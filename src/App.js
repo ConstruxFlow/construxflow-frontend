@@ -1,11 +1,10 @@
+import { createBrowserRouter } from "react-router-dom";
+import Home from "./pages/Home";
 
 
-function App() {
-  return (
-    <div className="bg-black h-screen w-full">
-      
-    </div>
-  );
-}
-
-export default App;
+export const routes = createBrowserRouter([
+  {
+    path: "/",
+    element: <Home />
+  }
+]);
