@@ -4,6 +4,8 @@ import SupplierDashboard from "./pages/SupplierDashboard";
 import Login from "./pages/Login";
 import PurchasingDashboard from "./pages/PurchasingManager/DashBoard/Dashboard";
 import Create_Project from "./pages/SiteManager/Create_Project";
+import MaintenanceDashboard from "./pages/MaintenanceHead/MaintenanceDashboard";
+import MaintenanceMaterialRequest from "./pages/MaintenanceHead/MaintenanceMaterialRequest";
 
 export const routes = createBrowserRouter([
   {
@@ -25,5 +27,13 @@ export const routes = createBrowserRouter([
   {
     path: "/create-project",
     element: <Create_Project />
+  },
+  {
+    path: "/maintenance-dashboard",
+    element: <MaintenanceDashboard/>
+  },
+  {
+    path: "/maintenance-requests",
+    element: <MaintenanceMaterialRequest/>
   }
 ]);
