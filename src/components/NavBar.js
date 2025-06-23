@@ -22,8 +22,8 @@ const NavBar = ({
               key={idx}
               href={link.href}
               className="hover:text-web_yellow transition-colors"
-              target={link.target || "_self"}
-              rel={link.target === "_blank" ? "noopener noreferrer" : undefined}
+              // target={link.target || "_self"}
+              // rel={link.target === "_blank" ? "noopener noreferrer" : undefined}
             >
               {link.name}
             </a>
@@ -31,13 +31,15 @@ const NavBar = ({
         </div>
 
         {/* Desktop Button */}
-        {showButton && (
+        {showButton ? (
           <button
             className="hidden md:inline-block bg-web_yellow text-main_dark px-4 py-2 rounded-full ml-4"
             onClick={onButtonClick}
           >
             {buttonLabel}
           </button>
+        ):(
+          <div></div>
         )}
 
         {/* Hamburger Icon */}
