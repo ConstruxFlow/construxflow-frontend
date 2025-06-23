@@ -1,6 +1,8 @@
 import { createBrowserRouter } from "react-router-dom";
 import Home from "./pages/Home";
-import SupplierDashboard from "./pages/SupplierDashboard"; // Import your dashboard page
+import SupplierDashboard from "./pages/SupplierDashboard"; 
+import Login from "./pages/Login";
+import PurchasingDashboard from "./pages/PurchasingManager/DashBoard/Dashboard";
 
 export const routes = createBrowserRouter([
   {
@@ -8,7 +10,15 @@ export const routes = createBrowserRouter([
     element: <Home />
   },
   {
+    path: "/dashboard1",
+    element: <SupplierDashboard/>
+},
+{
+    path: "/login",
+    element: <Login />
+  },
+  {
     path: "/dashboard",
-    element: <SupplierDashboard />
-  }
+    element: <PurchasingDashboard />
+  }
 ]);
