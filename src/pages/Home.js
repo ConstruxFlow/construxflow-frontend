@@ -13,8 +13,15 @@ import { IoMail } from "react-icons/io5";
 import { FaPhoneAlt } from "react-icons/fa";
 import { MdLocationPin } from "react-icons/md";
 import InsightsCard from "../components/HomePage/InsightsCard";
+import { useNavigate } from "react-router-dom";
 
 const Home = () => {
+  const navigation=useNavigate();
+
+  const handlelogin=()=>{
+    navigation("/login");
+  }
+
   return (
     <div className="bg-main_dark flex flex-col items-center justify-center w-full">
       <NavBar
@@ -25,7 +32,7 @@ const Home = () => {
           { name: "Contact", href: "#" },
         ]}
         showButton={true}
-        onButtonClick={() => console.log("Button clicked")}
+        onButtonClick={handlelogin}
       />
       <div className="relative w-full md:h-[calc(100vh-70px)] h-[calc(100vh-50px)] overflow-hidden">
         <img
