@@ -14,6 +14,9 @@ import Site_EquipmentRequest from "./pages/SiteManager/Site_EquipmentRequest";
 import Site_MaterialInfo from "./pages/SiteManager/Site_MaterialInfo";
 import Site_MaterialAdd from "./pages/SiteManager/Site_MaterialAdd";
 import Site_MaterialUpdate from "./pages/SiteManager/Site_MaterialUpdate";
+import Purchase_Order from "./pages/SiteManager/Purchase_Order";
+import SiteManager_Profile from "./pages/SiteManager/SiteManager_Profile";
+import SiteManagerDashboard from "./pages/SiteManager/SiteManagerDashboard";
 
 export const routes = createBrowserRouter([
   {
@@ -34,6 +37,10 @@ export const routes = createBrowserRouter([
   },
 
   // SITE MANAGER
+  {
+    path: "/site-manager",
+    element: <SiteManagerDashboard />
+  },
   {
     path: "/create-project",
     element: <Create_Project />
@@ -77,5 +84,13 @@ export const routes = createBrowserRouter([
   {
     path: "/site-material-update",
     element: <Site_MaterialUpdate />
+  },
+  {
+    path: "/purchase-order",
+    element: <Purchase_Order />
+  },
+  {
+    path: "/site-manager-profile",
+    element: <SiteManager_Profile />
   }
 ]);
