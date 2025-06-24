@@ -6,6 +6,10 @@ import PurchasingDashboard from "./pages/PurchasingManager/DashBoard/Dashboard";
 import Create_Project from "./pages/SiteManager/Create_Project";
 import MaintenanceDashboard from "./pages/MaintenanceHead/MaintenanceDashboard";
 import MaintenanceMaterialRequest from "./pages/MaintenanceHead/MaintenanceMaterialRequest";
+import MaintenanceRequestTracker from "./pages/MaintenanceHead/MaintenanceTracker";
+import EquipmentLogContainer from "./pages/MaintenanceHead/EquipmentLog";
+import ServiceHistoryContainer from "./pages/MaintenanceHead/MaintenanceLog";
+import TechnicianAssignmentMain from "./pages/MaintenanceHead/TechnicianAssign";
 
 export const routes = createBrowserRouter([
   {
@@ -35,5 +39,21 @@ export const routes = createBrowserRouter([
   {
     path: "/maintenance-requests",
     element: <MaintenanceMaterialRequest/>
+  },
+  {
+    path: "/maintenance-tracker",
+    element: <MaintenanceRequestTracker/>
+  },
+  {
+    path: "equipment",
+    element: <EquipmentLogContainer/>
+  },
+  {
+    path: "/maintenance-log",
+    element: <ServiceHistoryContainer />
+  },
+  {
+    path: "/technician-assignment",
+    element: <TechnicianAssignmentMain />
   }
 ]);
