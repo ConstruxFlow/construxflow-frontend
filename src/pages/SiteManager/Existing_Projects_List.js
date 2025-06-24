@@ -2,10 +2,10 @@ import React from 'react'
 import NavBar from '../../components/NavBar'
 import ExistingProjects from '../../components/SiteManager/ExistingProjects'
 
-const Existing_Projects = () => {
+function Existing_Projects_List() {
   return (
     <>
-    <NavBar
+      <NavBar
         links={[
           { name: "Dashboard", href: "#" },
           { name: "Projects", href: "#" },
@@ -15,9 +15,9 @@ const Existing_Projects = () => {
         ]}
         showButton={true}
     />
-    <Existing_Projects/>
+    <ExistingProjects />
     </>
   )
 }
 
-export default Existing_Projects
+export default Existing_Projects_List

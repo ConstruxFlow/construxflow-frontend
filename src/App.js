@@ -5,7 +5,6 @@ import Login from "./pages/Login";
 import PurchasingDashboard from "./pages/PurchasingManager/DashBoard/Dashboard";
 import Create_Project from "./pages/SiteManager/Create_Project";
 import Edit_Project from "./pages/SiteManager/Edit_Project";
-import Existing_Projects from "./pages/SiteManager/Existing_Projects";
 import Project_Phase from "./pages/SiteManager/Project_Phase";
 import Create_Material_Request from "./pages/SiteManager/Create_Material_Request";
 import Material_Request from "./pages/SiteManager/Material_Request";
@@ -17,6 +16,7 @@ import Site_MaterialUpdate from "./pages/SiteManager/Site_MaterialUpdate";
 import Purchase_Order from "./pages/SiteManager/Purchase_Order";
 import SiteManager_Profile from "./pages/SiteManager/SiteManager_Profile";
 import SiteManagerDashboard from "./pages/SiteManager/SiteManagerDashboard";
+import Existing_Projects_List from "./pages/SiteManager/Existing_Projects_List";
 
 export const routes = createBrowserRouter([
   {
@@ -50,8 +50,8 @@ export const routes = createBrowserRouter([
     element: <Edit_Project />
   },
   {
-    path: "/existing-project",
-    element: <Existing_Projects />
+    path: "/projects-list",
+    element: <Existing_Projects_List />
   },
   {
     path: "/project-phase",
