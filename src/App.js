@@ -1,6 +1,5 @@
 import { createBrowserRouter } from "react-router-dom";
 import Home from "./pages/Home";
-import SupplierDashboard from "./pages/SupplierDashboard";
 import Login from "./pages/Login";
 import PurchasingDashboard from "./pages/PurchasingManager/DashBoard/Dashboard";
 import Create_Project from "./pages/SiteManager/Create_Project";
@@ -10,9 +9,6 @@ import MaterialRequests from "./pages/Supplier/MaterialRequests";
 import RequestDetails from "./pages/Supplier/RequestDetails";
 import SubmitQuotation from "./pages/Supplier/SubmitQuotation";
 import QuotationStatus from "./pages/Supplier/QuotationStatus";
-import Login from "./pages/Login";
-import PurchasingDashboard from "./pages/PurchasingManager/DashBoard/Dashboard";
-import Create_Project from "./pages/SiteManager/Create_Project";
 import Edit_Project from "./pages/SiteManager/Edit_Project";
 import Project_Phase from "./pages/SiteManager/Project_Phase";
 import Create_Material_Request from "./pages/SiteManager/Create_Material_Request";
@@ -38,7 +34,7 @@ export const routes = createBrowserRouter([
   },
   {
     path: "/requests",
-    element: <MaterialRequests/>
+    element: <MaterialRequests />
   },
   {
     path: "/requests/:id",
@@ -49,10 +45,6 @@ export const routes = createBrowserRouter([
 {
     path: "/login",
     element: <Login />
-  },
-  {
-    path: "/login",
-    element: <Login />,
   },
   {
     path: "/purchasingdashboard",
