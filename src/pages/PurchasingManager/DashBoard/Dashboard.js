@@ -1,5 +1,9 @@
 import React from 'react';
 import NavBar from '../../../components/NavBar';
+import { MdOutlinePendingActions } from "react-icons/md";
+import { LiaNotesMedicalSolid } from "react-icons/lia";
+import { GrDeliver } from "react-icons/gr";
+import { IoMdCheckmark } from "react-icons/io";
 
 const PurchasingDashboard = () => {
   return (
@@ -28,8 +32,8 @@ const PurchasingDashboard = () => {
           </div>
 
           {/* Urgent Actions Alert */}
-          <div className="bg-yellow-50 border border-yellow-200 rounded-lg p-4 mb-6 flex items-start gap-3">
-            <div className="text-yellow-600 text-lg mt-0.5">⚠</div>
+          <div className="bg-yellow-50 border border-web_yellow rounded-lg p-4 mb-6 flex items-start gap-3">
+            <div className="text-web_yellow text-lg mt-0.5">⚠</div>
             <div>
               <h3 className="font-semibold text-sm text-main_dark mb-0.5">
                 Urgent Actions Required
@@ -49,7 +53,7 @@ const PurchasingDashboard = () => {
                 <span className="text-deep_green text-xs">+3 from yesterday</span>
               </div>
               <div className="w-11 h-11 bg-web_yellow rounded-lg flex items-center justify-center text-white text-lg flex-shrink-0">
-                📋
+                <MdOutlinePendingActions/>
               </div>
             </div>
 
@@ -60,7 +64,7 @@ const PurchasingDashboard = () => {
                 <span className="text-deep_green text-xs">87% approval rate</span>
               </div>
               <div className="w-11 h-11 bg-deep_green rounded-lg flex items-center justify-center text-white text-lg flex-shrink-0">
-                ✓
+                <IoMdCheckmark/>
               </div>
             </div>
 
@@ -71,7 +75,7 @@ const PurchasingDashboard = () => {
                 <span className="text-deep_green text-xs">5 expiring soon</span>
               </div>
               <div className="w-11 h-11 bg-light_brown rounded-lg flex items-center justify-center text-gray-900 text-lg flex-shrink-0">
-                📄
+                <LiaNotesMedicalSolid/>
               </div>
             </div>
 
@@ -82,35 +86,35 @@ const PurchasingDashboard = () => {
                 <span className="text-deep_green text-xs">92% performance avg</span>
               </div>
               <div className="w-11 h-11 bg-light_gray rounded-lg flex items-center justify-center text-gray-900 text-lg flex-shrink-0">
-                🚚
+                <GrDeliver/>
               </div>
             </div>
           </div>
 
           {/* Quick Actions */}
           <div className="mb-8">
-            <h2 className="text-lg font-semibold text-gray-900 mb-4 tracking-tight text-center lg:text-left">
+            <h2 className="text-lg font-semibold text-main_dark mb-4 tracking-tight text-center lg:text-left">
               Quick Actions
             </h2>
             <div className="grid grid-cols-2 lg:grid-cols-4 gap-3 sm:gap-4">
               <div className="bg-purewhite border border-gray-200 hover:border-web_yellow rounded-lg p-4 sm:p-5 text-center cursor-pointer hover:-translate-y-0.5 hover:shadow-md transition-all duration-150">
                 <div className="text-xl sm:text-2xl mb-2">👤</div>
-                <span className="font-medium text-gray-900 text-xs sm:text-sm">Register Supplier</span>
+                <span className="font-medium text-main_dark text-xs sm:text-sm">Register Supplier</span>
               </div>
               
               <div className="bg-purewhite border border-gray-200 hover:border-deep_green rounded-lg p-4 sm:p-5 text-center cursor-pointer hover:-translate-y-0.5 hover:shadow-md transition-all duration-150">
                 <div className="text-xl sm:text-2xl mb-2">📝</div>
-                <span className="font-medium text-gray-900 text-xs sm:text-sm">Create Request</span>
+                <span className="font-medium text-main_dark text-xs sm:text-sm">Create Request</span>
               </div>
               
               <div className="bg-purewhite border border-gray-200 hover:border-light_brown rounded-lg p-4 sm:p-5 text-center cursor-pointer hover:-translate-y-0.5 hover:shadow-md transition-all duration-150">
                 <div className="text-xl sm:text-2xl mb-2">🔍</div>
-                <span className="font-medium text-gray-900 text-xs sm:text-sm">Review Quotes</span>
+                <span className="font-medium text-main_dark text-xs sm:text-sm">Review Quotes</span>
               </div>
               
               <div className="bg-purewhite border border-gray-200 hover:border-light_gray rounded-lg p-4 sm:p-5 text-center cursor-pointer hover:-translate-y-0.5 hover:shadow-md transition-all duration-150">
                 <div className="text-xl sm:text-2xl mb-2">📊</div>
-                <span className="font-medium text-gray-900 text-xs sm:text-sm">View Reports</span>
+                <span className="font-medium text-main_dark text-xs sm:text-sm">View Reports</span>
               </div>
             </div>
           </div>
@@ -118,14 +122,14 @@ const PurchasingDashboard = () => {
           {/* Charts Section */}
           <div className="grid grid-cols-1 lg:grid-cols-2 gap-4 sm:gap-5 mb-8">
             <div className="bg-purewhite border border-gray-200 rounded-lg p-4 sm:p-5">
-              <h3 className="font-semibold text-gray-900 mb-4 text-base">
+              <h3 className="font-semibold text-main_dark mb-4 text-base">
                 Procurement Trends
               </h3>
               <div className="h-36 sm:h-45 bg-gray-50 border border-dashed border-gray-300 rounded-md"></div>
             </div>
             
             <div className="bg-purewhite border border-gray-200 rounded-lg p-4 sm:p-5">
-              <h3 className="font-semibold text-gray-900 mb-4 text-base">
+              <h3 className="font-semibold text-main_dark mb-4 text-base">
                 Supplier Delivery Performance
               </h3>
               <div className="h-36 sm:h-45 bg-gray-50 border border-dashed border-gray-300 rounded-md"></div>
@@ -135,7 +139,7 @@ const PurchasingDashboard = () => {
           {/* Recent Orders Table */}
           <div className="mb-8">
             <div className="flex flex-col sm:flex-row sm:justify-between sm:items-center mb-4 gap-2">
-              <h2 className="text-lg font-semibold text-gray-900 tracking-tight text-center sm:text-left">
+              <h2 className="text-lg font-semibold text-main_dark tracking-tight text-center sm:text-left">
                 Recent Purchase Orders
               </h2>
               <a href="#" className="text-deep_green hover:text-deep_green/80 font-medium text-sm transition-colors duration-150 text-center sm:text-right">
@@ -193,19 +197,19 @@ const PurchasingDashboard = () => {
               <table className="w-full hidden sm:table">
                 <thead>
                   <tr className="bg-gray-50">
-                    <th className="px-3 sm:px-4 py-3 text-left font-semibold text-gray-900 text-xs uppercase tracking-wide">
+                    <th className="px-3 sm:px-4 py-3 text-left font-semibold text-main_dark text-xs uppercase tracking-wide">
                       Order ID
                     </th>
-                    <th className="px-3 sm:px-4 py-3 text-left font-semibold text-gray-900 text-xs uppercase tracking-wide">
+                    <th className="px-3 sm:px-4 py-3 text-left font-semibold text-main_dark text-xs uppercase tracking-wide">
                       Supplier
                     </th>
-                    <th className="px-3 sm:px-4 py-3 text-left font-semibold text-gray-900 text-xs uppercase tracking-wide">
+                    <th className="px-3 sm:px-4 py-3 text-left font-semibold text-main_dark text-xs uppercase tracking-wide">
                       Amount
                     </th>
-                    <th className="px-3 sm:px-4 py-3 text-left font-semibold text-gray-900 text-xs uppercase tracking-wide">
+                    <th className="px-3 sm:px-4 py-3 text-left font-semibold text-main_dark text-xs uppercase tracking-wide">
                       Status
                     </th>
-                    <th className="px-3 sm:px-4 py-3 text-left font-semibold text-gray-900 text-xs uppercase tracking-wide">
+                    <th className="px-3 sm:px-4 py-3 text-left font-semibold text-main_dark text-xs uppercase tracking-wide">
                       Date
                     </th>
                   </tr>
