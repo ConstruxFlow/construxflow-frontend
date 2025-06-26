@@ -5,6 +5,7 @@ import MaterialRequests from "./pages/Supplier/MaterialRequests";
 import RequestDetails from "./pages/Supplier/RequestDetails";
 import SubmitQuotation from "./pages/Supplier/SubmitQuotation";
 import QuotationStatus from "./pages/Supplier/QuotationStatus";
+import PurchasingOrders from "./pages/Supplier/PurchasingOrders";
 import Login from "./pages/Login";
 import PurchasingDashboard from "./pages/PurchasingManager/DashBoard/Dashboard";
 import Create_Project from "./pages/SiteManager/Create_Project";
@@ -41,6 +42,10 @@ export const routes = createBrowserRouter([
   },
   { path: "/quotations/submit", element: <SubmitQuotation /> },
   { path: "/quotations", element: <QuotationStatus /> },
+   {
+    path: "/orders",
+    element: <PurchasingOrders /> 
+  },
 {
     path: "/login",
     element: <Login />
