@@ -11,23 +11,21 @@ const navLinks = [
   { name: "Payments", href: "/payments" },
 ];
 
-const initialForm = {
-  steelPipePrice: "",
-  valvePrice: "",
-  safetyEquipPrice: "",
-  shipping: "",
-  tax: "",
-  deliveryTime: "",
-  deliveryMethod: "",
-  paymentTerms: "",
-  warranty: "",
-  validity: "",
-  notes: "",
-  attachments: [],
-};
-
 const SubmitQuotation = () => {
-  const [form, setForm] = useState(initialForm);
+  const [form, setForm] = useState({
+    steelPipePrice: "",
+    tax: "",
+    paymentTerms: "",
+    warranty: "",
+    validity: "",
+    advancedPayment: "",
+    notes: "",
+    attachments: [],
+  });
+
+  const [deliveries, setDeliveries] = useState([
+    { requiredDate: "", deliveryLocation: "", shippingCost: "" },
+  ]);
 
   const handleChange = (e) => {
     const { name, value, files } = e.target;
@@ -38,31 +36,47 @@ const SubmitQuotation = () => {
     }
   };
 
+  const handleDeliveryChange = (idx, e) => {
+    const { name, value } = e.target;
+    setDeliveries((prev) =>
+      prev.map((row, i) =>
+        i === idx ? { ...row, [name]: value } : row
+      )
+    );
+  };
+
+  const handleAddLocation = () => {
+    setDeliveries((prev) => [
+      ...prev,
+      { requiredDate: "", deliveryLocation: "", shippingCost: "" },
+    ]);
+  };
+
   const handleSubmit = (e) => {
     e.preventDefault();
-    // Submit logic here
     alert("Quotation submitted!");
   };
 
   // Calculate totals
-  const subtotal =
-    (parseFloat(form.steelPipePrice || 0) * 500) +
-    (parseFloat(form.valvePrice || 0) * 50) +
-    (parseFloat(form.safetyEquipPrice || 0) * 200);
-
-  const shipping = parseFloat(form.shipping || 0);
-  const tax = ((subtotal + shipping) * parseFloat(form.tax || 0)) / 100;
-  const total = subtotal + shipping + tax;
+  const steelPipeTotal = parseFloat(form.steelPipePrice || 0) * 500;
+  const totalShipping = deliveries.reduce((sum, delivery) =>
+    sum + parseFloat(delivery.shippingCost || 0), 0
+  );
+  const subtotal = steelPipeTotal;
+  const tax = ((subtotal + totalShipping) * parseFloat(form.tax || 0)) / 100;
+  const totalBeforeAdvance = subtotal + totalShipping + tax;
+  const advancedPayment = parseFloat(form.advancedPayment || 0);
+  const finalTotal = totalBeforeAdvance - advancedPayment;
 
   return (
-    <div className="bg-purewhite min-h-screen font-poppins">
+    <div className="bg-[#f8f9fa] min-h-screen font-poppins">
       <NavBar links={navLinks} logoSrc="/logo1.png" />
 
-      <div className="max-w-7xl mx-auto px-4 py-8">
+      <div className="max-w-4xl mx-auto px-4 py-8">
         {/* Breadcrumb */}
         <div className="text-sm text-slatebluegray mb-2">
-          <a href="/dashboard1" className="hover:underline">Dashboard</a> /{" "}
-          <a href="/requests" className="hover:underline">Request</a> /{" "}
+          <a href="/dashboard1" className="hover:underline text-deep_green">Dashboard</a> &nbsp;/&nbsp;
+          <a href="/requests" className="hover:underline text-deep_green">Request</a> &nbsp;/&nbsp;
           <span className="font-semibold">Submit Quotation</span>
         </div>
 
@@ -71,209 +85,227 @@ const SubmitQuotation = () => {
 
         {/* Request Summary */}
         <div className="bg-light_gray rounded-lg p-6 mb-7 relative">
-        {/* RFQ Badge */}
-        <span className="absolute top-4 right-4 bg-deep_green text-purewhite px-4 py-1.5 rounded-full text-sm font-semibold">
+          <div className="text-main_dark font-medium mb-3">Request Summary</div>
+          <span className="absolute top-4 right-4 bg-deep_green text-purewhite px-4 py-1.5 rounded-full text-sm font-medium">
             RFQ-2024-001
-        </span>
-        <div className="text-main_dark font-semibold mb-3 text-base">Request Summary</div>
-        <div className="grid grid-cols-3 gap-x-8 gap-y-2 text-sm items-start">
-            {/* Column 1: Labels */}
-            <div className="text-slatebluegray space-y-2">
-            <div>Company:</div>
-            <div>Contact:</div>
-            <div>Request Date:</div>
-            <div>Deadline:</div>
-            </div>
-            {/* Column 2: Main values */}
-            <div className="text-main_dark space-y-2">
-            <div>TechCorp Industries</div>
-            <div>Sarah Johnson</div>
-            <div>Dec 15, 2024</div>
-            <div className="font-semibold text-web_yellow">Dec 22, 2024</div>
-            </div>
-            {/* Column 3: Items and quantities */}
-            <div className="text-main_dark space-y-2">
-            <div>
-                <span className="text-slatebluegray">Items Requested:</span>
-            </div>
-            <div className="flex justify-between">
-                <span>Steel Pipes (6mm)</span>
-                <span>500 units</span>
-            </div>
-            <div className="flex justify-between">
-                <span>Industrial Valves</span>
-                <span>50 units</span>
-            </div>
-            <div className="flex justify-between">
-                <span>Safety Equipment</span>
-                <span>200 units</span>
-            </div>
-            </div>
-        </div>
-        </div>
+          </span>
+          <div className="grid grid-cols-4 gap-x-6 gap-y-2 text-sm">
+            <div className="text-slatebluegray">Company:</div>
+            <div className="text-main_dark">TechCorp Industries</div>
+            <div className="text-slatebluegray">Items Requested:</div>
+            <div className="text-main_dark"></div>
 
+            <div className="text-slatebluegray">Contact:</div>
+            <div className="text-main_dark">Sarah Johnson</div>
+            <div className="text-main_dark">Steel Pipes (6mm)</div>
+            <div className="text-main_dark text-right">500 units</div>
 
+            <div className="text-slatebluegray">Deadline:</div>
+            <div className="text-web_yellow font-semibold">Dec 22, 2024</div>
+            <div className="text-main_dark"></div>
+            <div className="text-main_dark"></div>
+          </div>
+        </div>
 
         <form onSubmit={handleSubmit}>
           {/* Pricing Information */}
           <section className="bg-purewhite border border-light_gray rounded-lg p-6 mb-6">
             <div className="font-semibold text-main_dark mb-4 flex items-center gap-2">
-              <span className="text-web_yellow text-lg">$</span> Pricing Information
-            </div>
-            <div className="grid grid-cols-1 md:grid-cols-3 gap-4 mb-4">
-              <input
-                type="number"
-                name="steelPipePrice"
-                value={form.steelPipePrice}
-                onChange={handleChange}
-                placeholder="Steel Pipes Unit Price"
-                className="border border-light_gray rounded-lg px-4 py-2"
-                min="0"
-                step="0.01"
-              />
-              <input
-                type="number"
-                name="valvePrice"
-                value={form.valvePrice}
-                onChange={handleChange}
-                placeholder="Industrial Valves Unit Price"
-                className="border border-light_gray rounded-lg px-4 py-2"
-                min="0"
-                step="0.01"
-              />
-              <input
-                type="number"
-                name="safetyEquipPrice"
-                value={form.safetyEquipPrice}
-                onChange={handleChange}
-                placeholder="Safety Equipment Unit Price"
-                className="border border-light_gray rounded-lg px-4 py-2"
-                min="0"
-                step="0.01"
-              />
+              <span className="text-web_yellow text-lg"></span> Pricing Information
             </div>
             <div className="grid grid-cols-1 md:grid-cols-3 gap-4">
-              <input
-                type="number"
-                name="shipping"
-                value={form.shipping}
-                onChange={handleChange}
-                placeholder="Shipping Cost"
-                className="border border-light_gray rounded-lg px-4 py-2"
-                min="0"
-                step="0.01"
-              />
-              <input
-                type="number"
-                name="tax"
-                value={form.tax}
-                onChange={handleChange}
-                placeholder="Tax (%)"
-                className="border border-light_gray rounded-lg px-4 py-2"
-                min="0"
-                step="0.01"
-              />
+              <div>
+                <label className="block text-sm text-slatebluegray mb-1">Steel Pipes Unit Price</label>
+                <div className="relative">
+                  <span className="absolute left-3 top-1/2 -translate-y-1/2 text-slatebluegray">$</span>
+                  <input
+                    type="number"
+                    name="steelPipePrice"
+                    value={form.steelPipePrice}
+                    onChange={handleChange}
+                    placeholder="0.00"
+                    className="w-full border border-light_gray rounded-lg pl-7 pr-3 py-2 text-main_dark focus:outline-none focus:ring-2 focus:ring-web_yellow"
+                    min="0"
+                    step="0.01"
+                  />
+                </div>
+              </div>
+              <div>
+                <label className="block text-sm text-slatebluegray mb-1">Tax (%)</label>
+                <div className="relative">
+                  <input
+                    type="number"
+                    name="tax"
+                    value={form.tax}
+                    onChange={handleChange}
+                    placeholder="0.00"
+                    className="w-full border border-light_gray rounded-lg px-3 py-2 text-main_dark focus:outline-none focus:ring-2 focus:ring-web_yellow"
+                    min="0"
+                    step="0.01"
+                  />
+                  <span className="absolute right-3 top-1/2 -translate-y-1/2 text-slatebluegray">%</span>
+                </div>
+              </div>
+              <div>
+                <label className="block text-sm text-slatebluegray mb-1">Advanced Payment Amount</label>
+                <div className="relative">
+                  <span className="absolute left-3 top-1/2 -translate-y-1/2 text-slatebluegray">$</span>
+                  <input
+                    type="number"
+                    name="advancedPayment"
+                    value={form.advancedPayment}
+                    onChange={handleChange}
+                    placeholder="0.00"
+                    className="w-full border border-light_gray rounded-lg pl-7 pr-3 py-2 text-main_dark focus:outline-none focus:ring-2 focus:ring-web_yellow"
+                    min="0"
+                    step="0.01"
+                  />
+                </div>
+              </div>
             </div>
           </section>
 
           {/* Delivery Information */}
           <section className="bg-purewhite border border-light_gray rounded-lg p-6 mb-6">
-            <div className="font-semibold text-main_dark mb-4 flex items-center gap-2">
-              <span className="text-web_yellow text-lg">📦</span> Delivery Information
+            <div className="flex items-center justify-between mb-4">
+              <div className="flex items-center gap-2 text-main_dark font-semibold">
+                <span className="text-web_yellow text-lg"></span>
+                <span>Delivery Information</span>
+              </div>
+              <button
+                type="button"
+                onClick={handleAddLocation}
+                className="bg-deep_green text-purewhite font-medium px-4 py-2 rounded-md hover:bg-deep_green/90 transition"
+              >
+                + Add Location
+              </button>
             </div>
-            <div className="grid grid-cols-1 md:grid-cols-2 gap-4">
-              <select
-                name="deliveryTime"
-                value={form.deliveryTime}
-                onChange={handleChange}
-                className="border border-light_gray rounded-lg px-4 py-2"
-              >
-                <option value="">Select delivery timeframe</option>
-                <option value="1 week">1 week</option>
-                <option value="2 weeks">2 weeks</option>
-                <option value="1 month">1 month</option>
-              </select>
-              <select
-                name="deliveryMethod"
-                value={form.deliveryMethod}
-                onChange={handleChange}
-                className="border border-light_gray rounded-lg px-4 py-2"
-              >
-                <option value="">Select delivery method</option>
-                <option value="Air">Air</option>
-                <option value="Sea">Sea</option>
-                <option value="Ground">Ground</option>
-              </select>
+            <div className="grid grid-cols-3 gap-x-6 gap-y-4">
+              <div>
+                <label className="block text-sm text-slatebluegray mb-1">Required Date</label>
+              </div>
+              <div>
+                <label className="block text-sm text-slatebluegray mb-1">Delivery Location</label>
+              </div>
+              <div>
+                <label className="block text-sm text-slatebluegray mb-1">Shipping Cost</label>
+              </div>
+              {deliveries.map((row, idx) => (
+                <React.Fragment key={idx}>
+                  <div>
+                    <input
+                      type="date"
+                      name="requiredDate"
+                      value={row.requiredDate}
+                      onChange={(e) => handleDeliveryChange(idx, e)}
+                      className="w-full border border-light_gray rounded-md px-3 py-2 text-main_dark text-sm focus:outline-none focus:ring-2 focus:ring-web_yellow"
+                    />
+                  </div>
+                  <div>
+                    <input
+                      type="text"
+                      name="deliveryLocation"
+                      value={row.deliveryLocation}
+                      onChange={(e) => handleDeliveryChange(idx, e)}
+                      className="w-full border border-light_gray rounded-md px-3 py-2 text-main_dark text-sm focus:outline-none focus:ring-2 focus:ring-web_yellow"
+                      placeholder="Enter location"
+                    />
+                  </div>
+                  <div className="relative">
+                    <span className="absolute left-3 top-1/2 -translate-y-1/2 text-slatebluegray">$</span>
+                    <input
+                      type="number"
+                      name="shippingCost"
+                      value={row.shippingCost}
+                      onChange={(e) => handleDeliveryChange(idx, e)}
+                      className="w-full border border-light_gray rounded-md pl-7 pr-3 py-2 text-main_dark text-sm focus:outline-none focus:ring-2 focus:ring-web_yellow"
+                      placeholder="0.00"
+                      min="0"
+                      step="0.01"
+                    />
+                  </div>
+                </React.Fragment>
+              ))}
             </div>
           </section>
 
           {/* Terms & Conditions */}
           <section className="bg-purewhite border border-light_gray rounded-lg p-6 mb-6">
             <div className="font-semibold text-main_dark mb-4 flex items-center gap-2">
-              <span className="text-web_yellow text-lg">📄</span> Terms & Conditions
+              <span className="text-web_yellow text-lg"></span> Terms & Conditions
             </div>
-            <div className="grid grid-cols-1 md:grid-cols-2 gap-4 mb-4">
-              <select
-                name="paymentTerms"
-                value={form.paymentTerms}
-                onChange={handleChange}
-                className="border border-light_gray rounded-lg px-4 py-2"
-              >
-                <option value="">Select payment terms</option>
-                <option value="Net 30">Net 30</option>
-                <option value="Net 60">Net 60</option>
-                <option value="Advance">Advance</option>
-              </select>
-              <select
-                name="warranty"
-                value={form.warranty}
-                onChange={handleChange}
-                className="border border-light_gray rounded-lg px-4 py-2"
-              >
-                <option value="">Select warranty period</option>
-                <option value="6 months">6 months</option>
-                <option value="1 year">1 year</option>
-                <option value="2 years">2 years</option>
-              </select>
-            </div>
-            <div className="grid grid-cols-1 md:grid-cols-2 gap-4">
-              <input
-                type="date"
-                name="validity"
-                value={form.validity}
-                onChange={handleChange}
-                className="border border-light_gray rounded-lg px-4 py-2"
-                placeholder="Validity Period"
-              />
+            <div className="grid grid-cols-1 md:grid-cols-3 gap-4">
+              <div>
+                <label className="block text-sm text-slatebluegray mb-1">Payment Terms</label>
+                <select
+                  name="paymentTerms"
+                  value={form.paymentTerms}
+                  onChange={handleChange}
+                  className="w-full border border-light_gray rounded-lg px-3 py-2 text-main_dark focus:outline-none focus:ring-2 focus:ring-web_yellow"
+                >
+                  <option value="">Select payment terms</option>
+                  <option value="Net 30">Net 30</option>
+                  <option value="Net 60">Net 60</option>
+                  <option value="Advance">Advance</option>
+                </select>
+              </div>
+              <div>
+                <label className="block text-sm text-slatebluegray mb-1">Warranty Period</label>
+                <select
+                  name="warranty"
+                  value={form.warranty}
+                  onChange={handleChange}
+                  className="w-full border border-light_gray rounded-lg px-3 py-2 text-main_dark focus:outline-none focus:ring-2 focus:ring-web_yellow"
+                >
+                  <option value="">Select warranty period</option>
+                  <option value="6 months">6 months</option>
+                  <option value="1 year">1 year</option>
+                  <option value="2 years">2 years</option>
+                </select>
+              </div>
+              <div>
+                <label className="block text-sm text-slatebluegray mb-1">Validity Period</label>
+                <input
+                  type="text"
+                  name="validity"
+                  value={form.validity}
+                  onChange={handleChange}
+                  className="w-full border border-light_gray rounded-lg px-3 py-2 text-main_dark focus:outline-none focus:ring-2 focus:ring-web_yellow"
+                  placeholder="mm/dd/yyyy"
+                />
+              </div>
             </div>
           </section>
 
           {/* Additional Notes */}
           <section className="bg-purewhite border border-light_gray rounded-lg p-6 mb-6">
             <div className="font-semibold text-main_dark mb-4 flex items-center gap-2">
-              <span className="text-web_yellow text-lg">📝</span> Additional Notes
+              <span className="text-web_yellow text-lg"></span> Additional Notes
             </div>
-            <textarea
-              name="notes"
-              value={form.notes}
-              onChange={handleChange}
-              rows={3}
-              placeholder="Add any special instructions, bulk discounts, or additional information..."
-              className="w-full border border-light_gray rounded-lg px-4 py-2"
-            />
+            <div>
+              <label className="block text-sm text-slatebluegray mb-1">Special Instructions or Comments</label>
+              <textarea
+                name="notes"
+                value={form.notes}
+                onChange={handleChange}
+                rows={4}
+                placeholder="Add any special instructions, bulk discounts, or additional information..."
+                className="w-full border border-light_gray rounded-lg px-4 py-3 text-main_dark focus:outline-none focus:ring-2 focus:ring-web_yellow resize-none"
+              />
+            </div>
           </section>
 
           {/* Attachments */}
           <section className="bg-purewhite border border-light_gray rounded-lg p-6 mb-6">
             <div className="font-semibold text-main_dark mb-4 flex items-center gap-2">
-              <span className="text-web_yellow text-lg">📎</span> Attachments
+              <span className="text-web_yellow text-lg"></span> Attachments
             </div>
-            <div className="flex flex-col items-center justify-center border-2 border-dashed border-light_gray rounded-lg py-6 mb-2 bg-light_gray">
+            <div className="flex flex-col items-center justify-center border-2 border-dashed border-light_gray rounded-lg py-8 bg-gray-50">
               <FaPaperclip className="text-2xl text-slatebluegray mb-2" />
-              <div className="text-slatebluegray text-sm mb-2">
+              <div className="text-slatebluegray text-sm mb-2 font-medium">
                 Drop files here or click to upload
               </div>
-              <div className="text-gray-400 text-xs mb-2">
+              <div className="text-gray-400 text-xs mb-4">
                 Supported formats: PDF, DOC, XLS, JPG, PNG (Max 10MB)
               </div>
               <input
@@ -286,54 +318,59 @@ const SubmitQuotation = () => {
               />
               <label
                 htmlFor="file-upload"
-                className="bg-light_brown text-main_dark px-4 py-2 rounded-lg cursor-pointer"
+                className="bg-gray-200 text-main_dark px-6 py-2 rounded-lg cursor-pointer hover:bg-light_brown/80 transition font-medium"
               >
                 Choose Files
               </label>
             </div>
             {form.attachments.length > 0 && (
-              <ul className="text-xs text-slatebluegray mt-2">
+              <ul className="text-sm text-slatebluegray mt-3">
                 {form.attachments.map((file, idx) => (
-                  <li key={idx}>{file.name}</li>
+                  <li key={idx} className="py-1">📄 {file.name}</li>
                 ))}
               </ul>
             )}
           </section>
 
           {/* Quotation Summary */}
-          <section className="bg-light_brown rounded-lg p-6 mb-6">
+          <section className="bg-light_gray rounded-lg p-6 mb-6">
             <div className="font-semibold text-main_dark mb-4">Quotation Summary</div>
-            <div className="flex flex-col gap-2 text-main_dark text-sm">
+            <div className="space-y-2 text-main_dark">
               <div className="flex justify-between">
                 <span>Subtotal:</span>
                 <span>${subtotal.toFixed(2)}</span>
               </div>
               <div className="flex justify-between">
                 <span>Shipping:</span>
-                <span>${shipping.toFixed(2)}</span>
+                <span>${totalShipping.toFixed(2)}</span>
               </div>
               <div className="flex justify-between">
                 <span>Tax:</span>
                 <span>${tax.toFixed(2)}</span>
               </div>
-              <div className="flex justify-between font-bold text-lg mt-2">
+              <div className="flex justify-between">
+                <span className="font-semibold">Advanced Payment:</span>
+                <span className="font-semibold text-web_yellow">-${advancedPayment.toFixed(2)}</span>
+              </div>
+              <hr className="border-gray-300 my-2" />
+              <div className="flex justify-between font-bold text-lg">
                 <span>Total:</span>
-                <span>${total.toFixed(2)}</span>
+                <span className="text-web_yellow">${finalTotal.toFixed(2)}</span>
               </div>
             </div>
           </section>
 
-          {/* Actions */}
+          {/* Action Buttons */}
           <div className="flex justify-end gap-4">
             <button
               type="button"
-              className="bg-light_gray text-main_dark px-6 py-2 rounded-lg border border-light_gray font-semibold"
+              className="bg-purewhite border border-light_gray text-main_dark px-6 py-3 rounded-lg font-medium hover:bg-gray-50 transition"
             >
               Save as Draft
             </button>
             <button
               type="submit"
-              className="bg-web_yellow text-main_dark px-6 py-2 rounded-lg font-semibold hover:opacity-90"
+              className="bg-web_yellow text-main_dark px-6 py-3 rounded-lg font-medium hover:opacity-90 transition"
             >
               Submit Quotation
             </button>
