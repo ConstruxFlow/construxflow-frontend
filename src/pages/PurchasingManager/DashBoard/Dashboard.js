@@ -11,9 +11,10 @@ const PurchasingDashboard = () => {
       {/* Header Navigation */}
      <NavBar links={
         [
-          { name: 'Dashboard', path: '/dashboard' },
+          { name: 'Dashboard', path: '/purchasing/dashboard' },
+          { name: 'Requests', path: '/purchasing/materialrequests/overview' },
           { name: 'Orders', path: '/orders' },
-          { name: 'Suppliers', path: '/suppliers' },
+          { name: 'Suppliers', path: '/purchasing/supplier/dashboard' },
           { name: 'Reports', path: '/reports' }
         ]
      } />

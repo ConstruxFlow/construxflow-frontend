@@ -3,7 +3,6 @@ import Home from "./pages/Home";
 import Login from "./pages/Login";
 import PurchasingDashboard from "./pages/PurchasingManager/DashBoard/Dashboard";
 import Create_Project from "./pages/SiteManager/Create_Project";
-import MaterialRequestsOverview from "./pages/PurchasingManager/Material_Requests/Request_Dashboard";
 import SupplierDashboard from "./pages/Supplier/SupplierDashboard";
 import MaterialRequests from "./pages/Supplier/MaterialRequests";
 import RequestDetails from "./pages/Supplier/RequestDetails";
@@ -27,6 +26,11 @@ import Purchase_Order from "./pages/SiteManager/Purchase_Order";
 import SiteManager_Profile from "./pages/SiteManager/SiteManager_Profile";
 import SiteManagerDashboard from "./pages/SiteManager/SiteManagerDashboard";
 import Existing_Projects_List from "./pages/SiteManager/Existing_Projects_List";
+import MaterialReqDetails from "./pages/PurchasingManager/Material_Requests/MaterialReqDetails";
+import MaterialReqDetails_MWise from "./pages/PurchasingManager/Material_Requests/MaterialReqDetails_MWise";
+import CreateMaterialRequest from "./pages/PurchasingManager/Material_Requests/CreateMaterialRequest";
+import SupplierPerformanceEvaluation from "./pages/PurchasingManager/Suppliers/SupplierPerformanceEvaluation";
+import { purchasingManagerRoutes, PurchasingManagerroutes } from "./pages/PurchasingManager/Routes";
 
 export const routes = createBrowserRouter([
   {
@@ -64,14 +68,9 @@ export const routes = createBrowserRouter([
     path: "/login",
     element: <Login />
   },
-  {
-    path: "/purchasingdashboard",
-    element: <PurchasingDashboard />,
-  },
-  {
-    path: "/materialrequestsoverview",
-    element: <MaterialRequestsOverview />,
-  },
+  
+  // PURCHASING MANAGER
+  purchasingManagerRoutes,
 
   // SITE MANAGER
   {

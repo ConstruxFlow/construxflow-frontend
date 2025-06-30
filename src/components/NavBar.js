@@ -20,10 +20,10 @@ const NavBar = ({
           {links.map((link, idx) => (
             <a
               key={idx}
-              href={link.href}
+              href={link.path || link.href}
               className="hover:text-web_yellow transition-colors"
-              // target={link.target || "_self"}
-              // rel={link.target === "_blank" ? "noopener noreferrer" : undefined}
+              target={link.target || "_self"}
+              rel={link.target === "_blank" ? "noopener noreferrer" : undefined}
             >
               {link.name}
             </a>
