@@ -6,6 +6,10 @@ import RequestDetails from "./pages/Supplier/RequestDetails";
 import SubmitQuotation from "./pages/Supplier/SubmitQuotation";
 import QuotationStatus from "./pages/Supplier/QuotationStatus";
 import PurchasingOrders from "./pages/Supplier/PurchasingOrders";
+import OrderDetails from "./pages/Supplier/OrderDetails";
+import PaymentStatus from "./pages/Supplier/PaymentStatus";
+import ReceiveAdvancedPayment from "./pages/Supplier/ReceiveAdvancedPayment";
+import ReceiveFullPayment from "./pages/Supplier/ReceiveFullPayment";
 import Login from "./pages/Login";
 import PurchasingDashboard from "./pages/PurchasingManager/DashBoard/Dashboard";
 import Create_Project from "./pages/SiteManager/Create_Project";
@@ -42,10 +46,19 @@ export const routes = createBrowserRouter([
   },
   { path: "/quotations/submit", element: <SubmitQuotation /> },
   { path: "/quotations", element: <QuotationStatus /> },
+  { path: "/payments/receive-advanced", element: <ReceiveAdvancedPayment /> },
+  { path: "/payments/receive-full", element: <ReceiveFullPayment /> },
+
    {
     path: "/orders",
     element: <PurchasingOrders /> 
   },
+  {
+  path: "/orders/:id",
+  element: <OrderDetails />
+},
+  { path: "/payments", element: <PaymentStatus /> },
+
 {
     path: "/login",
     element: <Login />

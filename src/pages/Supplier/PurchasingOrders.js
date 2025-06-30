@@ -1,7 +1,8 @@
 // src/pages/Supplier/PurchasingOrders.jsx
 import React, { useState } from "react";
-import { FaSearch, FaEye, FaChevronDown } from "react-icons/fa";
+import { FaSearch, FaEye, FaChevronDown,FaReply } from "react-icons/fa";
 import { MdFilterList } from "react-icons/md";
+import { useNavigate } from "react-router-dom";
 import NavBar from "../../components/NavBar";
 
 const navLinks = [
@@ -86,6 +87,8 @@ const PurchasingOrders = () => {
   const [statusFilter, setStatusFilter] = useState("All Status");
   const [currentPage, setCurrentPage] = useState(1);
 
+  const navigate = useNavigate();
+
   // Filtered data
   const filteredOrders = orders.filter(
     (order) =>
@@ -104,7 +107,7 @@ const PurchasingOrders = () => {
         {/* Header */}
         <div className="flex justify-between items-start mb-8">
           <div>
-            <h1 className="text-3xl font-bold text-main_dark mb-2">Purchasing Orders</h1>
+            <h1 className="text-3xl font-bold text-gray-800 mb-2">Purchasing Orders</h1>
             <p className="text-gray-500">Manage and track all your purchase orders</p>
           </div>
         </div>
@@ -210,9 +213,13 @@ const PurchasingOrders = () => {
                     </td>
                     <td className="px-6 py-4 font-bold">{order.amount}</td>
                     <td className="px-6 py-4">
-                      <button className="p-2 text-deep_green hover:bg-gray-100 rounded">
+                      <button className="p-2 text-deep_green hover:bg-gray-100 rounded"
+                        onClick={() => navigate(`/orders/${order.id}`)}>
                         <FaEye />
                       </button>
+                      <button className="p-2 text-web_yellow hover:bg-gray-100 rounded">
+                        <FaReply />
+                        </button>
                     </td>
                   </tr>
                 ))}

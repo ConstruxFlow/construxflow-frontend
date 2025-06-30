@@ -85,7 +85,7 @@ const QuotationStatus = () => {
       <NavBar links={navLinks} logoSrc="/logo1.png" />
 
       <div className="max-w-full mx-auto px-16 py-8">
-        <h1 className="text-2xl md:text-3xl font-bold text-main_dark mb-2">Monitor Quotation Status</h1>
+        <h1 className="text-2xl md:text-3xl font-bold text-gray-800 mb-2">Monitor Quotation Status</h1>
         <p className="text-gray-500 mb-8">Track and manage all your submitted quotations</p>
 
         <div className="grid grid-cols-1 md:grid-cols-3 gap-6 mb-8">
