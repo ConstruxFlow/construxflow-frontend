@@ -31,7 +31,6 @@ const MaterialRequests = () => {
       deadline: "Dec 25, 2024",
       status: "Pending",
       priority: "High",
-      icon: "🔧"
     },
     {
       id: "#REQ-002",
@@ -41,7 +40,6 @@ const MaterialRequests = () => {
       deadline: "Dec 30, 2024",
       status: "In Progress",
       priority: "Medium",
-      icon: "⚡"
     },
     {
       id: "#REQ-003",
@@ -50,8 +48,7 @@ const MaterialRequests = () => {
       quantity: "5 units",
       deadline: "Jan 15, 2025",
       status: "Completed",
-      priority: "Low",
-      icon: "⚙️"
+      priority: "Low"
     },
     {
       id: "#REQ-004",
@@ -60,8 +57,7 @@ const MaterialRequests = () => {
       quantity: "300 pieces",
       deadline: "Dec 28, 2024",
       status: "Rejected",
-      priority: "Medium",
-      icon: "🔩"
+      priority: "Medium"
     }
   ];
 
@@ -98,11 +94,11 @@ const MaterialRequests = () => {
     <div className="bg-purewhite min-h-screen">
       <NavBar links={navLinks} logoSrc="/logo1.png" />
       
-      <div className="max-w-full mx-auto px-14 py-8">
+      <div className="max-w-full mx-auto px-16 py-8">
         {/* Header */}
         <div className="flex justify-between items-start mb-8">
           <div>
-            <h1 className="text-3xl font-bold text-main_dark mb-2">Material Requests</h1>
+            <h1 className="text-3xl font-bold text-gray-800 mb-2">Material Requests</h1>
             <p className="text-gray-500">Manage and respond to material requests from managers</p>
           </div>
         </div>
@@ -181,7 +177,7 @@ const MaterialRequests = () => {
         <div className="bg-purewhite rounded-lg shadow-sm overflow-hidden">
           {/* Table Header */}
           <div className="flex justify-between items-center p-6 border border-gray-200 rounded-t-lg">
-            <h2 className="text-lg font-semibold text-main_dark">
+            <h2 className="text-lg font-semibold text-gray-800">
               Material Requests (24)
             </h2>
             <div className="flex items-center gap-2">
@@ -212,9 +208,9 @@ const MaterialRequests = () => {
                     </td>
                     <td className="px-6 py-4">
                       <div className="flex items-center gap-3">
-                        <div className="w-10 h-10 bg-web_yellow rounded-lg flex items-center justify-center text-lg">
+                        {/* <div className="w-10 h-10 bg-web_yellow rounded-lg flex items-center justify-center text-lg">
                           {request.icon}
-                        </div>
+                        </div> */}
                         <div>
                           <div className="font-medium text-main_dark">{request.item}</div>
                           <div className="text-sm text-slatebluegray">Model: {request.model}</div>
