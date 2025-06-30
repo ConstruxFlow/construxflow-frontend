@@ -2,11 +2,14 @@ import React, { useState } from 'react';
 import NavBar from '../../../components/NavBar';
 import { FaMagnifyingGlass } from "react-icons/fa6";
 import { FaEye } from "react-icons/fa";
+import { useNavigate } from 'react-router-dom';
 
 const MaterialRequestsOverview = () => {
   const [activeView, setActiveView] = useState('project-wise');
   const [searchTerm, setSearchTerm] = useState('');
   const [currentPage, setCurrentPage] = useState(1);
+  const navigate = useNavigate();
+
 
   const materialRequests = [
     {
@@ -110,9 +113,10 @@ const MaterialRequestsOverview = () => {
       {/*  Navigation */}
       <NavBar links={
         [
-          { name: 'Dashboard', path: '/dashboard' },
+          { name: 'Dashboard', path: '/purchasing/dashboard' },
+          { name: 'Requests', path: '/purchasing/materialrequests/overview' },
           { name: 'Orders', path: '/orders' },
-          { name: 'Suppliers', path: '/suppliers' },
+          { name: 'Suppliers', path: '/purchasing/supplier/dashboard' },
           { name: 'Reports', path: '/reports' }
         ]
      } />
@@ -125,7 +129,7 @@ const MaterialRequestsOverview = () => {
             <h1 className="text-2xl sm:text-3xl font-semibold text-main_dark mb-1 tracking-tight">
               Material Requests Overview
             </h1>
-            <p className="text-slatebluegray text-base">
+            <p className="text-gray-600 text-sm">
               View and manage all material requests across projects
             </p>
           </div>
@@ -241,7 +245,7 @@ const MaterialRequestsOverview = () => {
                           {request.requestor}
                         </td>
                         <td className="px-6 py-4 text-sm">
-                          <button className="text-deep_green hover:text-deep_green/80 transition-colors">
+                          <button onClick={() => navigate(`/purchasing/materialrequests`)} className="text-deep_green hover:text-deep_green/80 transition-colors">
                             <FaEye className="w-5 h-5" />
                           </button>
                         </td>
@@ -268,7 +272,7 @@ const MaterialRequestsOverview = () => {
                       <p><span className="font-medium">Requestor:</span> {request.requestor}</p>
                     </div>
                     <div className="mt-3 flex justify-end">
-                      <button className="text-deep_green hover:text-deep_green/80 transition-colors">
+                      <button onClick={() => navigate(`/purchasing/materialrequests`)} className="text-deep_green hover:text-deep_green/80 transition-colors">
                         <FaEye className="w-5 h-5" />
                       </button>
                     </div>
@@ -368,7 +372,7 @@ const MaterialRequestsOverview = () => {
                           </span>
                         </td>
                         <td className="px-6 py-4 text-sm">
-                          <button className="text-deep_green hover:text-deep_green/80 transition-colors">
+                          <button onClick={() => navigate(`/purchasing/materialrequests/mwise`)} className="text-deep_green hover:text-deep_green/80 transition-colors">
                             <FaEye className="w-5 h-5" />
                           </button>
                         </td>
@@ -398,7 +402,7 @@ const MaterialRequestsOverview = () => {
                       <p><span className="font-medium">Deadline:</span> {new Date(request.deadline).toLocaleDateString()}</p>
                     </div>
                     <div className="mt-3 flex justify-end">
-                      <button className="text-deep_green hover:text-deep_green/80 transition-colors">
+                      <button onClick={() => navigate(`/purchasing/materialrequests/mwise`)} className="text-deep_green hover:text-deep_green/80 transition-colors">
                         <FaEye className="w-5 h-5" />
                       </button>
                     </div>
