@@ -10,6 +10,12 @@ import MaintenanceRequestTracker from "./pages/MaintenanceHead/MaintenanceTracke
 import EquipmentLogContainer from "./pages/MaintenanceHead/EquipmentLog";
 import ServiceHistoryContainer from "./pages/MaintenanceHead/MaintenanceLog";
 import TechnicianAssignmentMain from "./pages/MaintenanceHead/TechnicianAssign";
+import TechnicianAssignmentContainer from "./pages/MaintenanceHead/UpcomingSchedule";
+import NextScheduleContainer from "./pages/MaintenanceHead/UpcomingSchedule";
+import TaskCompleteContainer from "./pages/MaintenanceHead/TaskComplete";
+import WorkerProfile from "./pages/MaintenanceHead/WorkerProfile";
+import ProfileManagement from "./pages/MaintenanceHead/MaintenanceProfile";
+import MaintenanceScheduling from "./pages/MaintenanceHead/MaintenanceScheduling";
 
 export const routes = createBrowserRouter([
   {
@@ -55,5 +61,25 @@ export const routes = createBrowserRouter([
   {
     path: "/technician-assignment",
     element: <TechnicianAssignmentMain />
+  },
+  {
+    path: "/upcoming-maintenance",
+    element: <NextScheduleContainer />
+  },
+  {
+    path: "/task-complete",
+    element: <TaskCompleteContainer/>
+  },
+  {
+    path: "/worker-profile",
+    element: <WorkerProfile/>
+  },
+  {
+    path: "/maintenance-profile",
+    element: <ProfileManagement/>
+  },
+  {
+    path: "/maintenance-scheduling",
+    element: <MaintenanceScheduling/>
   }
 ]);

@@ -1,9 +1,30 @@
-import React from 'react';
+import React, { useState } from 'react';
 import { Calendar, AlertTriangle, CheckCircle, Clock, AlertCircle, Eye, Plus, FileText } from 'lucide-react';
 import ScheduleOverview from '../../components/MaintenanceHead/ScheduleOverview';
+import NavBar from '../../components/NavBar';
+import TeamSection from '../../components/MaintenanceHead/TeamSection';
 
 const MaintenanceDashboard = () => {
+    const [showTeam, setShowTeam] = useState(false);
   return (
+    <>
+    <NavBar
+      links={[
+          { name: "Dashboard", href: "#" },
+          { name: "Task", href: "#" },
+          { name: "Team", href: "#",
+            onClick: () => {
+              // e.preventDefault();
+              console.log("Team link clicked");
+              
+              setShowTeam(true);
+            },
+           },
+          { name: "Equipment", href: "#" },
+          { name: "Request Tracker", href: "#" },
+        ]}
+        showButton={true}
+    />
     <div className="min-h-screen bg-gray-50 p-6">
       <div className="max-w-7xl mx-auto">
         {/* Header */}
@@ -178,6 +199,21 @@ const MaintenanceDashboard = () => {
         </div>
       </div>
     </div>
+
+    {/* Overlay and Team Sidebar */}
+      {showTeam && (
+        <>
+          {/* BLUR OVERLAY */}
+          <div
+            className="fixed inset-0 z-40 bg-black bg-opacity-30 backdrop-blur-sm transition-all"
+            onClick={() => setShowTeam(false)}
+            aria-label="Close team sidebar"
+          />
+          {/* TEAM SIDEBAR */}
+          <TeamSection onClose={() => setShowTeam(false)} />
+        </>
+      )}
+    </>
   );
 };
 

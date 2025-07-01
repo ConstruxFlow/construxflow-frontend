@@ -13,6 +13,7 @@ import {
   Wrench
 } from "lucide-react";
 import EquipmentLogCard from "../../components/MaintenanceHead/EquipmentLogCard";
+import NavBar from "../../components/NavBar";
 
 
 const equipmentData = [
@@ -58,7 +59,28 @@ const equipmentData = [
 ];
 
 export default function EquipmentLogContainer() {
+      const [showTeam, setShowTeam] = useState(false);
   return (
+
+    <>
+      <NavBar
+      links={[
+          { name: "Dashboard", href: "#" },
+          { name: "Task", href: "#" },
+          { name: "Team", href: "#",
+            onClick: () => {
+              // e.preventDefault();
+              console.log("Team link clicked");
+              
+              setShowTeam(true);
+            },
+           },
+          { name: "Equipment", href: "#" },
+          { name: "Request Tracker", href: "#" },
+        ]}
+        showButton={true}
+    />
+    
     <div className="min-h-screen bg-[#F8FAFC] p-6">
       <div className="max-w-7xl mx-auto">
         {/* Header */}
@@ -239,5 +261,6 @@ export default function EquipmentLogContainer() {
         </div>
       </div>
     </div>
+    </>
   );
 }

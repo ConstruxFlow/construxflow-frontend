@@ -1,5 +1,6 @@
 import React, { useState } from 'react';
 import { Upload, Calendar, User, AlertCircle } from 'lucide-react';
+import NavBar from '../../components/NavBar';
 
 const MaintenanceMaterialRequest = () => {
   const [formData, setFormData] = useState({
@@ -32,7 +33,29 @@ const MaintenanceMaterialRequest = () => {
     console.log('Form submitted:', formData);
   };
 
+  const [showTeam, setShowTeam] = useState(false);
   return (
+
+    <>
+    <NavBar
+      links={[
+          { name: "Dashboard", href: "#" },
+          { name: "Task", href: "#" },
+          { name: "Team", href: "#",
+            onClick: () => {
+              // e.preventDefault();
+              console.log("Team link clicked");
+              
+              setShowTeam(true);
+            },
+           },
+          { name: "Equipment", href: "#" },
+          { name: "Request Tracker", href: "#" },
+        ]}
+        showButton={true}
+    />
+    
+    
     <div className="min-h-screen bg-gray-50 p-6">
       <div className="max-w-6xl mx-auto">
         {/* Header */}
@@ -292,6 +315,7 @@ const MaintenanceMaterialRequest = () => {
         </div>
       </div>
     </div>
+    </>
   );
 };
 

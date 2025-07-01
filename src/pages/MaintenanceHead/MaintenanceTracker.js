@@ -1,5 +1,6 @@
 import React, { useState } from 'react';
 import { Filter, Calendar, ChevronDown, ChevronLeft, ChevronRight } from 'lucide-react';
+import NavBar from '../../components/NavBar';
 
 const MaintenanceRequestTracker = () => {
   const [filters, setFilters] = useState({
@@ -11,6 +12,7 @@ const MaintenanceRequestTracker = () => {
 
   const [currentPage, setCurrentPage] = useState(1);
   const totalPages = 6;
+  const [showTeam, setShowTeam] = useState(false);
 
   const requests = [
     {
@@ -73,6 +75,26 @@ const MaintenanceRequestTracker = () => {
   };
 
   return (
+
+    <>
+      <NavBar
+      links={[
+          { name: "Dashboard", href: "#" },
+          { name: "Task", href: "#" },
+          { name: "Team", href: "#",
+            onClick: () => {
+              // e.preventDefault();
+              console.log("Team link clicked");
+              
+              setShowTeam(true);
+            },
+           },
+          { name: "Equipment", href: "#" },
+          { name: "Request Tracker", href: "#" },
+        ]}
+        showButton={true}
+    />
+
     <div className="min-h-screen bg-gray-50 p-6">
       <div className="max-w-7xl mx-auto">
         {/* Header */}
@@ -262,6 +284,7 @@ const MaintenanceRequestTracker = () => {
         </div>
       </div>
     </div>
+    </>
   );
 };
 

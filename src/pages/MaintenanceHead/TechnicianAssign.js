@@ -1,6 +1,7 @@
 import { useState } from "react";
 import { UserPlus } from "lucide-react";
 import TechnicianCard from "../../components/MaintenanceHead/TechnicianCard";
+import NavBar from "../../components/NavBar";
 
 
 const technicians = [
@@ -14,8 +15,28 @@ export default function TechnicianAssignmentMain() {
   const [selectedTech, setSelectedTech] = useState("");
   const [duration, setDuration] = useState("1-2 hours");
   const [instructions, setInstructions] = useState("");
+  const [showTeam, setShowTeam] = useState(false);
 
   return (
+    <>
+    <NavBar
+      links={[
+          { name: "Dashboard", href: "#" },
+          { name: "Task", href: "#" },
+          { name: "Team", href: "#",
+            onClick: () => {
+              // e.preventDefault();
+              console.log("Team link clicked");
+              
+              setShowTeam(true);
+            },
+           },
+          { name: "Equipment", href: "#" },
+          { name: "Request Tracker", href: "#" },
+        ]}
+        showButton={true}
+    />
+
     <div className="min-h-screen bg-[#F8FAFC] flex flex-col md:flex-row items-start justify-center py-8 px-4 gap-8">
       {/* Main Content */}
       <div className="flex-1 max-w-3xl">
@@ -134,5 +155,6 @@ export default function TechnicianAssignmentMain() {
         </div>
       </aside>
     </div>
+    </>
   );
 }

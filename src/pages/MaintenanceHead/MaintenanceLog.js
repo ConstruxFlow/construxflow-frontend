@@ -1,6 +1,7 @@
 import { useState } from "react";
 import { FaDownload } from "react-icons/fa";
 import { MdKeyboardArrowDown, MdKeyboardArrowUp } from "react-icons/md";
+import NavBar from "../../components/NavBar";
 
 const serviceHistory = [
   {
@@ -61,7 +62,29 @@ export default function ServiceHistoryContainer() {
     );
   };
 
+      const [showTeam, setShowTeam] = useState(false);
+
   return (
+    <>
+    <NavBar
+      links={[
+          { name: "Dashboard", href: "#" },
+          { name: "Task", href: "#" },
+          { name: "Team", href: "#",
+            onClick: () => {
+              // e.preventDefault();
+              console.log("Team link clicked");
+              
+              setShowTeam(true);
+            },
+           },
+          { name: "Equipment", href: "#" },
+          { name: "Request Tracker", href: "#" },
+        ]}
+        showButton={true}
+    />
+    
+    
     <div className="min-h-screen bg-[#F8FAFC] py-10 px-2 flex justify-center items-start">
       <div className="w-full max-w-3xl">
         {/* Header */}
@@ -221,5 +244,6 @@ export default function ServiceHistoryContainer() {
         </div>
       </div>
     </div>
+    </>
   );
 }
