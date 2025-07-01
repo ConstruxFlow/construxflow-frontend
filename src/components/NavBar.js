@@ -24,7 +24,7 @@ const NavBar = ({
           {links.map((link, idx) => (
             <a
               key={idx}
-              href={link.href}
+              href={link.path || link.href}
               className="hover:text-web_yellow transition-colors cursor-pointer"
               onClick={(e) => {
                 if (link.onClick) {
