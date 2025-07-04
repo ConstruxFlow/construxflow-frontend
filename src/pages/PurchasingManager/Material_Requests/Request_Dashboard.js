@@ -245,7 +245,7 @@ const MaterialRequestsOverview = () => {
                           {request.requestor}
                         </td>
                         <td className="px-6 py-4 text-sm">
-                          <button onClick={() => navigate(`/purchasing/materialrequests`)} className="text-deep_green hover:text-deep_green/80 transition-colors">
+                          <button onClick={() => navigate(`/purchasing/materialrequests`)} className="text-main_dark  hover:text-deep_green/80 transition-colors">
                             <FaEye className="w-5 h-5" />
                           </button>
                         </td>
@@ -372,7 +372,7 @@ const MaterialRequestsOverview = () => {
                           </span>
                         </td>
                         <td className="px-6 py-4 text-sm">
-                          <button onClick={() => navigate(`/purchasing/materialrequests/mwise`)} className="text-deep_green hover:text-deep_green/80 transition-colors">
+                          <button onClick={() => navigate(`/purchasing/materialrequests/mwise`)} className="text-main_dark hover:text-deep_green/80 transition-colors">
                             <FaEye className="w-5 h-5" />
                           </button>
                         </td>
