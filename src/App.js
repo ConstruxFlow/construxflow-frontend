@@ -22,6 +22,9 @@ import SiteManager_Profile from "./pages/SiteManager/SiteManager_Profile";
 import SiteManagerDashboard from "./pages/SiteManager/SiteManagerDashboard";
 import Existing_Projects_List from "./pages/SiteManager/Existing_Projects_List";
 
+import Admin_Dashbaord from "./pages/Admin/Admin_Dashboard"
+import Admin_Inventory from "./pages/Admin/Admin_Inventory"
+
 export const routes = createBrowserRouter([
   {
     path: "/",
@@ -106,5 +109,13 @@ export const routes = createBrowserRouter([
   {
     path: "/site-manager-profile",
     element: <SiteManager_Profile />
+  },
+  {
+    path: "/admin",
+    element:<Admin_Dashbaord/>
+  },
+  {
+    path: "/admin-inventory",
+    element:<Admin_Inventory/>
   }
 ]);
