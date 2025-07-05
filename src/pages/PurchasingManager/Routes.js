@@ -8,6 +8,7 @@ import SupplierPerformanceEvaluation from "./Suppliers/SupplierPerformanceEvalua
 import SupplierRegPage from "./Suppliers/SupplierRegPage";
 import ReviewQuotations from "./Quotations/ReviewQuotationsOverview";
 import QuotationDetail from "./Quotations/QuotationDetails";
+import SupplierList from "./Suppliers/SupplierList";
 
 export const purchasingManagerRoutes = {
   path: '/purchasing',
@@ -36,6 +37,10 @@ export const purchasingManagerRoutes = {
     {
       path: 'supplier/dashboard',
       element: <SupplierPerformanceEvaluation />,
+    },
+    {
+      path: 'supplier/list',
+      element: <SupplierList />,
     },
     {
       path: 'supplier/register',
