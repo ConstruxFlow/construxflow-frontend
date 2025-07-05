@@ -42,7 +42,11 @@ import MaterialReqDetails from "./pages/PurchasingManager/Material_Requests/Mate
 import MaterialReqDetails_MWise from "./pages/PurchasingManager/Material_Requests/MaterialReqDetails_MWise";
 import CreateMaterialRequest from "./pages/PurchasingManager/Material_Requests/CreateMaterialRequest";
 import SupplierPerformanceEvaluation from "./pages/PurchasingManager/Suppliers/SupplierPerformanceEvaluation";
-import { purchasingManagerRoutes, PurchasingManagerroutes } from "./pages/PurchasingManager/Routes";
+import {
+  purchasingManagerRoutes,
+  PurchasingManagerroutes,
+} from "./pages/PurchasingManager/Routes";
+import { MaintenanceRoute } from "./pages/MaintenanceHead/MaintenanceRoute";
 
 export const routes = createBrowserRouter([
   {
@@ -55,7 +59,7 @@ export const routes = createBrowserRouter([
   },
   {
     path: "/requests",
-    element: <MaterialRequests />
+    element: <MaterialRequests />,
   },
   {
     path: "/requests/:id",
@@ -66,123 +70,83 @@ export const routes = createBrowserRouter([
   { path: "/payments/receive-advanced", element: <ReceiveAdvancedPayment /> },
   { path: "/payments/receive-full", element: <ReceiveFullPayment /> },
 
-   {
+  {
     path: "/orders",
-    element: <PurchasingOrders /> 
+    element: <PurchasingOrders />,
   },
   {
-  path: "/orders/:id",
-  element: <OrderDetails />
-},
+    path: "/orders/:id",
+    element: <OrderDetails />,
+  },
   { path: "/payments", element: <PaymentStatus /> },
 
-{
+  {
     path: "/login",
-    element: <Login />
+    element: <Login />,
   },
-  
+
   // PURCHASING MANAGER
   purchasingManagerRoutes,
 
+  // MAINTENANCE HEAD
+  MaintenanceRoute,
+
+  
   // SITE MANAGER
   {
     path: "/site-manager",
-    element: <SiteManagerDashboard />
+    element: <SiteManagerDashboard />,
   },
   {
     path: "/create-project",
-    element: <Create_Project />
-  },
-  {
-    path: "/maintenance-dashboard",
-    element: <MaintenanceDashboard/>
-  },
-  {
-    path: "/maintenance-requests",
-    element: <MaintenanceMaterialRequest/>
-  },
-  {
-    path: "/maintenance-tracker",
-    element: <MaintenanceRequestTracker/>
-  },
-  {
-    path: "equipment",
-    element: <EquipmentLogContainer/>
-  },
-  {
-    path: "/maintenance-log",
-    element: <ServiceHistoryContainer />
-  },
-  {
-    path: "/technician-assignment",
-    element: <TechnicianAssignmentMain />
-  },
-  {
-    path: "/upcoming-maintenance",
-    element: <NextScheduleContainer />
-  },
-  {
-    path: "/task-complete",
-    element: <TaskCompleteContainer/>
-  },
-  {
-    path: "/worker-profile",
-    element: <WorkerProfile/>
-  },
-  {
-    path: "/maintenance-profile",
-    element: <ProfileManagement/>
-  },
-  {
-    path: "/maintenance-scheduling",
-    element: <MaintenanceScheduling/>
+    element: <Create_Project />,
   },
   {
     path: "/edit-project",
-    element: <Edit_Project />
+    element: <Edit_Project />,
   },
   {
     path: "/projects-list",
-    element: <Existing_Projects_List />
+    element: <Existing_Projects_List />,
   },
   {
     path: "/project-phase",
-    element: <Project_Phase />
+    element: <Project_Phase />,
   },
   {
     path: "/material-request",
-    element: <Create_Material_Request />
+    element: <Create_Material_Request />,
   },
   {
     path: "/material-request-list",
-    element: <Material_Request />
+    element: <Material_Request />,
   },
   {
     path: "/site-equipment-info",
-    element: <Site_EquipmentInfo />
+    element: <Site_EquipmentInfo />,
   },
   {
     path: "/site-equipment-request",
-    element: <Site_EquipmentRequest />
+    element: <Site_EquipmentRequest />,
   },
   {
     path: "/site-material-info",
-    element: <Site_MaterialInfo />
+    element: <Site_MaterialInfo />,
   },
   {
     path: "/site-material-add",
-    element: <Site_MaterialAdd />
+    element: <Site_MaterialAdd />,
   },
   {
     path: "/site-material-update",
-    element: <Site_MaterialUpdate />
+    element: <Site_MaterialUpdate />,
   },
   {
     path: "/purchase-order",
-    element: <Purchase_Order />
+    element: <Purchase_Order />,
   },
   {
     path: "/site-manager-profile",
-    element: <SiteManager_Profile />
-  }
+    element: <SiteManager_Profile />,
+  },
 ]);
