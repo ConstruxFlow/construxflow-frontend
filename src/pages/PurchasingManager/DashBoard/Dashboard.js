@@ -4,6 +4,10 @@ import { MdOutlinePendingActions } from "react-icons/md";
 import { LiaNotesMedicalSolid } from "react-icons/lia";
 import { GrDeliver } from "react-icons/gr";
 import { IoMdCheckmark } from "react-icons/io";
+import { FaUser } from "react-icons/fa";
+import { TfiWrite } from "react-icons/tfi";
+import { IoSearch } from "react-icons/io5";
+import { SiGoogleanalytics } from "react-icons/si";
 
 const PurchasingDashboard = () => {
   return (
@@ -33,15 +37,30 @@ const PurchasingDashboard = () => {
           </div>
 
           {/* Urgent Actions Alert */}
-          <div className="bg-yellow-50 border border-web_yellow rounded-lg p-4 mb-6 flex items-start gap-3">
-            <div className="text-web_yellow text-lg mt-0.5">⚠</div>
-            <div>
-              <h3 className="font-semibold text-sm text-main_dark mb-0.5">
-                Urgent Actions Required
-              </h3>
-              <p className="text-slatebluegray text-xs">
-                3 delayed deliveries • 2 low stock alerts • 1 pending approval
-              </p>
+          <div className="bg-gradient-to-r from-web_yellow/15 via-web_yellow/8 to-transparent border-l-4 border-web_yellow rounded-lg p-4 mb-5 shadow-lg">
+            <div className="flex items-start gap-4">
+              <div className="w-10 h-10 bg-gradient-to-br from-web_yellow to-web_yellow/80 rounded-full flex items-center justify-center text-main_dark text-lg font-bold shadow-lg animate-pulse">
+                ⚠
+              </div>
+              <div className="flex-1">
+                <h3 className="font-bold text-base text-main_dark mb-2">
+                  Urgent Actions Required
+                </h3>
+                <div className="flex flex-wrap gap-3 text-sm">
+                  <span className="flex items-center gap-2 bg-purewhite px-3 py-1.5 rounded-full shadow-md border border-web_yellow/20">
+                    <div className="w-3 h-3 bg-gradient-to-r from-web_yellow to-web_yellow/70 rounded-full animate-pulse"></div>
+                    <span className="text-main_dark font-medium">3 delayed deliveries</span>
+                  </span>
+                  <span className="flex items-center gap-2 bg-purewhite px-3 py-1.5 rounded-full shadow-md border border-deep_green/20">
+                    <div className="w-3 h-3 bg-gradient-to-r from-deep_green to-deep_green/70 rounded-full animate-pulse"></div>
+                    <span className="text-main_dark font-medium">2 low stock alerts</span>
+                  </span>
+                  <span className="flex items-center gap-2 bg-purewhite px-3 py-1.5 rounded-full shadow-md border border-light_brown/30">
+                    <div className="w-3 h-3 bg-gradient-to-r from-light_brown to-light_brown/70 rounded-full animate-pulse"></div>
+                    <span className="text-main_dark font-medium">1 pending approval</span>
+                  </span>
+                </div>
+              </div>
             </div>
           </div>
 
@@ -53,9 +72,9 @@ const PurchasingDashboard = () => {
                 <h3 className="text-xl sm:text-2xl font-bold text-main_dark leading-tight mb-0.5">24</h3>
                 <span className="text-deep_green text-xs">+3 from yesterday</span>
               </div>
-              <div className="w-11 h-11 bg-web_yellow rounded-lg flex items-center justify-center text-white text-lg flex-shrink-0">
-                <MdOutlinePendingActions/>
-              </div>
+              <div className="w-12 h-12 bg-gradient-to-br from-web_yellow via-web_yellow to-web_yellow/80 rounded-xl flex items-center justify-center shadow-lg group-hover:scale-110 group-hover:rotate-3 transition-all duration-300">
+                  <MdOutlinePendingActions className="text-purewhite text-lg"/>
+                </div>
             </div>
 
             <div className="bg-purewhite border border-gray-200 rounded-xl p-4 sm:p-5 flex items-center gap-3 sm:gap-4 shadow-sm hover:shadow-md hover:-translate-y-0.5 transition-all duration-150">
@@ -64,8 +83,8 @@ const PurchasingDashboard = () => {
                 <h3 className="text-xl sm:text-2xl font-bold text-main_dark leading-tight mb-0.5">18</h3>
                 <span className="text-deep_green text-xs">87% approval rate</span>
               </div>
-              <div className="w-11 h-11 bg-deep_green rounded-lg flex items-center justify-center text-white text-lg flex-shrink-0">
-                <IoMdCheckmark/>
+              <div className="w-12 h-12 bg-gradient-to-br from-web_yellow via-web_yellow to-web_yellow/80 rounded-xl flex items-center justify-center shadow-lg group-hover:scale-110 group-hover:rotate-3 transition-all duration-300">
+                <IoMdCheckmark className="text-purewhite text-lg"/>
               </div>
             </div>
 
@@ -75,8 +94,8 @@ const PurchasingDashboard = () => {
                 <h3 className="text-xl sm:text-2xl font-bold text-main_dark leading-tight mb-0.5">12</h3>
                 <span className="text-deep_green text-xs">5 expiring soon</span>
               </div>
-              <div className="w-11 h-11 bg-light_brown rounded-lg flex items-center justify-center text-gray-900 text-lg flex-shrink-0">
-                <LiaNotesMedicalSolid/>
+              <div className="w-12 h-12 bg-gradient-to-br from-web_yellow via-web_yellow to-web_yellow/80 rounded-xl flex items-center justify-center shadow-lg group-hover:scale-110 group-hover:rotate-3 transition-all duration-300">
+                <LiaNotesMedicalSolid className="text-purewhite text-lg"/>
               </div>
             </div>
 
@@ -86,8 +105,8 @@ const PurchasingDashboard = () => {
                 <h3 className="text-xl sm:text-2xl font-bold text-main_dark leading-tight mb-0.5">156</h3>
                 <span className="text-deep_green text-xs">92% performance avg</span>
               </div>
-              <div className="w-11 h-11 bg-light_gray rounded-lg flex items-center justify-center text-gray-900 text-lg flex-shrink-0">
-                <GrDeliver/>
+              <div className="w-12 h-12 bg-gradient-to-br from-web_yellow via-web_yellow to-web_yellow/80 rounded-xl flex items-center justify-center shadow-lg group-hover:scale-110 group-hover:rotate-3 transition-all duration-300">
+                <GrDeliver className="text-purewhite text-lg"/>
               </div>
             </div>
           </div>
@@ -98,23 +117,23 @@ const PurchasingDashboard = () => {
               Quick Actions
             </h2>
             <div className="grid grid-cols-2 lg:grid-cols-4 gap-3 sm:gap-4">
-              <div className="bg-purewhite border border-gray-200 hover:border-web_yellow rounded-lg p-4 sm:p-5 text-center cursor-pointer hover:-translate-y-0.5 hover:shadow-md transition-all duration-150">
-                <div className="text-xl sm:text-2xl mb-2">👤</div>
+              <div className="bg-purewhite border-2  hover:border-web_yellow rounded-lg p-4 sm:p-5 text-center cursor-pointer hover:-translate-y-0.5 hover:shadow-md transition-all duration-150">
+                <div className="text-xl flex justify-center text-deep_green sm:text-2xl mb-2"><FaUser/></div>
                 <span className="font-medium text-main_dark text-xs sm:text-sm">Register Supplier</span>
               </div>
-              
-              <div className="bg-purewhite border border-gray-200 hover:border-deep_green rounded-lg p-4 sm:p-5 text-center cursor-pointer hover:-translate-y-0.5 hover:shadow-md transition-all duration-150">
-                <div className="text-xl sm:text-2xl mb-2">📝</div>
+
+              <div className="bg-purewhite border-2 hover:border-web_yellow rounded-lg p-4 sm:p-5 text-center cursor-pointer hover:-translate-y-0.5 hover:shadow-md transition-all duration-150">
+                <div className="text-xl flex justify-center text-deep_green sm:text-2xl mb-2"><TfiWrite/></div>
                 <span className="font-medium text-main_dark text-xs sm:text-sm">Create Request</span>
               </div>
-              
-              <div className="bg-purewhite border border-gray-200 hover:border-light_brown rounded-lg p-4 sm:p-5 text-center cursor-pointer hover:-translate-y-0.5 hover:shadow-md transition-all duration-150">
-                <div className="text-xl sm:text-2xl mb-2">🔍</div>
+
+              <div className="bg-purewhite border-2 hover:border-web_yellow rounded-lg p-4 sm:p-5 text-center cursor-pointer hover:-translate-y-0.5 hover:shadow-md transition-all duration-150">
+                <div className="text-xl flex justify-center text-deep_green sm:text-2xl mb-2"><IoSearch/></div>
                 <span className="font-medium text-main_dark text-xs sm:text-sm">Review Quotes</span>
               </div>
-              
-              <div className="bg-purewhite border border-gray-200 hover:border-light_gray rounded-lg p-4 sm:p-5 text-center cursor-pointer hover:-translate-y-0.5 hover:shadow-md transition-all duration-150">
-                <div className="text-xl sm:text-2xl mb-2">📊</div>
+
+              <div className="bg-purewhite border-2 hover:border-web_yellow rounded-lg p-4 sm:p-5 text-center cursor-pointer hover:-translate-y-0.5 hover:shadow-md transition-all duration-150">
+                <div className="text-xl flex justify-center text-deep_green sm:text-2xl mb-2"><SiGoogleanalytics/></div>
                 <span className="font-medium text-main_dark text-xs sm:text-sm">View Reports</span>
               </div>
             </div>
