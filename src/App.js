@@ -3,6 +3,18 @@ import Home from "./pages/Home";
 import Login from "./pages/Login";
 import PurchasingDashboard from "./pages/PurchasingManager/DashBoard/Dashboard";
 import Create_Project from "./pages/SiteManager/Create_Project";
+import MaintenanceDashboard from "./pages/MaintenanceHead/MaintenanceDashboard";
+import MaintenanceMaterialRequest from "./pages/MaintenanceHead/MaintenanceMaterialRequest";
+import MaintenanceRequestTracker from "./pages/MaintenanceHead/MaintenanceTracker";
+import EquipmentLogContainer from "./pages/MaintenanceHead/EquipmentLog";
+import ServiceHistoryContainer from "./pages/MaintenanceHead/MaintenanceLog";
+import TechnicianAssignmentMain from "./pages/MaintenanceHead/TechnicianAssign";
+import TechnicianAssignmentContainer from "./pages/MaintenanceHead/UpcomingSchedule";
+import NextScheduleContainer from "./pages/MaintenanceHead/UpcomingSchedule";
+import TaskCompleteContainer from "./pages/MaintenanceHead/TaskComplete";
+import WorkerProfile from "./pages/MaintenanceHead/WorkerProfile";
+import ProfileManagement from "./pages/MaintenanceHead/MaintenanceProfile";
+import MaintenanceScheduling from "./pages/MaintenanceHead/MaintenanceScheduling";
 import SupplierDashboard from "./pages/Supplier/SupplierDashboard";
 import MaterialRequests from "./pages/Supplier/MaterialRequests";
 import RequestDetails from "./pages/Supplier/RequestDetails";
@@ -31,7 +43,11 @@ import MaterialReqDetails from "./pages/PurchasingManager/Material_Requests/Mate
 import MaterialReqDetails_MWise from "./pages/PurchasingManager/Material_Requests/MaterialReqDetails_MWise";
 import CreateMaterialRequest from "./pages/PurchasingManager/Material_Requests/CreateMaterialRequest";
 import SupplierPerformanceEvaluation from "./pages/PurchasingManager/Suppliers/SupplierPerformanceEvaluation";
-import { purchasingManagerRoutes, PurchasingManagerroutes } from "./pages/PurchasingManager/Routes";
+import {
+  purchasingManagerRoutes,
+  PurchasingManagerroutes,
+} from "./pages/PurchasingManager/Routes";
+import { MaintenanceRoute } from "./pages/MaintenanceHead/MaintenanceRoute";
 
 export const routes = createBrowserRouter([
   {
@@ -44,7 +60,7 @@ export const routes = createBrowserRouter([
   },
   {
     path: "/requests",
-    element: <MaterialRequests />
+    element: <MaterialRequests />,
   },
   {
     path: "/requests/:id",
@@ -55,29 +71,33 @@ export const routes = createBrowserRouter([
   { path: "/payments/receive-advanced", element: <ReceiveAdvancedPayment /> },
   { path: "/payments/receive-full", element: <ReceiveFullPayment /> },
 
-   {
+  {
     path: "/orders",
-    element: <PurchasingOrders /> 
+    element: <PurchasingOrders />,
   },
   {
-  path: "/orders/:id",
-  element: <OrderDetails />
-},
+    path: "/orders/:id",
+    element: <OrderDetails />,
+  },
   { path: "/payments", element: <PaymentStatus /> },
   { path: "/supplierprofile", element: <SupplierProfile /> },
 
-{
+  {
     path: "/login",
-    element: <Login />
+    element: <Login />,
   },
-  
+
   // PURCHASING MANAGER
   purchasingManagerRoutes,
 
+  // MAINTENANCE HEAD
+  MaintenanceRoute,
+
+  
   // SITE MANAGER
   {
     path: "/site-manager",
-    element: <SiteManagerDashboard />
+    element: <SiteManagerDashboard />,
   },
   {
     path: "/create-project",
@@ -85,50 +105,50 @@ export const routes = createBrowserRouter([
   },
   {
     path: "/edit-project",
-    element: <Edit_Project />
+    element: <Edit_Project />,
   },
   {
     path: "/projects-list",
-    element: <Existing_Projects_List />
+    element: <Existing_Projects_List />,
   },
   {
     path: "/project-phase",
-    element: <Project_Phase />
+    element: <Project_Phase />,
   },
   {
     path: "/material-request",
-    element: <Create_Material_Request />
+    element: <Create_Material_Request />,
   },
   {
     path: "/material-request-list",
-    element: <Material_Request />
+    element: <Material_Request />,
   },
   {
     path: "/site-equipment-info",
-    element: <Site_EquipmentInfo />
+    element: <Site_EquipmentInfo />,
   },
   {
     path: "/site-equipment-request",
-    element: <Site_EquipmentRequest />
+    element: <Site_EquipmentRequest />,
   },
   {
     path: "/site-material-info",
-    element: <Site_MaterialInfo />
+    element: <Site_MaterialInfo />,
   },
   {
     path: "/site-material-add",
-    element: <Site_MaterialAdd />
+    element: <Site_MaterialAdd />,
   },
   {
     path: "/site-material-update",
-    element: <Site_MaterialUpdate />
+    element: <Site_MaterialUpdate />,
   },
   {
     path: "/purchase-order",
-    element: <Purchase_Order />
+    element: <Purchase_Order />,
   },
   {
     path: "/site-manager-profile",
-    element: <SiteManager_Profile />
-  }
+    element: <SiteManager_Profile />,
+  },
 ]);

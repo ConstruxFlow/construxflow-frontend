@@ -5,6 +5,11 @@ import MaterialReqDetails from "./Material_Requests/MaterialReqDetails";
 import MaterialReqDetails_MWise from "./Material_Requests/MaterialReqDetails_MWise";
 import MaterialRequestsOverview from "./Material_Requests/Request_Dashboard";
 import SupplierPerformanceEvaluation from "./Suppliers/SupplierPerformanceEvaluation";
+import SupplierRegPage from "./Suppliers/SupplierRegPage";
+import ReviewQuotations from "./Quotations/ReviewQuotationsOverview";
+import QuotationDetail from "./Quotations/QuotationDetails";
+import SupplierList from "./Suppliers/SupplierList";
+import SupplierDetail from "./Suppliers/SupplierDetails";
 
 export const purchasingManagerRoutes = {
   path: '/purchasing',
@@ -34,6 +39,26 @@ export const purchasingManagerRoutes = {
       path: 'supplier/dashboard',
       element: <SupplierPerformanceEvaluation />,
     },
+    {
+      path: 'supplier/list',
+      element: <SupplierList />,
+    },
+    {
+      path: 'supplier/details',
+      element: <SupplierDetail />,
+    },
+    {
+      path: 'supplier/register',
+      element: <SupplierRegPage />,
+    },
+    {
+      path: 'quotations/dashboard',
+      element: <ReviewQuotations />,
+    },
+    {
+      path: 'quotations/details',
+      element: <QuotationDetail />,
+    }
   ]
 };
 
