@@ -3,42 +3,35 @@ import React from "react";
 import { FaCalendarAlt, FaUserTie } from "react-icons/fa";
 import NavBar from "../../components/NavBar";
 import { useNavigate } from "react-router-dom";
+import { FiDownload } from "react-icons/fi";
 
 const navLinks = [
   { name: "Dashboard", href: "/dashboard1" },
   { name: "Requests", href: "/requests", active: true },
   { name: "Quotations", href: "/quotations" },
   { name: "Orders", href: "/orders" },
-  { name: "Payments", href: "/payments" },
-  { name: "Profile", href: "/profile" }
+  { name: "Payments", href: "/payments" }
 ];
 
 const request = {
   id: "#REQ-2024-0156",
-  title: "High-Precision Industrial Sensors",
-  status: "Pending",
-  priority: "High Priority",
-  materialType: "Industrial Sensors",
-  quantity: "250 units",
-  deliveryDeadline: "March 15, 2024",
-  requestedBy: "Construction Manager",
+  requestedBy: "John Smith",
+  requestedDate: "March 15, 2024",
   quotationDeadline: "February 17, 2024",
-  budget: "$15,000 - $20,000",
-  description:
-    "We require high-precision industrial sensors for our smart building automation system. The sensors must be compatible with IoT protocols and capable of monitoring temperature, humidity, and air quality. They should have wireless connectivity and battery life of at least 2 years. Certification for industrial environments is mandatory.",
-  deliverySchedule: [
-    {
-      location: "Warehouse A",
-      date: "02/24/2024",
-      quantity: "100",
-    },
+  priority: "High Priority",
+  status: "Pending",
+  materials: [
+    { name: "Steel Pipes", type: "Grade 60", quantity: "500 units" },
+    { name: "Concrete Mix", type: "Type II", quantity: "25 bags" }
   ],
-  technical: {
-    temperature: "-20°C to +70°C",
-    accuracy: "±0.1°C",
-    connectivity: "LoRaWAN, WiFi",
-    power: "3.6V Lithium Battery",
-  },
+  deliverySchedule: [
+    { location: "Warehouse A", date: "02/24/2024", quantity: "100" }
+  ],
+  description: "",
+  attachments: [
+    { name: "Material Specifications.pdf", size: "2.3 MB" },
+    { name: "Site Layout.jpg", size: "1.8 MB" }
+  ]
 };
 
 const RequestDetails = () => {
@@ -61,8 +54,7 @@ const RequestDetails = () => {
         {/* Header */}
         <div className="bg-deep_green px-8 py-6 flex flex-col md:flex-row md:items-center md:justify-between">
           <div>
-            <h2 className="text-purewhite text-2xl font-bold mb-1">{request.title}</h2>
-            <div className="text-web_yellow text-sm font-medium">Request ID: {request.id}</div>
+            <div className="text-purewhite text-lg font-semibold mb-1">Request ID: {request.id}</div>
           </div>
           <div className="mt-3 md:mt-0 flex gap-2">
             <span className="bg-main_dark text-purewhite px-4 py-1 rounded-full text-sm font-medium">
@@ -77,35 +69,20 @@ const RequestDetails = () => {
         {/* Details Section */}
         <div className="px-8 pt-8 pb-2">
           <div className="grid grid-cols-1 md:grid-cols-2 gap-4 mb-6">
-            {/* Material Type */}
-            <div className="bg-purewhite border border-light_gray rounded-lg p-5 flex flex-col gap-1">
-              <div className="text-slatebluegray text-sm font-medium mb-1">Material Type</div>
-              <div className="flex items-center gap-2 text-main_dark">
-                <FaUserTie className="text-deep_green" />
-                <span>{request.materialType}</span>
-              </div>
-            </div>
-            {/* Quantity Required */}
-            <div className="bg-purewhite border border-light_gray rounded-lg p-5 flex flex-col gap-1">
-              <div className="text-slatebluegray text-sm font-medium mb-1">Quantity Required</div>
-              <div className="flex items-center gap-2 text-main_dark font-bold text-lg">
-                <span className="text-lg">{request.quantity}</span>
-              </div>
-            </div>
-            {/* Delivery Deadline */}
-            <div className="bg-purewhite border border-light_gray rounded-lg p-5 flex flex-col gap-1">
-              <div className="text-slatebluegray text-sm font-medium mb-1">Delivery Deadline</div>
-              <div className="flex items-center gap-2 text-main_dark">
-                <FaCalendarAlt className="text-deep_green" />
-                <span>{request.deliveryDeadline}</span>
-              </div>
-            </div>
             {/* Requested By */}
             <div className="bg-purewhite border border-light_gray rounded-lg p-5 flex flex-col gap-1">
               <div className="text-slatebluegray text-sm font-medium mb-1">Requested By</div>
               <div className="flex items-center gap-2 text-main_dark">
                 <FaUserTie className="text-deep_green" />
                 <span>{request.requestedBy}</span>
+              </div>
+            </div>
+            {/* Requested Date */}
+            <div className="bg-purewhite border border-light_gray rounded-lg p-5 flex flex-col gap-1">
+              <div className="text-slatebluegray text-sm font-medium mb-1">Requested Date</div>
+              <div className="flex items-center gap-2 text-main_dark">
+                <FaCalendarAlt className="text-deep_green" />
+                <span>{request.requestedDate}</span>
               </div>
             </div>
             {/* Quotation Deadline */}
@@ -116,21 +93,28 @@ const RequestDetails = () => {
                 <span>{request.quotationDeadline}</span>
               </div>
             </div>
-            {/* Budget Range */}
+            {/* Priority Level */}
             <div className="bg-purewhite border border-light_gray rounded-lg p-5 flex flex-col gap-1">
-              <div className="text-slatebluegray text-sm font-medium mb-1">Budget Range</div>
-              <div className="flex items-center gap-2 text-main_dark font-semibold">
-                <span className="text-deep_green">$</span>
-                <span>{request.budget}</span>
+              <div className="text-slatebluegray text-sm font-medium mb-1">Priority Level</div>
+              <div className="flex items-center gap-2 text-main_dark">
+                <span>{request.priority}</span>
               </div>
             </div>
           </div>
 
-          {/* Description & Requirements */}
+          {/* Requested Materials */}
           <div className="mb-6">
-            <div className="text-slatebluegray text-sm font-semibold mb-1">Description & Requirements</div>
+            <div className="text-slatebluegray text-sm font-semibold mb-1">Requested Materials</div>
             <div className="bg-purewhite border border-light_gray rounded-lg p-5 text-main_dark text-sm">
-              {request.description}
+              {request.materials.map((mat, idx) => (
+                <div key={idx} className="flex justify-between items-center py-2 border-b last:border-b-0">
+                  <div>
+                    <div className="font-medium">{mat.name}</div>
+                    <div className="text-xs text-slatebluegray">Type : {mat.type}</div>
+                  </div>
+                  <div className="font-semibold">{mat.quantity}</div>
+                </div>
+              ))}
             </div>
           </div>
 
@@ -172,26 +156,36 @@ const RequestDetails = () => {
             </div>
           </div>
 
-          {/* Technical Specifications */}
+          {/* Description & Requirements */}
           <div className="mb-6">
-            <div className="text-slatebluegray text-sm font-semibold mb-1">Technical Specifications</div>
-            <div className="grid grid-cols-1 md:grid-cols-4 gap-4 text-main_dark text-sm border border-light_gray bg-purewhite rounded-lg px-4 py-3">
-              <div>
-                <span className="font-medium">Operating Temperature:</span>
-                <span className="ml-1">{request.technical.temperature}</span>
-              </div>
-              <div>
-                <span className="font-medium">Accuracy:</span>
-                <span className="ml-1">{request.technical.accuracy}</span>
-              </div>
-              <div>
-                <span className="font-medium">Connectivity:</span>
-                <span className="ml-1">{request.technical.connectivity}</span>
-              </div>
-              <div>
-                <span className="font-medium">Power Supply:</span>
-                <span className="ml-1">{request.technical.power}</span>
-              </div>
+            <div className="text-slatebluegray text-sm font-semibold mb-1">Description & Requirements</div>
+            <div className="bg-purewhite border border-light_gray rounded-lg p-5 text-main_dark text-sm min-h-[48px]">
+              Additional Requirements or specifications…..
+            </div>
+          </div>
+
+          {/* Attachments */}
+          <div className="mb-6">
+            <div className="text-slatebluegray text-sm font-semibold mb-1">Attachments</div>
+            <div className="bg-purewhite border border-light_gray rounded-lg p-5 text-main_dark text-sm flex flex-col gap-3">
+              {request.attachments.map((file, idx) => (
+                <div key={idx} className="flex items-center gap-3">
+                  <div className={`w-8 h-8 flex items-center justify-center rounded bg-${file.name.endsWith('.pdf') ? 'red-100' : 'blue-100'}`}>
+                    {file.name.endsWith('.pdf') ? (
+                      <span className="text-red-600 text-xl">📄</span>
+                    ) : (
+                      <span className="text-blue-600 text-xl">🖼️</span>
+                    )}
+                  </div>
+                  <div className="flex-1">
+                    <div className="font-medium">{file.name}</div>
+                    <div className="text-xs text-slatebluegray">{file.size}</div>
+                  </div>
+                  <button className="p-2 rounded hover:bg-light_gray transition">
+                    <FiDownload className="text-xl" />
+                  </button>
+                </div>
+              ))}
             </div>
           </div>
         </div>
@@ -204,12 +198,12 @@ const RequestDetails = () => {
           >
             Send Quotation
           </button>
-          <a
-            href="/requests"
+          <button
             className="flex-1 flex items-center justify-center bg-deep_green text-purewhite font-medium py-3 rounded-lg hover:opacity-90 transition"
+            onClick={() => navigate("/requests")}
           >
             &larr; Back to Requests
-          </a>
+          </button>
         </div>
       </div>
     </div>
@@ -217,6 +211,7 @@ const RequestDetails = () => {
 };
 
 export default RequestDetails;
+
 
 
 
