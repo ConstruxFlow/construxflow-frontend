@@ -204,13 +204,14 @@ const SupplierList = () => {
                 <table className="w-full">
                   <thead className="bg-light_gray/30">
                     <tr>
+                      <th className="px-6 py-4 text-left text-sm font-semibold text-main_dark">Company</th>
                       <th className="px-6 py-4 text-left text-sm font-semibold text-main_dark">Supplier</th>
                       <th className="px-6 py-4 text-left text-sm font-semibold text-main_dark">Category</th>
                       <th className="px-6 py-4 text-left text-sm font-semibold text-main_dark">Contact</th>
                       <th className="px-6 py-4 text-left text-sm font-semibold text-main_dark">Rating</th>
                       <th className="px-6 py-4 text-left text-sm font-semibold text-main_dark">Orders</th>
                       <th className="px-6 py-4 text-left text-sm font-semibold text-main_dark">Status</th>
-                      <th className="px-6 py-4 text-left text-sm font-semibold text-main_dark">Actions</th>
+                      <th className="px-6 py-4  text-sm font-semibold text-main_dark">Actions</th>
                     </tr>
                   </thead>
                   <tbody className="divide-y divide-gray-200">
@@ -218,13 +219,16 @@ const SupplierList = () => {
                       <tr key={supplier.id} className="hover:bg-gray-50 transition-colors">
                         <td className="px-6 py-4">
                           <div>
-                            <div className="font-semibold text-main_dark text-sm">{supplier.name}</div>
-                            <div className="text-xs text-gray-500 flex items-center gap-1">
-                              <FaMapMarkerAlt className="w-3 h-3" />
-                              {supplier.location}
-                            </div>
+                            <div className="font-semibold text-main_dark text-sm">{supplier.company_name}</div>
+                            
                           </div>
                         </td>
+                          <td className="px-6 py-4">
+                            <div>
+                              <div className="font-semibold text-main_dark text-sm">{supplier.name}</div>
+                              
+                            </div>
+                          </td>
                         <td className="px-6 py-4 text-sm text-gray-600">{supplier.category}</td>
                         <td className="px-6 py-4">
                           <div className="text-sm">
@@ -255,16 +259,16 @@ const SupplierList = () => {
                           </span>
                         </td>
                         <td className="px-6 py-4">
-                          <div className="flex items-center gap-2">
-                            <button className="text-deep_green hover:text-deep_green/80 transition-colors">
+                          <div className="flex items-center justify-center gap-2">
+                            <button onClick={()=>navigate('/purchasing/supplier/details',{ state: { supplierId: supplier.supplier_id }})} className="text-deep_green hover:text-deep_green/80 transition-colors">
                               <FaEye className="w-4 h-4" />
                             </button>
-                            <button className="text-gray-600 hover:text-gray-800 transition-colors">
+                            {/* <button className="text-gray-600 hover:text-gray-800 transition-colors">
                               <FaEdit className="w-4 h-4" />
                             </button>
                             <button className="text-red-500 hover:text-red-700 transition-colors">
                               <FaTrash className="w-4 h-4" />
-                            </button>
+                            </button> */}
                           </div>
                         </td>
                       </tr>
