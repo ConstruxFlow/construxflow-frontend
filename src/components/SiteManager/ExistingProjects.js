@@ -57,6 +57,7 @@ const ExistingProjects = () => {
         <button
             className="px-4 py-2 text-black font-semibold rounded-lg"
             style={{ backgroundColor: '#EFC11A' }}
+            onClick={() => window.location.href = '/projects-list/create-project'}
         >
             + New Project
         </button>
@@ -95,6 +96,7 @@ const ExistingProjects = () => {
               <button 
                 className="text-white px-3 py-1 rounded text-sm flex items-center gap-1"
                 style={{backgroundColor: '#236571'}}
+                onClick={() => window.location.href = '/projects-list/edit-project'}
               >
                 ✏️ Edit
               </button>

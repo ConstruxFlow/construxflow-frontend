@@ -102,23 +102,23 @@ export const routes = createBrowserRouter([
     element: <SiteManagerDashboard />,
   },
   {
-    path: "/create-project",
-    element: <Create_Project />,
-  },
-  {
-    path: "/edit-project",
-    element: <Edit_Project />,
-  },
-  {
     path: "/projects-list",
     element: <Existing_Projects_List />,
   },
   {
-    path: "/project-phase",
+    path: "/projects-list/create-project",
+    element: <Create_Project />,
+  },
+  {
+    path: "/projects-list/edit-project",
+    element: <Edit_Project />,
+  },
+  {
+    path: "/projects-list/create-project/project-phase",
     element: <Project_Phase />,
   },
   {
-    path: "/material-request",
+    path: "/material-request-list/material-request",
     element: <Create_Material_Request />,
   },
   {
