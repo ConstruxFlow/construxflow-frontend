@@ -26,6 +26,7 @@ import PaymentStatus from "./pages/Supplier/PaymentStatus";
 import ReceiveAdvancedPayment from "./pages/Supplier/ReceiveAdvancedPayment";
 import ReceiveFullPayment from "./pages/Supplier/ReceiveFullPayment";
 import SupplierProfile from "./pages/Supplier/Profile";
+import SupplierProfileEdit from "./pages/Supplier/EditProfile";
 import Edit_Project from "./pages/SiteManager/Edit_Project";
 import Project_Phase from "./pages/SiteManager/Project_Phase";
 import Create_Material_Request from "./pages/SiteManager/Create_Material_Request";
@@ -81,6 +82,7 @@ export const routes = createBrowserRouter([
   },
   { path: "/payments", element: <PaymentStatus /> },
   { path: "/supplierprofile", element: <SupplierProfile /> },
+  { path: "/supplierprofile/edit", element: <SupplierProfileEdit /> },
 
   {
     path: "/login",
