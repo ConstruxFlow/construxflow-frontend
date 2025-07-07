@@ -227,6 +227,7 @@ export default function Material_Request_List() {
                       <button 
                         className="flex items-center px-3 py-1 text-white font-medium rounded-lg shadow-sm hover:opacity-90 transition-opacity text-sm"
                         style={{ backgroundColor: '#236571' }}
+                        onClick={() => window.location.href = '/material-request-list/material-request'}
                       >
                         <Plus className="w-3 h-3 mr-1" />
                         New Request

@@ -66,7 +66,7 @@ const Create_ProjectForm = () => {
   };
 
   const handleCreatePhases = () => {
-    console.log('Creating project phases');
+    window.location.href = '/projects-list/create-project/project-phase';
   };
 
   return (
@@ -259,7 +259,7 @@ const Create_ProjectForm = () => {
             </div>
 
             <button
-                onClick={handleCreatePhases}
+                onClick={() => window.location.href = '/projects-list/create-project/project-phase'}
                 className="inline-flex items-center px-6 py-2 bg-[#EFC11A] text-gray-900 font-medium rounded-md hover:bg-yellow-400 transition-colors"
             >
                 Create Phases
