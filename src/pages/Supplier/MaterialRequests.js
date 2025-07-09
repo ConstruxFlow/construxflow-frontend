@@ -1,6 +1,6 @@
 // src/pages/Supplier/MaterialRequests.jsx
 import React, { useState } from "react";
-import { FaSearch, FaEye, FaReply, FaDownload, FaCalendarAlt, FaChevronDown } from "react-icons/fa";
+import { FaSearch, FaEye, FaReply, FaChevronDown } from "react-icons/fa";
 import { MdFilterList } from "react-icons/md";
 import { useNavigate } from "react-router-dom";
 import NavBar from "../../components/NavBar";
@@ -17,6 +17,7 @@ const MaterialRequests = () => {
   const [searchTerm, setSearchTerm] = useState("");
   const [statusFilter, setStatusFilter] = useState("All Status");
   const [priorityFilter, setPriorityFilter] = useState("All Priorities");
+  const [dateRange, setDateRange] = useState("");
   const [currentPage, setCurrentPage] = useState(1);
 
   const navigate = useNavigate();
@@ -25,9 +26,8 @@ const MaterialRequests = () => {
   const requests = [
     {
       id: "#REQ-001",
-      item: "Industrial Sensors",
-      model: "IS-2024",
-      quantity: "150 units",
+      item: "Industrial Sensors, cement, steel pipes",
+      quantity: "—",
       deadline: "Dec 25, 2024",
       status: "Pending",
       priority: "High",
@@ -35,8 +35,7 @@ const MaterialRequests = () => {
     {
       id: "#REQ-002",
       item: "Power Cables",
-      model: "Heavy Duty",
-      quantity: "200 meters",
+      quantity: "—",
       deadline: "Dec 30, 2024",
       status: "In Progress",
       priority: "Medium",
@@ -44,8 +43,7 @@ const MaterialRequests = () => {
     {
       id: "#REQ-003",
       item: "Hydraulic Pumps",
-      model: "HP-500",
-      quantity: "5 units",
+      quantity: "—",
       deadline: "Jan 15, 2025",
       status: "Completed",
       priority: "Low"
@@ -53,8 +51,7 @@ const MaterialRequests = () => {
     {
       id: "#REQ-004",
       item: "Steel Brackets",
-      model: "Grade: A36",
-      quantity: "300 pieces",
+      quantity: "—",
       deadline: "Dec 28, 2024",
       status: "Rejected",
       priority: "Medium"
@@ -80,27 +77,25 @@ const MaterialRequests = () => {
   const getPriorityBadge = (priority) => {
     switch (priority) {
       case "High":
-        return "text-red-600 font-medium";
+        return "bg-red-100 text-red-600 font-medium px-3 py-1 rounded-full text-xs";
       case "Medium":
-        return "text-blue-600 font-medium";
+        return "bg-blue-100 text-blue-600 font-medium px-3 py-1 rounded-full text-xs";
       case "Low":
-        return "text-green-600 font-medium";
+        return "bg-green-100 text-green-600 font-medium px-3 py-1 rounded-full text-xs";
       default:
-        return "text-gray-600 font-medium";
+        return "bg-gray-100 text-gray-600 font-medium px-3 py-1 rounded-full text-xs";
     }
   };
 
   return (
-    <div className="bg-purewhite min-h-screen">
+    <div className="bg-[#f8f9fa] min-h-screen font-poppins">
       <NavBar links={navLinks} logoSrc="/logo1.png" />
-      
+
       <div className="max-w-full mx-auto px-16 py-8">
         {/* Header */}
-        <div className="flex justify-between items-start mb-8">
-          <div>
-            <h1 className="text-3xl font-bold text-gray-800 mb-2">Material Requests</h1>
-            <p className="text-gray-500">Manage and respond to material requests from managers</p>
-          </div>
+        <div className="mb-6">
+          <h1 className="text-3xl font-bold text-main_dark mb-1">Material Requests</h1>
+          <p className="text-gray-500">Manage and respond to material requests from managers</p>
         </div>
 
         {/* Filters */}
@@ -174,26 +169,14 @@ const MaterialRequests = () => {
         </div>
 
         {/* Table */}
-        <div className="bg-purewhite rounded-lg shadow-sm overflow-hidden">
-          {/* Table Header */}
-          <div className="flex justify-between items-center p-6 border border-gray-200 rounded-t-lg">
-            <h2 className="text-lg font-semibold text-gray-800">
-              Material Requests (24)
-            </h2>
-            <div className="flex items-center gap-2">
-              <MdFilterList className="text-gray-400" />
-              <FaChevronDown className="text-gray-400" />
-            </div>
-          </div>
-
+        <div className="bg-purewhite rounded-lg border border-gray-200 overflow-hidden">
           {/* Table Content */}
           <div className="overflow-x-auto">
             <table className="w-full">
-              <thead className="bg-web_yellow">
-                <tr>
+              <thead>
+                <tr className="bg-web_yellow">
                   <th className="px-6 py-4 text-left text-sm font-semibold text-main_dark">Request ID</th>
                   <th className="px-6 py-4 text-left text-sm font-semibold text-main_dark">Item</th>
-                  <th className="px-6 py-4 text-left text-sm font-semibold text-main_dark">Quantity</th>
                   <th className="px-6 py-4 text-left text-sm font-semibold text-main_dark">Quotation Deadline</th>
                   <th className="px-6 py-4 text-left text-sm font-semibold text-main_dark">Status</th>
                   <th className="px-6 py-4 text-left text-sm font-semibold text-main_dark">Priority</th>
@@ -206,20 +189,7 @@ const MaterialRequests = () => {
                     <td className="px-6 py-4 text-sm font-medium text-main_dark">
                       {request.id}
                     </td>
-                    <td className="px-6 py-4">
-                      <div className="flex items-center gap-3">
-                        {/* <div className="w-10 h-10 bg-web_yellow rounded-lg flex items-center justify-center text-lg">
-                          {request.icon}
-                        </div> */}
-                        <div>
-                          <div className="font-medium text-main_dark">{request.item}</div>
-                          <div className="text-sm text-slatebluegray">Model: {request.model}</div>
-                        </div>
-                      </div>
-                    </td>
-                    <td className="px-6 py-4 text-sm text-main_dark font-medium">
-                      {request.quantity}
-                    </td>
+                    <td className="px-6 py-4 text-main_dark">{request.item}</td>
                     <td className="px-6 py-4 text-sm text-main_dark">
                       {request.deadline}
                     </td>
@@ -251,9 +221,8 @@ const MaterialRequests = () => {
               </tbody>
             </table>
           </div>
-
           {/* Pagination */}
-          <div className="flex justify-between items-center px-6 py-4 border-t border-light_gray">
+          <div className="flex justify-between items-center px-6 py-4 border-t border-light_gray bg-purewhite">
             <div className="text-sm text-slatebluegray">
               Showing 1 to 4 of 24 results
             </div>
@@ -282,4 +251,3 @@ const MaterialRequests = () => {
 };
 
 export default MaterialRequests;
-

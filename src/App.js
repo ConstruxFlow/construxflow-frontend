@@ -25,6 +25,8 @@ import OrderDetails from "./pages/Supplier/OrderDetails";
 import PaymentStatus from "./pages/Supplier/PaymentStatus";
 import ReceiveAdvancedPayment from "./pages/Supplier/ReceiveAdvancedPayment";
 import ReceiveFullPayment from "./pages/Supplier/ReceiveFullPayment";
+import SupplierProfile from "./pages/Supplier/Profile";
+import SupplierProfileEdit from "./pages/Supplier/EditProfile";
 import Edit_Project from "./pages/SiteManager/Edit_Project";
 import Project_Phase from "./pages/SiteManager/Project_Phase";
 import Create_Material_Request from "./pages/SiteManager/Create_Material_Request";
@@ -80,6 +82,8 @@ export const routes = createBrowserRouter([
     element: <OrderDetails />,
   },
   { path: "/payments", element: <PaymentStatus /> },
+  { path: "/supplierprofile", element: <SupplierProfile /> },
+  { path: "/supplierprofile/edit", element: <SupplierProfileEdit /> },
 
   {
     path: "/login",
@@ -99,23 +103,23 @@ export const routes = createBrowserRouter([
     element: <SiteManagerDashboard />,
   },
   {
-    path: "/create-project",
-    element: <Create_Project />,
-  },
-  {
-    path: "/edit-project",
-    element: <Edit_Project />,
-  },
-  {
     path: "/projects-list",
     element: <Existing_Projects_List />,
   },
   {
-    path: "/project-phase",
+    path: "/projects-list/create-project",
+    element: <Create_Project />,
+  },
+  {
+    path: "/projects-list/edit-project",
+    element: <Edit_Project />,
+  },
+  {
+    path: "/projects-list/create-project/project-phase",
     element: <Project_Phase />,
   },
   {
-    path: "/material-request",
+    path: "/material-request-list/material-request",
     element: <Create_Material_Request />,
   },
   {

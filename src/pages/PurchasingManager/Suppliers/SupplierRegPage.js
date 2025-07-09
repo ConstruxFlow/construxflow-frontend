@@ -1,14 +1,19 @@
 import React, { useEffect, useState } from "react";
-import {
-  FaArrowLeft,
-} from "react-icons/fa";
+import { FaArrowLeft } from "react-icons/fa";
 import NavBar from "../../../components/NavBar";
 import { generateNextSupplierId } from "./Functions";
+import { toast } from "react-toastify";
+import LoadingOverlay from "../../../components/LoadingOverlay";
+import { useNavigate } from "react-router-dom";
 
 const SupplierRegPage = () => {
+  const [isLoading, setIsLoading] = useState(false);
+  const [loadingProgress, setLoadingProgress] = useState(0);
+  const navigate = useNavigate();
+
   const [supplierData, setSupplierData] = useState({
     companyName: "",
-    businessType: "Manufacturer",
+    businessRegNumber: "",
     registrationNumber: "",
     user_name: "",
     email: "",
@@ -19,60 +24,7 @@ const SupplierRegPage = () => {
     district: "",
     province: "",
     primaryCategory: "Electronics",
-    minimumOrderValue: "",
-    productDescription: "",
   });
-  // const [userDetails, setUserDetails] = useState({
-  //   supplierId: "",
-  //   user_name: "",
-  //   email: "",
-  //   phone_number1: "",
-  //   phone_number2: "",
-  //   address: "",
-  //   userRole: "Supplier",
-  //   password: "",
-  // });
-
-  const handleChange = (e) => {
-    const { name, value } = e.target;
-    setSupplierData((prevState) => ({
-      ...prevState,
-      [name]: value,
-    }));
-  };
-  const handleOnSubmit =async (e) => {
-    e.preventDefault();
-    // Prepare data for submission
-    const submissionData = {
-      supplierId: supplierData.registrationNumber,
-      user_name: supplierData.user_name,
-      email: supplierData.email,
-      phone_number1: supplierData.phone_number1,
-      phone_number2: supplierData.phone_number2,
-      address: `${supplierData.street}, ${supplierData.city}, ${supplierData.district}, ${supplierData.province}`,
-      userRole: "Supplier",
-      password: "<GENERATED_PASSWORD>", // You can change this to a more secure password or generate one
-    };// console.log(userDetails);
-
-
-    if (!submissionData.supplierId || !submissionData.user_name || !submissionData.email || !submissionData.phone_number1) {
-      alert("Please fill in all required fields");
-      return;
-    }
-
-    const response=await fetch(
-      "http://localhost:8080/api/user/register",
-      {
-        method: "POST",
-        headers: {
-          "Content-Type": "application/json",
-        },
-        body: JSON.stringify(submissionData),
-      }
-    );
-    const result = await response.json();
-    
-  };
 
   const [SuppliersLatestId, setSuppliersLatestId] = useState("");
   const getlatestSupplierId = async () => {
@@ -86,18 +38,29 @@ const SupplierRegPage = () => {
       }
     );
     const data = await response.json();
-    
-    if(data.status === "success") {
+
+    if (data.status === "success") {
       setSuppliersLatestId(data.data);
-    }else{
+    } else if (
+      data.message === "No suppliers found" ||
+      data.status === "error"
+    ) {
       // Handle error case
+      setSupplierData((prevState) => ({
+        ...prevState,
+        registrationNumber: "S001",
+      }));
+    } else {
+      // Handle unexpected error
+      toast.error(
+        "An unexpected error occurred while fetching the latest supplier ID"
+      );
     }
   };
-  
+
   useEffect(() => {
     getlatestSupplierId();
   }, []);
-  
 
   const [newSupplierId, setNewSupplierId] = useState("");
   useEffect(() => {
@@ -108,9 +71,143 @@ const SupplierRegPage = () => {
         ...prevState,
         registrationNumber: nextId,
       }));
-    }   
+    }
   }, [SuppliersLatestId]);
-  
+
+  const handleChange = (e) => {
+    const { name, value } = e.target;
+    setSupplierData((prevState) => ({
+      ...prevState,
+      [name]: value,
+    }));
+  };
+  const handleOnSubmit = async (e) => {
+    e.preventDefault();
+
+    // Initialize loading state
+    setIsLoading(true);
+    setLoadingProgress(0);
+
+    // Progress tracking interval for smooth animation
+    const progressInterval = setInterval(() => {
+      setLoadingProgress((prev) => {
+        if (prev >= 90) return prev; // Stop at 90% until completion
+        return prev + Math.random() * 5;
+      });
+    }, 200);
+
+    try {
+      // Step 1: Data preparation (10% progress)
+      setLoadingProgress(10);
+
+      const submissionData = {
+        supplierId: supplierData.registrationNumber,
+        user_name: supplierData.user_name,
+        email: supplierData.email,
+        phone_number1: supplierData.phone_number1,
+        phone_number2: supplierData.phone_number2,
+        address: `${supplierData.street}, ${supplierData.city}, ${supplierData.district}, ${supplierData.province}`,
+        userRole: "Supplier",
+        password: "sanndaru5678",
+      };
+
+      // Step 2: Validation (20% progress)
+      setLoadingProgress(20);
+
+      if (
+        !submissionData.supplierId ||
+        !submissionData.user_name ||
+        !submissionData.email ||
+        !submissionData.phone_number1 ||
+        !submissionData.phone_number2 ||
+        !supplierData.companyName ||
+        !supplierData.businessRegNumber
+      ) {
+        toast.error("Please fill in all required fields");
+        return;
+      }
+
+      // Step 3: User registration API call (40% progress)
+      setLoadingProgress(40);
+
+      const response = await fetch("http://localhost:8080/api/user/register", {
+        method: "POST",
+        headers: {
+          "Content-Type": "application/json",
+        },
+        body: JSON.stringify(submissionData),
+      });
+
+      if (!response.ok) {
+        const errorData = await response.json().catch(() => ({}));
+        throw new Error(
+          errorData.message ||
+            `User registration failed with status: ${response.status}`
+        );
+      }
+
+      // Step 4: Process user registration response (60% progress)
+      setLoadingProgress(60);
+      const userData = await response.json();
+
+      // Step 5: Supplier registration API call (80% progress)
+      setLoadingProgress(80);
+
+      const supplierResponse = await fetch(
+        "http://localhost:8080/api/supplier/Register",
+        {
+          method: "POST",
+          headers: {
+            "Content-Type": "application/json",
+          },
+          body: JSON.stringify({
+            supplier_id: submissionData.supplierId,
+            name: submissionData.user_name,
+            company_name: supplierData.companyName,
+            business_registration_number: supplierData.businessRegNumber,
+          }),
+        }
+      );
+
+      if (!supplierResponse.ok) {
+        const errorData = await supplierResponse.json().catch(() => ({}));
+        throw new Error(
+          errorData.message ||
+            `Supplier registration failed with status: ${supplierResponse.status}`
+        );
+      }
+
+      // Step 6: Process supplier registration response (95% progress)
+      setLoadingProgress(95);
+      const supplierResponseData = await supplierResponse.json();
+
+      // Step 7: Complete (100% progress)
+      setLoadingProgress(100);
+
+      // Show completion briefly before hiding overlay
+      setTimeout(() => {
+        if (supplierResponseData.status === "success") {
+          toast.success("Supplier registered successfully!");
+          navigate('/purchasing/supplier/list');
+        } else {
+          toast.error(
+            "Failed to register supplier: " + supplierResponseData.message
+          );
+        }
+
+        // Hide loading overlay
+        setIsLoading(false);
+        setLoadingProgress(0);
+      }, 800);
+    } catch (error) {
+      console.error("Registration error:", error);
+      toast.error("Registration failed: " + error.message);
+      setIsLoading(false);
+      setLoadingProgress(0);
+    } finally {
+      clearInterval(progressInterval);
+    }
+  };
 
   return (
     <div className="min-h-screen bg-purewhite font-poppins">
@@ -125,6 +222,12 @@ const SupplierRegPage = () => {
         ]}
       />
 
+      {isLoading && (
+        <LoadingOverlay
+          progress={loadingProgress}
+          message="Registering supplier details..."
+        />
+      )}
       {/* Main Content */}
       <main className="py-6">
         <div className="max-w-full mx-auto px-2 sm:px-3 lg:px-10">
@@ -169,19 +272,16 @@ const SupplierRegPage = () => {
                   </div>
                   <div>
                     <label className="block text-sm font-medium text-gray-700 mb-2">
-                      Business Type
+                      Business Registration Number *
                     </label>
-                    <select
-                      name="businessType"
-                      value={supplierData.businessType}
+                    <input
+                      type="text"
+                      name="businessRegNumber"
+                      placeholder="Enter business registration number"
+                      value={supplierData.businessRegNumber}
                       onChange={handleChange}
                       className="w-full px-3 py-2 border border-gray-300 rounded-md focus:outline-none focus:ring-2 focus:ring-web_yellow focus:border-transparent"
-                    >
-                      <option>Manufacturer</option>
-                      <option>Distributor</option>
-                      <option>Service Provider</option>
-                      <option>Retailer</option>
-                    </select>
+                    />
                   </div>
                 </div>
                 <div className="grid grid-cols-1 md:grid-cols-2 gap-4">
@@ -350,32 +450,6 @@ const SupplierRegPage = () => {
                       <option>Food & Beverages</option>
                     </select>
                   </div>
-                  <div>
-                    <label className="block text-sm font-medium text-gray-700 mb-2">
-                      Minimum Order Value
-                    </label>
-                    <input
-                      type="number"
-                      name="minimumOrderValue"
-                      placeholder="Enter minimum order value"
-                      value={supplierData.minimumOrderValue}
-                      onChange={handleChange}
-                      className="w-full px-3 py-2 border border-gray-300 rounded-md focus:outline-none focus:ring-2 focus:ring-web_yellow focus:border-transparent"
-                    />
-                  </div>
-                </div>
-                <div>
-                  <label className="block text-sm font-medium text-gray-700 mb-2">
-                    Product Description
-                  </label>
-                  <textarea
-                    name="productDescription"
-                    value={supplierData.productDescription}
-                    onChange={handleChange}
-                    placeholder="Describe products and services offered..."
-                    rows={4}
-                    className="w-full resize-none px-3 py-2 border border-gray-300 rounded-md focus:outline-none focus:ring-2 focus:ring-web_yellow focus:border-transparent"
-                  />
                 </div>
               </div>
             </div>
@@ -423,9 +497,7 @@ const SupplierRegPage = () => {
                         Contact:
                       </h4>
                       <div className="text-sm text-gray-600">
-                        <p>
-                          {supplierData.user_name || "Not specified"}
-                        </p>
+                        <p>{supplierData.user_name || "Not specified"}</p>
                         <p>{supplierData.email || "Not specified"}</p>
                         <p>{supplierData.phoneNumber1 || "Not specified"}</p>
                       </div>
@@ -449,7 +521,10 @@ const SupplierRegPage = () => {
                   </div>
 
                   <div className="mt-6 space-y-3">
-                    <button className="w-full px-4 py-3 bg-web_yellow text-main_dark rounded-md hover:bg-web_yellow/90 transition-colors font-semibold flex items-center justify-center gap-2" onClick={handleOnSubmit}>
+                    <button
+                      className="w-full px-4 py-3 bg-web_yellow text-main_dark rounded-md hover:bg-web_yellow/90 transition-colors font-semibold flex items-center justify-center gap-2"
+                      onClick={handleOnSubmit}
+                    >
                       <svg
                         className="w-4 h-4"
                         fill="none"
