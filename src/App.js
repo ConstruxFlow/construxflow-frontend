@@ -49,6 +49,7 @@ import {
   PurchasingManagerroutes,
 } from "./pages/PurchasingManager/Routes";
 import { MaintenanceRoute } from "./pages/MaintenanceHead/MaintenanceRoute";
+import VerificationEmailPage from "./components/EmailVerify";
 
 export const routes = createBrowserRouter([
   {
@@ -153,4 +154,8 @@ export const routes = createBrowserRouter([
     path: "/site-manager-profile",
     element: <SiteManager_Profile />,
   },
+  {
+    path: "/verify-email",
+    element: <VerificationEmailPage/>
+  }
 ]);
