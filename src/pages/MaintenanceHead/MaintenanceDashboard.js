@@ -1,11 +1,32 @@
-import React, { useState } from 'react';
+import React, { use, useEffect, useState } from 'react';
 import { Calendar, AlertTriangle, CheckCircle, Clock, AlertCircle, Eye, Plus, FileText } from 'lucide-react';
 import ScheduleOverview from '../../components/MaintenanceHead/ScheduleOverview';
 import NavBar from '../../components/NavBar';
 import TeamSection from '../../components/MaintenanceHead/TeamSection';
+import { useNavigate } from 'react-router-dom';
 
 const MaintenanceDashboard = () => {
     const [showTeam, setShowTeam] = useState(false);
+    const navigation = useNavigate();
+    const [isLoggedIn, setIsLoggedIn] = useState(false);
+    
+      // Check login state on mount
+      useEffect(() => {
+        const user = localStorage.getItem("user");
+        setIsLoggedIn(!!user);
+      }, []);
+    
+      // Logout handler
+      const handleLogout = () => {
+        localStorage.removeItem("user");
+        localStorage.removeItem("role");
+        setIsLoggedIn(false);
+        navigation("/login");
+      };
+
+      const handleLogin = () => {
+    navigation("/login");
+  };
   return (
     <>
     <NavBar
@@ -24,6 +45,8 @@ const MaintenanceDashboard = () => {
           { name: "Request Tracker", href: "#" },
         ]}
         showButton={true}
+        buttonLabel={isLoggedIn ? "Logout" : "Get Started"}
+        onButtonClick={isLoggedIn ? handleLogout : handleLogin}
     />
     <div className="min-h-screen bg-gray-50 p-6">
       <div className="max-w-7xl mx-auto">

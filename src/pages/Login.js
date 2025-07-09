@@ -8,12 +8,94 @@ import { IoCloseSharp } from "react-icons/io5";
 import GlassCard from "../components/LoginPage/GlassCard";
 import DayWidgets from "../components/LoginPage/DayWidgets";
 import DiagonalLines from "../components/LoginPage/DigonalLines";
-import { useNavigate } from "react-router-dom";
+import { useLocation, useNavigate } from "react-router-dom";
+import { signInWithEmailAndPassword } from "firebase/auth";
+import { auth } from "../firebase";
 
 const Login = () => {
   const [showPassword, setShowPassword] = useState(false);
   const [rememberMe, setRememberMe] = useState(false);
   const navigation = useNavigate();
+  const [form, setForm] = useState({
+    email: "",
+    password: "",
+  });
+
+  const location = useLocation();
+  const emailVerified = location.state && location.state.emailVerified;
+
+
+  const handleChange = (e) => {
+    setForm({ ...form, [e.target.name]: e.target.value });
+  };
+
+  const handleSubmit = async (e) => {
+  e.preventDefault();
+  try {
+    // 1. Sign in with Firebase Auth
+    const userCred = await signInWithEmailAndPassword(
+      auth,
+      form.email,
+      form.password
+    );
+    const idToken = await userCred.user.getIdToken();
+    document.cookie = `idToken=${idToken}; path=/; max-age=3600; secure; samesite=strict`;
+
+    // 2. Call backend with ID token in Authorization header
+    const res = await fetch("http://localhost:8080/api/user/login", {
+      method: "GET",
+      headers: { Authorization: "Bearer " + idToken },
+    });
+    console.log(res);
+    
+    if (!res.ok) {
+      const error = await res.text();
+      alert("Login failed: " + error);
+      return;
+    }
+
+    // Parse response as JSON
+    const data = await res.json();
+    console.log("Backend response:", data);
+
+    // Defensive checks for user and userRole
+    const user = data.user;
+    console.log("User data:", user);
+    if (!user || !user.userRole) {
+      alert("User data or userRole is missing from the response.");
+      return;
+    }
+
+    // Store user data in localStorage
+    localStorage.setItem("user", JSON.stringify(user));
+    localStorage.setItem("role", user.userRole);
+
+    // Role-based navigation
+    const role = user.userRole.toUpperCase();
+    const roleRoutes = {
+      ADMIN: "/admin/dashboard",
+      SITE_MANAGER: "/site-manager",
+      INVENTORY_MANAGER: "/inventory/dashboard",
+      FINANCE_OFFICER: "/finance/dashboard",
+      MAINTENANCE_HEAD: "/maintenance/dashboard",
+      SUPPLIER: "/supplier/dashboard",
+      PURCHASING_MANAGER: "/purchasing/dashboard",
+    };
+
+    if (roleRoutes[role]) {
+      navigation(roleRoutes[role]);
+    } else {
+      alert("Unknown user role. Please contact support.");
+      navigation("/"); // fallback
+    }
+  } catch (err) {
+    alert("Login error: " + err.message);
+  }
+};
+
+
+
+
 
   const handleclose = () => {
     navigation("/");
@@ -27,7 +109,13 @@ const Login = () => {
   const additionalCount = 2;
 
   return (
-    <div className="min-h-screen bg-purewhite flex flex-col lg:flex-row font-poppins">
+    <>
+      {emailVerified && (
+        <div style={{ color: "green", marginBottom: "1rem" }}>
+          Your email has been verified! You can now log in.
+        </div>
+      )}
+      <div className="min-h-screen bg-purewhite flex flex-col lg:flex-row font-poppins">
       {/* Left Side - Login Form */}
       <div className="w-full lg:w-1/2 flex items-center justify-center p-4 sm:p-6 lg:p-8 order-2 lg:order-1">
         <div className="w-full max-w-md">
@@ -53,7 +141,8 @@ const Login = () => {
           </div>
 
           {/* Login Form */}
-          <form className="space-y-4 sm:space-y-6">
+          <form className="space-y-4 sm:space-y-6" onSubmit={handleSubmit}>
+            {/* Email Field */}
             {/* Username Field */}
             <div>
               <label className="text-main_dark text-sm mb-2 block font-medium">
@@ -61,7 +150,10 @@ const Login = () => {
               </label>
               <input
                 type="text"
+                name="email"
+                value={form.email}
                 placeholder="Enter your username"
+                onChange={handleChange}
                 className="w-full px-4 py-3 bg-light_gray/20 text-main_dark rounded-full placeholder-slatebluegray border border-light_gray/40 focus:outline-none focus:ring-2 focus:ring-web_yellow focus:border-web_yellow transition-all text-sm sm:text-base"
               />
             </div>
@@ -74,6 +166,9 @@ const Login = () => {
               <div className="relative">
                 <input
                   type={showPassword ? "text" : "password"}
+                  name="password"
+                  value={form.password}
+                  onChange={handleChange}
                   placeholder="Enter your password"
                   className="w-full px-4 py-3 bg-light_gray/20 text-main_dark rounded-full placeholder-slatebluegray border border-light_gray/40 focus:outline-none focus:ring-2 focus:ring-web_yellow focus:border-web_yellow transition-all pr-12 text-sm sm:text-base"
                 />
@@ -232,6 +327,7 @@ const Login = () => {
         </div>
       </div>
     </div>
+    </>
   );
 };
 
