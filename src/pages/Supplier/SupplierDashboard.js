@@ -39,11 +39,11 @@ const navLinks = [
 
 // Data for the Material Requests Trend chart (matches the provided image)
 const materialRequestsData = {
-  labels: ["Jan", "Feb", "Mar", "Apr", "May", "Jun"],
+  labels: ["Jan", "Feb", "Mar", "Apr", "May", "Jun", "Jul", "Aug", "Sep", "Oct", "Nov", "Dec"],
   datasets: [
     {
       label: "Requests",
-      data: [15, 22, 18, 35, 28, 42],
+      data: [15, 22, 18, 35, 28, 42, 30, 25, 40, 38, 45, 50],
       fill: false,
       borderColor: "#236571", // deep green
       backgroundColor: "#236571",
@@ -52,13 +52,14 @@ const materialRequestsData = {
       pointRadius: 4,
       pointHoverRadius: 5,
       pointBorderWidth: 1,
-      tension: 0,
+      tension: 0.3,
     },
   ],
 };
 
 const materialRequestsOptions = {
   responsive: true,
+  maintainAspectRatio: false,
   plugins: {
     legend: { display: false },
     title: { display: false },
@@ -172,7 +173,7 @@ const SupplierDashboard = () => {
               <FaRegFileAlt className="text-lg" />
               <span>View Quotations</span>
             </button>
-            <button onClick={()=> navigate('/supplierprofile')} className="flex items-center justify-center w-full h-14 rounded-xl bg-gradient-to-br from-light_brown via-light_brown to-light_brown/80 hover:bg-light_brown/90 transition font-medium text-main_dark text-base gap-2">
+            <button onClick={()=> navigate('/supplierprofile/edit')} className="flex items-center justify-center w-full h-14 rounded-xl bg-gradient-to-br from-light_brown via-light_brown to-light_brown/80 hover:bg-light_brown/90 transition font-medium text-main_dark text-base gap-2">
               <FaUser className="text-lg" />
               <span>Update Profile</span>
             </button>
@@ -187,7 +188,7 @@ const SupplierDashboard = () => {
         <div className="grid grid-cols-1 md:grid-cols-2 gap-4 mb-6">
           <div className="bg-purewhite border border-gray-200 rounded-xl p-5 min-h-[230px]">
             <div className="font-semibold mb-2 text-lg text-gray-700">Material Requests Trend</div>
-            <div className="w-full h-64 px-5 mt-5">
+            <div className="w-full h-60 px-5 mt-5">
               <Line data={materialRequestsData} options={materialRequestsOptions} />
             </div>
           </div>
