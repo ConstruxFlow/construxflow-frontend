@@ -1,11 +1,33 @@
 import React from "react";
-import { FaRegUserCircle } from "react-icons/fa";
+import { FaRegUserCircle, FaTruck, FaRegFileAlt, FaEye, FaPlus, FaUser, FaHeadset, FaRegCheckCircle, FaRegFolderOpen } from "react-icons/fa";
 import { MdOutlineStorage, MdOutlineNotificationsNone } from "react-icons/md";
-import { FaTruck, FaRegFileAlt } from "react-icons/fa";
 import { BsCreditCard2Back } from "react-icons/bs";
-import { FaEye, FaPlus, FaUser, FaHeadset } from "react-icons/fa";
-import { FaRegCheckCircle, FaRegFolderOpen } from "react-icons/fa";
 import NavBar from "../../components/NavBar";
+import { useNavigate } from "react-router-dom";
+import { Line } from "react-chartjs-2";
+import {
+  Chart as ChartJS,
+  CategoryScale,
+  LinearScale,
+  PointElement,
+  LineElement,
+  Title,
+  Tooltip,
+  Legend,
+} from "chart.js";
+
+// Register Chart.js components
+ChartJS.register(
+  CategoryScale,
+  LinearScale,
+  PointElement,
+  LineElement,
+  Title,
+  Tooltip,
+  Legend
+);
+
+
 
 const navLinks = [
   { name: "Dashboard", href: "/" },
@@ -15,7 +37,59 @@ const navLinks = [
   { name: "Payments", href: "/payments" },
 ];
 
+// Data for the Material Requests Trend chart (matches the provided image)
+const materialRequestsData = {
+  labels: ["Jan", "Feb", "Mar", "Apr", "May", "Jun"],
+  datasets: [
+    {
+      label: "Requests",
+      data: [15, 22, 18, 35, 28, 42],
+      fill: false,
+      borderColor: "#236571", // deep green
+      backgroundColor: "#236571",
+      pointBackgroundColor: "#236571",
+      pointBorderColor: "#236571",
+      pointRadius: 4,
+      pointHoverRadius: 5,
+      pointBorderWidth: 1,
+      tension: 0,
+    },
+  ],
+};
+
+const materialRequestsOptions = {
+  responsive: true,
+  plugins: {
+    legend: { display: false },
+    title: { display: false },
+    tooltip: {
+      mode: "index",
+      intersect: false,
+    },
+  },
+  scales: {
+    x: {
+      grid: { display: false },
+      ticks: { color: "#555", font: { size: 14 } },
+    },
+    y: {
+      grid: { color: "#eee" },
+      ticks: { color: "#555", font: { size: 14 } },
+      beginAtZero: true,
+      suggestedMax: 50,
+    },
+  },
+  elements: {
+    line: {
+      borderWidth: 3,
+    },
+  },
+};
+
+
 const SupplierDashboard = () => {
+  const navigate = useNavigate();
+
   return (
     <div className="bg-purewhite min-h-screen">
       <NavBar links={navLinks} logoSrc="/logo1.png" />
@@ -25,83 +99,97 @@ const SupplierDashboard = () => {
           Here’s what’s happening with your supply chain today.
         </p>
 
-        <div className="bg-yellow-50 border-l-4 border-yellow-400 rounded-xl p-5 mb-8 flex items-start gap-4 shadow-md">
+        {/* Urgent Actions */}
+        <div className="bg-gradient-to-r from-web_yellow/15 via-web_yellow/8 to-transparent border-l-4 border-web_yellow rounded-lg p-4 mb-8 flex items-start gap-4 shadow-md">
           <div className="text-yellow-600 text-2xl mt-1">⚠</div>
           <div>
             <h3 className="font-semibold text-base text-gray-800 mb-1 tracking-wide">
               Urgent Actions Required
             </h3>
-            <p className="text-yellow-700 text-sm font-medium">
-              3 delayed shipments • 2 critical stock replenishments needed • 1 quotation awaiting your approval
+            <p className="text-gray-500 text-sm font-medium">
+              You have 3 pending material requests that need your attention. Please review them as soon as possible to avoid delays in your supply chain.
             </p>
           </div>
         </div>
 
-        <div className="grid grid-cols-1 md:grid-cols-4 gap-4 mb-5">
-          <div className="bg-purewhite border border-gray-200 rounded-xl p-5 shadow-sm hover:shadow-md hover:-translate-y-0.5 transition-all duration-150">
-            <div className="flex items-center mb-2">
-              <MdOutlineStorage className="text-2xl text-deep_green mr-2 " />
-              <span className="bg-web_yellow text-xs px-2 py-1 rounded-full font-medium ml-auto">12 New</span>
+        {/* Stats Cards */}
+        <div className="grid grid-cols-1 sm:grid-cols-2 lg:grid-cols-4 gap-3 sm:gap-4 mb-8">
+          {/* Card 1 */}
+          <div className="bg-purewhite border border-gray-200 rounded-xl p-4 sm:p-5 flex items-center gap-3 sm:gap-4 shadow-sm hover:shadow-md hover:-translate-y-0.5 transition-all duration-150">
+            <div className="flex-1 min-w-0">
+              <p className="text-slatebluegray font-medium text-sm mb-0.5 truncate">Pending Requests</p>
+              <h3 className="text-xl sm:text-2xl font-bold text-main_dark leading-tight mb-0.5">24</h3>
+              <span className="text-deep_green text-xs">12 New</span>
             </div>
-            <div className="text-2xl font-bold">24</div>
-            <div className="text-gray-500">Pending Requests</div>
-            <a href="/requests" className="text-deep_green text-sm mt-3 inline-block">View Details →</a>
+            <div className="w-12 h-12 bg-gradient-to-br from-web_yellow via-web_yellow to-web_yellow/80 rounded-xl flex items-center justify-center shadow-lg group-hover:scale-110 group-hover:rotate-3 transition-all duration-300">
+              <MdOutlineStorage className="text-purewhite text-lg"/>
+            </div>
           </div>
-          <div className="bg-purewhite border border-gray-200 rounded-xl p-5 shadow-sm hover:shadow-md hover:-translate-y-0.5 transition-all duration-150">
-            <div className="flex items-center mb-2">
-              <FaRegFileAlt className="text-2xl text-web_yellow mr-2" />
-              <span className="bg-deep_green text-xs text-white px-2 py-1 rounded-full font-medium ml-auto">8 Pending</span>
+          {/* Card 2 */}
+          <div className="bg-purewhite border border-gray-200 rounded-xl p-4 sm:p-5 flex items-center gap-3 sm:gap-4 shadow-sm hover:shadow-md hover:-translate-y-0.5 transition-all duration-150">
+            <div className="flex-1 min-w-0">
+              <p className="text-slatebluegray font-medium text-sm mb-0.5 truncate">Active Quotations</p>
+              <h3 className="text-xl sm:text-2xl font-bold text-main_dark leading-tight mb-0.5">18</h3>
+              <span className="text-deep_green text-xs">8 Pending</span>
             </div>
-            <div className="text-2xl font-bold">18</div>
-            <div className="text-gray-500">Active Quotations</div>
-            <a href="/quotations" className="text-deep_green text-sm mt-3 inline-block">Manage →</a>
+            <div className="w-12 h-12 bg-gradient-to-br from-deep_green via-deep_green to-deep_green/80 rounded-xl flex items-center justify-center shadow-lg group-hover:scale-110 group-hover:rotate-3 transition-all duration-300">
+              <FaRegFileAlt className="text-purewhite text-lg"/>
+            </div>
           </div>
-          <div className="bg-purewhite border border-gray-200 rounded-xl p-5 shadow-sm hover:shadow-md hover:-translate-y-0.5 transition-all duration-150">
-            <div className="flex items-center mb-2">
-              <FaTruck className="text-2xl text-deep_green mr-2" />
-              <span className="bg-light_brown text-xs px-2 py-1 rounded-full font-medium ml-auto">5 In Transit</span>
+          {/* Card 3 */}
+          <div className="bg-purewhite border border-gray-200 rounded-xl p-4 sm:p-5 flex items-center gap-3 sm:gap-4 shadow-sm hover:shadow-md hover:-translate-y-0.5 transition-all duration-150">
+            <div className="flex-1 min-w-0">
+              <p className="text-slatebluegray font-medium text-sm mb-0.5 truncate">Purchase Orders</p>
+              <h3 className="text-xl sm:text-2xl font-bold text-main_dark leading-tight mb-0.5">32</h3>
+              <span className="text-deep_green text-xs">5 In Transit</span>
             </div>
-            <div className="text-2xl font-bold">32</div>
-            <div className="text-gray-500">Purchase Orders</div>
-            <a href="/orders" className="text-deep_green text-sm mt-3 inline-block">Track →</a>
+            <div className="w-12 h-12 bg-gradient-to-br from-light_brown via-light_brown to-light_brown/80 rounded-xl flex items-center justify-center shadow-lg group-hover:scale-110 group-hover:rotate-3 transition-all duration-300">
+              <FaTruck className="text-purewhite text-lg"/>
+            </div>
           </div>
-          <div className="bg-purewhite border border-gray-200 rounded-xl p-5 shadow-sm hover:shadow-md hover:-translate-y-0.5 transition-all duration-150">
-            <div className="flex items-center mb-2">
-              <BsCreditCard2Back className="text-2xl text-web_yellow mr-2" />
-              <span className="bg-deep_green text-xs text-white px-2 py-1 rounded-full font-medium ml-auto">$45.2K</span>
+          {/* Card 4 */}
+          <div className="bg-purewhite border border-gray-200 rounded-xl p-4 sm:p-5 flex items-center gap-3 sm:gap-4 shadow-sm hover:shadow-md hover:-translate-y-0.5 transition-all duration-150">
+            <div className="flex-1 min-w-0">
+              <p className="text-slatebluegray font-medium text-sm mb-0.5 truncate">Total Payments</p>
+              <h3 className="text-xl sm:text-2xl font-bold text-main_dark leading-tight mb-0.5">$128.5K</h3>
+              <span className="text-deep_green text-xs">$45.2K</span>
             </div>
-            <div className="text-2xl font-bold">$128.5K</div>
-            <div className="text-gray-500">Total Payments</div>
-            <a href="/payments" className="text-deep_green text-sm mt-3 inline-block">View All →</a>
+            <div className="w-12 h-12 bg-gradient-to-br from-web_yellow via-web_yellow to-web_yellow/80 rounded-xl flex items-center justify-center shadow-lg group-hover:scale-110 group-hover:rotate-3 transition-all duration-300">
+              <BsCreditCard2Back className="text-purewhite text-lg"/>
+            </div>
           </div>
         </div>
 
+        {/* Quick Actions */}
         <div className="bg-purewhite border border-gray-200 rounded-xl p-5 mb-6">
-            <div className="font-semibold mb-4">Quick Actions</div>
-            <div className="grid grid-cols-1 md:grid-cols-4 gap-4">
-                <button className="flex flex-col items-center justify-center bg-web_yellow text-main_dark px-6 py-5 rounded font-semibold shadow hover:brightness-95 transition">
-                    <FaEye className="text-2xl mb-2" />
-                    <span className="text-base font-medium">View Requests</span>
-                </button>
-                <button className="flex flex-col items-center justify-center bg-deep_green text-white px-6 py-5 rounded font-semibold shadow hover:brightness-95 transition">
-                    <FaPlus className="text-2xl mb-2" />
-                    <span className="text-base font-medium">New Quotation</span>
-                </button>
-                <button className="flex flex-col items-center justify-center bg-light_brown text-main_dark px-6 py-5 rounded font-semibold shadow hover:brightness-95 transition">
-                    <FaUser className="text-2xl mb-2" />
-                    <span className="text-base font-medium">Update Profile</span>
-                </button>
-                <button className="flex flex-col items-center justify-center bg-gray-200 text-main_dark px-6 py-5 rounded font-semibold shadow hover:brightness-95 transition">
-                    <FaHeadset className="text-2xl mb-2" />
-                    <span className="text-base font-medium">Contact Support</span>
-                </button>
-            </div>
-</div>
+          <div className="font-semibold mb-4">Quick Actions</div>
+          <div className="grid grid-cols-1 md:grid-cols-4 gap-4 px-5">
+            <button onClick={() => navigate('/requests')} className="flex items-center justify-center w-full h-14 rounded-xl bg-gradient-to-br from-deep_green via-deep_green to-deep_green/80 hover:bg-deep_green/90 transition font-medium text-white text-base gap-2">
+              <FaEye className="text-lg" />
+              <span>View Requests</span>
+            </button>
+            <button onClick={() => navigate('/quotations')}  className="flex items-center justify-center w-full h-14 rounded-xl bg-gradient-to-br from-web_yellow via-web_yellow to-web_yellow/80 hover:bg-web_yellow/90 transition font-medium text-main_dark text-base gap-2">
+              <FaRegFileAlt className="text-lg" />
+              <span>View Quotations</span>
+            </button>
+            <button onClick={()=> navigate('/supplierprofile')} className="flex items-center justify-center w-full h-14 rounded-xl bg-gradient-to-br from-light_brown via-light_brown to-light_brown/80 hover:bg-light_brown/90 transition font-medium text-main_dark text-base gap-2">
+              <FaUser className="text-lg" />
+              <span>Update Profile</span>
+            </button>
+            <button className="flex items-center justify-center w-full h-14 rounded-xl bg-light_gray hover:bg-light_gray/90 transition font-medium text-main_dark text-base gap-2">
+              <FaHeadset className="text-lg" />
+              <span>Contact Support</span>
+            </button>
+          </div>
+        </div>
 
+        {/* Trends & Notifications */}
         <div className="grid grid-cols-1 md:grid-cols-2 gap-4 mb-6">
           <div className="bg-purewhite border border-gray-200 rounded-xl p-5 min-h-[230px]">
             <div className="font-semibold mb-2 text-lg text-gray-700">Material Requests Trend</div>
-            {/* You can add a chart here */}
+            <div className="w-full h-64 px-5 mt-5">
+              <Line data={materialRequestsData} options={materialRequestsOptions} />
+            </div>
           </div>
           <div className="bg-purewhite border border-gray-200 rounded-xl p-5 min-h-[230px]">
             <div className="font-semibold mb-2 text-lg text-gray-700">Urgent Notifications</div>
@@ -109,49 +197,48 @@ const SupplierDashboard = () => {
           </div>
         </div>
 
-        
-
+        {/* Recent Activity */}
         <div className="bg-purewhite rounded-lg p-5 shadow-md mt-8">
-            <div className="font-semibold mb-4">Recent Activity</div>
-            <div className="space-y-3">
-                {/* Activity 1 */}
-                <div className="flex items-start bg-gray-100 rounded-lg p-4 border-l-4 border-deep_green shadow">
-                <span className="flex items-center justify-center w-8 h-8 mr-4">
-                    <FaRegCheckCircle className="text-deep_green text-lg" />
-                </span>
-                <div className="flex-1">
-                    <div className="font-medium text-gray-800">
-                    Quotation <span className="font-semibold">#Q-2024-156</span> accepted
-                    </div>
-                    <div className="text-xs text-gray-500 mt-1">2 hours ago</div>
+          <div className="font-semibold mb-4">Recent Activity</div>
+          <div className="space-y-3">
+            {/* Activity 1 */}
+            <div className="flex items-start bg-gray-100 rounded-lg p-4 border-l-4 border-deep_green shadow">
+              <span className="flex items-center justify-center w-8 h-8 mr-4">
+                <FaRegCheckCircle className="text-deep_green text-lg" />
+              </span>
+              <div className="flex-1">
+                <div className="font-medium text-gray-800">
+                  Quotation <span className="font-semibold">#Q-2024-156</span> accepted
                 </div>
-                </div>
-                {/* Activity 2 */}
-                <div className="flex items-start bg-gray-100 rounded-lg p-4 border-l-4 border-web_yellow shadow">
-                <span className="flex items-center justify-center w-8 h-8 mr-4">
-                    <FaRegFolderOpen className="text-web_yellow text-lg" />
-                </span>
-                <div className="flex-1">
-                    <div className="font-medium text-gray-800">
-                    Payment received for PO
-                    </div>
-                    <div className="text-xs text-gray-500 mt-1 font-mono">#PO-2024-089</div>
-                </div>
-                </div>
-                {/* Activity 3 */}
-                <div className="flex items-start bg-gray-100 rounded-lg p-4 border-l-4 border-deep_green shadow">
-                <span className="flex items-center justify-center w-8 h-8 mr-4">
-                    <MdOutlineNotificationsNone className="text-deep_green text-lg" />
-                </span>
-                <div className="flex-1">
-                    <div className="font-medium text-gray-800">
-                    New material request received
-                    </div>
-                    <div className="text-xs text-gray-500 mt-1">1 day ago</div>
-                </div>
-                </div>
+                <div className="text-xs text-gray-500 mt-1">2 hours ago</div>
+              </div>
             </div>
+            {/* Activity 2 */}
+            <div className="flex items-start bg-gray-100 rounded-lg p-4 border-l-4 border-web_yellow shadow">
+              <span className="flex items-center justify-center w-8 h-8 mr-4">
+                <FaRegFolderOpen className="text-web_yellow text-lg" />
+              </span>
+              <div className="flex-1">
+                <div className="font-medium text-gray-800">
+                  Payment received for PO
+                </div>
+                <div className="text-xs text-gray-500 mt-1 font-mono">#PO-2024-089</div>
+              </div>
             </div>
+            {/* Activity 3 */}
+            <div className="flex items-start bg-gray-100 rounded-lg p-4 border-l-4 border-deep_green shadow">
+              <span className="flex items-center justify-center w-8 h-8 mr-4">
+                <MdOutlineNotificationsNone className="text-deep_green text-lg" />
+              </span>
+              <div className="flex-1">
+                <div className="font-medium text-gray-800">
+                  New material request received
+                </div>
+                <div className="text-xs text-gray-500 mt-1">1 day ago</div>
+              </div>
+            </div>
+          </div>
+        </div>
       </div>
     </div>
   );
