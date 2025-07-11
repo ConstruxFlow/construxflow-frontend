@@ -199,11 +199,11 @@ const SupplierDashboard = () => {
         </div>
 
         {/* Recent Activity */}
-        <div className="bg-purewhite rounded-lg p-5 shadow-md mt-8">
+        <div className="bg-purewhite border border-gray-200 rounded-xl p-5 mt-8">
           <div className="font-semibold mb-4">Recent Activity</div>
           <div className="space-y-3">
             {/* Activity 1 */}
-            <div className="flex items-start bg-gray-100 rounded-lg p-4 border-l-4 border-deep_green shadow">
+            <div className="flex items-start bg-purewhite rounded-lg p-4 border-l-4 border-deep_green shadow hover:-translate-y-0.5 transition-all duration-150">
               <span className="flex items-center justify-center w-8 h-8 mr-4">
                 <FaRegCheckCircle className="text-deep_green text-lg" />
               </span>
@@ -215,7 +215,7 @@ const SupplierDashboard = () => {
               </div>
             </div>
             {/* Activity 2 */}
-            <div className="flex items-start bg-gray-100 rounded-lg p-4 border-l-4 border-web_yellow shadow">
+            <div className="flex items-start bg-purewhite rounded-lg p-4 border-l-4 border-web_yellow shadow hover:-translate-y-0.5 transition-all duration-150">
               <span className="flex items-center justify-center w-8 h-8 mr-4">
                 <FaRegFolderOpen className="text-web_yellow text-lg" />
               </span>
@@ -227,7 +227,7 @@ const SupplierDashboard = () => {
               </div>
             </div>
             {/* Activity 3 */}
-            <div className="flex items-start bg-gray-100 rounded-lg p-4 border-l-4 border-deep_green shadow">
+            <div className="flex items-start bg-purewhite rounded-lg p-4 border-l-4 border-deep_green shadow hover:-translate-y-0.5 transition-all duration-150">
               <span className="flex items-center justify-center w-8 h-8 mr-4">
                 <MdOutlineNotificationsNone className="text-deep_green text-lg" />
               </span>
