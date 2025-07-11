@@ -195,6 +195,26 @@ const SupplierDashboard = () => {
           <div className="bg-purewhite border border-gray-200 rounded-xl p-5 min-h-[230px]">
             <div className="font-semibold mb-2 text-lg text-gray-700">Urgent Notifications</div>
             {/* Notifications go here */}
+            <div className="space-y-3">
+  {/* Notification 1 */}
+  <div className="flex items-start bg-yellow-50 rounded-lg p-4 border-l-4 border-yellow-400 shadow mt-8">
+    <div className="flex-1 ml-3">
+      <div className="font-semibold text-yellow-700">Pending Material Requests</div>
+      <div className="text-sm text-yellow-800">You have 3 pending material requests that need your attention.</div>
+      <div className="text-xs text-yellow-500 mt-1">10 minutes ago</div>
+    </div>
+  </div>
+  {/* Notification 2 */}
+  <div className="flex items-start bg-deep_green/10 rounded-lg p-4 border-l-4 border-deep_green shadow">
+    <div className="flex-1 ml-3">
+      <div className="font-semibold text-deep_green">New Purchase Order</div>
+      <div className="text-sm text-deep_green">Purchase order #PO-2025-123 has been placed.</div>
+      <div className="text-xs text-deep_green/80 mt-1">1 hour ago</div>
+    </div>
+  </div>
+  
+</div>
+
           </div>
         </div>
 
