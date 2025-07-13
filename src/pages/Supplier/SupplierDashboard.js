@@ -177,7 +177,7 @@ const SupplierDashboard = () => {
               <FaUser className="text-lg" />
               <span>Update Profile</span>
             </button>
-            <button className="flex items-center justify-center w-full h-14 rounded-xl bg-light_gray hover:bg-light_gray/90 transition font-medium text-main_dark text-base gap-2">
+            <button onClick={()=> navigate('/contact-support')} className="flex items-center justify-center w-full h-14 rounded-xl bg-light_gray hover:bg-light_gray/90 transition font-medium text-main_dark text-base gap-2">
               <FaHeadset className="text-lg" />
               <span>Contact Support</span>
             </button>
