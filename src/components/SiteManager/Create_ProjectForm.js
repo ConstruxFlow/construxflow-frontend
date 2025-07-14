@@ -1,6 +1,7 @@
 import React, { useState } from 'react';
 import { Calendar, Upload, FolderPlus, Save, X } from 'lucide-react';
 import { pdfjs } from 'react-pdf';
+import { useNavigate } from 'react-router-dom';
 // IMPORTANT: Make sure public/pdf.worker.min.js exists (copy from node_modules/pdfjs-dist/build/pdf.worker.min.js)
 pdfjs.GlobalWorkerOptions.workerSrc = `${process.env.PUBLIC_URL}/pdf.worker.min.js`;
 
@@ -13,6 +14,7 @@ const Create_ProjectForm = () => {
     progressStatus: '',
     boqFile: null
   });
+  const navigate = useNavigate();
 
   // --- PHASES STATE AND HANDLERS ---
   const [phases, setPhases] = useState([
@@ -258,6 +260,7 @@ const Create_ProjectForm = () => {
       });
       if (res.ok) {
         alert('Project created successfully!');
+        navigate('/projects-list');
         // Optionally, reset form or redirect here
       } else {
         alert('Failed to create project. Please try again.');

@@ -7,6 +7,16 @@ const ExistingProjects = () => {
   const [loading, setLoading] = useState(true);
   const [error, setError] = useState(null);
   const [deletingId, setDeletingId] = useState(null);
+  const [statusFilter, setStatusFilter] = useState('All Status');
+  const [searchTerm, setSearchTerm] = useState('');
+  const statusOptions = [
+    'All Status',
+    'Not Started',
+    'Planning',
+    'In Progress',
+    'On Hold',
+    'Completed'
+  ];
 
   const navigate = useNavigate();
 
@@ -54,6 +64,27 @@ const ExistingProjects = () => {
   if (loading) return <div>Loading projects...</div>;
   if (error) return <div>{error}</div>;
 
+  // Filter projects by status
+  const filteredProjects = projects.filter(project => {
+    // Status filter
+    if (statusFilter !== 'All Status') {
+      const status = (project.progressStatus || project.status || '')
+        .toLowerCase()
+        .replace(/[_-]/g, ' ')
+        .trim();
+      if (status !== statusFilter.toLowerCase()) return false;
+    }
+    // Search filter
+    if (searchTerm.trim() !== '') {
+      const name = (project.projectName || project.name || '').toLowerCase();
+      const location = (project.location || '').toLowerCase();
+      const status = (project.progressStatus || project.status || '').toLowerCase();
+      const term = searchTerm.toLowerCase();
+      if (!name.includes(term) && !location.includes(term) && !status.includes(term)) return false;
+    }
+    return true;
+  });
+
   return (
     <div className="max-w-4xl mx-auto p-6 bg-gray-50 min-h-screen pt-12">
       {/* Header */}
@@ -83,19 +114,23 @@ const ExistingProjects = () => {
       <div className="flex items-center gap-4 mb-6">
         <div className="flex items-center gap-2">
           <span className="text-gray-700 font-medium">Status:</span>
-          <select className="border border-gray-300 rounded-md px-3 py-1 bg-white">
-            <option>All Projects</option>
-            <option>In Progress</option>
-            <option>Completed</option>
-            <option>On Hold</option>
-            <option>Planning</option>
+          <select
+            className="border border-gray-300 rounded-md px-3 py-1 bg-white"
+            value={statusFilter}
+            onChange={e => setStatusFilter(e.target.value)}
+          >
+            {statusOptions.map(option => (
+              <option key={option}>{option}</option>
+            ))}
           </select>
         </div>
         <div className="flex items-center gap-2">
           <span className="text-gray-400">🔍</span>
-          <input 
-            type="text" 
-            placeholder="Search projects..." 
+          <input
+            type="text"
+            placeholder="Search projects..."
+            value={searchTerm}
+            onChange={e => setSearchTerm(e.target.value)}
             className="border border-gray-300 rounded-md px-3 py-1 bg-white w-64"
           />
         </div>
@@ -103,10 +138,10 @@ const ExistingProjects = () => {
 
       {/* Project Cards */}
       <div className="space-y-4">
-        {projects.length === 0 ? (
+        {filteredProjects.length === 0 ? (
           <div className="text-gray-500">No projects found.</div>
         ) : (
-          projects.map((project) => {
+          filteredProjects.map((project) => {
             // Map backend fields to UI fields
             // Adjust these as per your ProjectResponseDTO
             const name = project.projectName || project.name || 'Unnamed Project';
@@ -150,15 +185,16 @@ const ExistingProjects = () => {
                 </div>
                 
                 <div className="flex gap-3">
-                <button 
+                {/* <button 
                     className="text-black font-semibold px-4 py-2 rounded text-sm flex items-center gap-2"
                     style={{ backgroundColor: '#EFC11A' }}
                 >
                     + Add Phase
-                </button>
+                </button> */}
                 <button 
                     className="text-black font-semibold px-4 py-2 rounded text-sm flex items-center gap-2"
                     style={{ backgroundColor: '#EFC11A' }}
+                    onClick={() => navigate('/material-request-list')}
                 >
                     🗎 View Materials
                 </button>
