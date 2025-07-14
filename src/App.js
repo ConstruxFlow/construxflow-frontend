@@ -55,6 +55,7 @@ import {
 } from "./pages/PurchasingManager/Routes";
 import { MaintenanceRoute } from "./pages/MaintenanceHead/MaintenanceRoute";
 import VerificationEmailPage from "./components/EmailVerify";
+import BOQPDFReader from "./pages/BOQPDFReader";
 
 export const routes = createBrowserRouter([
   {
@@ -123,7 +124,10 @@ export const routes = createBrowserRouter([
 
   // MAINTENANCE HEAD
   MaintenanceRoute,
-
+{
+  path: "/pdfreader",
+  element: <BOQPDFReader />,
+},
   
   // SITE MANAGER
   {
