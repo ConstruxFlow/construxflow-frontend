@@ -1,4 +1,4 @@
-import React from "react";
+import React, { useEffect, useState } from "react";
 import NavBar from "../components/NavBar";
 import { MdOutlineStorage } from "react-icons/md";
 import { FaRobot, FaChartLine, FaWarehouse, FaUser, FaBuilding } from "react-icons/fa";
@@ -11,6 +11,21 @@ import { useNavigate } from "react-router-dom";
 
 const Home = () => {
   const navigation = useNavigate();
+  const [isLoggedIn, setIsLoggedIn] = useState(false);
+
+  // Check login state on mount
+  useEffect(() => {
+    const user = localStorage.getItem("user");
+    setIsLoggedIn(!!user);
+  }, []);
+
+  // Logout handler
+  const handleLogout = () => {
+    localStorage.removeItem("user");
+    localStorage.removeItem("role");
+    setIsLoggedIn(false);
+    window.location.reload(); // or use navigation to go to login page
+  };
 
   const handleLogin = () => {
     navigation("/login");
@@ -26,7 +41,8 @@ const Home = () => {
           { name: "Contact", href: "#contact" },
         ]}
         showButton={true}
-        onButtonClick={handleLogin}
+        buttonLabel={isLoggedIn ? "Logout" : "Get Started"}
+        onButtonClick={isLoggedIn ? handleLogout : handleLogin}
       />
 
       {/* Hero Section with Full Background Image */}

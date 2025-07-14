@@ -8,18 +8,22 @@ import { FaUser } from "react-icons/fa";
 import { TfiWrite } from "react-icons/tfi";
 import { IoSearch } from "react-icons/io5";
 import { SiGoogleanalytics } from "react-icons/si";
+import { useNavigate } from 'react-router-dom';
 
 const PurchasingDashboard = () => {
+  const navigate=useNavigate();
+
+
   return (
     <div className="min-h-screen bg-purewhite font-poppins">
       {/* Header Navigation */}
      <NavBar links={
         [
           { name: 'Dashboard', path: '/purchasing/dashboard' },
-          { name: 'Requests', path: '/purchasing/materialrequests/overview' },
-          { name: 'Orders', path: '/orders' },
+          { name: 'Material Requests', path: '/purchasing/materialrequests/overview' },
           { name: 'Suppliers', path: '/purchasing/supplier/dashboard' },
-          { name: 'Reports', path: '/reports' }
+          { name: 'Quotation Requests', path: '/purchasing/quotationrequest/overview' },
+          { name: 'Orders', path: '/orders' },
         ]
      } />
 
@@ -117,7 +121,7 @@ const PurchasingDashboard = () => {
               Quick Actions
             </h2>
             <div className="grid grid-cols-2 lg:grid-cols-4 gap-3 sm:gap-4">
-              <div className="bg-purewhite border-2  hover:border-web_yellow rounded-lg p-4 sm:p-5 text-center cursor-pointer hover:-translate-y-0.5 hover:shadow-md transition-all duration-150">
+              <div onClick={()=>navigate('/purchasing/supplier/register')} className="bg-purewhite border-2  hover:border-web_yellow rounded-lg p-4 sm:p-5 text-center cursor-pointer hover:-translate-y-0.5 hover:shadow-md transition-all duration-150">
                 <div className="text-xl flex justify-center text-deep_green sm:text-2xl mb-2"><FaUser/></div>
                 <span className="font-medium text-main_dark text-xs sm:text-sm">Register Supplier</span>
               </div>

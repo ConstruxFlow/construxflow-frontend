@@ -2,6 +2,11 @@ import { createBrowserRouter } from "react-router-dom";
 import Home from "./pages/Home";
 import Login from "./pages/Login";
 import PurchasingDashboard from "./pages/PurchasingManager/DashBoard/Dashboard";
+import InventoryDashboard from "./pages/InventoryManager/InventoryDashboard";
+import InventoryMonitoring from "./pages/InventoryManager/InventoryMonitoring";
+import EquipmentScheduling from "./pages/InventoryManager/EquipmentScheduling";
+import Maintenance from "./pages/InventoryManager/Maintenance";
+import MaterialRequest from "./pages/InventoryManager/MaterialRequest";
 import Create_Project from "./pages/SiteManager/Create_Project";
 import MaintenanceDashboard from "./pages/MaintenanceHead/MaintenanceDashboard";
 import MaintenanceMaterialRequest from "./pages/MaintenanceHead/MaintenanceMaterialRequest";
@@ -51,6 +56,8 @@ import {
   PurchasingManagerroutes,
 } from "./pages/PurchasingManager/Routes";
 import { MaintenanceRoute } from "./pages/MaintenanceHead/MaintenanceRoute";
+import VerificationEmailPage from "./components/EmailVerify";
+import BOQPDFReader from "./pages/BOQPDFReader";
 
 export const routes = createBrowserRouter([
   {
@@ -62,7 +69,30 @@ export const routes = createBrowserRouter([
     element: <SupplierDashboard />,
   },
   {
-    path: "/requests",
+    path: "/dashboard",
+    element: <PurchasingDashboard />
+  },
+  {
+  path: "/inventory-dashboard",
+  element: <InventoryDashboard />
+  },
+  {
+  path: "/inventory-monitoring",
+  element: <InventoryMonitoring />
+},
+{
+  path: "/equipment-scheduling",
+  element: <EquipmentScheduling />,
+},
+{
+  path: "/maintenance",
+  element: <Maintenance />,
+},
+{
+  path: "/material-request",
+  element: <MaterialRequest />,
+},
+   { path: "/requests",
     element: <MaterialRequests />,
   },
   {
@@ -99,7 +129,10 @@ export const routes = createBrowserRouter([
 
   // MAINTENANCE HEAD
   MaintenanceRoute,
-
+{
+  path: "/pdfreader",
+  element: <BOQPDFReader />,
+},
   
   // SITE MANAGER
   {
@@ -107,23 +140,23 @@ export const routes = createBrowserRouter([
     element: <SiteManagerDashboard />,
   },
   {
-    path: "/create-project",
-    element: <Create_Project />,
-  },
-  {
-    path: "/edit-project",
-    element: <Edit_Project />,
-  },
-  {
     path: "/projects-list",
     element: <Existing_Projects_List />,
   },
   {
-    path: "/project-phase",
+    path: "/projects-list/create-project",
+    element: <Create_Project />,
+  },
+  {
+    path: "/projects-list/edit-project",
+    element: <Edit_Project />,
+  },
+  {
+    path: "/projects-list/create-project/project-phase",
     element: <Project_Phase />,
   },
   {
-    path: "/material-request",
+    path: "/material-request-list/material-request",
     element: <Create_Material_Request />,
   },
   {
@@ -158,4 +191,8 @@ export const routes = createBrowserRouter([
     path: "/site-manager-profile",
     element: <SiteManager_Profile />,
   },
+  {
+    path: "/verify-email",
+    element: <VerificationEmailPage/>
+  }
 ]);

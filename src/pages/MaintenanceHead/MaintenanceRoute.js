@@ -10,6 +10,9 @@ import TaskCompleteContainer from "./TaskComplete";
 import WorkerProfile from "./WorkerProfile";
 import ProfileManagement from "./MaintenanceProfile";
 import MaintenanceScheduling from "./MaintenanceScheduling";
+import EquipmentMaintenanceContainer from "./UpdateEquipmentMaintenance";
+import UpdateEquipmentMaintenance from "./UpdateEquipmentMaintenance";
+import ScheduleMaintenanceAndRequestMaterials from "./MaintenanceScheduling";
 
 export const MaintenanceRoute = {
   path: "/maintenance",
@@ -36,7 +39,7 @@ export const MaintenanceRoute = {
         element: <ServiceHistoryContainer/>,
     },
     {
-        path: 'technician-assignment',
+        path: 'technician-assignment/:id',
         element: <TechnicianAssignmentMain/>,
     },
     {
@@ -57,7 +60,11 @@ export const MaintenanceRoute = {
     },
     {
         path: 'scheduling',
-        element: <MaintenanceScheduling/>,
+        element: <ScheduleMaintenanceAndRequestMaterials/>,
     },
+    {
+        path: "update-equipment-maintenance",
+        element: <UpdateEquipmentMaintenance/>
+    }
   ],
 };

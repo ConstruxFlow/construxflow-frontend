@@ -279,7 +279,7 @@ export default function NextScheduleContainer() {
                   Cancel
                 </button>
                 <button className="px-6 py-2 bg-[#236571] text-white rounded-md text-sm font-medium hover:bg-[#1e5a63] transition">
-                  Assign Technician
+                  Confirm
                 </button>
               </div>
             </div>
