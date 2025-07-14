@@ -17,6 +17,7 @@ import CreatePurchaseOrder from "./PurchasingOrder/CreatePurchaseOrder";
 import RequestAdvancePayment from "./PurchasingOrder/RequestAdvancePayment";
 import PurchaseOrdersOverview from "./PurchasingOrder/PurchaseOrdersOverview";
 import PurchaseOrderDetails from "./PurchasingOrder/PurchaseOrderDetails";
+import EditQuotationRequest from "./Material_Requests/EditQuotationRequest";
 
 export const purchasingManagerRoutes = {
   path: '/purchasing',
@@ -49,6 +50,10 @@ export const purchasingManagerRoutes = {
     {
       path: 'quotationrequest/details/:id',
       element: <QuotationRequestDetail />,
+    },
+    {
+      path: 'quotationrequest/edit/:id',
+      element: <EditQuotationRequest />,
     },
     {
       path: 'supplier/dashboard',
