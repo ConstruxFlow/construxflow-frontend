@@ -1,249 +1,450 @@
-import React from "react";
+import React, { useEffect, useState } from "react";
 import NavBar from "../components/NavBar";
 import { MdOutlineStorage } from "react-icons/md";
-import FeaturesCard from "../components/HomePage/FeaturesCard";
-import { FaRobot } from "react-icons/fa";
-import { FaChartLine } from "react-icons/fa6";
-import { FaWarehouse } from "react-icons/fa";
-import { FaArrowUpLong } from "react-icons/fa6";
-import { FaRegClock } from "react-icons/fa6";
-import { FaBuilding } from "react-icons/fa6";
-import { GrStatusGood } from "react-icons/gr";
-import { IoMail } from "react-icons/io5";
-import { FaPhoneAlt } from "react-icons/fa";
+import { FaRobot, FaChartLine, FaWarehouse, FaUser, FaBuilding } from "react-icons/fa";
+import { TfiWrite } from "react-icons/tfi";
+import { IoSearch, IoMail } from "react-icons/io5";
+import { SiGoogleanalytics } from "react-icons/si";
+import { FaPhoneAlt, FaArrowUpLong } from "react-icons/fa";
 import { MdLocationPin } from "react-icons/md";
-import InsightsCard from "../components/HomePage/InsightsCard";
 import { useNavigate } from "react-router-dom";
 
 const Home = () => {
-  const navigation=useNavigate();
+  const navigation = useNavigate();
+  const [isLoggedIn, setIsLoggedIn] = useState(false);
 
-  const handlelogin=()=>{
+  // Check login state on mount
+  useEffect(() => {
+    const user = localStorage.getItem("user");
+    setIsLoggedIn(!!user);
+  }, []);
+
+  // Logout handler
+  const handleLogout = () => {
+    localStorage.removeItem("user");
+    localStorage.removeItem("role");
+    setIsLoggedIn(false);
+    window.location.reload(); // or use navigation to go to login page
+  };
+
+  const handleLogin = () => {
     navigation("/login");
-  }
+  };
 
   return (
-    <div className="bg-main_dark flex flex-col items-center justify-center w-full">
+    <div className="bg-purewhite flex flex-col items-center justify-center w-full font-poppins">
       <NavBar
         links={[
           { name: "Home", href: "#" },
-          { name: "Features", href: "#" },
-          { name: "Insights", href: "#" },
-          { name: "Contact", href: "#" },
+          { name: "Features", href: "#features" },
+          { name: "Solutions", href: "#solutions" },
+          { name: "Contact", href: "#contact" },
         ]}
         showButton={true}
-        onButtonClick={handlelogin}
+        buttonLabel={isLoggedIn ? "Logout" : "Get Started"}
+        onButtonClick={isLoggedIn ? handleLogout : handleLogin}
       />
-      <div className="relative w-full md:h-[calc(100vh-70px)] h-[calc(100vh-50px)] overflow-hidden">
-        <img
-          src="/assets/home_page/hero.jpg"
-          alt="Background"
-          className="absolute inset-0 w-full h-full object-cover"
-        />
-        <div className="absolute inset-0 bg-black/50" />
-        <div
-          className="absolute inset-0"
-          style={{
-            background:
-              "linear-gradient(90deg, #191919 0%, rgba(25, 25, 25, 0.90) 50%, rgba(0, 0, 0, 0) 100%)",
-          }}
-        />
-        <div className="relative z-10 flex justify-between items-center h-full">
-          <div className="w-1/2 flex flex-col gap-8 justify-center items-start pl-10">
-            <h1 className="text-purewhite font-extrabold text-7xl">
-              Seamless Projects, One Powerful Platform
-            </h1>
-            <p className="text-light_gray text-lg w-[500px]">
-              All-in-one platform for inventory, procurement, and
-              maintenance—built for seamless construction project management.
-            </p>
-            <div className="flex gap-4">
-              <button className="bg-web_yellow font-medium text-main_dark px-6 py-3 rounded hover:bg-yellow-500 transition-colors">
-                Start Managing Today
-              </button>
-              <button className="bg-transparent border font-medium border-deep_green text-deep_green px-6 py-3 rounded ">
-                Learn More
-              </button>
-            </div>
+
+      {/* Hero Section with Full Background Image */}
+      <div 
+        className="relative w-full min-h-[calc(100vh-70px)] flex items-center justify-center bg-cover bg-center bg-no-repeat"
+        style={{
+          backgroundImage: `linear-gradient(rgba(0, 0, 0, 0.3), rgba(0, 0, 0, 0.3)), url('/assets/home_page/1.jpg')`
+        }}
+      >
+        <div className="max-w-4xl mx-auto px-4 sm:px-6 lg:px-8 py-16 text-center relative z-10">
+          {/* Trust Badge */}
+          <div className="inline-flex items-center gap-2 bg-gradient-to-r from-web_yellow/20 via-web_yellow/15 to-transparent border border-web_yellow/30 rounded-full px-4 py-2 mb-8 backdrop-blur-sm">
+            <div className="w-2 h-2 bg-web_yellow rounded-full animate-pulse"></div>
+            <span className="text-purewhite font-medium text-sm">Trusted by 500+ Construction Teams</span>
           </div>
-          <div className="w-1/2 md:flex hidden justify-center items-center">
-            <img
-              src="/assets/home_page/hero2.jpg"
-              alt="Hero"
-              className="w-[680px] h-[450px] rounded-xl shadow-xl"
-            />
-            {/* Liquid glass cards */}
-            <div className="absolute left-[750px] top-[380px] w-[152px] h-[86px]  bg-[#1A1A1A]/40 rounded-[16px] border border-white/20 shadow-[0_4px_32px_0_rgba(0,0,0,0.25)] backdrop-blur-sm backdrop-saturate-150  overflow-hidden">
-              <div className="absolute inset-0 flex flex-col gap-1 items-center justify-center text-white pointer-events-none">
-                <p className="text-deep_green font-bold text-xl">500+</p>
-                <p className="font-light">Happy Clients</p>
-                <div className="absolute top-2 left-2 w-2/3 h-1/4 bg-white/20 rounded-full blur-lg"></div>
-                <div className="absolute bottom-2 right-2 w-1/3 h-1/6 bg-white/10 rounded-full blur"></div>
-              </div>
+          
+          {/* Main Heading */}
+          <h1 className="text-purewhite font-bold text-4xl md:text-5xl lg:text-6xl leading-tight mb-6 max-w-4xl mx-auto drop-shadow-lg">
+            Streamline Your Construction
+            <span className="text-web_yellow"> Operations</span>
+          </h1>
+          
+          {/* Subheading */}
+          <p className="text-gray-200 text-lg lg:text-xl max-w-2xl mx-auto leading-relaxed mb-8 drop-shadow-md">
+            All-in-one platform for inventory management, procurement tracking, and maintenance coordination—designed for modern construction teams.
+          </p>
+          
+          {/* CTA Buttons */}
+          <div className="flex flex-col sm:flex-row gap-4 justify-center mb-12">
+            <button className="bg-gradient-to-r from-web_yellow to-web_yellow/90 font-semibold text-main_dark px-8 py-4 rounded-xl hover:shadow-lg hover:-translate-y-0.5 transition-all duration-300 backdrop-blur-sm">
+              Start Free Trial
+            </button>
+            <button className="bg-purewhite/10 backdrop-blur-sm border-2 border-purewhite font-semibold text-purewhite px-8 py-4 rounded-xl hover:bg-purewhite hover:text-main_dark transition-all duration-300">
+              Watch Demo
+            </button>
+          </div>
+
+          {/* Stats Row */}
+          <div className="grid grid-cols-1 sm:grid-cols-3 gap-8 max-w-2xl mx-auto">
+            <div className="text-center bg-purewhite/10 backdrop-blur-sm rounded-lg p-4 border border-purewhite/20">
+              <h3 className="text-3xl font-bold text-purewhite mb-1">500+</h3>
+              <p className="text-gray-200 text-sm">Active Projects</p>
             </div>
-            <div className="absolute right-[300px] bottom-[85px] w-[152px] h-[86px]  bg-[#1A1A1A]/40 rounded-[16px] border border-white/20 shadow-[0_4px_32px_0_rgba(0,0,0,0.25)] backdrop-blur-sm backdrop-saturate-150  overflow-hidden">
-              <div className="absolute inset-0 flex flex-col gap-1 items-center justify-center text-white pointer-events-none">
-                <p className="text-web_yellow font-bold text-xl">640+</p>
-                <p className="font-light">Active Workers</p>
-                <div className="absolute top-2 left-2 w-2/3 h-1/4 bg-white/20 rounded-full blur-lg"></div>
-                <div className="absolute bottom-2 right-2 w-1/3 h-1/6 bg-white/10 rounded-full blur"></div>
-              </div>
+            <div className="text-center bg-purewhite/10 backdrop-blur-sm rounded-lg p-4 border border-purewhite/20">
+              <h3 className="text-3xl font-bold text-purewhite mb-1">98%</h3>
+              <p className="text-gray-200 text-sm">Client Satisfaction</p>
             </div>
-            <div className="absolute right-4 top-[90px] w-[152px] h-[86px]  bg-[#1A1A1A]/40 rounded-[16px] border border-white/20 shadow-[0_4px_32px_0_rgba(0,0,0,0.25)] backdrop-blur-sm backdrop-saturate-150  overflow-hidden">
-              <div className="absolute inset-0 flex flex-col gap-1 items-center justify-center text-white pointer-events-none">
-                <p className="text-web_yellow font-bold text-xl">150+</p>
-                <p className="font-light">Projects Finished</p>
-                <div className="absolute top-2 left-2 w-2/3 h-1/4 bg-white/20 rounded-full blur-lg"></div>
-                <div className="absolute bottom-2 right-2 w-1/3 h-1/6 bg-white/10 rounded-full blur"></div>
-              </div>
+            <div className="text-center bg-purewhite/10 backdrop-blur-sm rounded-lg p-4 border border-purewhite/20">
+              <h3 className="text-3xl font-bold text-purewhite mb-1">24/7</h3>
+              <p className="text-gray-200 text-sm">Support Available</p>
             </div>
           </div>
         </div>
       </div>
-      {/* Features Section */}
-      <div className="w-full py-10 flex flex-col gap-3 items-center">
-        <p className="text-purewhite text-3xl">
-          Powerful Features for Construction Teams
-        </p>
-        <p className="text-light_gray text-base w-[540px] text-center">
-          Everything you need to manage inventory, track procurement, and
-          coordinate maintenance across your construction projects.
-        </p>
-        <div className="flex w-full px-28 pt-5 justify-between">
-          <FeaturesCard
-            icon={MdOutlineStorage}
-            title="Inventory Management"
-            description="Optimize material ordering, track deliveries, and manage warehouse operations with intelligent automation."
-          />
-          <FeaturesCard
-            icon={FaRobot}
-            iconBg="bg-web_yellow"
-            title="Automated Ordering"
-            description="Set minimum stock levels and let the system automatically generate purchase orders when inventory runs low."
-          />
-          <FeaturesCard
-            icon={FaChartLine}
-            title="Real-Time Tracking"
-            description="Monitor inventory levels, track deliveries, and get instant updates on material availability across all your construction sites."
-          />
-        </div>
-      </div>
-      {/* Insights Section */}
-      <div className="w-full py-10 flex flex-col gap-3 items-center">
-        <p className="text-purewhite text-3xl">
-          Real-Time Construction Insights
-        </p>
-        <p className="text-light_gray text-base w-[400px] text-center">
-          See the pulse of your projects and supply chain at a glance.
-        </p>
-        <div className="flex w-full px-28 pt-5 justify-between">
-          <InsightsCard
-            icon={FaChartLine}
-            title="Real-Time Tracking"
-            main_percentage="75%"
-            percentage="12%"
-            plus={true}
-            iconBg="bg-deep_green"
-            bordercolor="border-deep_green/50"
-          />
-          <InsightsCard
-            icon={GrStatusGood}
-            title="Order Fulfillment"
-            main_percentage="95%"
-            percentage="5%"
-            plus={true}
-            iconBg="bg-web_yellow"
-            bordercolor="border-web_yellow/50"
-          />
-          <InsightsCard
-            icon={FaRegClock}
-            title="On-Time Delivery"
-            main_percentage="91%"
-            percentage="8%"
-            plus={true}
-            iconBg="bg-deep_green"
-            bordercolor="border-deep_green/50"
-          />
-          <div className="w-[300px] h-[180px] bg-[#1A1A1A]/40 rounded-[16px] border border-web_yellow/50 shadow-[0_4px_32px_0_rgba(0,0,0,0.25)] backdrop-blur-sm backdrop-saturate-150 overflow-hidden relative">
-            <div className="absolute inset-0 flex flex-col px-5 items-start gap-2 justify-center text-white pointer-events-none">
-              <div className="w-full flex items-center justify-between">
-                <div
-                  className={`text-purewhite bg-web_yellow rounded p-1 w-fit flex items-center justify-center`}
-                >
-                  <FaBuilding className="text-xl" />
-                </div>
-                <p className="text-web_yellow text-xs flex gap-1"> Active</p>
-              </div>
-              <p className="text-purewhite text-2xl">25</p>
-              <p className="text-[#D1D5DB] text-base font-extralight">
-                Inventory Level
+
+      {/* Features Section with Right Side Image */}
+      <div id="features" className="w-full py-16 bg-light_gray/10">
+        <div className="max-w-7xl mx-auto px-4 sm:px-6 lg:px-8">
+          <div className="grid grid-cols-1 lg:grid-cols-2 gap-12 items-center mb-16">
+            {/* Content Column */}
+            <div>
+              <h2 className="text-3xl lg:text-4xl font-bold text-main_dark mb-6">
+                Everything You Need for Construction Excellence
+              </h2>
+              <p className="text-slatebluegray text-lg mb-8 leading-relaxed">
+                Powerful features designed specifically for construction teams to streamline operations and boost productivity. Our comprehensive platform brings together all the tools you need in one place.
               </p>
-              <div className="absolute top-2 left-2 w-2/3 h-1/4 bg-white/20 rounded-full blur-lg"></div>
-              <div className="absolute bottom-2 right-2 w-1/3 h-1/6 bg-white/10 rounded-full blur"></div>
+              <div className="space-y-4">
+                <div className="flex items-center gap-4">
+                  <div className="w-8 h-8 bg-web_yellow rounded-full flex items-center justify-center">
+                    <MdOutlineStorage className="text-main_dark text-sm"/>
+                  </div>
+                  <span className="text-main_dark font-medium">Smart Inventory Management</span>
+                </div>
+                <div className="flex items-center gap-4">
+                  <div className="w-8 h-8 bg-deep_green rounded-full flex items-center justify-center">
+                    <FaRobot className="text-purewhite text-sm"/>
+                  </div>
+                  <span className="text-main_dark font-medium">Automated Procurement</span>
+                </div>
+                <div className="flex items-center gap-4">
+                  <div className="w-8 h-8 bg-web_yellow rounded-full flex items-center justify-center">
+                    <SiGoogleanalytics className="text-main_dark text-sm"/>
+                  </div>
+                  <span className="text-main_dark font-medium">Real-time Analytics</span>
+                </div>
+              </div>
+            </div>
+            
+            {/* Image Column */}
+            <div className="relative">
+              <img 
+                src="/assets/home_page/2.jpg" 
+                alt="Construction Management Features"
+                className="w-full h-auto rounded-2xl shadow-xl border border-gray-200"
+              />
+              <div className="absolute -bottom-6 -left-6 bg-web_yellow rounded-xl p-4 shadow-lg">
+                <div className="text-main_dark font-bold text-lg">40%</div>
+                <div className="text-main_dark text-sm">Efficiency Boost</div>
+              </div>
+            </div>
+          </div>
+
+          {/* Feature Cards Grid */}
+          <div className="grid grid-cols-1 md:grid-cols-2 lg:grid-cols-3 gap-8">
+            {/* Feature Card 1 */}
+            <div className="bg-purewhite border border-gray-200 rounded-xl p-8 hover:shadow-lg hover:-translate-y-1 transition-all duration-300 text-center">
+              <div className="w-16 h-16 bg-gradient-to-br from-web_yellow to-web_yellow/80 rounded-xl flex items-center justify-center mx-auto mb-6">
+                <MdOutlineStorage className="text-purewhite text-2xl"/>
+              </div>
+              <h3 className="text-xl font-semibold text-main_dark mb-4">Inventory Management</h3>
+              <p className="text-slatebluegray leading-relaxed">
+                Track materials, manage stock levels, and automate reordering with intelligent inventory controls.
+              </p>
+            </div>
+
+            {/* Feature Card 2 */}
+            <div className="bg-purewhite border border-gray-200 rounded-xl p-8 hover:shadow-lg hover:-translate-y-1 transition-all duration-300 text-center">
+              <div className="w-16 h-16 bg-gradient-to-br from-deep_green to-deep_green/80 rounded-xl flex items-center justify-center mx-auto mb-6">
+                <FaRobot className="text-purewhite text-2xl"/>
+              </div>
+              <h3 className="text-xl font-semibold text-main_dark mb-4">Automated Procurement</h3>
+              <p className="text-slatebluegray leading-relaxed">
+                Streamline purchasing with automated workflows, supplier management, and approval processes.
+              </p>
+            </div>
+
+            {/* Feature Card 3 */}
+            <div className="bg-purewhite border border-gray-200 rounded-xl p-8 hover:shadow-lg hover:-translate-y-1 transition-all duration-300 text-center">
+              <div className="w-16 h-16 bg-gradient-to-br from-web_yellow to-web_yellow/80 rounded-xl flex items-center justify-center mx-auto mb-6">
+                <SiGoogleanalytics className="text-purewhite text-2xl"/>
+              </div>
+              <h3 className="text-xl font-semibold text-main_dark mb-4">Real-time Analytics</h3>
+              <p className="text-slatebluegray leading-relaxed">
+                Get instant insights into project progress, costs, and resource utilization with comprehensive dashboards.
+              </p>
+            </div>
+
+            {/* Feature Card 4 */}
+            <div className="bg-purewhite border border-gray-200 rounded-xl p-8 hover:shadow-lg hover:-translate-y-1 transition-all duration-300 text-center">
+              <div className="w-16 h-16 bg-gradient-to-br from-deep_green to-deep_green/80 rounded-xl flex items-center justify-center mx-auto mb-6">
+                <FaWarehouse className="text-purewhite text-2xl"/>
+              </div>
+              <h3 className="text-xl font-semibold text-main_dark mb-4">Multi-Site Management</h3>
+              <p className="text-slatebluegray leading-relaxed">
+                Manage inventory and operations across multiple construction sites from a single platform.
+              </p>
+            </div>
+
+            {/* Feature Card 5 */}
+            <div className="bg-purewhite border border-gray-200 rounded-xl p-8 hover:shadow-lg hover:-translate-y-1 transition-all duration-300 text-center">
+              <div className="w-16 h-16 bg-gradient-to-br from-web_yellow to-web_yellow/80 rounded-xl flex items-center justify-center mx-auto mb-6">
+                <FaUser className="text-purewhite text-2xl"/>
+              </div>
+              <h3 className="text-xl font-semibold text-main_dark mb-4">Supplier Network</h3>
+              <p className="text-slatebluegray leading-relaxed">
+                Build and manage relationships with trusted suppliers for consistent material delivery.
+              </p>
+            </div>
+
+            {/* Feature Card 6 */}
+            <div className="bg-purewhite border border-gray-200 rounded-xl p-8 hover:shadow-lg hover:-translate-y-1 transition-all duration-300 text-center">
+              <div className="w-16 h-16 bg-gradient-to-br from-deep_green to-deep_green/80 rounded-xl flex items-center justify-center mx-auto mb-6">
+                <FaChartLine className="text-purewhite text-2xl"/>
+              </div>
+              <h3 className="text-xl font-semibold text-main_dark mb-4">Cost Control</h3>
+              <p className="text-slatebluegray leading-relaxed">
+                Monitor budgets, track expenses, and prevent cost overruns with real-time financial insights.
+              </p>
             </div>
           </div>
         </div>
       </div>
-      {/* Contact Section */}
-      <div className="w-full py-10 flex flex-col bg-deep_green gap-3 items-center">
-        <p className="text-purewhite text-3xl">
-          Ready to Transform Your Construction Workflow?
-        </p>
-        <p className="text-light_gray text-base w-[600px] text-center">
-          Join thousands of construction teams already using ConstructFlow to
-          streamline their operations.
-        </p>
-        <div className="flex gap-4">
-          <button className="bg-web_yellow font-medium text-main_dark px-6 py-3 rounded hover:bg-yellow-500 transition-colors">
-            Start Managing Today
-          </button>
-          <button className="bg-transparent border font-medium border-purewhite text-purewhite px-6 py-3 rounded ">
-            Learn More
-          </button>
+
+      {/* Solutions Section with Left Side Image */}
+      <div id="solutions" className="w-full py-16">
+        <div className="max-w-7xl mx-auto px-4 sm:px-6 lg:px-8">
+          <div className="text-center mb-12">
+            <h2 className="text-3xl lg:text-4xl font-bold text-main_dark mb-4">
+              Built for Construction Excellence
+            </h2>
+            <p className="text-slatebluegray text-lg max-w-2xl mx-auto">
+              See how leading construction companies are transforming their operations with our platform.
+            </p>
+          </div>
+
+          <div className="grid grid-cols-1 lg:grid-cols-2 gap-12 items-center mb-16">
+            {/* Image Column - Left Side */}
+            <div className="relative order-2 lg:order-1">
+              <img 
+                src="/assets/home_page/3.jpg" 
+                alt="Construction Solutions Dashboard"
+                className="w-full h-auto rounded-2xl shadow-xl border border-gray-200"
+              />
+              <div className="absolute -top-6 -right-6 bg-deep_green rounded-xl p-4 shadow-lg">
+                <div className="text-purewhite font-bold text-lg">24/7</div>
+                <div className="text-purewhite text-sm">Support</div>
+              </div>
+            </div>
+
+            {/* Content Column - Right Side */}
+            <div className="order-1 lg:order-2">
+              <div className="space-y-8">
+                <div className="flex items-start gap-6">
+                  <div className="w-12 h-12 bg-web_yellow rounded-xl flex items-center justify-center flex-shrink-0">
+                    {/* <FaArrowUpLong className="text-main_dark text-lg"/> */}
+                  </div>
+                  <div>
+                    <h3 className="text-xl font-semibold text-main_dark mb-3">Increase Efficiency by 40%</h3>
+                    <p className="text-slatebluegray leading-relaxed">Reduce manual processes and eliminate bottlenecks with automated workflows and intelligent resource allocation.</p>
+                  </div>
+                </div>
+
+                <div className="flex items-start gap-6">
+                  <div className="w-12 h-12 bg-deep_green rounded-xl flex items-center justify-center flex-shrink-0">
+                    <FaBuilding className="text-purewhite text-lg"/>
+                  </div>
+                  <div>
+                    <h3 className="text-xl font-semibold text-main_dark mb-3">Scale Across Multiple Sites</h3>
+                    <p className="text-slatebluegray leading-relaxed">Manage inventory and procurement across all your construction sites from one centralized platform with real-time synchronization.</p>
+                  </div>
+                </div>
+
+                <div className="flex items-start gap-6">
+                  <div className="w-12 h-12 bg-web_yellow rounded-xl flex items-center justify-center flex-shrink-0">
+                    <FaChartLine className="text-main_dark text-lg"/>
+                  </div>
+                  <div>
+                    <h3 className="text-xl font-semibold text-main_dark mb-3">Real-time Cost Control</h3>
+                    <p className="text-slatebluegray leading-relaxed">Track expenses, monitor budgets, and prevent cost overruns with live financial insights and predictive analytics.</p>
+                  </div>
+                </div>
+              </div>
+            </div>
+          </div>
+
+          {/* Dashboard Preview */}
+          <div className="bg-gradient-to-br from-light_gray/20 to-light_brown/10 rounded-2xl p-8">
+            <div className="bg-purewhite rounded-xl p-6 shadow-lg border border-gray-200">
+              <h4 className="text-lg font-semibold text-main_dark mb-6">Live Dashboard Preview</h4>
+              <div className="space-y-6">
+                <div className="flex justify-between items-center">
+                  <span className="text-slatebluegray font-medium">Materials on Site</span>
+                  <span className="font-bold text-main_dark">85%</span>
+                </div>
+                <div className="w-full bg-light_gray rounded-full h-3">
+                  <div className="bg-gradient-to-r from-web_yellow to-web_yellow/80 h-3 rounded-full" style={{width: '85%'}}></div>
+                </div>
+                
+                <div className="flex justify-between items-center">
+                  <span className="text-slatebluegray font-medium">Budget Utilization</span>
+                  <span className="font-bold text-main_dark">72%</span>
+                </div>
+                <div className="w-full bg-light_gray rounded-full h-3">
+                  <div className="bg-gradient-to-r from-deep_green to-deep_green/80 h-3 rounded-full" style={{width: '72%'}}></div>
+                </div>
+
+                <div className="flex justify-between items-center">
+                  <span className="text-slatebluegray font-medium">Active Orders</span>
+                  <span className="font-bold text-main_dark">24</span>
+                </div>
+                <div className="flex justify-between items-center">
+                  <span className="text-slatebluegray font-medium">Pending Approvals</span>
+                  <span className="font-bold text-main_dark">3</span>
+                </div>
+              </div>
+            </div>
+          </div>
         </div>
       </div>
+
+      {/* Testimonials Section with Right Side Image */}
+      <div className="w-full py-16 bg-light_gray/5">
+        <div className="max-w-7xl mx-auto px-4 sm:px-6 lg:px-8">
+          <div className="grid grid-cols-1 lg:grid-cols-2 gap-12 items-center">
+            {/* Content Column */}
+            <div>
+              <h2 className="text-3xl lg:text-4xl font-bold text-main_dark mb-8">
+                Trusted by Industry Leaders
+              </h2>
+              
+              <div className="space-y-8">
+                <div className="bg-purewhite rounded-xl p-6 shadow-lg border border-gray-200">
+                  <div className="flex items-start gap-4 mb-4">
+                    <img 
+                      src="/assets/home_page/4.jpg" 
+                      alt="John Smith"
+                      className="w-12 h-12 rounded-full object-cover"
+                    />
+                    <div>
+                      <h4 className="font-semibold text-main_dark">John Smith</h4>
+                      <p className="text-slatebluegray text-sm">Project Manager, BuildCorp</p>
+                    </div>
+                  </div>
+                  <p className="text-slatebluegray leading-relaxed">
+                    "This platform has revolutionized how we manage our construction projects. The inventory tracking alone has saved us thousands in waste reduction."
+                  </p>
+                </div>
+
+                <div className="bg-purewhite rounded-xl p-6 shadow-lg border border-gray-200">
+                  <div className="flex items-start gap-4 mb-4">
+                    <img 
+                      src="/assets/home_page/hero2.jpg" 
+                      alt="Sarah Johnson"
+                      className="w-12 h-12 rounded-full object-cover"
+                    />
+                    <div>
+                      <h4 className="font-semibold text-main_dark">Sarah Johnson</h4>
+                      <p className="text-slatebluegray text-sm">Operations Director, SteelWorks</p>
+                    </div>
+                  </div>
+                  <p className="text-slatebluegray leading-relaxed">
+                    "The real-time analytics give us unprecedented visibility into our operations. We can now make data-driven decisions that improve our bottom line."
+                  </p>
+                </div>
+              </div>
+            </div>
+            
+            {/* Image Column */}
+            <div className="relative">
+              <img 
+                src="/assets/home_page/4.jpg" 
+                alt="Construction Team Success"
+                className="w-full h-auto rounded-2xl shadow-xl border border-gray-200"
+              />
+              <div className="absolute -bottom-6 -left-6 bg-purewhite rounded-xl p-4 shadow-lg border border-gray-200">
+                <div className="text-main_dark font-bold text-lg">98%</div>
+                <div className="text-main_dark text-sm">Satisfaction Rate</div>
+              </div>
+            </div>
+          </div>
+        </div>
+      </div>
+
+      {/* CTA Section */}
+      <div className="w-full py-16 bg-gradient-to-r from-deep_green to-deep_green/90">
+        <div className="max-w-4xl mx-auto px-4 sm:px-6 lg:px-8 text-center">
+          <h2 className="text-3xl lg:text-4xl font-bold text-purewhite mb-4">
+            Ready to Transform Your Construction Operations?
+          </h2>
+          <p className="text-light_gray text-lg mb-8 max-w-2xl mx-auto">
+            Join hundreds of construction teams already using our platform to streamline their projects and boost productivity.
+          </p>
+          <div className="flex flex-col sm:flex-row gap-4 justify-center">
+            <button className="bg-web_yellow font-semibold text-main_dark px-8 py-4 rounded-xl hover:bg-web_yellow/90 transition-all duration-300">
+              Start Free Trial
+            </button>
+            <button className="bg-transparent border-2 border-purewhite font-semibold text-purewhite px-8 py-4 rounded-xl hover:bg-purewhite hover:text-deep_green transition-all duration-300">
+              Schedule Demo
+            </button>
+          </div>
+        </div>
+      </div>
+
       {/* Footer */}
-      <div className="w-full py-10 flex flex-col gap-3 items-center">
-        <div className="w-full flex py-4 px-32 justify-between">
-          <img
-            src="/logo1.png"
-            alt="Logo"
-            className="md:h-16 h-10 md:w-[100px] object-contain"
-          />
-          <div className="flex flex-col gap-2">
-            <p className="text-purewhite ">Product</p>
-            <div className="flex flex-col gap-1">
-              <p className="text-light_gray text-xs">Features</p>
-              <p className="text-light_gray text-xs">Pricing</p>
-              <p className="text-light_gray text-xs">Integrations</p>
-              <p className="text-light_gray text-xs">API</p>
+      <div id="contact" className="w-full py-12 bg-purewhite border-t border-gray-200">
+        <div className="max-w-7xl mx-auto px-4 sm:px-6 lg:px-8">
+          <div className="grid grid-cols-1 md:grid-cols-4 gap-8">
+            <div className="col-span-1 md:col-span-2">
+              <img
+                src="/logo2.png"
+                alt="Logo"
+                className="h-12 w-auto mb-4"
+              />
+              <p className="text-slatebluegray mb-6 max-w-md leading-relaxed">
+                Empowering construction teams with intelligent project management solutions for better efficiency and control.
+              </p>
+              <div className="flex items-center gap-2 text-sm text-slatebluegray">
+                <IoMail className="text-web_yellow"/>
+                support@constructflow.com
+              </div>
+            </div>
+
+            <div>
+              <h4 className="font-semibold text-main_dark mb-4">Product</h4>
+              <div className="space-y-3">
+                <p className="text-slatebluegray text-sm hover:text-deep_green cursor-pointer transition-colors">Features</p>
+                <p className="text-slatebluegray text-sm hover:text-deep_green cursor-pointer transition-colors">Pricing</p>
+                <p className="text-slatebluegray text-sm hover:text-deep_green cursor-pointer transition-colors">Integrations</p>
+                <p className="text-slatebluegray text-sm hover:text-deep_green cursor-pointer transition-colors">API</p>
+              </div>
+            </div>
+
+            <div>
+              <h4 className="font-semibold text-main_dark mb-4">Support</h4>
+              <div className="space-y-3">
+                <p className="text-slatebluegray text-sm hover:text-deep_green cursor-pointer transition-colors">Help Center</p>
+                <p className="text-slatebluegray text-sm hover:text-deep_green cursor-pointer transition-colors">Documentation</p>
+                <p className="text-slatebluegray text-sm hover:text-deep_green cursor-pointer transition-colors">Training</p>
+                <p className="text-slatebluegray text-sm hover:text-deep_green cursor-pointer transition-colors">Contact Us</p>
+              </div>
             </div>
           </div>
-          <div className="flex flex-col gap-2">
-            <p className="text-purewhite ">Support</p>
-            <div className="flex flex-col gap-1">
-              <p className="text-light_gray text-xs">Help Center</p>
-              <p className="text-light_gray text-xs">Documentation</p>
-              <p className="text-light_gray text-xs">Training</p>
-              <p className="text-light_gray text-xs">Contact Us</p>
+
+          <div className="border-t border-gray-200 mt-8 pt-8 flex flex-col md:flex-row justify-between items-center">
+            <p className="text-slatebluegray text-sm">© 2024 ConstructFlow. All rights reserved.</p>
+            <div className="flex gap-6 mt-4 md:mt-0">
+              <p className="text-slatebluegray text-sm hover:text-deep_green cursor-pointer transition-colors">Privacy Policy</p>
+              <p className="text-slatebluegray text-sm hover:text-deep_green cursor-pointer transition-colors">Terms of Service</p>
+              <p className="text-slatebluegray text-sm hover:text-deep_green cursor-pointer transition-colors">Cookie Policy</p>
             </div>
           </div>
-          <div className="flex flex-col gap-2">
-            <p className="text-purewhite ">Contact</p>
-            <div className="flex flex-col gap-1">
-              <p className="flex gap-3 text-web_yellow text-xs"><IoMail/>support@constructflow.com</p>
-              <p className="flex gap-3 text-web_yellow text-xs"><FaPhoneAlt/>+1 (555) 123-4567</p>
-              <p className="flex gap-3 text-web_yellow text-xs"><MdLocationPin/>24/7 Support Available</p>
-            </div>
-          </div>
-        </div>
-        <div className="flex justify-between w-3/4 mt-3 border-t pt-5 border-[#2E2F34]">
-            <p className="text-light_gray text-xs">© 2024 ConstructFlow. All rights reserved.</p>
-            <div className="flex gap-3">
-            <p className="text-light_gray text-xs">Privacy Policy</p>
-            <p className="text-light_gray text-xs">Terms of Service</p>
-            <p className="text-light_gray text-xs">Cookie Policy</p>
-            </div>
         </div>
       </div>
     </div>
