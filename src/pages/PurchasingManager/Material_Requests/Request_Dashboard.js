@@ -114,10 +114,10 @@ const MaterialRequestsOverview = () => {
       <NavBar links={
         [
           { name: 'Dashboard', path: '/purchasing/dashboard' },
-          { name: 'Requests', path: '/purchasing/materialrequests/overview' },
-          { name: 'Orders', path: '/orders' },
+          { name: 'Material Requests', path: '/purchasing/materialrequests/overview' },
           { name: 'Suppliers', path: '/purchasing/supplier/dashboard' },
-          { name: 'Reports', path: '/reports' }
+          { name: 'Quotation Requests', path: '/purchasing/quotationrequest/overview' },
+          { name: 'Orders', path: '/orders' },
         ]
      } />
 

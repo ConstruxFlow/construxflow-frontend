@@ -129,11 +129,11 @@ console.log(supplierData);
       {/* Header Navigation */}
       <NavBar
         links={[
-          { name: "Dashboard", path: "/purchasing/dashboard" },
-          { name: "Requests", path: "/purchasing/materialrequests/overview" },
-          { name: "Orders", path: "/orders" },
-          { name: "Suppliers", path: "/purchasing/supplier/dashboard" },
-          { name: "Reports", path: "/reports" },
+          { name: 'Dashboard', path: '/purchasing/dashboard' },
+          { name: 'Material Requests', path: '/purchasing/materialrequests/overview' },
+          { name: 'Suppliers', path: '/purchasing/supplier/dashboard' },
+          { name: 'Quotation Requests', path: '/purchasing/quotationrequest/overview' },
+          { name: 'Orders', path: '/orders' },
         ]}
       />
 

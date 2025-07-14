@@ -1,6 +1,8 @@
 import React, { useState } from 'react';
 import { FaDownload, FaStar, FaTruck, FaDollarSign, FaShieldAlt , FaEye, FaEdit } from 'react-icons/fa';
+import { FaPlus } from "react-icons/fa6";
 import NavBar from '../../../components/NavBar';
+import { useNavigate } from 'react-router-dom';
 
 
 const SupplierPerformanceEvaluation = () => {
@@ -10,6 +12,7 @@ const SupplierPerformanceEvaluation = () => {
   const [feedbackSupplier, setFeedbackSupplier] = useState('');
   const [feedbackRating, setFeedbackRating] = useState('');
   const [feedbackComments, setFeedbackComments] = useState('');
+  const navigate = useNavigate();
 
   
   const performanceData = [
@@ -88,10 +91,10 @@ const SupplierPerformanceEvaluation = () => {
       <NavBar
         links={[
            { name: 'Dashboard', path: '/purchasing/dashboard' },
-          { name: 'Requests', path: '/purchasing/materialrequests/overview' },
-          { name: 'Orders', path: '/orders' },
+          { name: 'Material Requests', path: '/purchasing/materialrequests/overview' },
           { name: 'Suppliers', path: '/purchasing/supplier/dashboard' },
-          { name: 'Reports', path: '/reports' }
+          { name: 'Quotation Requests', path: '/purchasing/quotationrequest/overview' },
+          { name: 'Orders', path: '/orders' },
         ]}
       />
 
@@ -324,11 +327,8 @@ const SupplierPerformanceEvaluation = () => {
           {/* Supplier Performance Table */}
           <div className="bg-purewhite border border-gray-200 rounded-lg overflow-hidden mb-6">
             <div className="flex items-center justify-between p-6 border-b border-gray-200">
-              <h2 className="text-lg font-semibold text-main_dark">Supplier Performance Table</h2>
-              <button className="px-4 py-2 bg-deep_green text-purewhite rounded-md hover:bg-deep_green/90 transition-colors flex items-center gap-2">
-                <FaDownload className="w-4 h-4" />
-                Export
-              </button>
+              <h2 className="text-lg font-semibold text-main_dark">Supplier Performance Table </h2>
+              <span onClick={() => navigate('/purchasing/supplier/list')} className="text-sm font-medium text-gray-500 cursor-pointer hover:text-gray-500/80">View All</span>
             </div>
 
             <div className="overflow-x-auto">
@@ -341,7 +341,6 @@ const SupplierPerformanceEvaluation = () => {
                     <th className="px-6 py-4 text-left text-sm font-semibold text-main_dark">Quality Score</th>
                     <th className="px-6 py-4 text-left text-sm font-semibold text-main_dark">Cost Performance</th>
                     <th className="px-6 py-4 text-left text-sm font-semibold text-main_dark">Status</th>
-                    <th className="px-6 py-4 text-left text-sm font-semibold text-main_dark">Actions</th>
                   </tr>
                 </thead>
                 <tbody className="divide-y divide-gray-200">
@@ -369,16 +368,6 @@ const SupplierPerformanceEvaluation = () => {
                         <span className={`px-3 py-1 rounded-full text-xs font-medium ${supplier.statusColor}`}>
                           {supplier.status}
                         </span>
-                      </td>
-                      <td className="px-6 py-4 text-sm">
-                        <div className="flex items-center gap-2">
-                          <button className="text-deep_green hover:text-deep_green/80 transition-colors">
-                            <FaEye className="w-4 h-4" />
-                          </button>
-                          <button className="text-gray-600 hover:text-gray-800 transition-colors">
-                            <FaEdit className="w-4 h-4" />
-                          </button>
-                        </div>
                       </td>
                     </tr>
                   ))}

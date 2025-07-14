@@ -214,11 +214,11 @@ const SupplierRegPage = () => {
       {/* Header Navigation */}
       <NavBar
         links={[
-          { name: "Dashboard", path: "/purchasing/dashboard" },
-          { name: "Requests", path: "/purchasing/materialrequests/overview" },
-          { name: "Orders", path: "/orders" },
-          { name: "Suppliers", path: "/purchasing/supplier/dashboard" },
-          { name: "Reports", path: "/reports" },
+          { name: 'Dashboard', path: '/purchasing/dashboard' },
+          { name: 'Material Requests', path: '/purchasing/materialrequests/overview' },
+          { name: 'Suppliers', path: '/purchasing/supplier/dashboard' },
+          { name: 'Quotation Requests', path: '/purchasing/quotationrequest/overview' },
+          { name: 'Orders', path: '/orders' },
         ]}
       />
 
@@ -234,7 +234,7 @@ const SupplierRegPage = () => {
           {/* Back Button and Header */}
           <div className="flex items-center justify-between mb-6">
             <div>
-              <button className="flex items-center gap-2 text-gray-600 hover:text-main_dark mb-4">
+              <button onClick={() => navigate(-1)} className="flex items-center gap-2 text-gray-600 hover:text-main_dark mb-4">
                 <FaArrowLeft />
                 <span className="text-sm">Back</span>
               </button>

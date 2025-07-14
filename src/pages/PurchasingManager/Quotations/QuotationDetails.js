@@ -1,9 +1,11 @@
 import React, { useState } from 'react';
 import { FaArrowLeft, FaDownload, FaEdit, FaCheck, FaTimes, FaCalendarAlt, FaDollarSign, FaTruck, FaFileAlt } from 'react-icons/fa';
 import NavBar from '../../../components/NavBar';
+import { useNavigate } from 'react-router-dom';
 
 const QuotationDetail = () => {
   const [status, setStatus] = useState('Pending');
+  const navigate = useNavigate();
 
   // Sample quotation data based on the form structure
   const quotationData = {
@@ -51,11 +53,11 @@ const QuotationDetail = () => {
       {/* Header Navigation */}
       <NavBar
         links={[
-          { name: "Dashboard", path: "/purchasing/dashboard" },
-          { name: "Requests", path: "/purchasing/materialrequests/overview" },
-          { name: "Orders", path: "/orders" },
-          { name: "Suppliers", path: "/purchasing/supplier/dashboard" },
-          { name: "Reports", path: "/reports" },
+          { name: 'Dashboard', path: '/purchasing/dashboard' },
+          { name: 'Material Requests', path: '/purchasing/materialrequests/overview' },
+          { name: 'Suppliers', path: '/purchasing/supplier/dashboard' },
+          { name: 'Quotation Requests', path: '/purchasing/quotationrequest/overview' },
+          { name: 'Orders', path: '/orders' },
         ]}
       />
 
@@ -65,7 +67,7 @@ const QuotationDetail = () => {
           {/* Header Section */}
           <div className="flex flex-col lg:flex-row lg:items-center lg:justify-between mb-6 gap-4">
             <div className="flex-1">
-              <button className="flex items-center gap-2 text-slatebluegray text-sm mb-4 hover:underline">
+              <button onClick={() => navigate(-1)} className="flex items-center gap-2 text-slatebluegray text-sm mb-4 hover:underline">
                 <FaArrowLeft className="w-4 h-4" />
                 Back to Quotations
               </button>
