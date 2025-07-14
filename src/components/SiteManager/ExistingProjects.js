@@ -1,10 +1,14 @@
 import React, { useEffect, useState } from 'react';
 import axios from 'axios';
+import { useNavigate } from 'react-router-dom';
 
 const ExistingProjects = () => {
   const [projects, setProjects] = useState([]);
   const [loading, setLoading] = useState(true);
   const [error, setError] = useState(null);
+  const [deletingId, setDeletingId] = useState(null);
+
+  const navigate = useNavigate();
 
   useEffect(() => {
     axios.get('http://localhost:5454/api/projects/all')
@@ -17,6 +21,19 @@ const ExistingProjects = () => {
         setLoading(false);
       });
   }, []);
+
+  const handleDelete = async (projectId) => {
+    if (!window.confirm('Are you sure you want to delete this project?')) return;
+    setDeletingId(projectId);
+    try {
+      await axios.delete(`http://localhost:5454/api/projects/${projectId}`);
+      setProjects((prev) => prev.filter((p) => (p.projectId || p.id) !== projectId));
+    } catch (err) {
+      alert('Failed to delete project.');
+    } finally {
+      setDeletingId(null);
+    }
+  };
 
   // Helper to map backend status to color classes
   const getStatusStyles = (status) => {
@@ -104,7 +121,7 @@ const ExistingProjects = () => {
                   <button 
                     className="text-white px-3 py-1 rounded text-sm flex items-center gap-1"
                     style={{backgroundColor: '#236571'}}
-                    onClick={() => window.location.href = '/projects-list/edit-project'}
+                    onClick={() => navigate(`/projects-list/edit-project/${project.projectId || project.id}`)}
                   >
                     ✏️ Edit
                   </button>
@@ -144,6 +161,13 @@ const ExistingProjects = () => {
                     style={{ backgroundColor: '#EFC11A' }}
                 >
                     🗎 View Materials
+                </button>
+                <button
+                  className="text-red-600 font-semibold px-4 py-2 rounded text-sm flex items-center gap-2 border border-red-200 bg-red-50 hover:bg-red-100"
+                  onClick={() => handleDelete(project.projectId || project.id)}
+                  disabled={deletingId === (project.projectId || project.id)}
+                >
+                  {deletingId === (project.projectId || project.id) ? 'Deleting...' : 'Delete'}
                 </button>
                 </div>
 
