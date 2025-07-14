@@ -6,16 +6,26 @@ import {
   FaCloudUploadAlt,
   FaSave,
   FaEye,
+  FaCalendarAlt,
+  FaDollarSign,
+  FaTruck,
+  FaFileAlt,
+  FaUser,
+  FaMapMarkerAlt,
+  FaClock,
+  FaExclamationTriangle,
 } from "react-icons/fa";
 import NavBar from "../../../components/NavBar";
 import { useFormValidation } from "./functions/UseformValidation";
 import { toast } from "react-toastify";
 import LoadingOverlay from "../../../components/LoadingOverlay";
-import { useNavigate } from "react-router-dom";
+import { useNavigate, useParams } from "react-router-dom";
 
-const CreateMaterialRequest = () => {
+const EditQuotationRequest = () => {
+  const { id } = useParams();
   const [isLoading, setIsLoading] = useState(false);
   const [loadingProgress, setLoadingProgress] = useState(0);
+  const [initialDataLoaded, setInitialDataLoaded] = useState(false);
   const { validateForm, validateField, isSubmitting, setIsSubmitting } =
     useFormValidation();
 
@@ -34,6 +44,78 @@ const CreateMaterialRequest = () => {
     quotationReqDocs: [],
   });
   const [reqDocs, setreqDocs] = useState([]);
+
+  // Fetch existing data on component mount
+  useEffect(() => {
+    if (id) {
+      fetchQuotationRequest();
+    }
+  }, [id]);
+
+  const fetchQuotationRequest = async () => {
+    setIsLoading(true);
+    try {
+      const response = await fetch(
+        `http://localhost:8080/api/quotationrequest/find/${id}`
+      );
+      const data = await response.json();
+
+      if (data.status === "success") {
+        const requestData = data.data;
+        
+        // Populate form data
+        setRequestdata({
+          requesterName: requestData.requesterName || "",
+          request_date: requestData.requestDate ? requestData.requestDate.split('T')[0] : "",
+          quotation_deadline: requestData.quotationDeadline ? requestData.quotationDeadline.split('T')[0] : "",
+          priority_level: requestData.priorityLevel || "",
+          quotation_type: requestData.quotationType || "",
+          status: requestData.status || "Pending",
+          additional_info: requestData.additionalInfo || "",
+          estimated_cost: requestData.estimatedCost || 0,
+          quotationReqMaterials: requestData.quotationReqMaterials || [],
+          quotationReqDelivery: requestData.quotationReqDelivery || [],
+          quotationReqDocs: requestData.quotationReqDocs || [],
+        });
+
+        // Populate materials
+        if (requestData.quotationReqMaterials && requestData.quotationReqMaterials.length > 0) {
+          const materialsData = requestData.quotationReqMaterials.map((item, index) => ({
+            id: item.quotationReqMaterialId || Date.now() + index,
+            material: {
+              material_id: item.material.materialId,
+            },
+            quantity: item.quantity || "",
+            unitPrice: item.unitPrice || "",
+            estimatedCost: item.estimatedCost || 0,
+          }));
+          setMaterials(materialsData);
+        }
+
+        // Populate delivery schedule
+        if (requestData.quotationReqDelivery && requestData.quotationReqDelivery.length > 0) {
+          const deliveryData = requestData.quotationReqDelivery.map((item, index) => ({
+            id: item.quotationReqDeliveryId || Date.now() + index,
+            location: item.location || "",
+            deliveryDate: item.deliveryDate ? item.deliveryDate.split('T')[0] : "",
+            quantitySplit: item.quantitySplit || "",
+          }));
+          setDeliverySchedule(deliveryData);
+        }
+
+        setInitialDataLoaded(true);
+      } else {
+        toast.error("Failed to fetch quotation request details");
+        navigate(-1);
+      }
+    } catch (error) {
+      toast.error("Network error: Failed to fetch quotation request");
+      console.error("Error fetching quotation request:", error);
+      navigate(-1);
+    } finally {
+      setIsLoading(false);
+    }
+  };
 
   const handleChange = (e) => {
     const { name, value } = e.target;
@@ -150,6 +232,10 @@ const CreateMaterialRequest = () => {
     setDeliverySchedule([...deliverySchedule, newLocation]);
   };
 
+  const removeLocation = (id) => {
+    setDeliverySchedule(deliverySchedule.filter((item) => item.id !== id));
+  };
+
   const updateDeliverySchedule = (id, field, value) => {
     setDeliverySchedule(
       deliverySchedule.map((item) => {
@@ -215,13 +301,13 @@ const CreateMaterialRequest = () => {
       };
 
       setLoadingProgress(40);
-      console.log("Submitting data:", updatedRequestData);
+      console.log("Updating data:", updatedRequestData);
       setLoadingProgress(50);
       setRequestdata(updatedRequestData);
       setLoadingProgress(60);
 
-      const response = await fetch("http://localhost:8080/api/quotationrequest/create", {
-        method: "POST",
+      const response = await fetch(`http://localhost:8080/api/quotationrequest/update/${id}`, {
+        method: "PUT",
         headers: {
           "Content-Type": "application/json",
         },
@@ -234,7 +320,7 @@ const CreateMaterialRequest = () => {
         const errorData = await response.json().catch(() => ({}));
         throw new Error(
           errorData.message || 
-          `Request creation failed with status: ${response.status}`
+          `Request update failed with status: ${response.status}`
         );
       }
 
@@ -243,11 +329,11 @@ const CreateMaterialRequest = () => {
 
       setTimeout(() => {
         if (responseData.status === "success" || response.ok) {
-          toast.success("Quotation request created successfully!");
-          navigate("/purchasing/quotationrequest/overview");
+          toast.success("Quotation request updated successfully!");
+          navigate(`/purchasing/quotationrequest/detail/${id}`);
         } else {
           toast.error(
-            "Failed to create request: " + (responseData.message || "Unknown error")
+            "Failed to update request: " + (responseData.message || "Unknown error")
           );
         }
 
@@ -261,7 +347,7 @@ const CreateMaterialRequest = () => {
       } else if (error.message.includes('timeout')) {
         toast.error("Request timeout: Please try again");
       } else {
-        toast.error("Submission failed: " + error.message);
+        toast.error("Update failed: " + error.message);
       }
       setIsLoading(false);
       setLoadingProgress(0);
@@ -269,6 +355,47 @@ const CreateMaterialRequest = () => {
       clearInterval(progressInterval);
     }
   };
+
+  const getStatusColor = (status) => {
+    switch (status?.toLowerCase()) {
+      case "pending":
+        return "bg-yellow-100 text-yellow-800";
+      case "approved":
+        return "bg-green-100 text-green-800";
+      case "rejected":
+        return "bg-red-100 text-red-800";
+      case "in progress":
+        return "bg-blue-100 text-blue-800";
+      default:
+        return "bg-gray-100 text-gray-800";
+    }
+  };
+
+  const getPriorityColor = (priority) => {
+    switch (priority?.toLowerCase()) {
+      case "urgent":
+        return "bg-red-100 text-red-800";
+      case "high":
+        return "bg-orange-100 text-orange-800";
+      case "medium":
+        return "bg-yellow-100 text-yellow-800";
+      case "low":
+        return "bg-green-100 text-green-800";
+      default:
+        return "bg-gray-100 text-gray-800";
+    }
+  };
+
+  if (isLoading && !initialDataLoaded) {
+    return (
+      <div className="min-h-screen bg-purewhite font-poppins flex items-center justify-center">
+        <div className="text-center">
+          <div className="animate-spin rounded-full h-12 w-12 border-b-2 border-web_yellow mx-auto mb-4"></div>
+          <p className="text-gray-600">Loading quotation request...</p>
+        </div>
+      </div>
+    );
+  }
 
   return (
     <div className="min-h-screen bg-purewhite font-poppins">
@@ -284,29 +411,105 @@ const CreateMaterialRequest = () => {
       {isLoading && (
         <LoadingOverlay
           progress={loadingProgress}
-          message="Registering supplier details..."
+          message="Updating quotation request..."
         />
       )}
 
       <main className="py-6">
         <div className="max-w-full mx-auto px-2 sm:px-3 lg:px-10">
+          {/* Header Section */}
           <div className="flex items-center justify-between mb-6">
             <div>
               <button onClick={() => navigate(-1)} className="flex items-center gap-2 text-gray-600 hover:text-main_dark mb-4">
                 <FaArrowLeft />
                 <span className="text-sm">Back</span>
               </button>
-              <h1 className="text-2xl font-bold text-main_dark">
-                Create Quotation Request
-              </h1>
+              <div className="flex items-center gap-4 mb-4">
+                <div className="flex-1">
+                  <h1 className="text-2xl font-bold text-main_dark">
+                    Edit Quotation Request #{id}
+                  </h1>
+                  <div className="flex items-center gap-4 mt-2">
+                    <span className="text-gray-600 text-sm">
+                      Requested by:{" "}
+                      <span className="font-semibold text-main_dark">
+                        {Requestdata.requesterName}
+                      </span>
+                    </span>
+                    <span
+                      className={`px-3 py-1 rounded-full text-sm font-medium ${getStatusColor(
+                        Requestdata.status
+                      )}`}
+                    >
+                      {Requestdata.status}
+                    </span>
+                    <span
+                      className={`px-3 py-1 rounded-full text-sm font-medium ${getPriorityColor(
+                        Requestdata.priority_level
+                      )}`}
+                    >
+                      {Requestdata.priority_level} Priority
+                    </span>
+                  </div>
+                </div>
+              </div>
               <p className="text-gray-600 text-sm">
-                Submit a new material request with multiple locations and
-                delivery schedules
+                Update quotation request details, materials, and delivery schedules
               </p>
             </div>
           </div>
 
+          {/* Quick Info Cards */}
+          <div className="grid grid-cols-2 lg:grid-cols-4 gap-4 mb-6">
+            <div className="bg-purewhite border border-gray-200 rounded-lg p-4">
+              <div className="flex items-center gap-2 mb-2">
+                <FaCalendarAlt className="w-4 h-4 text-web_yellow" />
+                <span className="text-sm font-medium text-gray-600">
+                  Request Date
+                </span>
+              </div>
+              <div className="text-lg font-bold text-main_dark">
+                {Requestdata.request_date || "Not set"}
+              </div>
+            </div>
+            <div className="bg-purewhite border border-gray-200 rounded-lg p-4">
+              <div className="flex items-center gap-2 mb-2">
+                <FaClock className="w-4 h-4 text-deep_green" />
+                <span className="text-sm font-medium text-gray-600">
+                  Deadline
+                </span>
+              </div>
+              <div className="text-lg font-bold text-main_dark">
+                {Requestdata.quotation_deadline || "Not set"}
+              </div>
+            </div>
+            <div className="bg-purewhite border border-gray-200 rounded-lg p-4">
+              <div className="flex items-center gap-2 mb-2">
+                <FaFileAlt className="w-4 h-4 text-slatebluegray" />
+                <span className="text-sm font-medium text-gray-600">
+                  Materials
+                </span>
+              </div>
+              <div className="text-lg font-bold text-main_dark">
+                {materials.length}
+              </div>
+            </div>
+            <div className="bg-purewhite border border-gray-200 rounded-lg p-4">
+              <div className="flex items-center gap-2 mb-2">
+                <FaDollarSign className="w-4 h-4 text-web_yellow" />
+                <span className="text-sm font-medium text-gray-600">
+                  Est. Cost
+                </span>
+              </div>
+              <div className="text-lg font-bold text-main_dark">
+                ${Requestdata.estimated_cost.toFixed(2)}
+              </div>
+            </div>
+          </div>
+
+          {/* Main Grid Layout */}
           <div className="grid grid-cols-1 lg:grid-cols-3 gap-6">
+            {/* Left Column - Main Form */}
             <div className="lg:col-span-2 space-y-6">
               {/* Request Information */}
               <div className="bg-light_brown/30 rounded-lg p-6">
@@ -382,6 +585,22 @@ const CreateMaterialRequest = () => {
                       <option>Service</option>
                       <option>Equipment</option>
                       <option>Other</option>
+                    </select>
+                  </div>
+                  <div>
+                    <label className="block text-sm font-medium text-gray-700 mb-2">
+                      Status
+                    </label>
+                    <select
+                      name="status"
+                      value={Requestdata.status}
+                      onChange={handleChange}
+                      className="w-full px-3 py-2 border border-gray-300 rounded-md focus:outline-none focus:ring-2 focus:ring-web_yellow focus:border-transparent"
+                    >
+                      <option>Pending</option>
+                      <option>Approved</option>
+                      <option>Rejected</option>
+                      <option>In Progress</option>
                     </select>
                   </div>
                 </div>
@@ -529,82 +748,88 @@ const CreateMaterialRequest = () => {
                   </button>
                 </div>
 
-                <div className="w-full overflow-x-auto">
-                  <table className="w-full min-w-[600px]">
-                    <thead className="bg-deep_green/10">
-                      <tr>
-                        <th className="px-2 sm:px-4 py-3 text-left text-xs sm:text-sm font-semibold text-main_dark">
+                <div className="space-y-4">
+                  {deliverySchedule.map((item) => (
+                    <div
+                      key={item.id}
+                      className="grid grid-cols-1 md:grid-cols-4 gap-4 items-center p-4 border border-gray-200 rounded-lg"
+                    >
+                      <div>
+                        <label className="block text-sm font-medium text-gray-700 mb-2">
                           Location
-                        </th>
-                        <th className="px-2 sm:px-4 py-3 text-left text-xs sm:text-sm font-semibold text-main_dark">
+                        </label>
+                        <select
+                          value={item.location}
+                          onChange={(e) =>
+                            updateDeliverySchedule(
+                              item.id,
+                              "location",
+                              e.target.value
+                            )
+                          }
+                          className="w-full px-3 py-2 border border-gray-300 rounded-md focus:outline-none focus:ring-2 focus:ring-web_yellow focus:border-transparent"
+                        >
+                          <option value="">Select Location</option>
+                          <option value="Construction Site A, Downtown">
+                            Construction Site A, Downtown
+                          </option>
+                          <option value="Construction Site B, Uptown">
+                            Construction Site B, Uptown
+                          </option>
+                          <option value="Warehouse A">Warehouse A</option>
+                          <option value="Warehouse B">Warehouse B</option>
+                          <option value="Site Office">Site Office</option>
+                          <option value="Main Storage">Main Storage</option>
+                        </select>
+                      </div>
+                      <div>
+                        <label className="block text-sm font-medium text-gray-700 mb-2">
                           Required Date
-                        </th>
-                        <th className="px-2 sm:px-4 py-3 text-left text-xs sm:text-sm font-semibold text-main_dark">
+                        </label>
+                        <input
+                          type="date"
+                          value={item.deliveryDate}
+                          onChange={(e) =>
+                            updateDeliverySchedule(
+                              item.id,
+                              "deliveryDate",
+                              e.target.value
+                            )
+                          }
+                          className="w-full px-3 py-2 border border-gray-300 rounded-md focus:outline-none focus:ring-2 focus:ring-web_yellow focus:border-transparent"
+                        />
+                      </div>
+                      <div>
+                        <label className="block text-sm font-medium text-gray-700 mb-2">
                           Quantity Split
-                        </th>
-                      </tr>
-                    </thead>
-                    <tbody>
-                      {deliverySchedule.map((item) => (
-                        <tr key={item.id} className="border-b border-gray-200">
-                          <td className="px-2 sm:px-4 py-3">
-                            <select
-                              value={item.location}
-                              onChange={(e) =>
-                                updateDeliverySchedule(
-                                  item.id,
-                                  "location",
-                                  e.target.value
-                                )
-                              }
-                              className="w-full px-2 sm:px-3 py-2 text-xs sm:text-sm border border-gray-300 rounded-md focus:outline-none focus:ring-2 focus:ring-web_yellow focus:border-transparent"
-                            >
-                              <option value="">Select Location</option>
-                              <option value="Construction Site A, Downtown">
-                                Construction Site A, Downtown
-                              </option>
-                              <option value="Construction Site B, Uptown">
-                                Construction Site B, Uptown
-                              </option>
-                              <option value="Warehouse A">Warehouse A</option>
-                              <option value="Warehouse B">Warehouse B</option>
-                              <option value="Site Office">Site Office</option>
-                              <option value="Main Storage">Main Storage</option>
-                            </select>
-                          </td>
-                          <td className="px-2 sm:px-4 py-3">
-                            <input
-                              type="date"
-                              value={item.deliveryDate}
-                              onChange={(e) =>
-                                updateDeliverySchedule(
-                                  item.id,
-                                  "deliveryDate",
-                                  e.target.value
-                                )
-                              }
-                              className="w-full px-2 sm:px-3 py-2 text-xs sm:text-sm border border-gray-300 rounded-md focus:outline-none focus:ring-2 focus:ring-web_yellow focus:border-transparent"
-                            />
-                          </td>
-                          <td className="px-2 sm:px-4 py-3">
-                            <input
-                              type="number"
-                              step="0.01"
-                              value={item.quantitySplit}
-                              onChange={(e) =>
-                                updateDeliverySchedule(
-                                  item.id,
-                                  "quantitySplit",
-                                  e.target.value
-                                )
-                              }
-                              className="w-full px-2 sm:px-3 py-2 text-xs sm:text-sm border border-gray-300 rounded-md focus:outline-none focus:ring-2 focus:ring-web_yellow focus:border-transparent"
-                            />
-                          </td>
-                        </tr>
-                      ))}
-                    </tbody>
-                  </table>
+                        </label>
+                        <input
+                          type="number"
+                          step="0.01"
+                          value={item.quantitySplit}
+                          onChange={(e) =>
+                            updateDeliverySchedule(
+                              item.id,
+                              "quantitySplit",
+                              e.target.value
+                            )
+                          }
+                          className="w-full px-3 py-2 border border-gray-300 rounded-md focus:outline-none focus:ring-2 focus:ring-web_yellow focus:border-transparent"
+                        />
+                      </div>
+                      <div className="flex items-end">
+                        {deliverySchedule.length > 1 && (
+                          <button
+                            onClick={() => removeLocation(item.id)}
+                            className="text-red-500 hover:text-red-700 text-sm flex items-center gap-1 pb-2"
+                          >
+                            <FaTrash className="w-3 h-3" />
+                            Remove
+                          </button>
+                        )}
+                      </div>
+                    </div>
+                  ))}
                 </div>
               </div>
 
@@ -668,6 +893,13 @@ const CreateMaterialRequest = () => {
                     </div>
 
                     <div className="flex justify-between">
+                      <span className="text-gray-600">Status:</span>
+                      <span className={`px-2 py-1 rounded text-sm font-medium ${getStatusColor(Requestdata.status)}`}>
+                        {Requestdata.status}
+                      </span>
+                    </div>
+
+                    <div className="flex justify-between">
                       <span className="text-gray-600">Estimated Cost:</span>
                       <span className="font-bold text-main_dark text-lg">
                         ${Requestdata.estimated_cost.toFixed(2)}
@@ -716,25 +948,16 @@ const CreateMaterialRequest = () => {
                       onClick={handleOnSubmit}
                       className="w-full px-4 py-3 bg-web_yellow text-main_dark rounded-md hover:bg-web_yellow/90 transition-colors font-semibold flex items-center justify-center gap-2"
                     >
-                      <svg
-                        className="w-4 h-4"
-                        fill="none"
-                        stroke="currentColor"
-                        viewBox="0 0 24 24"
-                      >
-                        <path
-                          strokeLinecap="round"
-                          strokeLinejoin="round"
-                          strokeWidth={2}
-                          d="M12 19l9 2-9-18-9 18 9-2zm0 0v-8"
-                        />
-                      </svg>
-                      Submit Request
+                      <FaSave className="w-4 h-4" />
+                      Update Request
                     </button>
 
-                    <button className="w-full px-4 py-2 border border-gray-300 text-gray-700 rounded-md hover:bg-gray-50 transition-colors flex items-center justify-center gap-2">
+                    <button 
+                      onClick={() => navigate(`/purchasing/quotationrequest/detail/${id}`)}
+                      className="w-full px-4 py-2 border border-gray-300 text-gray-700 rounded-md hover:bg-gray-50 transition-colors flex items-center justify-center gap-2"
+                    >
                       <FaEye className="w-4 h-4" />
-                      Preview
+                      View Details
                     </button>
                   </div>
                 </div>
@@ -747,4 +970,4 @@ const CreateMaterialRequest = () => {
   );
 };
 
-export default CreateMaterialRequest;
+export default EditQuotationRequest;
