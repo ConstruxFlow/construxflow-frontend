@@ -152,6 +152,10 @@ export const routes = createBrowserRouter([
     element: <Edit_Project />,
   },
   {
+    path: "/projects-list/edit-project/:projectId",
+    element: <Edit_Project />,
+  },
+  {
     path: "/projects-list/create-project/project-phase",
     element: <Project_Phase />,
   },
