@@ -28,6 +28,7 @@ import ReceiveFullPayment from "./pages/Supplier/ReceiveFullPayment";
 import SupplierProfile from "./pages/Supplier/Profile";
 import SupplierProfileEdit from "./pages/Supplier/EditProfile";
 import ContactSupport from "./pages/Supplier/ContactSupport";
+import QuotationDetails from "./pages/Supplier/QuotationDetails";
 import Edit_Project from "./pages/SiteManager/Edit_Project";
 import Project_Phase from "./pages/SiteManager/Project_Phase";
 import Create_Material_Request from "./pages/SiteManager/Create_Material_Request";
@@ -85,6 +86,7 @@ export const routes = createBrowserRouter([
   { path: "/supplierprofile", element: <SupplierProfile /> },
   { path: "/supplierprofile/edit", element: <SupplierProfileEdit /> },
   { path: "/contact-support", element: <ContactSupport /> },
+  { path: "/quotations/:id", element: <QuotationDetails /> },
 
 
   {

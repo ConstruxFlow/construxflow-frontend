@@ -1,6 +1,7 @@
 // src/pages/Supplier/QuotationStatus.jsx
 import React, { useState } from "react";
 import NavBar from "../../components/NavBar";
+import { useNavigate } from "react-router-dom";
 import { FaClipboard, FaCheckCircle, FaClock, FaSearch, FaChevronDown,FaEye } from "react-icons/fa";
 
 const navLinks = [
@@ -64,6 +65,8 @@ const QuotationStatus = () => {
   const [search, setSearch] = useState("");
   const [status, setStatus] = useState("All Status");
   const [date, setDate] = useState("");
+
+  const navigate = useNavigate();
 
   // Filter logic (basic)
   const filteredQuotations = quotations.filter(
@@ -184,7 +187,7 @@ const QuotationStatus = () => {
                     </span>
                   </td>
                   <td className="px-6 py-4">
-                    <button className="p-2 text-deep_green hover:bg-gray-100 rounded"><FaEye /></button>
+                    <button onClick={()=>navigate(`/quotations/${q.id.replace('#', '')}`)} className="p-2 text-deep_green hover:bg-gray-100 rounded"><FaEye /></button>
                   </td>
                 </tr>
               ))}
