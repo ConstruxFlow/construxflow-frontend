@@ -6,11 +6,14 @@ import {
   FaDownload,
   FaSearch,
 } from "react-icons/fa";
+import { FaEye } from "react-icons/fa";
 import NavBar from "../../../components/NavBar";
+import { useNavigate } from "react-router-dom";
 
 const ReviewQuotations = () => {
   const [selected, setSelected] = useState(1);
   const [searchTerm, setSearchTerm] = useState("");
+  const navigate = useNavigate();
 
   const suppliers = [
     {
@@ -67,11 +70,11 @@ const ReviewQuotations = () => {
       {/* Header */}
       <NavBar
         links={[
-          { name: "Dashboard", path: "/purchasing/dashboard" },
-          { name: "Requests", path: "/purchasing/materialrequests/overview" },
-          { name: "Orders", path: "/orders" },
-          { name: "Suppliers", path: "/purchasing/supplier/dashboard" },
-          { name: "Reports", path: "/reports" },
+          { name: 'Dashboard', path: '/purchasing/dashboard' },
+          { name: 'Material Requests', path: '/purchasing/materialrequests/overview' },
+          { name: 'Suppliers', path: '/purchasing/supplier/dashboard' },
+          { name: 'Quotation Requests', path: '/purchasing/quotationrequest/overview' },
+          { name: 'Orders', path: '/orders' },
         ]}
       />
 
@@ -83,7 +86,10 @@ const ReviewQuotations = () => {
             {/* Back Button and Title */}
             <div className="flex items-center justify-between mb-6">
               <div>
-                <button className="flex items-center gap-2 text-slatebluegray text-sm mb-4 hover:underline">
+                <button
+                  onClick={() => navigate(-1)}
+                  className="flex items-center gap-2 text-slatebluegray text-sm mb-4 hover:underline"
+                >
                   <FaChevronLeft className="w-4 h-4" />
                   Back
                 </button>
@@ -252,34 +258,14 @@ const ReviewQuotations = () => {
           <div className="w-full lg:w-80 flex-shrink-0 space-y-6">
             <div className="sticky top-6">
               {/* Quotation Comparison */}
-              <div className="bg-purewhite border border-light_gray rounded-lg p-6 mb-6">
-                <h2 className="font-semibold text-main_dark mb-4">
-                  Quotation Comparison
-                </h2>
-                <div className="space-y-3">
-                  <div className="flex justify-between">
-                    <span className="text-gray-600">Best Price</span>
-                    <span className="font-semibold text-deep_green">
-                      $2,450.00
-                    </span>
-                  </div>
-                  <div className="flex justify-between">
-                    <span className="text-gray-600">Fastest Delivery</span>
-                    <span className="font-semibold text-deep_green">
-                      1-2 days
-                    </span>
-                  </div>
-                  <div className="flex justify-between">
-                    <span className="text-gray-600">Highest Rating</span>
-                    <span className="font-semibold text-deep_green">4.9/5</span>
-                  </div>
-                  <div className="flex justify-between">
-                    <span className="text-gray-600">Best Terms</span>
-                    <span className="font-semibold text-deep_green">
-                      Net 45
-                    </span>
-                  </div>
-                </div>
+              <div className=" mb-6">
+                <button
+                  onClick={() => navigate(`/purchasing/quotations/best`)}
+                  className="w-full px-4 py-2 bg-web_yellow text-main_dark font-medium rounded-md hover:bg-yellow-400 transition-colors flex items-center justify-center gap-2"
+                >
+                  <FaEye className="w-4 h-4" />
+                  View Best Quotations
+                </button>
               </div>
 
               {/* Selected Supplier */}
@@ -322,14 +308,17 @@ const ReviewQuotations = () => {
                   </div>
                 </div>
                 <div className="space-y-3">
-                  <button className="w-full px-4 py-2 bg-web_yellow text-main_dark font-semibold rounded-md hover:bg-yellow-400 transition-colors flex items-center justify-center gap-2">
-                    <FaCheckCircle className="w-4 h-4" />
-                    Confirm Selection
+                  <button
+                    onClick={() => navigate(`/purchasing/quotations/details`)}
+                    className="w-full px-4 py-2 bg-web_yellow text-main_dark font-medium rounded-md hover:bg-yellow-400 transition-colors flex items-center justify-center gap-2"
+                  >
+                    <FaEye className="w-4 h-4" />
+                    View Details
                   </button>
-                  <button className="w-full px-4 py-2 border border-light_gray text-slatebluegray rounded-md hover:bg-light_gray transition-colors flex items-center justify-center gap-2">
+                  {/* <button className="w-full px-4 py-2 border border-light_gray text-slatebluegray rounded-md hover:bg-light_gray transition-colors flex items-center justify-center gap-2">
                     <FaDownload className="w-4 h-4" />
                     Export Comparison
-                  </button>
+                  </button> */}
                 </div>
               </div>
             </div>

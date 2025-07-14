@@ -12,9 +12,11 @@ import { IoMdClose } from "react-icons/io";
 import { RiInformationLine } from "react-icons/ri";
 import { BsBag } from "react-icons/bs";
 import NavBar from "../../../components/NavBar";
+import { useNavigate } from "react-router-dom";
 
 const MaterialReqDetails_MWise = () => {
   const [internalNote, setInternalNote] = useState("");
+  const navigate=useNavigate();
 
   return (
     <div className="min-h-screen bg-purewhite font-poppins">
@@ -23,10 +25,10 @@ const MaterialReqDetails_MWise = () => {
         links={
             [
           { name: 'Dashboard', path: '/purchasing/dashboard' },
-          { name: 'Requests', path: '/purchasing/materialrequests/overview' },
-          { name: 'Orders', path: '/orders' },
+          { name: 'Material Requests', path: '/purchasing/materialrequests/overview' },
           { name: 'Suppliers', path: '/purchasing/supplier/dashboard' },
-          { name: 'Reports', path: '/reports' }
+          { name: 'Quotation Requests', path: '/purchasing/quotationrequest/overview' },
+          { name: 'Orders', path: '/orders' },
         ]
         }
       />
@@ -102,7 +104,7 @@ const MaterialReqDetails_MWise = () => {
                   Quick Actions
                 </h2>
                 <div className="space-y-3">
-                  <button className="w-full px-4 py-3 bg-deep_green text-purewhite rounded-md hover:bg-deep_green/90 transition-colors flex items-center justify-center gap-2">
+                  <button onClick={()=>navigate('/purchasing/materialrequests/create')} className="w-full px-4 py-3 bg-deep_green text-purewhite rounded-md hover:bg-deep_green/90 transition-colors flex items-center justify-center gap-2">
                     <IoMdCheckmark />
                     Approve Request
                   </button>

@@ -10,6 +10,13 @@ import ReviewQuotations from "./Quotations/ReviewQuotationsOverview";
 import QuotationDetail from "./Quotations/QuotationDetails";
 import SupplierList from "./Suppliers/SupplierList";
 import SupplierDetail from "./Suppliers/SupplierDetails";
+import QuotationRequestsOverview from "./Material_Requests/QuotationRequestsOverview ";
+import QuotationRequestDetail from "./Material_Requests/QuotationRequestDetail";
+import BestQuotationsList from "./Quotations/BestQuotationsList ";
+import CreatePurchaseOrder from "./PurchasingOrder/CreatePurchaseOrder";
+import RequestAdvancePayment from "./PurchasingOrder/RequestAdvancePayment";
+import PurchaseOrdersOverview from "./PurchasingOrder/PurchaseOrdersOverview";
+import PurchaseOrderDetails from "./PurchasingOrder/PurchaseOrderDetails";
 
 export const purchasingManagerRoutes = {
   path: '/purchasing',
@@ -36,6 +43,14 @@ export const purchasingManagerRoutes = {
       element: <CreateMaterialRequest />,
     },
     {
+      path: 'quotationrequest/overview',
+      element: <QuotationRequestsOverview />,
+    },
+    {
+      path: 'quotationrequest/details/:id',
+      element: <QuotationRequestDetail />,
+    },
+    {
       path: 'supplier/dashboard',
       element: <SupplierPerformanceEvaluation />,
     },
@@ -58,6 +73,26 @@ export const purchasingManagerRoutes = {
     {
       path: 'quotations/details',
       element: <QuotationDetail />,
+    },
+    {
+      path: 'quotations/best',
+      element: <BestQuotationsList />,
+    },
+    {
+      path: 'orders/create',
+      element: <CreatePurchaseOrder />,
+    },
+    {
+      path: 'orders/advance-payment',
+      element: <RequestAdvancePayment />,
+    },
+    {
+      path: 'orders/overview',
+      element: <PurchaseOrdersOverview />,
+    },
+    {
+      path: 'orders/details/:id',
+      element: <PurchaseOrderDetails />,
     }
   ]
 };
