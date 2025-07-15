@@ -1,6 +1,7 @@
 import React, { useState, useEffect } from 'react';
 import axios from 'axios';
 import { ChevronDown, ChevronUp, Search } from 'lucide-react';
+import { useNavigate } from 'react-router-dom';
 
 export default function Material_Request_List() {
   const [projects, setProjects] = useState([]);
@@ -10,6 +11,7 @@ export default function Material_Request_List() {
   const [expandedProjects, setExpandedProjects] = useState({});
   const [expandedPhases, setExpandedPhases] = useState({});
   const [searchTerm, setSearchTerm] = useState('');
+  const navigate = useNavigate();
 
   // Fetch all projects for the filter dropdown
   useEffect(() => {
@@ -180,6 +182,19 @@ export default function Material_Request_List() {
                       </button>
                       {expandedPhases[`${project}__${phase}`] && (
                         <div className="px-8 py-4">
+                          {/* Create Request Button for this phase */}
+                          <button
+                            className="px-3 py-1 text-white font-medium rounded-lg shadow-sm hover:opacity-90 transition-opacity text-sm mb-4"
+                            style={{ backgroundColor: '#236571' }}
+                            onClick={() => navigate('/material-request-list/material-request', {
+                              state: {
+                                project: project,
+                                phase: phase
+                              }
+                            })}
+                          >
+                            Create Request
+                          </button>
                           <div className="grid grid-cols-5 gap-4 pb-2 border-b font-semibold text-gray-700">
                             <div>Material Name</div>
                             <div>Quantity</div>
