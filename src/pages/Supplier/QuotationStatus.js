@@ -1,7 +1,8 @@
 // src/pages/Supplier/QuotationStatus.jsx
 import React, { useState } from "react";
 import NavBar from "../../components/NavBar";
-import { FaClipboard, FaCheckCircle, FaClock, FaSearch, FaChevronDown } from "react-icons/fa";
+import { useNavigate } from "react-router-dom";
+import { FaClipboard, FaCheckCircle, FaClock, FaSearch, FaChevronDown,FaEye } from "react-icons/fa";
 
 const navLinks = [
   { name: "Dashboard", href: "/dashboard1" },
@@ -13,14 +14,13 @@ const navLinks = [
 
 const statusColors = {
   Pending: "bg-yellow-100 text-yellow-800",
-  Accepted: "bg-green-100 text-green-700",
-  Rejected: "bg-red-100 text-red-600",
+  Accepted: "bg-green-100 text-green-800",
+  Rejected: "bg-red-100 text-red-800",
 };
 
 const quotations = [
   {
     id: "QT-2024-001",
-    project: "Metro Bridge Construction",
     material: "Steel Reinforcement Bars",
     quantity: "500 tons",
     price: "$45,000",
@@ -29,7 +29,6 @@ const quotations = [
   },
   {
     id: "QT-2024-002",
-    project: "Shopping Mall Phase 2",
     material: "Concrete Mix",
     quantity: "200 m³",
     price: "$18,500",
@@ -38,7 +37,6 @@ const quotations = [
   },
   {
     id: "QT-2024-003",
-    project: "Office Complex Downtown",
     material: "Electrical Cables",
     quantity: "2,000 meters",
     price: "$12,300",
@@ -47,7 +45,6 @@ const quotations = [
   },
   {
     id: "QT-2024-004",
-    project: "Residential Tower A",
     material: "Plumbing Pipes",
     quantity: "800 units",
     price: "$22,750",
@@ -56,7 +53,6 @@ const quotations = [
   },
   {
     id: "QT-2024-005",
-    project: "Highway Extension Project",
     material: "Asphalt",
     quantity: "1,500 tons",
     price: "$67,200",
@@ -69,6 +65,8 @@ const QuotationStatus = () => {
   const [search, setSearch] = useState("");
   const [status, setStatus] = useState("All Status");
   const [date, setDate] = useState("");
+
+  const navigate = useNavigate();
 
   // Filter logic (basic)
   const filteredQuotations = quotations.filter(
@@ -84,34 +82,46 @@ const QuotationStatus = () => {
     <div className="bg-purewhite min-h-screen font-poppins">
       <NavBar links={navLinks} logoSrc="/logo1.png" />
 
-      <div className="max-w-full mx-auto px-14 py-8">
-        <h1 className="text-2xl md:text-3xl font-bold text-main_dark mb-2">Monitor Quotation Status</h1>
+      <div className="max-w-full mx-auto px-16 py-8">
+        <h1 className="text-2xl md:text-3xl font-bold text-gray-800 mb-2">Monitor Quotation Status</h1>
         <p className="text-gray-500 mb-8">Track and manage all your submitted quotations</p>
 
-        {/* Summary Cards */}
         <div className="grid grid-cols-1 md:grid-cols-3 gap-6 mb-8">
-          <div className="flex items-center bg-[#3AA6B9] rounded-lg p-6">
-            <div className="flex-1">
-              <div className="text-purewhite text-lg font-semibold">Total Quotations</div>
-              <div className="text-purewhite text-3xl font-bold mt-2">24</div>
+            {/* Total Quotations */}
+            <div className="flex items-center gap-4 bg-purewhite border border-light_gray rounded-xl shadow-sm p-5 hover:shadow-md transition">
+                <div className="flex items-center justify-center h-12 w-12 rounded-lg bg-deep_green/10">
+                <FaClipboard className="text-deep_green text-2xl" />
+                </div>
+                <div>
+                <div className="text-sm text-slatebluegray font-semibold">Total Quotations</div>
+                <div className="text-2xl font-bold text-main_dark">24</div>
+                <div className="text-xs text-slatebluegray mt-1">This month</div>
+                </div>
             </div>
-            <FaClipboard className="text-purewhite text-3xl" />
-          </div>
-          <div className="flex items-center bg-light_gray rounded-lg p-6">
-            <div className="flex-1">
-              <div className="text-main_dark text-lg font-semibold">Accepted</div>
-              <div className="text-main_dark text-3xl font-bold mt-2">8</div>
+            {/* Accepted */}
+            <div className="flex items-center gap-4 bg-purewhite border border-web_yellow rounded-xl shadow-sm p-5 hover:shadow-md transition">
+                <div className="flex items-center justify-center h-12 w-12 rounded-lg bg-web_yellow/10">
+                <FaCheckCircle className="text-web_yellow text-2xl" />
+                </div>
+                <div>
+                <div className="text-sm text-slatebluegray font-semibold">Accepted</div>
+                <div className="text-2xl font-bold text-main_dark">8</div>
+                <div className="text-xs text-slatebluegray mt-1">Approved by client</div>
+                </div>
             </div>
-            <FaCheckCircle className="text-deep_green text-3xl" />
-          </div>
-          <div className="flex items-center bg-[#F7D6C6] rounded-lg p-6">
-            <div className="flex-1">
-              <div className="text-main_dark text-lg font-semibold">Pending Review</div>
-              <div className="text-main_dark text-3xl font-bold mt-2">12</div>
+            {/* Pending Review */}
+            <div className="flex items-center gap-4 bg-purewhite border border-light_gray rounded-xl shadow-sm p-5 hover:shadow-md transition">
+                <div className="flex items-center justify-center h-12 w-12 rounded-lg bg-slatebluegray/10">
+                <FaClock className="text-slatebluegray text-2xl" />
+                </div>
+                <div>
+                <div className="text-sm text-slatebluegray font-semibold">Pending Review</div>
+                <div className="text-2xl font-bold text-main_dark">12</div>
+                <div className="text-xs text-slatebluegray mt-1">Awaiting feedback</div>
+                </div>
             </div>
-            <FaClock className="text-main_dark text-3xl" />
-          </div>
-        </div>
+            </div>
+
 
         {/* Filters */}
         <div className="bg-purewhite border border-gray-200 rounded-lg p-6 flex flex-col md:flex-row md:items-center gap-4 mb-6">
@@ -155,27 +165,29 @@ const QuotationStatus = () => {
             <thead>
               <tr className="bg-web_yellow">
                 <th className="px-6 py-4 text-left text-sm font-semibold text-main_dark">Quotation ID</th>
-                <th className="px-6 py-4 text-left text-sm font-semibold text-main_dark">Project Name</th>
                 <th className="px-6 py-4 text-left text-sm font-semibold text-main_dark">Material</th>
                 <th className="px-6 py-4 text-left text-sm font-semibold text-main_dark">Quantity</th>
                 <th className="px-6 py-4 text-left text-sm font-semibold text-main_dark">Quoted Price</th>
                 <th className="px-6 py-4 text-left text-sm font-semibold text-main_dark">Submitted</th>
                 <th className="px-6 py-4 text-left text-sm font-semibold text-main_dark">Status</th>
+                <th className="px-6 py-4 text-left text-sm font-semibold text-main_dark">Action</th>
               </tr>
             </thead>
             <tbody className="divide-y divide-light_gray">
               {filteredQuotations.map((q, idx) => (
                 <tr key={q.id} className="hover:bg-gray-50">
-                  <td className="px-6 py-4 text-main_dark font-medium">{q.id}</td>
-                  <td className="px-6 py-4">{q.project}</td>
+                  <td className="px-6 py-4 text-main_dark font-medium text-sm">{q.id}</td>
                   <td className="px-6 py-4">{q.material}</td>
                   <td className="px-6 py-4">{q.quantity}</td>
                   <td className="px-6 py-4 font-semibold text-main_dark">{q.price}</td>
                   <td className="px-6 py-4">{q.submitted}</td>
                   <td className="px-6 py-4">
-                    <span className={`px-3 py-1 rounded-full text-xs font-semibold ${statusColors[q.status]}`}>
+                    <span className={`px-3 py-1 rounded-full text-xs font-medium ${statusColors[q.status]}`}>
                       {q.status}
                     </span>
+                  </td>
+                  <td className="px-6 py-4">
+                    <button onClick={()=>navigate(`/quotations/${q.id.replace('#', '')}`)} className="p-2 text-deep_green hover:bg-gray-100 rounded"><FaEye /></button>
                   </td>
                 </tr>
               ))}
