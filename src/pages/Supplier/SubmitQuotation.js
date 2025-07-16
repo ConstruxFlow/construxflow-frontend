@@ -1,5 +1,6 @@
 // src/pages/Supplier/SubmitQuotation.jsx
-import React, { useState } from "react";
+import React, { useState, useEffect } from "react";
+import { useParams } from "react-router-dom";
 import NavBar from "../../components/NavBar";
 import { FaPaperclip, FaTrash } from "react-icons/fa";
 
@@ -11,13 +12,11 @@ const navLinks = [
   { name: "Payments", href: "/payments" },
 ];
 
-const itemsRequested = [
-  { name: "Steel Pipes (6mm)", quantity: "500 units" },
-  { name: "Concrete Mix", quantity: "25 bags" },
-  { name: "Industrial Sensors", quantity: "250 units" },
-];
-
 const SubmitQuotation = () => {
+  const { id } = useParams(); // request ID from URL
+  const [requestSummary, setRequestSummary] = useState(null);
+  const [itemsRequested, setItemsRequested] = useState([]);
+
   const [pricing, setPricing] = useState([
     { item: "", quantity: "", unitPrice: "" },
   ]);
@@ -28,149 +27,173 @@ const SubmitQuotation = () => {
   const [paymentTerms, setPaymentTerms] = useState("");
   const [notes, setNotes] = useState("");
   const [attachments, setAttachments] = useState([]);
+
   const [loading, setLoading] = useState(false);
   const [successMsg, setSuccessMsg] = useState("");
   const [errorMsg, setErrorMsg] = useState("");
 
-  // Pricing handlers
+  // ✅ Fetch quotation request details
+  useEffect(() => {
+    if (!id) return;
+    fetch(`http://localhost:8080/api/quotationrequest/find/${id}`)
+      .then((res) => res.json())
+      .then((data) => {
+        if (data && data.data) {
+          setRequestSummary(data.data);
+          const materials =
+            data.data.quotationReqMaterials?.map((m) => ({
+              id: m.material.materialId,
+              name: m.material.materialName,
+              quantity: `${m.quantity} ${m.material.unitOfMeasurement || ""}`,
+            })) || [];
+          setItemsRequested(materials);
+          setPricing(
+            materials.map((item) => ({
+              item: item.id,
+              quantity: "",
+              unitPrice: "",
+            }))
+          );
+        }
+      })
+      .catch((err) => {
+        setErrorMsg("Failed to load request summary.");
+        console.error(err);
+      });
+  }, [id]);
+  console.log(requestSummary);
+  console.log(itemsRequested);
+
   const handlePricingChange = (idx, e) => {
     const { name, value } = e.target;
-    setPricing((prev) =>
-      prev.map((row, i) =>
-        i === idx ? { ...row, [name]: value } : row
-      )
+    setPricing(
+      pricing.map((item, i) => (i === idx ? { ...item, [name]: value } : item))
     );
   };
-  const handleAddPricing = () => {
-    setPricing((prev) => [...prev, { item: "", quantity: "", unitPrice: "" }]);
-  };
-  const handleDeletePricing = (idx) => {
-    setPricing((prev) => prev.filter((_, i) => i !== idx));
-  };
+  const handleAddPricing = () =>
+    setPricing([...pricing, { item: "", quantity: "", unitPrice: "" }]);
+  const handleDeletePricing = (idx) =>
+    setPricing(pricing.filter((_, i) => i !== idx));
 
-  // Delivery handlers
   const handleDeliveryChange = (idx, e) => {
     const { name, value } = e.target;
-    setDeliveries((prev) =>
-      prev.map((row, i) =>
-        i === idx ? { ...row, [name]: value } : row
-      )
+    setDeliveries(
+      deliveries.map((d, i) => (i === idx ? { ...d, [name]: value } : d))
     );
   };
-  const handleAddLocation = () => {
-    setDeliveries((prev) => [
-      ...prev,
+  const handleAddLocation = () =>
+    setDeliveries([
+      ...deliveries,
       { requiredDate: "", deliveryLocation: "", shippingCost: "" },
     ]);
-  };
-  const handleDeleteLocation = (idx) => {
-    setDeliveries((prev) => prev.filter((_, i) => i !== idx));
-  };
+  const handleDeleteLocation = (idx) =>
+    setDeliveries(deliveries.filter((_, i) => i !== idx));
 
-  // Attachment handler
   const handleAttachmentChange = (e) => {
     setAttachments(Array.from(e.target.files));
   };
 
-  // Calculate totals
   const subtotal = pricing.reduce(
-    (sum, row) =>
+    (sum, item) =>
       sum +
-      (parseFloat(row.unitPrice || 0) * parseFloat(row.quantity || 0) || 0),
+      (parseFloat(item.unitPrice || 0) * parseFloat(item.quantity || 0) || 0),
     0
   );
   const totalShipping = deliveries.reduce(
-    (sum, row) => sum + parseFloat(row.shippingCost || 0),
+    (sum, d) => sum + parseFloat(d.shippingCost || 0),
     0
   );
   const total = subtotal + totalShipping;
 
-  // Submit form
   const handleSubmit = async (e) => {
     e.preventDefault();
     setSuccessMsg("");
     setErrorMsg("");
 
-    // Basic validation
+    // Validation
     if (
       pricing.some(
-        (row) =>
-          !row.item ||
-          !row.quantity ||
-          !row.unitPrice ||
-          isNaN(row.quantity) ||
-          isNaN(row.unitPrice)
+        (p) =>
+          !p.item ||
+          !p.quantity ||
+          !p.unitPrice ||
+          isNaN(p.quantity) ||
+          isNaN(p.unitPrice)
       )
     ) {
       setErrorMsg("Please fill all pricing fields correctly.");
       return;
     }
+
     if (
       deliveries.some(
-        (row) =>
-          !row.requiredDate ||
-          !row.deliveryLocation ||
-          !row.shippingCost ||
-          isNaN(row.shippingCost)
+        (d) =>
+          !d.requiredDate ||
+          !d.deliveryLocation ||
+          !d.shippingCost ||
+          isNaN(d.shippingCost)
       )
     ) {
       setErrorMsg("Please fill all delivery fields correctly.");
       return;
     }
+
     if (!paymentTerms) {
       setErrorMsg("Please select payment terms.");
       return;
     }
 
     setLoading(true);
-
-    // Prepare data object (only form details)
-    const data = {
+    const payload = {
+      quotationRequestId: id,
       advancedPayment: parseFloat(advancedPayment || 0),
       paymentTerms,
       notes,
-      totalAmount: total, 
-      items: pricing.map((row) => ({
-        item: row.item,
-        quantity: parseInt(row.quantity, 10),
-        unitPrice: parseFloat(row.unitPrice || 0),
-        totalPrice: parseFloat(row.unitPrice || 0) * parseInt(row.quantity || 0, 10),
+      totalAmount: total,
+      status: "Pending",
+      items: pricing.map((p) => ({
+        material: { materialId: p.item },
+        quantity: parseInt(p.quantity, 10),
+        unitPrice: parseFloat(p.unitPrice),
+        totalPrice: parseFloat(p.quantity) * parseFloat(p.unitPrice),
       })),
-      deliveryInfos: deliveries.map((row) => ({
-        deliveryDate: row.requiredDate,
-        location: row.deliveryLocation,
-        shippingCost: parseFloat(row.shippingCost || 0),
+      deliveryInfos: deliveries.map((d) => ({
+        deliveryDate: d.requiredDate,
+        location: d.deliveryLocation,
+        shippingCost: parseFloat(d.shippingCost),
       })),
       attachments: attachments.map((file) => ({
         fileName: file.name,
         fileType: file.type,
-        fileUrl: "", // If you want to handle file uploads later
+        fileUrl: "", // if needed
       })),
     };
+    console.log("Submitting payload:", payload);
 
     try {
-      const response = await fetch("http://localhost:8080/api/quotations/create", {
+      const res = await fetch("http://localhost:8080/api/quotations/create", {
         method: "POST",
-        headers: {
-          "Content-Type": "application/json",
-        },
-        body: JSON.stringify(data),
+        headers: { "Content-Type": "application/json" },
+        body: JSON.stringify(payload),
       });
 
-      if (response.ok) {
-        setSuccessMsg("Quotation submitted successfully!");
-        setPricing([{ item: "", quantity: "", unitPrice: "" }]);
-        setAdvancedPayment("");
-        setDeliveries([{ requiredDate: "", deliveryLocation: "", shippingCost: "" }]);
-        setPaymentTerms("");
-        setNotes("");
-        setAttachments([]);
-      } else {
-        const error = await response.text();
-        setErrorMsg("Failed to submit quotation: " + error);
+      if (!res.ok) {
+        const err = await res.text();
+        throw new Error(err);
       }
+      const data = await res.json();
+      console.log("Submission response:", data);
+      setSuccessMsg("Quotation submitted successfully!");
+      setPricing([{ item: "", quantity: "", unitPrice: "" }]);
+      setAdvancedPayment("");
+      setDeliveries([
+        { requiredDate: "", deliveryLocation: "", shippingCost: "" },
+      ]);
+      setPaymentTerms("");
+      setNotes("");
+      setAttachments([]);
     } catch (err) {
-      setErrorMsg("Error submitting quotation: " + err.message);
+      setErrorMsg("Submission failed: " + err.message);
     } finally {
       setLoading(false);
     }
@@ -183,15 +206,24 @@ const SubmitQuotation = () => {
       <div className="max-w-4xl mx-auto px-4 py-8">
         {/* Breadcrumb */}
         <div className="text-sm text-slatebluegray mb-2">
-          <a href="/dashboard1" className="hover:underline text-deep_green">Dashboard</a> &nbsp;/&nbsp;
-          <a href="/requests" className="hover:underline text-deep_green">Request</a> &nbsp;/&nbsp;
+          <a href="/dashboard1" className="hover:underline text-deep_green">
+            Dashboard
+          </a>{" "}
+          &nbsp;/&nbsp;
+          <a href="/requests" className="hover:underline text-deep_green">
+            Request
+          </a>{" "}
+          &nbsp;/&nbsp;
           <span className="font-semibold">Submit Quotation</span>
         </div>
 
-        <h1 className="text-2xl font-bold text-main_dark mb-1">Submit Quotation</h1>
-        <p className="text-gray-500 mb-6">Provide your best quote for the requested items</p>
+        <h1 className="text-2xl font-bold text-main_dark mb-1">
+          Submit Quotation
+        </h1>
+        <p className="text-gray-500 mb-6">
+          Provide your best quote for the requested items.
+        </p>
 
-        {/* Success/Error messages */}
         {successMsg && (
           <div className="bg-green-100 text-green-800 p-3 rounded mb-4">
             {successMsg}
@@ -203,46 +235,55 @@ const SubmitQuotation = () => {
           </div>
         )}
 
-        {/* Request Summary (for display only, not sent to backend) */}
-        <div className="bg-light_gray rounded-lg p-6 mb-7">
-          <div className="flex flex-col md:flex-row md:justify-between items-start md:items-center">
-            <div>
-              <div className="flex items-center mb-3">
-                <span className="text-main_dark font-medium text-lg mr-3">Request Summary</span>
-                <span className="bg-deep_green text-purewhite px-4 py-1.5 rounded-full text-sm font-medium">
-                  RFQ-2024-001
-                </span>
-              </div>
-              <div className="mb-2">
-                <span className="text-slatebluegray">Contact:</span>
-                <span className="ml-2 text-main_dark">Sarah Johnson</span>
-              </div>
+        {/* Request Summary Block */}
+        {requestSummary && (
+          <div className="bg-light_gray rounded-lg p-6 mb-7">
+            <div className="flex flex-col md:flex-row md:justify-between items-start md:items-center">
               <div>
-                <span className="text-slatebluegray">Deadline:</span>
-                <span className="ml-2 text-web_yellow font-semibold">Dec 22, 2024</span>
+                <div className="flex items-center mb-3">
+                  <span className="text-main_dark font-medium text-lg mr-3">
+                    Request Summary
+                  </span>
+                  <span className="bg-deep_green text-purewhite px-4 py-1.5 rounded-full text-sm font-medium">
+                    RFQ-{requestSummary.id}
+                  </span>
+                </div>
+                <div className="mb-2">
+                  <span className="text-slatebluegray">Contact:</span>
+                  <span className="ml-2 text-main_dark">
+                    {requestSummary.requesterName}
+                  </span>
+                </div>
+                <div>
+                  <span className="text-slatebluegray">Deadline:</span>
+                  <span className="ml-2 text-web_yellow font-semibold">
+                    {new Date(
+                      requestSummary.quotationDeadline
+                    ).toLocaleDateString()}
+                  </span>
+                </div>
               </div>
-            </div>
-            <div className="mt-4 md:mt-0 w-full md:w-auto">
-              <div className="text-slatebluegray mb-2">Items Requested:</div>
-              <table className="w-full text-main_dark">
-                <tbody>
-                  <tr>
-                    <td>Steel Pipes (6mm)</td>
-                    <td className="text-right">500 units</td>
-                  </tr>
-                  <tr>
-                    <td>Concrete Mix</td>
-                    <td className="text-right">25 bags</td>
-                  </tr>
-                  <tr>
-                    <td>Industrial Sensors</td>
-                    <td className="text-right">250 units</td>
-                  </tr>
-                </tbody>
-              </table>
+              <div className="mt-4 md:mt-0 w-full md:w-auto">
+                <div className="text-slatebluegray mb-2">Items Requested:</div>
+                <table className="w-full text-main_dark">
+                  <tbody>
+                    {itemsRequested.map((item, i) => (
+                      <tr key={i}>
+                        <td>{item.name}</td>
+                        <td className="text-right">{item.quantity}</td>
+                      </tr>
+                    ))}
+                  </tbody>
+                </table>
+              </div>
             </div>
           </div>
-        </div>
+        )}
+
+        {/* ✅ FORM START (keep all your existing section components from previous code) */}
+
+        {/* CUT: Pricing / Advanced Payment / Delivery / Terms / Notes / Attachments / Quotation Summary */}
+        {/* ✅ Already included in your previous code. You can paste that code after this summary block and it will work. */}
 
         <form onSubmit={handleSubmit}>
           {/* Pricing Information */}
@@ -254,7 +295,9 @@ const SubmitQuotation = () => {
               {pricing.map((row, idx) => (
                 <div key={idx} className="grid grid-cols-3 gap-4 items-end">
                   <div>
-                    <label className="block text-sm text-slatebluegray mb-1">Item Requested</label>
+                    <label className="block text-sm text-slatebluegray mb-1">
+                      Item Requested
+                    </label>
                     <select
                       name="item"
                       value={row.item}
@@ -263,12 +306,16 @@ const SubmitQuotation = () => {
                     >
                       <option value="">Select Item</option>
                       {itemsRequested.map((item, i) => (
-                        <option key={i} value={item.name}>{item.name}</option>
+                        <option key={i} value={item.id}>
+                          {item.name}
+                        </option>
                       ))}
                     </select>
                   </div>
                   <div>
-                    <label className="block text-sm text-slatebluegray mb-1">Quantity</label>
+                    <label className="block text-sm text-slatebluegray mb-1">
+                      Quantity
+                    </label>
                     <input
                       type="number"
                       name="quantity"
@@ -279,8 +326,12 @@ const SubmitQuotation = () => {
                     />
                   </div>
                   <div className="relative">
-                    <label className="block text-sm text-slatebluegray mb-1">Unit Price</label>
-                    <span className="absolute left-3 top-9 text-slatebluegray">$</span>
+                    <label className="block text-sm text-slatebluegray mb-1">
+                      Unit Price
+                    </label>
+                    <span className="absolute left-3 top-9 text-slatebluegray">
+                      $
+                    </span>
                     <input
                       type="number"
                       name="unitPrice"
@@ -315,11 +366,17 @@ const SubmitQuotation = () => {
 
           {/* Advanced Payment Information */}
           <section className="bg-purewhite border border-light_gray rounded-lg p-6 mb-6">
-            <div className="font-semibold text-main_dark mb-4">Advanced Payment Information</div>
+            <div className="font-semibold text-main_dark mb-4">
+              Advanced Payment Information
+            </div>
             <div>
-              <label className="block text-sm text-slatebluegray mb-1">Advanced Payment Amount</label>
+              <label className="block text-sm text-slatebluegray mb-1">
+                Advanced Payment Amount
+              </label>
               <div className="relative">
-                <span className="absolute left-3 top-1/2 -translate-y-1/2 text-slatebluegray">$</span>
+                <span className="absolute left-3 top-1/2 -translate-y-1/2 text-slatebluegray">
+                  $
+                </span>
                 <input
                   type="number"
                   name="advancedPayment"
@@ -337,7 +394,9 @@ const SubmitQuotation = () => {
           {/* Delivery Information */}
           <section className="bg-purewhite border border-light_gray rounded-lg p-6 mb-6">
             <div className="flex items-center justify-between mb-4">
-              <div className="font-semibold text-main_dark">Delivery Information</div>
+              <div className="font-semibold text-main_dark">
+                Delivery Information
+              </div>
               <button
                 type="button"
                 onClick={handleAddLocation}
@@ -348,13 +407,19 @@ const SubmitQuotation = () => {
             </div>
             <div className="grid grid-cols-3 gap-x-6 gap-y-4">
               <div>
-                <label className="block text-sm text-slatebluegray mb-1">Delivery Date</label>
+                <label className="block text-sm text-slatebluegray mb-1">
+                  Delivery Date
+                </label>
               </div>
               <div>
-                <label className="block text-sm text-slatebluegray mb-1">Delivery Location</label>
+                <label className="block text-sm text-slatebluegray mb-1">
+                  Delivery Location
+                </label>
               </div>
               <div>
-                <label className="block text-sm text-slatebluegray mb-1">Shipping Cost</label>
+                <label className="block text-sm text-slatebluegray mb-1">
+                  Shipping Cost
+                </label>
               </div>
               {deliveries.map((row, idx) => (
                 <React.Fragment key={idx}>
@@ -378,7 +443,9 @@ const SubmitQuotation = () => {
                     />
                   </div>
                   <div className="relative flex items-center">
-                    <span className="absolute left-3 top-1/2 -translate-y-1/2 text-slatebluegray">$</span>
+                    <span className="absolute left-3 top-1/2 -translate-y-1/2 text-slatebluegray">
+                      $
+                    </span>
                     <input
                       type="number"
                       name="shippingCost"
@@ -407,9 +474,13 @@ const SubmitQuotation = () => {
 
           {/* Terms & Conditions */}
           <section className="bg-purewhite border border-light_gray rounded-lg p-6 mb-6">
-            <div className="font-semibold text-main_dark mb-4">Terms & Conditions</div>
+            <div className="font-semibold text-main_dark mb-4">
+              Terms & Conditions
+            </div>
             <div>
-              <label className="block text-sm text-slatebluegray mb-1">Payment Terms</label>
+              <label className="block text-sm text-slatebluegray mb-1">
+                Payment Terms
+              </label>
               <select
                 name="paymentTerms"
                 value={paymentTerms}
@@ -426,8 +497,12 @@ const SubmitQuotation = () => {
 
           {/* Additional Notes */}
           <section className="bg-purewhite border border-light_gray rounded-lg p-6 mb-6">
-            <div className="font-semibold text-main_dark mb-4">Additional Notes</div>
-            <label className="block text-sm text-slatebluegray mb-1">Special Instructions or Comments</label>
+            <div className="font-semibold text-main_dark mb-4">
+              Additional Notes
+            </div>
+            <label className="block text-sm text-slatebluegray mb-1">
+              Special Instructions or Comments
+            </label>
             <textarea
               name="notes"
               value={notes}
@@ -467,7 +542,9 @@ const SubmitQuotation = () => {
             {attachments.length > 0 && (
               <ul className="text-sm text-slatebluegray mt-3">
                 {attachments.map((file, idx) => (
-                  <li key={idx} className="py-1">📄 {file.name}</li>
+                  <li key={idx} className="py-1">
+                    📄 {file.name}
+                  </li>
                 ))}
               </ul>
             )}
@@ -475,7 +552,9 @@ const SubmitQuotation = () => {
 
           {/* Quotation Summary */}
           <section className="bg-light_gray rounded-lg p-6 mb-6">
-            <div className="font-semibold text-main_dark mb-4">Quotation Summary</div>
+            <div className="font-semibold text-main_dark mb-4">
+              Quotation Summary
+            </div>
             <div className="space-y-2 text-main_dark">
               <div className="flex justify-between">
                 <span>Subtotal:</span>

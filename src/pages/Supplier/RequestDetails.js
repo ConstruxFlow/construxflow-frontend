@@ -245,7 +245,7 @@ const RequestDetails = () => {
         <div className="flex flex-col md:flex-row gap-4 px-8 py-8 bg-purewhite border-t border-light_gray">
           <button
             className="flex-1 bg-web_yellow text-main_dark font-medium py-3 rounded-lg hover:opacity-90 transition"
-            onClick={() => navigate("/quotations/submit")}
+            onClick={() => navigate(`/quotations/submit/${request.id}`)}
           >
             Send Quotation
           </button>
