@@ -182,19 +182,29 @@ export default function Material_Request_List() {
                       </button>
                       {expandedPhases[`${project}__${phase}`] && (
                         <div className="px-8 py-4">
-                          {/* Create Request Button for this phase */}
-                          <button
-                            className="px-3 py-1 text-white font-medium rounded-lg shadow-sm hover:opacity-90 transition-opacity text-sm mb-4"
-                            style={{ backgroundColor: '#236571' }}
-                            onClick={() => navigate('/material-request-list/material-request', {
-                              state: {
-                                project: project,
-                                phase: phase
-                              }
-                            })}
-                          >
-                            Create Request
-                          </button>
+                          {/* Create Request Button or Pending Badge for this phase */}
+                          {mats.every(mat => mat.status === 'Pending') ? (
+                            <span className="px-3 py-1 rounded-lg bg-yellow-100 text-yellow-800 font-medium text-sm mb-4 inline-block">Pending</span>
+                          ) : mats.some(mat => mat.status === 'Not Requested') ? (
+                            <button
+                              className="px-3 py-1 text-white font-medium rounded-lg shadow-sm hover:opacity-90 transition-opacity text-sm mb-4"
+                              style={{ backgroundColor: '#236571' }}
+                              onClick={() => {
+                                console.log('Navigating with:', { project, phase, mats });
+                                navigate('/material-request-list/material-request', {
+                                  state: {
+                                    project: project,
+                                    phase: phase,
+                                    materials: mats // Pass the materials for this phase
+                                  }
+                                });
+                              }}
+                            >
+                              Create Request
+                            </button>
+                          ) : (
+                            <span className="text-gray-400 text-sm mb-4 inline-block">-</span>
+                          )}
                           <div className="grid grid-cols-5 gap-4 pb-2 border-b font-semibold text-gray-700">
                             <div>Material Name</div>
                             <div>Quantity</div>
