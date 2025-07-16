@@ -203,7 +203,7 @@ const SubmitQuotation = () => {
     <div className="bg-[#f6f7f9] min-h-screen font-poppins">
       <NavBar links={navLinks} logoSrc="/logo1.png" />
 
-      <div className="max-w-4xl mx-auto px-4 py-8">
+      <div className="max-w-full mx-auto px-20 py-8">
         {/* Breadcrumb */}
         <div className="text-sm text-slatebluegray mb-2">
           <a href="/dashboard1" className="hover:underline text-deep_green">
@@ -255,7 +255,7 @@ const SubmitQuotation = () => {
                   </span>
                 </div>
                 <div>
-                  <span className="text-slatebluegray">Deadline:</span>
+                  <span className="text-slatebluegray">Quotation Deadline:</span>
                   <span className="ml-2 text-web_yellow font-semibold">
                     {new Date(
                       requestSummary.quotationDeadline
