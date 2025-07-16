@@ -2,16 +2,11 @@ import { createBrowserRouter } from "react-router-dom";
 import Home from "./pages/Home";
 import Login from "./pages/Login";
 import PurchasingDashboard from "./pages/PurchasingManager/DashBoard/Dashboard";
-
-//inventory manager
 import InventoryDashboard from "./pages/InventoryManager/InventoryDashboard";
 import InventoryMonitoring from "./pages/InventoryManager/InventoryMonitoring";
 import EquipmentScheduling from "./pages/InventoryManager/EquipmentScheduling";
 import Maintenance from "./pages/InventoryManager/Maintenance";
 import MaterialRequest from "./pages/InventoryManager/MaterialRequest";
-import AddEquipment from "./pages/InventoryManager/AddEquipment";
-
-
 import Create_Project from "./pages/SiteManager/Create_Project";
 import MaintenanceDashboard from "./pages/MaintenanceHead/MaintenanceDashboard";
 import MaintenanceMaterialRequest from "./pages/MaintenanceHead/MaintenanceMaterialRequest";
@@ -37,8 +32,6 @@ import ReceiveAdvancedPayment from "./pages/Supplier/ReceiveAdvancedPayment";
 import ReceiveFullPayment from "./pages/Supplier/ReceiveFullPayment";
 import SupplierProfile from "./pages/Supplier/Profile";
 import SupplierProfileEdit from "./pages/Supplier/EditProfile";
-import ContactSupport from "./pages/Supplier/ContactSupport";
-import QuotationDetails from "./pages/Supplier/QuotationDetails";
 import Edit_Project from "./pages/SiteManager/Edit_Project";
 import Project_Phase from "./pages/SiteManager/Project_Phase";
 import Create_Material_Request from "./pages/SiteManager/Create_Material_Request";
@@ -62,8 +55,9 @@ import {
 } from "./pages/PurchasingManager/Routes";
 import { MaintenanceRoute } from "./pages/MaintenanceHead/MaintenanceRoute";
 import VerificationEmailPage from "./components/EmailVerify";
-import MaintenanceRequestsOverview from "./pages/InventoryManager/MaintenanceRequestsOverview";
-import MaintenanceRequestPage from "./pages/InventoryManager/MaintenanceRequestPage";
+import BOQPDFReader from "./pages/BOQPDFReader";
+import AddEquipment from "./pages/InventoryManager/AddEquipment";
+
 
 export const routes = createBrowserRouter([
   {
@@ -87,24 +81,12 @@ export const routes = createBrowserRouter([
   element: <InventoryMonitoring />
 },
 {
-  path:"/maintenance-requests-overview",
-  element: <MaintenanceRequestsOverview/>
-},
-{
   path: "/equipment-scheduling",
   element: <EquipmentScheduling />,
 },
 {
-  path: "/add-equipment",
-  element: <AddEquipment />,
-},
-{
   path: "/maintenance",
   element: <Maintenance />,
-},
-{
-  path: "/maintenance-request-page",
-  element: <MaintenanceRequestPage />,
 },
 {
   path: "/material-request",
@@ -133,9 +115,6 @@ export const routes = createBrowserRouter([
   { path: "/payments", element: <PaymentStatus /> },
   { path: "/supplierprofile", element: <SupplierProfile /> },
   { path: "/supplierprofile/edit", element: <SupplierProfileEdit /> },
-  { path: "/contact-support", element: <ContactSupport /> },
-  { path: "/quotations/:id", element: <QuotationDetails /> },
-
 
   {
     path: "/login",
@@ -154,7 +133,7 @@ export const routes = createBrowserRouter([
   
   // SITE MANAGER
   {
-    path: "/site-manager",  
+    path: "/site-manager",
     element: <SiteManagerDashboard />,
   },
   {
@@ -216,5 +195,9 @@ export const routes = createBrowserRouter([
   {
     path: "/verify-email",
     element: <VerificationEmailPage/>
-  }
+  },
+  {
+  path: "/add-equipment",
+  element: <AddEquipment />,
+},
 ]);
