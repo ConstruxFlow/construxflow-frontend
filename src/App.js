@@ -2,11 +2,16 @@ import { createBrowserRouter } from "react-router-dom";
 import Home from "./pages/Home";
 import Login from "./pages/Login";
 import PurchasingDashboard from "./pages/PurchasingManager/DashBoard/Dashboard";
+
+//inventory manager
 import InventoryDashboard from "./pages/InventoryManager/InventoryDashboard";
 import InventoryMonitoring from "./pages/InventoryManager/InventoryMonitoring";
 import EquipmentScheduling from "./pages/InventoryManager/EquipmentScheduling";
 import Maintenance from "./pages/InventoryManager/Maintenance";
 import MaterialRequest from "./pages/InventoryManager/MaterialRequest";
+import AddEquipment from "./pages/InventoryManager/AddEquipment";
+
+
 import Create_Project from "./pages/SiteManager/Create_Project";
 import MaintenanceDashboard from "./pages/MaintenanceHead/MaintenanceDashboard";
 import MaintenanceMaterialRequest from "./pages/MaintenanceHead/MaintenanceMaterialRequest";
@@ -57,7 +62,8 @@ import {
 } from "./pages/PurchasingManager/Routes";
 import { MaintenanceRoute } from "./pages/MaintenanceHead/MaintenanceRoute";
 import VerificationEmailPage from "./components/EmailVerify";
-import BOQPDFReader from "./pages/BOQPDFReader";
+import MaintenanceRequestsOverview from "./pages/InventoryManager/MaintenanceRequestsOverview";
+import MaintenanceRequestPage from "./pages/InventoryManager/MaintenanceRequestPage";
 
 export const routes = createBrowserRouter([
   {
@@ -81,12 +87,24 @@ export const routes = createBrowserRouter([
   element: <InventoryMonitoring />
 },
 {
+  path:"/maintenance-requests-overview",
+  element: <MaintenanceRequestsOverview/>
+},
+{
   path: "/equipment-scheduling",
   element: <EquipmentScheduling />,
 },
 {
+  path: "/add-equipment",
+  element: <AddEquipment />,
+},
+{
   path: "/maintenance",
   element: <Maintenance />,
+},
+{
+  path: "/maintenance-request-page",
+  element: <MaintenanceRequestPage />,
 },
 {
   path: "/material-request",
@@ -136,7 +154,7 @@ export const routes = createBrowserRouter([
   
   // SITE MANAGER
   {
-    path: "/site-manager",
+    path: "/site-manager",  
     element: <SiteManagerDashboard />,
   },
   {
