@@ -1,7 +1,8 @@
 // src/pages/Supplier/QuotationStatus.jsx
 import React, { useState } from "react";
 import NavBar from "../../components/NavBar";
-import { FaClipboard, FaCheckCircle, FaClock, FaSearch, FaChevronDown } from "react-icons/fa";
+import { useNavigate } from "react-router-dom";
+import { FaClipboard, FaCheckCircle, FaClock, FaSearch, FaChevronDown,FaEye } from "react-icons/fa";
 
 const navLinks = [
   { name: "Dashboard", href: "/dashboard1" },
@@ -20,7 +21,6 @@ const statusColors = {
 const quotations = [
   {
     id: "QT-2024-001",
-    project: "Metro Bridge Construction",
     material: "Steel Reinforcement Bars",
     quantity: "500 tons",
     price: "$45,000",
@@ -29,7 +29,6 @@ const quotations = [
   },
   {
     id: "QT-2024-002",
-    project: "Shopping Mall Phase 2",
     material: "Concrete Mix",
     quantity: "200 m³",
     price: "$18,500",
@@ -38,7 +37,6 @@ const quotations = [
   },
   {
     id: "QT-2024-003",
-    project: "Office Complex Downtown",
     material: "Electrical Cables",
     quantity: "2,000 meters",
     price: "$12,300",
@@ -47,7 +45,6 @@ const quotations = [
   },
   {
     id: "QT-2024-004",
-    project: "Residential Tower A",
     material: "Plumbing Pipes",
     quantity: "800 units",
     price: "$22,750",
@@ -56,7 +53,6 @@ const quotations = [
   },
   {
     id: "QT-2024-005",
-    project: "Highway Extension Project",
     material: "Asphalt",
     quantity: "1,500 tons",
     price: "$67,200",
@@ -69,6 +65,8 @@ const QuotationStatus = () => {
   const [search, setSearch] = useState("");
   const [status, setStatus] = useState("All Status");
   const [date, setDate] = useState("");
+
+  const navigate = useNavigate();
 
   // Filter logic (basic)
   const filteredQuotations = quotations.filter(
@@ -167,19 +165,18 @@ const QuotationStatus = () => {
             <thead>
               <tr className="bg-web_yellow">
                 <th className="px-6 py-4 text-left text-sm font-semibold text-main_dark">Quotation ID</th>
-                <th className="px-6 py-4 text-left text-sm font-semibold text-main_dark">Project Name</th>
                 <th className="px-6 py-4 text-left text-sm font-semibold text-main_dark">Material</th>
                 <th className="px-6 py-4 text-left text-sm font-semibold text-main_dark">Quantity</th>
                 <th className="px-6 py-4 text-left text-sm font-semibold text-main_dark">Quoted Price</th>
                 <th className="px-6 py-4 text-left text-sm font-semibold text-main_dark">Submitted</th>
                 <th className="px-6 py-4 text-left text-sm font-semibold text-main_dark">Status</th>
+                <th className="px-6 py-4 text-left text-sm font-semibold text-main_dark">Action</th>
               </tr>
             </thead>
             <tbody className="divide-y divide-light_gray">
               {filteredQuotations.map((q, idx) => (
                 <tr key={q.id} className="hover:bg-gray-50">
                   <td className="px-6 py-4 text-main_dark font-medium text-sm">{q.id}</td>
-                  <td className="px-6 py-4 ">{q.project}</td>
                   <td className="px-6 py-4">{q.material}</td>
                   <td className="px-6 py-4">{q.quantity}</td>
                   <td className="px-6 py-4 font-semibold text-main_dark">{q.price}</td>
@@ -188,6 +185,9 @@ const QuotationStatus = () => {
                     <span className={`px-3 py-1 rounded-full text-xs font-medium ${statusColors[q.status]}`}>
                       {q.status}
                     </span>
+                  </td>
+                  <td className="px-6 py-4">
+                    <button onClick={()=>navigate(`/quotations/${q.id.replace('#', '')}`)} className="p-2 text-deep_green hover:bg-gray-100 rounded"><FaEye /></button>
                   </td>
                 </tr>
               ))}

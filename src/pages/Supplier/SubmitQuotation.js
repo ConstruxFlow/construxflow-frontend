@@ -28,6 +28,9 @@ const SubmitQuotation = () => {
   const [paymentTerms, setPaymentTerms] = useState("");
   const [notes, setNotes] = useState("");
   const [attachments, setAttachments] = useState([]);
+  const [loading, setLoading] = useState(false);
+  const [successMsg, setSuccessMsg] = useState("");
+  const [errorMsg, setErrorMsg] = useState("");
 
   // Pricing handlers
   const handlePricingChange = (idx, e) => {
@@ -40,6 +43,9 @@ const SubmitQuotation = () => {
   };
   const handleAddPricing = () => {
     setPricing((prev) => [...prev, { item: "", quantity: "", unitPrice: "" }]);
+  };
+  const handleDeletePricing = (idx) => {
+    setPricing((prev) => prev.filter((_, i) => i !== idx));
   };
 
   // Delivery handlers
@@ -57,20 +63,13 @@ const SubmitQuotation = () => {
       { requiredDate: "", deliveryLocation: "", shippingCost: "" },
     ]);
   };
-
-  // Attachment handler
-  const handleAttachmentChange = (e) => {
-    setAttachments(Array.from(e.target.files));
-  };
-
-  // Remove delivery location
   const handleDeleteLocation = (idx) => {
     setDeliveries((prev) => prev.filter((_, i) => i !== idx));
   };
 
-  // Remove pricing row
-  const handleDeletePricing = (idx) => {
-    setPricing((prev) => prev.filter((_, i) => i !== idx));
+  // Attachment handler
+  const handleAttachmentChange = (e) => {
+    setAttachments(Array.from(e.target.files));
   };
 
   // Calculate totals
@@ -84,12 +83,97 @@ const SubmitQuotation = () => {
     (sum, row) => sum + parseFloat(row.shippingCost || 0),
     0
   );
-  const advPay = parseFloat(advancedPayment || 0);
   const total = subtotal + totalShipping;
 
-  const handleSubmit = (e) => {
+  // Submit form
+  const handleSubmit = async (e) => {
     e.preventDefault();
-    alert("Quotation submitted!");
+    setSuccessMsg("");
+    setErrorMsg("");
+
+    // Basic validation
+    if (
+      pricing.some(
+        (row) =>
+          !row.item ||
+          !row.quantity ||
+          !row.unitPrice ||
+          isNaN(row.quantity) ||
+          isNaN(row.unitPrice)
+      )
+    ) {
+      setErrorMsg("Please fill all pricing fields correctly.");
+      return;
+    }
+    if (
+      deliveries.some(
+        (row) =>
+          !row.requiredDate ||
+          !row.deliveryLocation ||
+          !row.shippingCost ||
+          isNaN(row.shippingCost)
+      )
+    ) {
+      setErrorMsg("Please fill all delivery fields correctly.");
+      return;
+    }
+    if (!paymentTerms) {
+      setErrorMsg("Please select payment terms.");
+      return;
+    }
+
+    setLoading(true);
+
+    // Prepare data object (only form details)
+    const data = {
+      advancedPayment: parseFloat(advancedPayment || 0),
+      paymentTerms,
+      notes,
+      totalAmount: total, 
+      items: pricing.map((row) => ({
+        item: row.item,
+        quantity: parseInt(row.quantity, 10),
+        unitPrice: parseFloat(row.unitPrice || 0),
+        totalPrice: parseFloat(row.unitPrice || 0) * parseInt(row.quantity || 0, 10),
+      })),
+      deliveryInfos: deliveries.map((row) => ({
+        deliveryDate: row.requiredDate,
+        location: row.deliveryLocation,
+        shippingCost: parseFloat(row.shippingCost || 0),
+      })),
+      attachments: attachments.map((file) => ({
+        fileName: file.name,
+        fileType: file.type,
+        fileUrl: "", // If you want to handle file uploads later
+      })),
+    };
+
+    try {
+      const response = await fetch("http://localhost:8080/api/quotations/create", {
+        method: "POST",
+        headers: {
+          "Content-Type": "application/json",
+        },
+        body: JSON.stringify(data),
+      });
+
+      if (response.ok) {
+        setSuccessMsg("Quotation submitted successfully!");
+        setPricing([{ item: "", quantity: "", unitPrice: "" }]);
+        setAdvancedPayment("");
+        setDeliveries([{ requiredDate: "", deliveryLocation: "", shippingCost: "" }]);
+        setPaymentTerms("");
+        setNotes("");
+        setAttachments([]);
+      } else {
+        const error = await response.text();
+        setErrorMsg("Failed to submit quotation: " + error);
+      }
+    } catch (err) {
+      setErrorMsg("Error submitting quotation: " + err.message);
+    } finally {
+      setLoading(false);
+    }
   };
 
   return (
@@ -107,47 +191,58 @@ const SubmitQuotation = () => {
         <h1 className="text-2xl font-bold text-main_dark mb-1">Submit Quotation</h1>
         <p className="text-gray-500 mb-6">Provide your best quote for the requested items</p>
 
+        {/* Success/Error messages */}
+        {successMsg && (
+          <div className="bg-green-100 text-green-800 p-3 rounded mb-4">
+            {successMsg}
+          </div>
+        )}
+        {errorMsg && (
+          <div className="bg-red-100 text-red-800 p-3 rounded mb-4">
+            {errorMsg}
+          </div>
+        )}
+
+        {/* Request Summary (for display only, not sent to backend) */}
         <div className="bg-light_gray rounded-lg p-6 mb-7">
-  <div className="flex flex-col md:flex-row md:justify-between items-start md:items-center">
-    <div>
-      <div className="flex items-center mb-3">
-        <span className="text-main_dark font-medium text-lg mr-3">Request Summary</span>
-        <span className="bg-deep_green text-purewhite px-4 py-1.5 rounded-full text-sm font-medium">
-          RFQ-2024-001
-        </span>
-      </div>
-      <div className="mb-2">
-        <span className="text-slatebluegray">Contact:</span>
-        <span className="ml-2 text-main_dark">Sarah Johnson</span>
-      </div>
-      <div>
-        <span className="text-slatebluegray">Deadline:</span>
-        <span className="ml-2 text-web_yellow font-semibold">Dec 22, 2024</span>
-      </div>
-    </div>
-    <div className="mt-4 md:mt-0 w-full md:w-auto">
-      <div className="text-slatebluegray mb-2">Items Requested:</div>
-      <table className="w-full text-main_dark">
-        <tbody>
-          <tr>
-            <td>Steel Pipes (6mm)</td>
-            <td className="text-right">500 units</td>
-          </tr>
-          <tr>
-            <td>Concrete Mix</td>
-            <td className="text-right">25 bags</td>
-          </tr>
-          <tr>
-            <td>Industrial Sensors</td>
-            <td className="text-right">250 units</td>
-          </tr>
-        </tbody>
-      </table>
-    </div>
-  </div>
-</div>
-
-
+          <div className="flex flex-col md:flex-row md:justify-between items-start md:items-center">
+            <div>
+              <div className="flex items-center mb-3">
+                <span className="text-main_dark font-medium text-lg mr-3">Request Summary</span>
+                <span className="bg-deep_green text-purewhite px-4 py-1.5 rounded-full text-sm font-medium">
+                  RFQ-2024-001
+                </span>
+              </div>
+              <div className="mb-2">
+                <span className="text-slatebluegray">Contact:</span>
+                <span className="ml-2 text-main_dark">Sarah Johnson</span>
+              </div>
+              <div>
+                <span className="text-slatebluegray">Deadline:</span>
+                <span className="ml-2 text-web_yellow font-semibold">Dec 22, 2024</span>
+              </div>
+            </div>
+            <div className="mt-4 md:mt-0 w-full md:w-auto">
+              <div className="text-slatebluegray mb-2">Items Requested:</div>
+              <table className="w-full text-main_dark">
+                <tbody>
+                  <tr>
+                    <td>Steel Pipes (6mm)</td>
+                    <td className="text-right">500 units</td>
+                  </tr>
+                  <tr>
+                    <td>Concrete Mix</td>
+                    <td className="text-right">25 bags</td>
+                  </tr>
+                  <tr>
+                    <td>Industrial Sensors</td>
+                    <td className="text-right">250 units</td>
+                  </tr>
+                </tbody>
+              </table>
+            </div>
+          </div>
+        </div>
 
         <form onSubmit={handleSubmit}>
           {/* Pricing Information */}
@@ -407,8 +502,9 @@ const SubmitQuotation = () => {
             <button
               type="submit"
               className="bg-web_yellow text-main_dark px-6 py-3 rounded-lg font-medium hover:opacity-90 transition"
+              disabled={loading}
             >
-              Submit Quotation
+              {loading ? "Submitting..." : "Submit Quotation"}
             </button>
           </div>
         </form>

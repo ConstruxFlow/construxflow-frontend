@@ -235,7 +235,7 @@ const QuotationRequestDetail = () => {
                   </button>
                   </>
                   )} */}
-              <button className="px-4 py-2 border border-gray-300 text-gray-700 rounded-md hover:bg-gray-50 transition-colors flex items-center justify-center gap-2 text-sm">
+              <button onClick={() => navigate(`/purchasing/quotationrequest/edit/${requestData.id}`)} className="px-4 py-2 border border-gray-300 text-gray-700 rounded-md hover:bg-gray-50 transition-colors flex items-center justify-center gap-2 text-sm">
                 <FaEdit className="w-4 h-4" />
                 Edit
               </button>
@@ -479,10 +479,16 @@ const QuotationRequestDetail = () => {
                               Type
                             </th>
                             <th className="px-4 py-3 text-left text-sm font-semibold text-main_dark">
+                              Unit
+                            </th>
+                            <th className="px-4 py-3 text-left text-sm font-semibold text-main_dark">
                               Quantity
                             </th>
                             <th className="px-4 py-3 text-left text-sm font-semibold text-main_dark">
-                              Unit
+                              unit Price
+                            </th>
+                            <th className="px-4 py-3 text-left text-sm font-semibold text-main_dark">
+                              Estimated Cost
                             </th>
                           </tr>
                         </thead>
@@ -502,11 +508,17 @@ const QuotationRequestDetail = () => {
                                 <td className="px-4 py-3 text-sm text-gray-600">
                                   {item.material.materialType}
                                 </td>
+                                <td className="px-4 py-3 text-sm text-gray-600">
+                                  {item.material.unitOfMeasurement}
+                                </td>
                                 <td className="px-4 py-3 text-sm font-semibold text-main_dark">
                                   {item.quantity}
                                 </td>
-                                <td className="px-4 py-3 text-sm text-gray-600">
-                                  {item.material.unitOfMeasurement}
+                                <td className="px-4 py-3 text-sm font-semibold text-main_dark">
+                                  {item.unitPrice}
+                                </td>
+                                <td className="px-4 py-3 text-sm font-semibold text-main_dark">
+                                  {item.estimatedCost}
                                 </td>
                               </tr>
                             )

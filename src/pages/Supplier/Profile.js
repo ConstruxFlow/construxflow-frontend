@@ -3,6 +3,7 @@
 import React, { useEffect, useState } from "react";
 import axios from "axios";
 import { FaEdit, FaDownload, FaTrash, FaLock, FaPaperclip } from "react-icons/fa";
+import { useNavigate } from "react-router-dom";
 import NavBar from "../../components/NavBar";
 
 const navLinks = [
@@ -18,6 +19,8 @@ const Profile = () => {
   const [supplierData, setSupplierData] = useState(null);
   const [loading, setLoading] = useState(true);
   const [error, setError] = useState(null);
+
+    const navigate = useNavigate();
 
   // Replace with actual supplier ID logic (from auth or route params)
   const supplierId = "S001";
@@ -53,7 +56,7 @@ const Profile = () => {
             <p className="text-gray-500 mb-5">
               Premium construction materials and equipment supplier
             </p>
-            <button className="bg-web_yellow text-main_dark px-4 py-2 rounded-lg font-medium flex items-center gap-2 hover:opacity-90 transition">
+            <button onClick={() => navigate('/supplierprofile/edit')} className="bg-web_yellow text-main_dark px-4 py-2 rounded-lg font-medium flex items-center gap-2 hover:opacity-90 transition">
               <FaEdit /> Edit Profile
             </button>
           </div>
