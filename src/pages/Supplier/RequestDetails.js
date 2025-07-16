@@ -73,14 +73,14 @@ const RequestDetails = () => {
       <NavBar links={navLinks} logoSrc="/logo1.png" />
 
       {/* Breadcrumb */}
-      <div className="max-w-3xl mx-auto pt-8 pb-2 px-4 text-sm text-slatebluegray">
+      <div className="max-w-7xl mx-auto pt-8 pb-2 text-sm text-slatebluegray">
         <a href="/dashboard1" className="hover:underline text-deep_green">Dashboard</a> &nbsp;/&nbsp;
         <a href="/requests" className="hover:underline text-deep_green">Request</a> &nbsp;/&nbsp;
         <span className="font-semibold">Request Details</span>
       </div>
 
       {/* Main Card */}
-      <div className="max-w-3xl mx-auto bg-purewhite rounded-md border border-light_gray mt-2 shadow p-0 overflow-hidden">
+      <div className="max-w-7xl mx-auto bg-purewhite rounded-md border border-light_gray mt-2 shadow p-0 overflow-hidden">
         {/* Header */}
         <div className="bg-deep_green px-8 py-6 flex flex-col md:flex-row md:items-center md:justify-between">
           <div>
