@@ -32,8 +32,6 @@ import ReceiveAdvancedPayment from "./pages/Supplier/ReceiveAdvancedPayment";
 import ReceiveFullPayment from "./pages/Supplier/ReceiveFullPayment";
 import SupplierProfile from "./pages/Supplier/Profile";
 import SupplierProfileEdit from "./pages/Supplier/EditProfile";
-import ContactSupport from "./pages/Supplier/ContactSupport";
-import QuotationDetails from "./pages/Supplier/QuotationDetails";
 import Edit_Project from "./pages/SiteManager/Edit_Project";
 import Project_Phase from "./pages/SiteManager/Project_Phase";
 import Create_Material_Request from "./pages/SiteManager/Create_Material_Request";
@@ -58,6 +56,14 @@ import {
 import { MaintenanceRoute } from "./pages/MaintenanceHead/MaintenanceRoute";
 import VerificationEmailPage from "./components/EmailVerify";
 import BOQPDFReader from "./pages/BOQPDFReader";
+import AddEquipment from "./pages/InventoryManager/AddEquipment";
+
+
+import Admin_Dashbaord from "./pages/Admin/Admin-Dashboard";
+import Admin_Inventory from "./pages/Admin/Admin-Inventory";
+import ConstructionDashboard from "./components/Admin/admin-dashboard";
+import UserDashboard from "./components/Admin/admin-users";
+import Admin_Users from "./pages/Admin/Admin-User";
 
 export const routes = createBrowserRouter([
   {
@@ -115,9 +121,6 @@ export const routes = createBrowserRouter([
   { path: "/payments", element: <PaymentStatus /> },
   { path: "/supplierprofile", element: <SupplierProfile /> },
   { path: "/supplierprofile/edit", element: <SupplierProfileEdit /> },
-  { path: "/contact-support", element: <ContactSupport /> },
-  { path: "/quotations/:id", element: <QuotationDetails /> },
-
 
   {
     path: "/login",
@@ -193,10 +196,26 @@ export const routes = createBrowserRouter([
   },
   {
     path: "/site-manager-profile",
-    element: <SiteManager_Profile />,
+    element: <SiteManager_Profile />
+  },
+  {
+    path: "/admin",
+    element:<ConstructionDashboard/>
+  },
+  {
+    path: "/admin-inventory",
+    element:<Admin_Inventory/>
+  },
+  {
+    path: "/admin-users",
+    element:<Admin_Users/>
   },
   {
     path: "/verify-email",
     element: <VerificationEmailPage/>
-  }
+  },
+  {
+  path: "/add-equipment",
+  element: <AddEquipment />,
+},
 ]);
