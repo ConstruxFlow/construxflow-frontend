@@ -76,10 +76,10 @@ const CreateMaterialRequest = () => {
     const totalEstimatedCost = materials.reduce((total, material) => {
       return total + (material.estimatedCost || 0);
     }, 0);
-    
-    setRequestdata(prevState => ({
+
+    setRequestdata((prevState) => ({
       ...prevState,
-      estimated_cost: totalEstimatedCost
+      estimated_cost: totalEstimatedCost,
     }));
   }, [materials]);
 
@@ -105,7 +105,7 @@ const CreateMaterialRequest = () => {
       materials.map((material) => {
         if (material.id === id) {
           let updatedMaterial = { ...material };
-          
+
           if (field === "material_id") {
             updatedMaterial.material = {
               ...material.material,
@@ -116,14 +116,20 @@ const CreateMaterialRequest = () => {
           } else if (field === "unitPrice") {
             updatedMaterial.unitPrice = parseFloat(value) || 0;
           }
-          
+
           // Auto-calculate estimatedCost when quantity or unitPrice changes
           if (field === "quantity" || field === "unitPrice") {
-            const quantity = field === "quantity" ? (parseFloat(value) || 0) : (parseFloat(updatedMaterial.quantity) || 0);
-            const unitPrice = field === "unitPrice" ? (parseFloat(value) || 0) : (parseFloat(updatedMaterial.unitPrice) || 0);
+            const quantity =
+              field === "quantity"
+                ? parseFloat(value) || 0
+                : parseFloat(updatedMaterial.quantity) || 0;
+            const unitPrice =
+              field === "unitPrice"
+                ? parseFloat(value) || 0
+                : parseFloat(updatedMaterial.unitPrice) || 0;
             updatedMaterial.estimatedCost = quantity * unitPrice;
           }
-          
+
           return updatedMaterial;
         }
         return material;
@@ -220,21 +226,24 @@ const CreateMaterialRequest = () => {
       setRequestdata(updatedRequestData);
       setLoadingProgress(60);
 
-      const response = await fetch("http://localhost:8080/api/quotationrequest/create", {
-        method: "POST",
-        headers: {
-          "Content-Type": "application/json",
-        },
-        body: JSON.stringify(updatedRequestData),
-      });
+      const response = await fetch(
+        "http://localhost:8080/api/quotationrequest/create",
+        {
+          method: "POST",
+          headers: {
+            "Content-Type": "application/json",
+          },
+          body: JSON.stringify(updatedRequestData),
+        }
+      );
 
       setLoadingProgress(95);
 
       if (!response.ok) {
         const errorData = await response.json().catch(() => ({}));
         throw new Error(
-          errorData.message || 
-          `Request creation failed with status: ${response.status}`
+          errorData.message ||
+            `Request creation failed with status: ${response.status}`
         );
       }
 
@@ -247,18 +256,18 @@ const CreateMaterialRequest = () => {
           navigate("/purchasing/quotationrequest/overview");
         } else {
           toast.error(
-            "Failed to create request: " + (responseData.message || "Unknown error")
+            "Failed to create request: " +
+              (responseData.message || "Unknown error")
           );
         }
 
         setIsLoading(false);
         setLoadingProgress(0);
       }, 800);
-
     } catch (error) {
-      if (error.name === 'TypeError' && error.message.includes('fetch')) {
+      if (error.name === "TypeError" && error.message.includes("fetch")) {
         toast.error("Network error: Please check your internet connection");
-      } else if (error.message.includes('timeout')) {
+      } else if (error.message.includes("timeout")) {
         toast.error("Request timeout: Please try again");
       } else {
         toast.error("Submission failed: " + error.message);
@@ -278,7 +287,7 @@ const CreateMaterialRequest = () => {
           { name: 'Material Requests', path: '/purchasing/materialrequests/overview' },
           { name: 'Suppliers', path: '/purchasing/supplier/dashboard' },
           { name: 'Quotation Requests', path: '/purchasing/quotationrequest/overview' },
-          { name: 'Orders', path: '/orders' },
+          { name: 'Purchasing Orders', path: '/purchasing/orders/overview' },
         ]}
       />
       {isLoading && (
@@ -292,7 +301,10 @@ const CreateMaterialRequest = () => {
         <div className="max-w-full mx-auto px-2 sm:px-3 lg:px-10">
           <div className="flex items-center justify-between mb-6">
             <div>
-              <button onClick={() => navigate(-1)} className="flex items-center gap-2 text-gray-600 hover:text-main_dark mb-4">
+              <button
+                onClick={() => navigate(-1)}
+                className="flex items-center gap-2 text-gray-600 hover:text-main_dark mb-4"
+              >
                 <FaArrowLeft />
                 <span className="text-sm">Back</span>
               </button>
@@ -430,7 +442,7 @@ const CreateMaterialRequest = () => {
                           <option value="4">Steel Beams</option>
                         </select>
                       </div>
-                      
+
                       <div>
                         <label className="block text-sm font-medium text-gray-700 mb-2">
                           Quantity
@@ -520,13 +532,15 @@ const CreateMaterialRequest = () => {
                   <h2 className="text-lg font-semibold text-main_dark">
                     Delivery Schedule
                   </h2>
-                  <button
-                    onClick={addLocation}
-                    className="px-4 py-2 bg-deep_green text-purewhite text-sm rounded-md hover:bg-deep_green/90 transition-colors flex items-center gap-2"
-                  >
-                    <FaPlus />
-                    Add Location
-                  </button>
+                  {materials.length === 1 && (
+                    <button
+                      onClick={addLocation}
+                      className="px-4 py-2 bg-deep_green text-purewhite text-sm rounded-md hover:bg-deep_green/90 transition-colors flex items-center gap-2"
+                    >
+                      <FaPlus />
+                      Add Location
+                    </button>
+                  )}
                 </div>
 
                 <div className="w-full overflow-x-auto">
@@ -539,9 +553,11 @@ const CreateMaterialRequest = () => {
                         <th className="px-2 sm:px-4 py-3 text-left text-xs sm:text-sm font-semibold text-main_dark">
                           Required Date
                         </th>
-                        <th className="px-2 sm:px-4 py-3 text-left text-xs sm:text-sm font-semibold text-main_dark">
-                          Quantity Split
-                        </th>
+                        {materials.length === 1 && (
+                          <th className="px-2 sm:px-4 py-3 text-left text-xs sm:text-sm font-semibold text-main_dark">
+                            Quantity Split
+                          </th>
+                        )}
                       </tr>
                     </thead>
                     <tbody>
@@ -586,21 +602,23 @@ const CreateMaterialRequest = () => {
                               className="w-full px-2 sm:px-3 py-2 text-xs sm:text-sm border border-gray-300 rounded-md focus:outline-none focus:ring-2 focus:ring-web_yellow focus:border-transparent"
                             />
                           </td>
-                          <td className="px-2 sm:px-4 py-3">
-                            <input
-                              type="number"
-                              step="0.01"
-                              value={item.quantitySplit}
-                              onChange={(e) =>
-                                updateDeliverySchedule(
-                                  item.id,
-                                  "quantitySplit",
-                                  e.target.value
-                                )
-                              }
-                              className="w-full px-2 sm:px-3 py-2 text-xs sm:text-sm border border-gray-300 rounded-md focus:outline-none focus:ring-2 focus:ring-web_yellow focus:border-transparent"
-                            />
-                          </td>
+                          {materials.length === 1 && (
+                            <td className="px-2 sm:px-4 py-3">
+                              <input
+                                type="number"
+                                step="0.01"
+                                value={item.quantitySplit}
+                                onChange={(e) =>
+                                  updateDeliverySchedule(
+                                    item.id,
+                                    "quantitySplit",
+                                    e.target.value
+                                  )
+                                }
+                                className="w-full px-2 sm:px-3 py-2 text-xs sm:text-sm border border-gray-300 rounded-md focus:outline-none focus:ring-2 focus:ring-web_yellow focus:border-transparent"
+                              />
+                            </td>
+                          )}
                         </tr>
                       ))}
                     </tbody>
@@ -649,21 +667,23 @@ const CreateMaterialRequest = () => {
                     <div className="flex justify-between">
                       <span className="text-gray-600">Total Materials:</span>
                       <span className="font-medium text-main_dark">
-                        {materials.length} Item{materials.length !== 1 ? 's' : ''}
+                        {materials.length} Item
+                        {materials.length !== 1 ? "s" : ""}
                       </span>
                     </div>
 
                     <div className="flex justify-between">
                       <span className="text-gray-600">Delivery Locations:</span>
                       <span className="font-medium text-main_dark">
-                        {deliverySchedule.length} location{deliverySchedule.length !== 1 ? 's' : ''}
+                        {deliverySchedule.length} location
+                        {deliverySchedule.length !== 1 ? "s" : ""}
                       </span>
                     </div>
 
                     <div className="flex justify-between">
                       <span className="text-gray-600">Priority:</span>
                       <span className="px-2 py-1 bg-yellow-100 text-yellow-800 rounded text-sm font-medium">
-                        {Requestdata.priority_level || 'Not Selected'}
+                        {Requestdata.priority_level || "Not Selected"}
                       </span>
                     </div>
 
@@ -682,13 +702,20 @@ const CreateMaterialRequest = () => {
                       </h4>
                       <div className="text-sm text-gray-600 space-y-1">
                         {materials.map((material) => (
-                          <div key={material.id} className="flex justify-between">
+                          <div
+                            key={material.id}
+                            className="flex justify-between"
+                          >
                             <span>
-                              {material.material.material_id === "1" && "Steel Rods - 12mm"}
-                              {material.material.material_id === "2" && "Cement Bags"}
-                              {material.material.material_id === "3" && "Concrete Blocks"}
-                              {material.material.material_id === "4" && "Steel Beams"}
-                              {!material.material.material_id && "Not Selected"}
+                              {material.material.material_id === 1 ?
+                                "Steel Rods - 12mm" :
+                              material.material.material_id === 2 ?
+                                "Cement Bags" :
+                              material.material.material_id === 3 ?
+                                "Concrete Blocks" :
+                              material.material.material_id === 4 ?
+                                "Steel Beams" :
+                              "Not Selected"}
                             </span>
                             <span>{material.quantity || 0} pcs</span>
                           </div>
@@ -704,7 +731,9 @@ const CreateMaterialRequest = () => {
                         {deliverySchedule.map((item) => (
                           <div key={item.id} className="mb-2">
                             <p>{item.location || "Location not selected"}</p>
-                            <p>Required: {item.deliveryDate || "Date not set"}</p>
+                            <p>
+                              Required: {item.deliveryDate || "Date not set"}
+                            </p>
                           </div>
                         ))}
                       </div>

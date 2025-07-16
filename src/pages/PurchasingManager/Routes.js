@@ -18,6 +18,7 @@ import RequestAdvancePayment from "./PurchasingOrder/RequestAdvancePayment";
 import PurchaseOrdersOverview from "./PurchasingOrder/PurchaseOrdersOverview";
 import PurchaseOrderDetails from "./PurchasingOrder/PurchaseOrderDetails";
 import EditQuotationRequest from "./Material_Requests/EditQuotationRequest";
+import EditPurchaseOrder from "./PurchasingOrder/EditPurchaseOrder";
 
 export const purchasingManagerRoutes = {
   path: '/purchasing',
@@ -98,6 +99,10 @@ export const purchasingManagerRoutes = {
     {
       path: 'orders/details/:id',
       element: <PurchaseOrderDetails />,
+    },
+    {
+      path: 'orders/edit/:id',
+      element: <EditPurchaseOrder />,
     }
   ]
 };
