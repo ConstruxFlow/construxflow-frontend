@@ -22,8 +22,10 @@ import SiteManager_Profile from "./pages/SiteManager/SiteManager_Profile";
 import SiteManagerDashboard from "./pages/SiteManager/SiteManagerDashboard";
 import Existing_Projects_List from "./pages/SiteManager/Existing_Projects_List";
 
-import Admin_Dashbaord from "./pages/Admin/Admin_Dashboard"
-import Admin_Inventory from "./pages/Admin/Admin_Inventory"
+import Admin_Dashbaord from "./pages/Admin/Admin-Dashboard";
+import Admin_Inventory from "./pages/Admin/Admin-Inventory";
+import ConstructionDashboard from "./components/Admin/admin-dashboard";
+import UserDashboard from "./components/Admin/admin-users";
 
 export const routes = createBrowserRouter([
   {
@@ -112,10 +114,14 @@ export const routes = createBrowserRouter([
   },
   {
     path: "/admin",
-    element:<Admin_Dashbaord/>
+    element:<ConstructionDashboard/>
   },
   {
     path: "/admin-inventory",
     element:<Admin_Inventory/>
+  },
+  {
+    path: "/admin-users",
+    element:<UserDashboard/>
   }
 ]);
