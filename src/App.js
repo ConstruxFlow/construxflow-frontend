@@ -56,6 +56,8 @@ import {
 import { MaintenanceRoute } from "./pages/MaintenanceHead/MaintenanceRoute";
 import VerificationEmailPage from "./components/EmailVerify";
 import BOQPDFReader from "./pages/BOQPDFReader";
+import AddEquipment from "./pages/InventoryManager/AddEquipment";
+
 
 export const routes = createBrowserRouter([
   {
@@ -193,5 +195,9 @@ export const routes = createBrowserRouter([
   {
     path: "/verify-email",
     element: <VerificationEmailPage/>
-  }
+  },
+  {
+  path: "/add-equipment",
+  element: <AddEquipment />,
+},
 ]);
