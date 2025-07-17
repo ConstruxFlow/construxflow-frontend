@@ -13,6 +13,7 @@ import MaintenanceScheduling from "./MaintenanceScheduling";
 import EquipmentMaintenanceContainer from "./UpdateEquipmentMaintenance";
 import UpdateEquipmentMaintenance from "./UpdateEquipmentMaintenance";
 import ScheduleMaintenanceAndRequestMaterials from "./MaintenanceScheduling";
+import TeamMemberDetailsForm from "./TeamMemberDetailsForm";
 
 export const MaintenanceRoute = {
   path: "/maintenance",
@@ -65,6 +66,10 @@ export const MaintenanceRoute = {
     {
         path: "update-equipment-maintenance",
         element: <UpdateEquipmentMaintenance/>
+    },
+    {
+        path: "add-member",
+        element: <TeamMemberDetailsForm/>
     }
   ],
 };
