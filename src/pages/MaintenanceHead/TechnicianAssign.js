@@ -1,25 +1,30 @@
 import { useState, useEffect } from "react";
-import { useParams } from "react-router-dom"; // <-- Import this!
+import { useParams } from "react-router-dom";
 import { UserPlus } from "lucide-react";
 import TechnicianCard from "../../components/MaintenanceHead/TechnicianCard";
 import NavBar from "../../components/NavBar";
 
-const technicians = [
-  { initials: "JS", name: "John Smith", skills: "Plumbing, HVAC", status: "Active" },
-  { initials: "SW", name: "Sarah Wilson", skills: "Electrical, Lighting", status: "On Task" },
-  { initials: "MJ", name: "Mike Johnson", skills: "General Maintenance", status: "Unavailable" },
-  { initials: "LC", name: "Lisa Chen", skills: "Plumbing, Water System", status: "Active" },
-];
-
 export default function TechnicianAssignmentMain() {
-  const { id } = useParams(); // <-- Get the equipment ID from the URL
+  const { id } = useParams();
   const [equipment, setEquipment] = useState(null);
   const [loading, setLoading] = useState(true);
+
+  // Team members state
+  const [teamMembers, setTeamMembers] = useState([]);
+  const [loadingTeam, setLoadingTeam] = useState(true);
+
   const [selectedTech, setSelectedTech] = useState("");
   const [duration, setDuration] = useState("1-2 hours");
   const [instructions, setInstructions] = useState("");
   const [showTeam, setShowTeam] = useState(false);
 
+  // New states for assignment
+  const [startDate, setStartDate] = useState("");
+  const [startTime, setStartTime] = useState("");
+  const [submitMsg, setSubmitMsg] = useState("");
+  const [submitting, setSubmitting] = useState(false);
+
+  // Fetch equipment details
   useEffect(() => {
     setLoading(true);
     fetch(`http://localhost:8080/api/equipment-scheduling/${id}`)
@@ -33,6 +38,58 @@ export default function TechnicianAssignmentMain() {
       })
       .catch(() => setLoading(false));
   }, [id]);
+
+  // Fetch team members
+  useEffect(() => {
+    setLoadingTeam(true);
+    fetch("http://localhost:8080/api/team")
+      .then((res) => {
+        if (!res.ok) throw new Error("Failed to fetch team members");
+        return res.json();
+      })
+      .then((data) => {
+        setTeamMembers(data);
+        setLoadingTeam(false);
+      })
+      .catch(() => setLoadingTeam(false));
+  }, []);
+
+  // Assignment submit handler
+  const handleAssign = async (e) => {
+    e.preventDefault();
+    setSubmitting(true);
+    setSubmitMsg("");
+
+    const reqBody = {
+      equipmentSchedulingId: id,
+      technicianId: selectedTech,
+      duration,
+      notes: instructions,
+      startDate: startDate || null,
+      endDate: null,
+      startTime: startTime || null,
+      endTime: null,
+      status: "ASSIGNED"
+    };
+
+    try {
+      const res = await fetch("http://localhost:8080/api/equipmentassigntechnician/addassign", {
+        method: "POST",
+        headers: { "Content-Type": "application/json" },
+        body: JSON.stringify(reqBody),
+      });
+      if (res.ok) {
+        setSubmitMsg("Technician assigned successfully!");
+        // Optionally reset form fields here
+      } else {
+        const errText = await res.text();
+        setSubmitMsg("Error: " + errText);
+      }
+    } catch (err) {
+      setSubmitMsg("Network error: " + err.message);
+    }
+    setSubmitting(false);
+  };
 
   return (
     <>
@@ -129,7 +186,7 @@ export default function TechnicianAssignmentMain() {
           </div>
 
           {/* Assignment Details */}
-          <div className="bg-white rounded-xl shadow p-6">
+          <form className="bg-white rounded-xl shadow p-6" onSubmit={handleAssign}>
             <div className="text-[#236571] font-semibold mb-4 text-lg">Assignment Details</div>
             <div className="grid grid-cols-1 md:grid-cols-2 gap-4 mb-4">
               <div>
@@ -138,13 +195,20 @@ export default function TechnicianAssignmentMain() {
                   className="w-full border border-gray-200 rounded-md px-3 py-2 text-gray-800 bg-gray-50"
                   value={selectedTech}
                   onChange={(e) => setSelectedTech(e.target.value)}
+                  required
                 >
                   <option value="">Choose a technician...</option>
-                  {technicians.map((tech) => (
-                    <option key={tech.initials} value={tech.name}>
-                      {tech.name}
-                    </option>
-                  ))}
+                  {loadingTeam ? (
+                    <option>Loading...</option>
+                  ) : (
+                    teamMembers
+                      .filter((member) => member.availabilityStatus === "AVAILABLE")
+                      .map((member) => (
+                        <option key={member.empId} value={member.empId}>
+                          {member.name} ({member.specializations?.join(", ")})
+                        </option>
+                      ))
+                  )}
                 </select>
               </div>
               <div>
@@ -160,6 +224,26 @@ export default function TechnicianAssignmentMain() {
                   <option>Next Day</option>
                 </select>
               </div>
+              <div>
+                <label className="block text-sm font-medium text-gray-600 mb-1">Start Date</label>
+                <input
+                  type="date"
+                  className="w-full border border-gray-200 rounded-md px-3 py-2 text-gray-800 bg-gray-50"
+                  value={startDate}
+                  onChange={(e) => setStartDate(e.target.value)}
+                  required
+                />
+              </div>
+              <div>
+                <label className="block text-sm font-medium text-gray-600 mb-1">Start Time</label>
+                <input
+                  type="time"
+                  className="w-full border border-gray-200 rounded-md px-3 py-2 text-gray-800 bg-gray-50"
+                  value={startTime}
+                  onChange={(e) => setStartTime(e.target.value)}
+                  required
+                />
+              </div>
             </div>
             <div>
               <label className="block text-sm font-medium text-gray-600 mb-1">Special Instructions</label>
@@ -171,25 +255,62 @@ export default function TechnicianAssignmentMain() {
                 onChange={(e) => setInstructions(e.target.value)}
               />
             </div>
+            {submitMsg && (
+              <div className={`mt-3 text-sm ${submitMsg.startsWith("Technician assigned") ? "text-green-600" : "text-red-600"}`}>
+                {submitMsg}
+              </div>
+            )}
             <div className="flex justify-end gap-4 mt-6">
-              <button className="px-6 py-2 rounded-md border border-[#236571] text-[#236571] font-semibold bg-white hover:bg-gray-50 transition">
+              <button
+                type="button"
+                className="px-6 py-2 rounded-md border border-[#236571] text-[#236571] font-semibold bg-white hover:bg-gray-50 transition"
+                onClick={() => {
+                  setSelectedTech("");
+                  setDuration("1-2 hours");
+                  setInstructions("");
+                  setStartDate("");
+                  setStartTime("");
+                  setSubmitMsg("");
+                }}
+                disabled={submitting}
+              >
                 Cancel
               </button>
-              <button className="px-6 py-2 rounded-md bg-[#EFC11A] hover:bg-yellow-400 text-yellow-900 font-semibold flex items-center gap-2 shadow transition">
+              <button
+                type="submit"
+                className="px-6 py-2 rounded-md bg-[#EFC11A] hover:bg-yellow-400 text-yellow-900 font-semibold flex items-center gap-2 shadow transition"
+                disabled={submitting}
+              >
                 <UserPlus className="w-5 h-5" />
-                Assign Technician
+                {submitting ? "Assigning..." : "Assign Technician"}
               </button>
             </div>
-          </div>
+          </form>
         </div>
 
         {/* Technicians List */}
         <aside className="w-full md:w-80 bg-white rounded-xl shadow p-5">
           <div className="text-[#236571] font-semibold mb-4 text-lg">Available Technicians</div>
           <div>
-            {technicians.map((tech) => (
-              <TechnicianCard key={tech.initials} {...tech} />
-            ))}
+            {loadingTeam ? (
+              <div className="text-gray-500">Loading...</div>
+            ) : (
+              teamMembers
+                .filter((member) => member.availabilityStatus === "AVAILABLE")
+                .map((member) => (
+                  <TechnicianCard
+                    key={member.empId}
+                    initials={member.name
+                      .split(" ")
+                      .map((n) => n[0])
+                      .join("")
+                      .toUpperCase()}
+                    name={member.name}
+                    skills={member.specializations?.join(", ")}
+                    status={member.availabilityStatus === "AVAILABLE" ? "Active" : "Unavailable"}
+                  />
+                ))
+            )}
           </div>
         </aside>
       </div>

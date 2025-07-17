@@ -6,7 +6,15 @@ import DashboardOverview from '../../components/InventoryManager/DashboardOvervi
 const InventoryDashboard = () => {
   return (
     <div>
-        <NavBar /> {/* ✅ Add this line */}
+         <NavBar 
+      links={[
+        {name: 'Dashboard', path: '/inventory-dashboard'},
+        {name: 'Inventory Control', path: '/inventory-control'},
+        {name: 'Maintenance Requests', path: '/maintenance-requests-overview'},
+        {name: 'Dashboard'},
+        {name: 'Dashboard'},
+     ]}
+        />
       <DashboardOverview />
     </div>
   );
