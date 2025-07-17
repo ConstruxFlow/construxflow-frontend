@@ -26,13 +26,13 @@ const MaintenanceDashboard = () => {
 
       const handleLogin = () => {
     navigation("/login");
-  };
+    };
   return (
     <>
     <NavBar
       links={[
-          { name: "Dashboard", href: "#" },
-          { name: "Task", href: "#" },
+          { name: "Dashboard", href: "#", onClick: () => navigation("/maintenance/dashboard") },
+          { name: "Task", href: "#",onClick: () => navigation("/maintenance/scheduling") },
           { name: "Team", href: "#",
             onClick: () => {
               // e.preventDefault();
@@ -41,8 +41,8 @@ const MaintenanceDashboard = () => {
               setShowTeam(true);
             },
            },
-          { name: "Equipment", href: "#" },
-          { name: "Request Tracker", href: "#" },
+          { name: "Equipment", href: "#" ,onClick: () => navigation("/maintenance/log")},
+          { name: "Add Technician", href: "#",onClick: () => navigation("/maintenance/add-member") },
         ]}
         showButton={true}
         buttonLabel={isLoggedIn ? "Logout" : "Get Started"}

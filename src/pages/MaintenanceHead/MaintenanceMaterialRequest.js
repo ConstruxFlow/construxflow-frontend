@@ -1,6 +1,8 @@
 import React, { useState } from 'react';
 import { Upload, Calendar, User, AlertCircle } from 'lucide-react';
 import NavBar from '../../components/NavBar';
+import { useNavigate } from 'react-router-dom';
+import TeamSection from '../../components/MaintenanceHead/TeamSection';
 
 const MaintenanceMaterialRequest = () => {
   const [formData, setFormData] = useState({
@@ -34,13 +36,14 @@ const MaintenanceMaterialRequest = () => {
   };
 
   const [showTeam, setShowTeam] = useState(false);
+  const navigation = useNavigate();
   return (
 
     <>
     <NavBar
       links={[
-          { name: "Dashboard", href: "#" },
-          { name: "Task", href: "#" },
+          { name: "Dashboard", href: "#", onClick: () => navigation("/maintenance/dashboard") },
+          { name: "Task", href: "#",onClick: () => navigation("/maintenance/scheduling") },
           { name: "Team", href: "#",
             onClick: () => {
               // e.preventDefault();
@@ -49,8 +52,8 @@ const MaintenanceMaterialRequest = () => {
               setShowTeam(true);
             },
            },
-          { name: "Equipment", href: "#" },
-          { name: "Request Tracker", href: "#" },
+          { name: "Equipment", href: "#" ,onClick: () => navigation("/maintenance/log")},
+          { name: "Add Technician", href: "#",onClick: () => navigation("/maintenance/add-member") },
         ]}
         showButton={true}
     />
@@ -315,6 +318,20 @@ const MaintenanceMaterialRequest = () => {
         </div>
       </div>
     </div>
+
+    {/* Overlay and Team Sidebar */}
+          {showTeam && (
+            <>
+              {/* BLUR OVERLAY */}
+              <div
+                className="fixed inset-0 z-40 bg-black bg-opacity-30 backdrop-blur-sm transition-all"
+                onClick={() => setShowTeam(false)}
+                aria-label="Close team sidebar"
+              />
+              {/* TEAM SIDEBAR */}
+              <TeamSection onClose={() => setShowTeam(false)} />
+            </>
+          )}
     </>
   );
 };
