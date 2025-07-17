@@ -21,7 +21,7 @@ const ExistingProjects = () => {
   const navigate = useNavigate();
 
   useEffect(() => {
-    axios.get('http://localhost:5454/api/projects/all')
+    axios.get('http://localhost:8080/api/projects/all')
       .then(response => {
         setProjects(response.data);
         setLoading(false);
@@ -36,7 +36,7 @@ const ExistingProjects = () => {
     if (!window.confirm('Are you sure you want to delete this project?')) return;
     setDeletingId(projectId);
     try {
-      await axios.delete(`http://localhost:5454/api/projects/${projectId}`);
+      await axios.delete(`http://localhost:8080/api/projects/${projectId}`);
       setProjects((prev) => prev.filter((p) => (p.projectId || p.id) !== projectId));
     } catch (err) {
       alert('Failed to delete project.');

@@ -75,6 +75,9 @@ import ConstructionDashboard from "./components/Admin/admin-dashboard";
 import UserDashboard from "./components/Admin/admin-users";
 import Admin_Users from "./pages/Admin/Admin-User";
 import Admin_Analysis from "./pages/Admin/Admin-Analysis";
+import ContactSupport from "./pages/Supplier/ContactSupport";
+import QuotationDetail from "./pages/PurchasingManager/Quotations/QuotationDetails";
+import QuotationDetails from "./pages/Supplier/QuotationDetails";
 
 export const routes = createBrowserRouter([
   {
@@ -118,6 +121,7 @@ export const routes = createBrowserRouter([
   },
   { path: "/quotations/submit/:id", element: <SubmitQuotation /> },
   { path: "/quotations", element: <QuotationStatus /> },
+  { path: "/quotations/:id", element: <QuotationDetails /> },
   { path: "/payments/receive-advanced", element: <ReceiveAdvancedPayment /> },
   { path: "/payments/receive-full", element: <ReceiveFullPayment /> },
 
@@ -132,6 +136,7 @@ export const routes = createBrowserRouter([
   { path: "/payments", element: <PaymentStatus /> },
   { path: "/supplierprofile", element: <SupplierProfile /> },
   { path: "/supplierprofile/edit", element: <SupplierProfileEdit /> },
+  { path:"/contact-support", element: <ContactSupport /> },
 
   {
     path: "/login",

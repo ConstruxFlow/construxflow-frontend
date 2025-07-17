@@ -116,6 +116,7 @@ const RequestAdvancePayment = () => {
           toast.success("Advance payment request submitted successfully!");
           setIsLoading(false);
           setLoadingProgress(0);
+          navigate("/purchasing/orders/overview");
         }, 800);
       } else {
         throw new Error("Failed to submit advance payment request");
@@ -134,9 +135,10 @@ const RequestAdvancePayment = () => {
       <NavBar
         links={[
           { name: 'Dashboard', path: '/purchasing/dashboard' },
-          { name: 'Purchase Orders', path: '/purchasing/orders/overview' },
-          { name: 'Payments', path: '/purchasing/payments/overview' },
+          { name: 'Material Requests', path: '/purchasing/materialrequests/overview' },
           { name: 'Suppliers', path: '/purchasing/supplier/dashboard' },
+          { name: 'Quotation Requests', path: '/purchasing/quotationrequest/overview' },
+          { name: 'Purchasing Orders', path: '/purchasing/orders/overview' },
         ]}
       />
 
