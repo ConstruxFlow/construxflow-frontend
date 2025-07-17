@@ -34,9 +34,9 @@ const MaintenanceRequestsOverview = () => {
     <>
       <NavBar 
       links={[
-        {name: 'Dashboard'},
-        {name: 'Maintenance'},
-        {name: 'Dashboard'},
+        {name: 'Dashboard', path: '/inventory-dashboard'},
+        {name: 'Inventory Control', path: '/inventory-control'},
+        {name: 'Maintenance Requests', path: '/maintenance-requests-overview'},
         {name: 'Dashboard'},
         {name: 'Dashboard'},
      ]}

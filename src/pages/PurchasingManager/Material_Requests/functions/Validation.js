@@ -93,9 +93,9 @@ export const validateDeliverySchedule = (deliverySchedule) => {
         errors.push(`Delivery ${index + 1}: Please select a delivery date`);
       }
       
-      if (!item.quantitySplit || item.quantitySplit <= 0) {
-        errors.push(`Delivery ${index + 1}: Quantity split must be greater than 0`);
-      }
+      // if (!item.quantitySplit || item.quantitySplit <= 0) {
+      //   errors.push(`Delivery ${index + 1}: Quantity split must be greater than 0`);
+      // }
 
       // Validate delivery date is not in the past
       if (item.deliveryDate) {

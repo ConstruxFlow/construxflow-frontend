@@ -11,11 +11,13 @@ import {
 import NavBar from "../../../components/NavBar";
 import { toast } from "react-toastify";
 import LoadingOverlay from "../../../components/LoadingOverlay";
-import { useNavigate } from "react-router-dom";
+import { useNavigate, useParams } from "react-router-dom";
 
-const CreatePurchaseOrder = () => {
+const EditPurchaseOrder = () => {
+  const { id } = useParams();
   const [isLoading, setIsLoading] = useState(false);
   const [loadingProgress, setLoadingProgress] = useState(0);
+  const [initialLoading, setInitialLoading] = useState(true);
   const navigate = useNavigate();
 
   const [orderData, setOrderData] = useState({
@@ -31,40 +33,6 @@ const CreatePurchaseOrder = () => {
     additional_info: "",
     status: "Pending",
   });
-
-  //   Get Latest PO Number
-  const getLatestPONumber = async () => {
-    const currentYear = new Date().getFullYear();
-    const responce = await fetch(
-      "http://localhost:8080/api/purchasingorder/latest",
-      {
-        method: "GET",
-        headers: {
-          "Content-Type": "application/json",
-        },
-      }
-    );
-    if (responce.ok) {
-      const data = await responce.json();
-      console.log(data.data.ponumber);
-      
-      const latestPO = data.data.ponumber;
-      if (latestPO) {
-        const latestNumber = parseInt(latestPO.split("-")[2]);
-        setOrderData((prev) => ({
-          ...prev,
-          ponumber: `PO-${currentYear}-${String(latestNumber + 1).padStart(4, "0")}`,
-        }));
-      }
-    }else{
-        // hadanna ona
-    }
-  };
-  useEffect(() => {
-    getLatestPONumber();
-  },[])
-
-  
 
   const [orderItems, setOrderItems] = useState([
     {
@@ -87,8 +55,74 @@ const CreatePurchaseOrder = () => {
     },
   ]);
 
-  // Add documents state
   const [documents, setDocuments] = useState([]);
+
+  // Fetch existing order data
+  const fetchOrderData = async () => {
+    try {
+      const response = await fetch(`http://localhost:8080/api/purchasingorder/ponumber/${id}`);
+      const data = await response.json();
+      
+      if (data.status === 'success') {
+        const order = data.data;
+        console.log(order);
+        
+        // Set order data
+        setOrderData({
+            poId: order.poId,
+          ponumber: order.ponumber,
+          order_date: order.orderDate ? order.orderDate.split('T')[0] : "",
+          supplier: {
+            supplier_id: order.supplier.supplier_id || "",
+            supplier: order.supplier.name || "",
+            contactPerson: order.supplier.name || "",
+            email: order.supplier.email || "",
+            phone: order.supplier.phone_number1 || "",
+          },
+          additional_info: order.additionalInfo || "",
+          status: order.status || "Pending",
+        });
+
+        // Set order items
+        if (order.materials && order.materials.length > 0) {
+          setOrderItems(order.materials.map((item, index) => ({
+            id: item.id || index + 1,
+            material: {
+              material_id: item.material.material_id,
+            },
+            quantity: item.quantity.toString(),
+            unitPrice: item.unitPrice.toString(),
+            cost: item.quantity * item.unitPrice,
+          })));
+        }
+
+        // Set delivery schedule
+        if (order.deliveries && order.deliveries.length > 0) {
+          setDeliverySchedule(order.deliveries.map((delivery, index) => ({
+            id: delivery.id || index + 1,
+            location: delivery.location || "",
+            requiredDate: delivery.requiredDate ? delivery.requiredDate.split('T')[0] : "",
+            shippingCost: delivery.shippingCost || 0,
+          })));
+        }
+      } else {
+        toast.error("Failed to fetch order details");
+      }
+    } catch (error) {
+      toast.error("Network error: Failed to fetch order details");
+      console.error("Error fetching order details:", error);
+    } finally {
+      setInitialLoading(false);
+    }
+  };
+
+  useEffect(() => {
+    if (id) {
+      fetchOrderData();
+    } else {
+      setInitialLoading(false);
+    }
+  }, [id]);
 
   const handleChange = (e) => {
     const { name, value } = e.target;
@@ -113,7 +147,7 @@ const CreatePurchaseOrder = () => {
     const newItem = {
       id: Date.now(),
       material: {
-        material_id: Date.now(),
+        material_id: "",
       },
       quantity: "",
       unitPrice: "",
@@ -123,7 +157,9 @@ const CreatePurchaseOrder = () => {
   };
 
   const removeOrderItem = (id) => {
-    setOrderItems(orderItems.filter((item) => item.id !== id));
+    if (orderItems.length > 1) {
+      setOrderItems(orderItems.filter((item) => item.id !== id));
+    }
   };
 
   const updateOrderItem = (id, field, value) => {
@@ -191,7 +227,7 @@ const CreatePurchaseOrder = () => {
     return calculateSubtotal() + shippingTotal;
   };
 
-  const handleSubmit = async (e) => {
+  const handleUpdate = async (e) => {
     e.preventDefault();
     setIsLoading(true);
     setLoadingProgress(0);
@@ -215,7 +251,8 @@ const CreatePurchaseOrder = () => {
         (item) => item.location && item.requiredDate
       );
 
-      const submitData = {
+      const updateData = {
+        poId: orderData.poId,
         ponumber: orderData.ponumber,
         order_date: orderData.order_date,
         status: orderData.status,
@@ -242,48 +279,53 @@ const CreatePurchaseOrder = () => {
       };
 
       setLoadingProgress(60);
-      console.log("Submit Data:", submitData);
-      navigate("/purchasing/orders/advance-payment", {
-        state: { orderData: submitData },
-      });
+      console.log("Update Data:", updateData);
 
-      // Uncomment when ready to submit to API
-      // const response = await fetch("http://localhost:8080/api/purchaseorder/create", {
-      //   method: "POST",
-      //   headers: {
-      //     "Content-Type": "application/json",
-      //   },
-      //   body: JSON.stringify(submitData),
-      // });
+      // API call to update purchase order
+      const response = await fetch(`http://localhost:8080/api/purchasingorder/update/${updateData.poId}`, {
+        method: "PUT",
+        headers: {
+          "Content-Type": "application/json",
+        },
+        body: JSON.stringify(updateData),
+      });
 
       setLoadingProgress(90);
 
-      // if (response.ok) {
-      //   setLoadingProgress(100);
-      //   setTimeout(() => {
-      //     toast.success("Purchase Order created successfully!");
-      //     setIsLoading(false);
-      //     setLoadingProgress(0);
-      //   }, 800);
-      // } else {
-      //   throw new Error("Failed to create purchase order");
-      // }
-
-      // For testing - simulate success
-      setLoadingProgress(100);
-      setTimeout(() => {
-        toast.success("Purchase Order created successfully!");
-        setIsLoading(false);
-        setLoadingProgress(0);
-      }, 800);
+      if (response.ok) {
+        setLoadingProgress(100);
+        setTimeout(() => {
+          toast.success("Purchase Order updated successfully!");
+          setIsLoading(false);
+          setLoadingProgress(0);
+          navigate(`/purchasing/orders/details/${updateData.ponumber}`);
+        }, 800);
+      } else {
+        throw new Error("Failed to update purchase order");
+      }
     } catch (error) {
-      toast.error("Failed to create purchase order: " + error.message);
+      toast.error("Failed to update purchase order: " + error.message);
       setIsLoading(false);
       setLoadingProgress(0);
     } finally {
       clearInterval(progressInterval);
     }
   };
+
+  const handleCancel = () => {
+    navigate(`/purchasing/purchaseorders/details/${id}`);
+  };
+
+  if (initialLoading) {
+    return (
+      <div className="min-h-screen bg-purewhite font-poppins flex items-center justify-center">
+        <div className="text-center">
+          <div className="animate-spin rounded-full h-12 w-12 border-b-2 border-web_yellow mx-auto mb-4"></div>
+          <p className="text-gray-600">Loading order details...</p>
+        </div>
+      </div>
+    );
+  }
 
   return (
     <div className="min-h-screen bg-purewhite font-poppins">
@@ -304,17 +346,17 @@ const CreatePurchaseOrder = () => {
           <div className="flex items-center justify-between mb-6">
             <div>
               <button
-                onClick={() => navigate(-1)}
+                onClick={() => navigate(`/purchasing/purchaseorders/details/${id}`)}
                 className="flex items-center gap-2 text-gray-600 hover:text-main_dark mb-4"
               >
                 <FaArrowLeft />
-                <span className="text-sm">Back</span>
+                <span className="text-sm">Back to Details</span>
               </button>
               <h1 className="text-2xl font-bold text-main_dark">
-                Create Purchase Order
+                Edit Purchase Order
               </h1>
               <p className="text-gray-600 text-sm">
-                Generate and send purchase orders to suppliers
+                Modify purchase order details - {orderData.ponumber}
               </p>
             </div>
           </div>
@@ -453,6 +495,10 @@ const CreatePurchaseOrder = () => {
                       <option value="Pending">Pending</option>
                       <option value="Approved">Approved</option>
                       <option value="Sent">Sent</option>
+                      <option value="Placed">Placed</option>
+                      <option value="Shipped">Shipped</option>
+                      <option value="Delivered">Delivered</option>
+                      <option value="Completed">Completed</option>
                     </select>
                   </div>
                 </div>
@@ -507,7 +553,7 @@ const CreatePurchaseOrder = () => {
                                   e.target.value
                                 )
                               }
-                              className="w-full px-3 py-2 border border-gray-300 rounded-md bg-gray-50 text-gray-500"
+                              className="w-full px-3 py-2 border border-gray-300 rounded-md focus:outline-none focus:ring-2 focus:ring-web_yellow focus:border-transparent"
                             >
                               <option value="">Select Material</option>
                               <option value="1">Steel Bolts M6</option>
@@ -529,7 +575,7 @@ const CreatePurchaseOrder = () => {
                               }
                               placeholder="100.00"
                               step="0.01"
-                              className="w-full px-3 py-2 border border-gray-300 rounded-md bg-gray-50 text-gray-500"
+                              className="w-full px-3 py-2 border border-gray-300 rounded-md focus:outline-none focus:ring-2 focus:ring-web_yellow focus:border-transparent"
                             />
                           </td>
                           <td className="px-4 py-3">
@@ -545,7 +591,7 @@ const CreatePurchaseOrder = () => {
                                 )
                               }
                               placeholder="250.00"
-                              className="w-full px-3 py-2 border border-gray-300 rounded-md bg-gray-50 text-gray-500"
+                              className="w-full px-3 py-2 border border-gray-300 rounded-md focus:outline-none focus:ring-2 focus:ring-web_yellow focus:border-transparent"
                             />
                           </td>
                           <td className="px-4 py-3">
@@ -752,19 +798,22 @@ const CreatePurchaseOrder = () => {
 
                   <div className="mt-6 space-y-3">
                     <button
-                      onClick={handleSubmit}
+                      onClick={handleUpdate}
                       className="w-full px-4 py-3 bg-web_yellow text-main_dark rounded-md hover:bg-web_yellow/90 transition-colors font-semibold flex items-center justify-center gap-2"
                     >
-                      <FaPaperPlane className="w-4 h-4" />
-                      Send Purchase Order
+                      <FaSave className="w-4 h-4" />
+                      Update Purchase Order
+                    </button>
+                    <button 
+                      onClick={handleCancel}
+                      className="w-full px-4 py-2 border border-gray-300 text-gray-700 rounded-md hover:bg-gray-50 transition-colors flex items-center justify-center gap-2"
+                    >
+                      <FaArrowLeft className="w-4 h-4" />
+                      Cancel Changes
                     </button>
                     <button className="w-full px-4 py-2 border border-gray-300 text-gray-700 rounded-md hover:bg-gray-50 transition-colors flex items-center justify-center gap-2">
                       <FaEye className="w-4 h-4" />
-                      Preview Order
-                    </button>
-                    <button className="w-full px-4 py-2 border border-gray-300 text-gray-700 rounded-md hover:bg-gray-50 transition-colors flex items-center justify-center gap-2">
-                      <FaSave className="w-4 h-4" />
-                      Save as Draft
+                      Preview Changes
                     </button>
                   </div>
                 </div>
@@ -777,4 +826,4 @@ const CreatePurchaseOrder = () => {
   );
 };
 
-export default CreatePurchaseOrder;
+export default EditPurchaseOrder;
