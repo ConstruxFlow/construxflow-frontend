@@ -9,6 +9,8 @@ import {
   FaFileAlt,
   FaBoxOpen,
   FaClock,
+  FaRegCheckCircle,
+  FaFlag,
 } from "react-icons/fa";
 import { useNavigate } from "react-router-dom";
 import NavBar from "../../components/NavBar";
@@ -137,16 +139,15 @@ const MaterialRequests = () => {
       <div className="max-w-full mx-auto px-16 py-8">
         {/* Header */}
         <div className="flex">
-        <div className="mb-6">
-          <h1 className="text-2xl font-bold text-main_dark mb-1">
-            Material Requests
-          </h1>
-          <p className="text-gray-600 text-base">
-            Manage and respond to material requests from managers
-          </p>
+          <div className="mb-6">
+            <h1 className="text-2xl font-bold text-main_dark mb-1">
+              Material Requests
+            </h1>
+            <p className="text-gray-600 text-base">
+              Manage and respond to material requests from managers
+            </p>
+          </div>
         </div>
-        </div>
-        
 
         {/* Filters */}
         <div className="bg-purewhite border border-gray-200 rounded-lg p-6 mb-6">
@@ -257,10 +258,14 @@ const MaterialRequests = () => {
                     </span>
                   </th>
                   <th className="px-6 py-4 text-left text-sm font-semibold text-main_dark">
-                    Status
+                    <span className="flex items-center gap-2">
+                      <FaRegCheckCircle className="inline mb-0.5" /> Status
+                    </span>
                   </th>
                   <th className="px-6 py-4 text-left text-sm font-semibold text-main_dark">
-                    Priority
+                    <span className="flex items-center gap-2">
+                      <FaFlag className="inline mb-0.5" /> Priority
+                    </span>
                   </th>
                   <th className="px-6 py-4 text-left text-sm font-semibold text-main_dark">
                     Actions
