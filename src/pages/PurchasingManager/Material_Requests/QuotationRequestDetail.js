@@ -226,7 +226,7 @@ const QuotationRequestDetail = () => {
             {/* Action Buttons */}
             <div className="flex flex-col sm:flex-row gap-2 sm:gap-3 w-full sm:w-auto">
               <button
-                onClick={() => navigate("/purchasing/quotations/dashboard")}
+                onClick={() => navigate("/purchasing/quotations/dashboard",{ state: { reqId: requestData.id } })}
                 className="px-4 py-2 bg-deep_green text-purewhite rounded-md hover:bg-deep_green/90 transition-colors flex items-center justify-center gap-2 text-sm"
               >
                 <RiNewspaperLine className="w-4 h-4" />

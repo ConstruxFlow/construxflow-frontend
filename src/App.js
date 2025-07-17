@@ -79,6 +79,8 @@ import Admin_Analysis from "./pages/Admin/Admin-Analysis";
 import ContactSupport from "./pages/Supplier/ContactSupport";
 import QuotationDetail from "./pages/PurchasingManager/Quotations/QuotationDetails";
 import QuotationDetails from "./pages/Supplier/QuotationDetails";
+import { FinanceManagerRoutes } from "./pages/FinancialOfficer/routes";
+import ManagerReg from "./pages/Admin/ManagerReg";
 
 export const routes = createBrowserRouter([
   {
@@ -147,6 +149,9 @@ export const routes = createBrowserRouter([
   // PURCHASING MANAGER
   purchasingManagerRoutes,
 
+  // Finance Officer
+  FinanceManagerRoutes,
+  
   // SITE MANAGER
   siteManagerRoutes,
 
@@ -221,6 +226,10 @@ export const routes = createBrowserRouter([
   {
     path: "/admin-users",
     element:<Admin_Users/>
+  },
+  {
+    path: "/admin-managers",
+    element:<ManagerReg/>
   },
   {
     path: "/admin-analysis",

@@ -55,6 +55,7 @@ const PurchaseOrderDetails = () => {
       setLoading(false);
     }
   };
+  console.log('Order Data:', orderData);
   
 
   const getStatusColor = (status) => {
