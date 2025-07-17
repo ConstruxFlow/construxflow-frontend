@@ -133,7 +133,7 @@ console.log(supplierData);
           { name: 'Material Requests', path: '/purchasing/materialrequests/overview' },
           { name: 'Suppliers', path: '/purchasing/supplier/dashboard' },
           { name: 'Quotation Requests', path: '/purchasing/quotationrequest/overview' },
-          { name: 'Orders', path: '/orders' },
+          { name: 'Purchasing Orders', path: '/purchasing/orders/overview' },
         ]}
       />
 

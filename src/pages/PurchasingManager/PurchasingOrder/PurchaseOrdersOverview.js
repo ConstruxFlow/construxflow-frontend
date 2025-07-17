@@ -63,7 +63,7 @@ const PurchaseOrdersOverview = () => {
       setLoading(false);
     }
   };
-
+  
   const filterOrders = () => {
     let filtered = purchaseOrders.filter(order => {
       const matchesSearch = 
@@ -185,7 +185,7 @@ const PurchaseOrdersOverview = () => {
           { name: 'Material Requests', path: '/purchasing/materialrequests/overview' },
           { name: 'Suppliers', path: '/purchasing/supplier/dashboard' },
           { name: 'Quotation Requests', path: '/purchasing/quotationrequest/overview' },
-          { name: 'Purchase Orders', path: '/purchasing/orders/overview' },
+          { name: 'Purchasing Orders', path: '/purchasing/orders/overview' },
         ]}
       />
 

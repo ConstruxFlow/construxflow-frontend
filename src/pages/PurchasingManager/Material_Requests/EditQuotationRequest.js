@@ -62,12 +62,16 @@ const EditQuotationRequest = () => {
 
       if (data.status === "success") {
         const requestData = data.data;
-        
+
         // Populate form data
         setRequestdata({
           requesterName: requestData.requesterName || "",
-          request_date: requestData.requestDate ? requestData.requestDate.split('T')[0] : "",
-          quotation_deadline: requestData.quotationDeadline ? requestData.quotationDeadline.split('T')[0] : "",
+          request_date: requestData.requestDate
+            ? requestData.requestDate.split("T")[0]
+            : "",
+          quotation_deadline: requestData.quotationDeadline
+            ? requestData.quotationDeadline.split("T")[0]
+            : "",
           priority_level: requestData.priorityLevel || "",
           quotation_type: requestData.quotationType || "",
           status: requestData.status || "Pending",
@@ -79,27 +83,39 @@ const EditQuotationRequest = () => {
         });
 
         // Populate materials
-        if (requestData.quotationReqMaterials && requestData.quotationReqMaterials.length > 0) {
-          const materialsData = requestData.quotationReqMaterials.map((item, index) => ({
-            id: item.quotationReqMaterialId || Date.now() + index,
-            material: {
-              material_id: item.material.materialId,
-            },
-            quantity: item.quantity || "",
-            unitPrice: item.unitPrice || "",
-            estimatedCost: item.estimatedCost || 0,
-          }));
+        if (
+          requestData.quotationReqMaterials &&
+          requestData.quotationReqMaterials.length > 0
+        ) {
+          const materialsData = requestData.quotationReqMaterials.map(
+            (item, index) => ({
+              id: item.quotationReqMaterialId || Date.now() + index,
+              material: {
+                material_id: item.material.materialId,
+              },
+              quantity: item.quantity || "",
+              unitPrice: item.unitPrice || "",
+              estimatedCost: item.estimatedCost || 0,
+            })
+          );
           setMaterials(materialsData);
         }
 
         // Populate delivery schedule
-        if (requestData.quotationReqDelivery && requestData.quotationReqDelivery.length > 0) {
-          const deliveryData = requestData.quotationReqDelivery.map((item, index) => ({
-            id: item.quotationReqDeliveryId || Date.now() + index,
-            location: item.location || "",
-            deliveryDate: item.deliveryDate ? item.deliveryDate.split('T')[0] : "",
-            quantitySplit: item.quantitySplit || "",
-          }));
+        if (
+          requestData.quotationReqDelivery &&
+          requestData.quotationReqDelivery.length > 0
+        ) {
+          const deliveryData = requestData.quotationReqDelivery.map(
+            (item, index) => ({
+              id: item.quotationReqDeliveryId || Date.now() + index,
+              location: item.location || "",
+              deliveryDate: item.deliveryDate
+                ? item.deliveryDate.split("T")[0]
+                : "",
+              quantitySplit: item.quantitySplit || "",
+            })
+          );
           setDeliverySchedule(deliveryData);
         }
 
@@ -158,10 +174,10 @@ const EditQuotationRequest = () => {
     const totalEstimatedCost = materials.reduce((total, material) => {
       return total + (material.estimatedCost || 0);
     }, 0);
-    
-    setRequestdata(prevState => ({
+
+    setRequestdata((prevState) => ({
       ...prevState,
-      estimated_cost: totalEstimatedCost
+      estimated_cost: totalEstimatedCost,
     }));
   }, [materials]);
 
@@ -187,7 +203,7 @@ const EditQuotationRequest = () => {
       materials.map((material) => {
         if (material.id === id) {
           let updatedMaterial = { ...material };
-          
+
           if (field === "material_id") {
             updatedMaterial.material = {
               ...material.material,
@@ -198,14 +214,20 @@ const EditQuotationRequest = () => {
           } else if (field === "unitPrice") {
             updatedMaterial.unitPrice = parseFloat(value) || 0;
           }
-          
+
           // Auto-calculate estimatedCost when quantity or unitPrice changes
           if (field === "quantity" || field === "unitPrice") {
-            const quantity = field === "quantity" ? (parseFloat(value) || 0) : (parseFloat(updatedMaterial.quantity) || 0);
-            const unitPrice = field === "unitPrice" ? (parseFloat(value) || 0) : (parseFloat(updatedMaterial.unitPrice) || 0);
+            const quantity =
+              field === "quantity"
+                ? parseFloat(value) || 0
+                : parseFloat(updatedMaterial.quantity) || 0;
+            const unitPrice =
+              field === "unitPrice"
+                ? parseFloat(value) || 0
+                : parseFloat(updatedMaterial.unitPrice) || 0;
             updatedMaterial.estimatedCost = quantity * unitPrice;
           }
-          
+
           return updatedMaterial;
         }
         return material;
@@ -306,21 +328,24 @@ const EditQuotationRequest = () => {
       setRequestdata(updatedRequestData);
       setLoadingProgress(60);
 
-      const response = await fetch(`http://localhost:8080/api/quotationrequest/update/${id}`, {
-        method: "PUT",
-        headers: {
-          "Content-Type": "application/json",
-        },
-        body: JSON.stringify(updatedRequestData),
-      });
+      const response = await fetch(
+        `http://localhost:8080/api/quotationrequest/update/${id}`,
+        {
+          method: "PUT",
+          headers: {
+            "Content-Type": "application/json",
+          },
+          body: JSON.stringify(updatedRequestData),
+        }
+      );
 
       setLoadingProgress(95);
 
       if (!response.ok) {
         const errorData = await response.json().catch(() => ({}));
         throw new Error(
-          errorData.message || 
-          `Request update failed with status: ${response.status}`
+          errorData.message ||
+            `Request update failed with status: ${response.status}`
         );
       }
 
@@ -330,21 +355,21 @@ const EditQuotationRequest = () => {
       setTimeout(() => {
         if (responseData.status === "success" || response.ok) {
           toast.success("Quotation request updated successfully!");
-          navigate(`/purchasing/quotationrequest/detail/${id}`);
+          navigate(`/purchasing/quotationrequest/details/${id}`);
         } else {
           toast.error(
-            "Failed to update request: " + (responseData.message || "Unknown error")
+            "Failed to update request: " +
+              (responseData.message || "Unknown error")
           );
         }
 
         setIsLoading(false);
         setLoadingProgress(0);
       }, 800);
-
     } catch (error) {
-      if (error.name === 'TypeError' && error.message.includes('fetch')) {
+      if (error.name === "TypeError" && error.message.includes("fetch")) {
         toast.error("Network error: Please check your internet connection");
-      } else if (error.message.includes('timeout')) {
+      } else if (error.message.includes("timeout")) {
         toast.error("Request timeout: Please try again");
       } else {
         toast.error("Update failed: " + error.message);
@@ -405,7 +430,7 @@ const EditQuotationRequest = () => {
           { name: 'Material Requests', path: '/purchasing/materialrequests/overview' },
           { name: 'Suppliers', path: '/purchasing/supplier/dashboard' },
           { name: 'Quotation Requests', path: '/purchasing/quotationrequest/overview' },
-          { name: 'Orders', path: '/orders' },
+          { name: 'Purchasing Orders', path: '/purchasing/orders/overview' },
         ]}
       />
       {isLoading && (
@@ -420,7 +445,10 @@ const EditQuotationRequest = () => {
           {/* Header Section */}
           <div className="flex items-center justify-between mb-6">
             <div>
-              <button onClick={() => navigate(-1)} className="flex items-center gap-2 text-gray-600 hover:text-main_dark mb-4">
+              <button
+                onClick={() => navigate(-1)}
+                className="flex items-center gap-2 text-gray-600 hover:text-main_dark mb-4"
+              >
                 <FaArrowLeft />
                 <span className="text-sm">Back</span>
               </button>
@@ -454,7 +482,8 @@ const EditQuotationRequest = () => {
                 </div>
               </div>
               <p className="text-gray-600 text-sm">
-                Update quotation request details, materials, and delivery schedules
+                Update quotation request details, materials, and delivery
+                schedules
               </p>
             </div>
           </div>
@@ -649,7 +678,7 @@ const EditQuotationRequest = () => {
                           <option value="4">Steel Beams</option>
                         </select>
                       </div>
-                      
+
                       <div>
                         <label className="block text-sm font-medium text-gray-700 mb-2">
                           Quantity
@@ -739,20 +768,26 @@ const EditQuotationRequest = () => {
                   <h2 className="text-lg font-semibold text-main_dark">
                     Delivery Schedule
                   </h2>
-                  <button
-                    onClick={addLocation}
-                    className="px-4 py-2 bg-deep_green text-purewhite text-sm rounded-md hover:bg-deep_green/90 transition-colors flex items-center gap-2"
-                  >
-                    <FaPlus />
-                    Add Location
-                  </button>
+                  {materials.length === 1 && (
+                    <button
+                      onClick={addLocation}
+                      className="px-4 py-2 bg-deep_green text-purewhite text-sm rounded-md hover:bg-deep_green/90 transition-colors flex items-center gap-2"
+                    >
+                      <FaPlus />
+                      Add Location
+                    </button>
+                  )}
                 </div>
 
                 <div className="space-y-4">
                   {deliverySchedule.map((item) => (
                     <div
                       key={item.id}
-                      className="grid grid-cols-1 md:grid-cols-4 gap-4 items-center p-4 border border-gray-200 rounded-lg"
+                      className={`grid gap-4 items-center p-4 border border-gray-200 rounded-lg ${
+                        materials.length === 1
+                          ? "grid-cols-1 md:grid-cols-4"
+                          : "grid-cols-1 md:grid-cols-3"
+                      }`}
                     >
                       <div>
                         <label className="block text-sm font-medium text-gray-700 mb-2">
@@ -799,24 +834,26 @@ const EditQuotationRequest = () => {
                           className="w-full px-3 py-2 border border-gray-300 rounded-md focus:outline-none focus:ring-2 focus:ring-web_yellow focus:border-transparent"
                         />
                       </div>
-                      <div>
-                        <label className="block text-sm font-medium text-gray-700 mb-2">
-                          Quantity Split
-                        </label>
-                        <input
-                          type="number"
-                          step="0.01"
-                          value={item.quantitySplit}
-                          onChange={(e) =>
-                            updateDeliverySchedule(
-                              item.id,
-                              "quantitySplit",
-                              e.target.value
-                            )
-                          }
-                          className="w-full px-3 py-2 border border-gray-300 rounded-md focus:outline-none focus:ring-2 focus:ring-web_yellow focus:border-transparent"
-                        />
-                      </div>
+                      {materials.length === 1 && (
+                        <div>
+                          <label className="block text-sm font-medium text-gray-700 mb-2">
+                            Quantity Split
+                          </label>
+                          <input
+                            type="number"
+                            step="0.01"
+                            value={item.quantitySplit}
+                            onChange={(e) =>
+                              updateDeliverySchedule(
+                                item.id,
+                                "quantitySplit",
+                                e.target.value
+                              )
+                            }
+                            className="w-full px-3 py-2 border border-gray-300 rounded-md focus:outline-none focus:ring-2 focus:ring-web_yellow focus:border-transparent"
+                          />
+                        </div>
+                      )}
                       <div className="flex items-end">
                         {deliverySchedule.length > 1 && (
                           <button
@@ -874,27 +911,33 @@ const EditQuotationRequest = () => {
                     <div className="flex justify-between">
                       <span className="text-gray-600">Total Materials:</span>
                       <span className="font-medium text-main_dark">
-                        {materials.length} Item{materials.length !== 1 ? 's' : ''}
+                        {materials.length} Item
+                        {materials.length !== 1 ? "s" : ""}
                       </span>
                     </div>
 
                     <div className="flex justify-between">
                       <span className="text-gray-600">Delivery Locations:</span>
                       <span className="font-medium text-main_dark">
-                        {deliverySchedule.length} location{deliverySchedule.length !== 1 ? 's' : ''}
+                        {deliverySchedule.length} location
+                        {deliverySchedule.length !== 1 ? "s" : ""}
                       </span>
                     </div>
 
                     <div className="flex justify-between">
                       <span className="text-gray-600">Priority:</span>
                       <span className="px-2 py-1 bg-yellow-100 text-yellow-800 rounded text-sm font-medium">
-                        {Requestdata.priority_level || 'Not Selected'}
+                        {Requestdata.priority_level || "Not Selected"}
                       </span>
                     </div>
 
                     <div className="flex justify-between">
                       <span className="text-gray-600">Status:</span>
-                      <span className={`px-2 py-1 rounded text-sm font-medium ${getStatusColor(Requestdata.status)}`}>
+                      <span
+                        className={`px-2 py-1 rounded text-sm font-medium ${getStatusColor(
+                          Requestdata.status
+                        )}`}
+                      >
                         {Requestdata.status}
                       </span>
                     </div>
@@ -914,12 +957,19 @@ const EditQuotationRequest = () => {
                       </h4>
                       <div className="text-sm text-gray-600 space-y-1">
                         {materials.map((material) => (
-                          <div key={material.id} className="flex justify-between">
+                          <div
+                            key={material.id}
+                            className="flex justify-between"
+                          >
                             <span>
-                              {material.material.material_id === "1" && "Steel Rods - 12mm"}
-                              {material.material.material_id === "2" && "Cement Bags"}
-                              {material.material.material_id === "3" && "Concrete Blocks"}
-                              {material.material.material_id === "4" && "Steel Beams"}
+                              {material.material.material_id === "1" &&
+                                "Steel Rods - 12mm"}
+                              {material.material.material_id === "2" &&
+                                "Cement Bags"}
+                              {material.material.material_id === "3" &&
+                                "Concrete Blocks"}
+                              {material.material.material_id === "4" &&
+                                "Steel Beams"}
                               {!material.material.material_id && "Not Selected"}
                             </span>
                             <span>{material.quantity || 0} pcs</span>
@@ -936,7 +986,9 @@ const EditQuotationRequest = () => {
                         {deliverySchedule.map((item) => (
                           <div key={item.id} className="mb-2">
                             <p>{item.location || "Location not selected"}</p>
-                            <p>Required: {item.deliveryDate || "Date not set"}</p>
+                            <p>
+                              Required: {item.deliveryDate || "Date not set"}
+                            </p>
                           </div>
                         ))}
                       </div>
@@ -952,8 +1004,10 @@ const EditQuotationRequest = () => {
                       Update Request
                     </button>
 
-                    <button 
-                      onClick={() => navigate(`/purchasing/quotationrequest/detail/${id}`)}
+                    <button
+                      onClick={() =>
+                        navigate(`/purchasing/quotationrequest/detail/${id}`)
+                      }
                       className="w-full px-4 py-2 border border-gray-300 text-gray-700 rounded-md hover:bg-gray-50 transition-colors flex items-center justify-center gap-2"
                     >
                       <FaEye className="w-4 h-4" />
