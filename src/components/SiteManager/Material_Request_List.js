@@ -191,7 +191,7 @@ export default function Material_Request_List() {
                               style={{ backgroundColor: '#236571' }}
                               onClick={() => {
                                 console.log('Navigating with:', { project, phase, mats });
-                                navigate('/material-request-list/material-request', {
+                                navigate('/site-manager/material-request-list/material-request', {
                                   state: {
                                     project: project,
                                     phase: phase,
@@ -226,7 +226,7 @@ export default function Material_Request_List() {
                                   <button
                                     className="px-3 py-1 text-white font-medium rounded-lg shadow-sm hover:opacity-90 transition-opacity text-sm"
                                     style={{ backgroundColor: '#236571' }}
-                                    onClick={() => window.location.href = '/material-request-list/material-request'}
+                                    onClick={() => window.location.href = '/site-manager/material-request-list/material-request'}
                                   >
                                     New Request
                                   </button>
