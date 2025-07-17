@@ -24,13 +24,13 @@ const AddEquipment = () => {
   return (
     <>
       <NavBar 
-      links={[
+       links={[
         {name: 'Dashboard', path: '/inventory-dashboard'},
-        {name: 'Maintenance', path: '/maintenance-requests-overview'},
+        {name: 'Inventory Control', path: '/inventory-control'},
         {name: 'Dashboard'},
         {name: 'Dashboard'},
         {name: 'Dashboard'},
-      ]}
+     ]}
         />
       <div className="bg-[#FCFCFC] min-h-screen py-8 px-4">
         <h1 className="text-3xl font-bold text-[#236571] text-center mb-6">Add New Equipment</h1>

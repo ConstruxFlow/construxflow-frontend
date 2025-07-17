@@ -57,6 +57,16 @@ import { MaintenanceRoute } from "./pages/MaintenanceHead/MaintenanceRoute";
 import VerificationEmailPage from "./components/EmailVerify";
 import BOQPDFReader from "./pages/BOQPDFReader";
 import AddEquipment from "./pages/InventoryManager/AddEquipment";
+import AddMaterial from "./pages/InventoryManager/AddMaterial";
+import InventoryControl from "./pages/InventoryManager/InventoryControl";
+import MaintenanceRequestsOverview from "./pages/InventoryManager/MaintenanceRequestsOverview";
+import MaintenanceRequestPage from "./pages/InventoryManager/MaintenanceRequestPage";
+
+
+
+
+
+
 
 
 import Admin_Dashbaord from "./pages/Admin/Admin-Dashboard";
@@ -64,6 +74,7 @@ import Admin_Inventory from "./pages/Admin/Admin-Inventory";
 import ConstructionDashboard from "./components/Admin/admin-dashboard";
 import UserDashboard from "./components/Admin/admin-users";
 import Admin_Users from "./pages/Admin/Admin-User";
+import Admin_Analysis from "./pages/Admin/Admin-Analysis";
 
 export const routes = createBrowserRouter([
   {
@@ -211,6 +222,10 @@ export const routes = createBrowserRouter([
     element:<Admin_Users/>
   },
   {
+    path: "/admin-analysis",
+    element:<Admin_Analysis/>
+  },
+  {
     path: "/verify-email",
     element: <VerificationEmailPage/>
   },
@@ -218,4 +233,26 @@ export const routes = createBrowserRouter([
   path: "/add-equipment",
   element: <AddEquipment />,
 },
+
+{
+  path: "/add-material",
+  element: <AddMaterial />,
+},
+{
+  path: "/inventory-control",
+  element: <InventoryControl />,
+},
+
+{
+  path: "/maintenance-requests-overview",
+  element: <MaintenanceRequestsOverview />,
+},
+{
+  path: "/maintenance-request-page",
+  element: <MaintenanceRequestPage />,
+},
+
+
+
 ]);
+

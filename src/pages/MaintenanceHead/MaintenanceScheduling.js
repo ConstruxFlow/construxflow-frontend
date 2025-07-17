@@ -5,6 +5,8 @@ export default function ScheduleMaintenanceAndRequestMaterials() {
   // Schedule Maintenance Form State
   const [equipmentType, setEquipmentType] = useState("");
   const [equipment, setEquipment] = useState("");
+  const [maintenanceType, setMaintenanceType] = useState("");
+  const [priority, setPriority] = useState("");
   const [scheduleDate, setScheduleDate] = useState("");
   const [scheduleTime, setScheduleTime] = useState("");
   const [scheduleNotes, setScheduleNotes] = useState("");
@@ -144,6 +146,8 @@ export default function ScheduleMaintenanceAndRequestMaterials() {
       const requestBody = {
         equipmentType: getEquipmentTypeName(equipmentType),
         equipmentName: getEquipmentName(equipment),
+        maintenanceType: maintenanceType,
+        priority: priority,
         scheduleDate: scheduleDate,
         scheduleTime: scheduleTime + ":00",
         scheduleNotes: scheduleNotes,
@@ -179,6 +183,8 @@ export default function ScheduleMaintenanceAndRequestMaterials() {
   const resetForm = () => {
     setEquipmentType("");
     setEquipment("");
+    setMaintenanceType("");
+    setPriority("");
     setScheduleDate("");
     setScheduleTime("");
     setScheduleNotes("");
@@ -266,8 +272,51 @@ export default function ScheduleMaintenanceAndRequestMaterials() {
                   </select>
                   <ChevronDown className="absolute right-3 top-2.5 h-4 w-4 text-gray-400 pointer-events-none" />
                 </div>
-              </div>
 
+              </div>
+              {/* Maintenance Type */}
+              <div>
+                <label className="block text-sm font-medium text-gray-700 mb-1">
+                  Maintenance Type <span className="text-red-500">*</span>
+                </label>
+                <div className="relative">
+                  <select
+                    value={maintenanceType}
+                    onChange={(e) => setMaintenanceType(e.target.value)}
+                    className="w-full px-3 py-2 border border-gray-300 rounded-md bg-white text-gray-700 appearance-none focus:outline-none focus:ring-2 focus:ring-[#236571] focus:border-transparent"
+                    required
+                    disabled={isLoading}
+                  >
+                    <option value="">Choose Maintenance Type</option>
+                    <option value="Preventive">Preventive</option>
+                    <option value="Corrective">Corrective</option>
+                    <option value="Emergancy">Emergancy</option>
+
+                    </select>
+                  <ChevronDown className="absolute right-3 top-2.5 h-4 w-4 text-gray-400 pointer-events-none" />
+                </div>
+              </div>
+              {/* Priority Level */}
+              <div>
+                <label className="block text-sm font-medium text-gray-700 mb-1">
+                  Priority Level <span className="text-red-500">*</span>
+                </label>
+                <div className="relative">
+                  <select
+                    value={priority}
+                    onChange={(e) => setPriority(e.target.value)}
+                    className="w-full px-3 py-2 border border-gray-300 rounded-md bg-white text-gray-700 appearance-none focus:outline-none focus:ring-2 focus:ring-[#236571] focus:border-transparent"
+                    required
+                    disabled={isLoading}
+                  >
+                    <option value="">Select priority...</option>
+                    <option value="low">Low</option>
+                    <option value="medium">Medium</option>
+                    <option value="high">High</option>
+                  </select>
+                  <ChevronDown className="absolute right-3 top-2.5 h-4 w-4 text-gray-400 pointer-events-none" />
+                </div>
+              </div>
               {/* Select Date */}
               <div>
                 <label className="block text-sm font-medium text-gray-700 mb-1">
