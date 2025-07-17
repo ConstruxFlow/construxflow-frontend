@@ -15,7 +15,7 @@ export default function Material_Request_List() {
 
   // Fetch all projects for the filter dropdown
   useEffect(() => {
-    axios.get('http://localhost:8080/api/projects/all')
+    axios.get('http://localhost:5454/api/projects/all')
       .then(res => {
         setProjects([{ id: 'All Projects', name: 'All Projects' }, ...res.data.map(p => ({ id: p.projectId, name: p.projectName }))]);
       })
@@ -26,9 +26,9 @@ export default function Material_Request_List() {
   useEffect(() => {
     const fetchMaterials = async () => {
       try {
-        let url = 'http://localhost:8080/api/projects/materials/request-list';
+        let url = 'http://localhost:5454/api/projects/materials/request-list';
         if (projectFilter !== 'All Projects') {
-          url = `http://localhost:8080/api/projects/${projectFilter}/materials/request-list`;
+          url = `http://localhost:5454/api/projects/${projectFilter}/materials/request-list`;
         }
         const res = await axios.get(url);
         setMaterials(res.data);
@@ -191,7 +191,7 @@ export default function Material_Request_List() {
                               style={{ backgroundColor: '#236571' }}
                               onClick={() => {
                                 console.log('Navigating with:', { project, phase, mats });
-                                navigate('/material-request-list/material-request', {
+                                navigate('/site-manager/material-request-list/material-request', {
                                   state: {
                                     project: project,
                                     phase: phase,
@@ -226,7 +226,7 @@ export default function Material_Request_List() {
                                   <button
                                     className="px-3 py-1 text-white font-medium rounded-lg shadow-sm hover:opacity-90 transition-opacity text-sm"
                                     style={{ backgroundColor: '#236571' }}
-                                    onClick={() => window.location.href = '/material-request-list/material-request'}
+                                    onClick={() => window.location.href = '/site-manager/material-request-list/material-request'}
                                   >
                                     New Request
                                   </button>

@@ -1,8 +1,9 @@
 import { useState, useEffect } from "react";
-import { useParams } from "react-router-dom";
+import { useNavigate, useParams } from "react-router-dom";
 import { UserPlus } from "lucide-react";
 import TechnicianCard from "../../components/MaintenanceHead/TechnicianCard";
 import NavBar from "../../components/NavBar";
+import TeamSection from "../../components/MaintenanceHead/TeamSection";
 
 export default function TechnicianAssignmentMain() {
   const { id } = useParams();
@@ -17,12 +18,14 @@ export default function TechnicianAssignmentMain() {
   const [duration, setDuration] = useState("1-2 hours");
   const [instructions, setInstructions] = useState("");
   const [showTeam, setShowTeam] = useState(false);
+  const [isLoggedIn, setIsLoggedIn] = useState(false);
 
   // New states for assignment
   const [startDate, setStartDate] = useState("");
   const [startTime, setStartTime] = useState("");
   const [submitMsg, setSubmitMsg] = useState("");
   const [submitting, setSubmitting] = useState(false);
+  const navigation = useNavigate();
 
   // Fetch equipment details
   useEffect(() => {
@@ -42,7 +45,7 @@ export default function TechnicianAssignmentMain() {
   // Fetch team members
   useEffect(() => {
     setLoadingTeam(true);
-    fetch("http://localhost:8080/api/team")
+    fetch("http://localhost:8080/api/team/all")
       .then((res) => {
         if (!res.ok) throw new Error("Failed to fetch team members");
         return res.json();
@@ -53,6 +56,9 @@ export default function TechnicianAssignmentMain() {
       })
       .catch(() => setLoadingTeam(false));
   }, []);
+
+  console.log(teamMembers);
+  
 
   // Assignment submit handler
   const handleAssign = async (e) => {
@@ -91,18 +97,44 @@ export default function TechnicianAssignmentMain() {
     setSubmitting(false);
   };
 
+   useEffect(() => {
+          const user = localStorage.getItem("user");
+          setIsLoggedIn(!!user);
+        }, []);
+      
+        // Logout handler
+        const handleLogout = () => {
+          localStorage.removeItem("user");
+          localStorage.removeItem("role");
+          setIsLoggedIn(false);
+          navigation("/login");
+        };
+  
+        const handleLogin = () => {
+      navigation("/login");
+      };
+
   return (
     <>
       <NavBar
-        links={[
-          { name: "Dashboard", href: "#" },
-          { name: "Task", href: "#" },
-          { name: "Team", href: "#", onClick: () => setShowTeam(true) },
-          { name: "Equipment", href: "#" },
-          { name: "Request Tracker", href: "#" },
+      links={[
+          { name: "Dashboard", href: "#", onClick: () => navigation("/maintenance/dashboard") },
+          { name: "Task", href: "#",onClick: () => navigation("/maintenance/scheduling") },
+          { name: "Team", href: "#",
+            onClick: () => {
+              // e.preventDefault();
+              console.log("Team link clicked");
+              
+              setShowTeam(true);
+            },
+           },
+          { name: "Equipment", href: "#" ,onClick: () => navigation("/maintenance/log")},
+          { name: "Add Technician", href: "#",onClick: () => navigation("/maintenance/add-member") },
         ]}
         showButton={true}
-      />
+        buttonLabel={isLoggedIn ? "Logout" : "Get Started"}
+        onButtonClick={isLoggedIn ? handleLogout : handleLogin}
+    />
 
       <div className="min-h-screen bg-[#F8FAFC] flex flex-col md:flex-row items-start justify-center py-8 px-4 gap-8">
         {/* Main Content */}
@@ -314,6 +346,20 @@ export default function TechnicianAssignmentMain() {
           </div>
         </aside>
       </div>
+
+      {/* Overlay and Team Sidebar */}
+            {showTeam && (
+              <>
+                {/* BLUR OVERLAY */}
+                <div
+                  className="fixed inset-0 z-40 bg-black bg-opacity-30 backdrop-blur-sm transition-all"
+                  onClick={() => setShowTeam(false)}
+                  aria-label="Close team sidebar"
+                />
+                {/* TEAM SIDEBAR */}
+                <TeamSection onClose={() => setShowTeam(false)} />
+              </>
+            )}
     </>
   );
 }

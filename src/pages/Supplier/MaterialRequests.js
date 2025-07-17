@@ -232,7 +232,7 @@ const MaterialRequests = () => {
           <div className="overflow-x-auto">
             <table className="w-full">
               <thead>
-                <tr className="bg-light_brown/30">
+                <tr className="bg-light_brown/35">
                   <th className="px-6 py-4 text-left text-sm font-semibold text-main_dark">
                     Request ID
                   </th>

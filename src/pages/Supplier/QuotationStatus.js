@@ -77,21 +77,21 @@ const QuotationStatus = () => {
             title="Total Quotations"
             value={quotations.length}
             subtitle="This month"
-            color="deep_green/10"
+            type="total"
           />
           <SummaryCard
             icon={<FaCheckCircle />}
             title="Accepted"
             value={quotations.filter((q) => q.status === "Accepted").length}
             subtitle="Approved by client"
-            color="web_yellow/20"
+            type="accepted"
           />
           <SummaryCard
             icon={<FaClock />}
             title="Pending Review"
             value={quotations.filter((q) => q.status === "Pending").length}
             subtitle="Awaiting feedback"
-            color="light_brown/30"
+            type="pending"
           />
         </div>
 
@@ -134,7 +134,7 @@ const QuotationStatus = () => {
         <div className="overflow-x-auto bg-purewhite rounded-lg shadow border border-light_gray">
           <table className="min-w-full">
             <thead>
-              <tr className="bg-light_brown/30">
+              <tr className="bg-light_brown/35">
                 <th className="px-6 py-4 text-left text-sm font-semibold text-main_dark">
                   Quotation ID
                 </th>
@@ -216,19 +216,58 @@ const QuotationStatus = () => {
 };
 
 // Summary card component
-const SummaryCard = ({ icon, title, value, subtitle, color }) => (
-  <div className="flex items-center gap-4 bg-purewhite border border-light_gray rounded-xl shadow-sm p-5 hover:shadow-md transition">
+const SummaryCard = ({ icon, title, value, subtitle, type }) => {
+  // Choose color mapping and gradients based on 'type'
+  const cardStyles = {
+    total: {
+      bg: "bg-gradient-to-bl from-light_gray to-purewhite",
+      border: "border-web_yellow",
+      iconBg: "bg-web_yellow",
+      iconColor: "text-purewhite",
+    },
+    accepted: {
+      bg: "bg-gradient-to-br from-purewhite to-deep_green/10",
+      border: "border-deep_green",
+      iconBg: "bg-deep_green",
+      iconColor: "text-purewhite",
+    },
+    pending: {
+      bg: "bg-gradient-to-tr from-purewhite to-web_yellow/20",
+      border: "border-web_yellow",
+      iconBg: "bg-web_yellow",
+      iconColor: "text-main_dark",
+    },
+    rejected: {
+      bg: "bg-gradient-to-tl from-purewhite to-light_brown",
+      border: "border-light_brown",
+      iconBg: "bg-light_brown",
+      iconColor: "text-main_dark",
+    },
+  };
+  const style = cardStyles[type] || cardStyles.total;
+
+  return (
     <div
-      className={`flex items-center justify-center h-12 w-12 rounded-lg bg-${color}`}
+      className={`shadow group transition-all duration-200 hover:scale-[1.02] 
+       rounded-lg px-6 py-6 flex items-center gap-4`}
     >
-      {icon}
+      <div
+        className={`flex items-center justify-center h-10 w-10 rounded-xl shadow 
+        ${style.iconBg} ${style.iconColor} group-hover:scale-110 transition-all text-lg`}
+      >
+        {icon}
+      </div>
+      <div className="flex-1">
+        <div className="text-sm uppercase tracking-widest font-bold text-slatebluegray mb-1">
+          {title}
+        </div>
+        <div className="text-3xl font-extrabold text-main_dark mb-1">
+          {value}
+        </div>
+        <div className="text-xs text-slatebluegray font-medium">{subtitle}</div>
+      </div>
     </div>
-    <div>
-      <div className="text-base text-main_dark font-medium">{title}</div>
-      <div className="text-2xl font-bold text-main_dark">{value}</div>
-      <div className="text-xs text-main_dark mt-1">{subtitle}</div>
-    </div>
-  </div>
-);
+  );
+};
 
 export default QuotationStatus;

@@ -1,5 +1,8 @@
-import { useState } from "react";
+import { useEffect, useState } from "react";
 import { Calendar, ChevronDown, Upload, Plus } from "lucide-react";
+import { useNavigate } from "react-router-dom";
+import NavBar from "../../components/NavBar";
+import TeamSection from "../../components/MaintenanceHead/TeamSection";
 
 export default function ScheduleMaintenanceAndRequestMaterials() {
   // Schedule Maintenance Form State
@@ -29,6 +32,10 @@ export default function ScheduleMaintenanceAndRequestMaterials() {
 
   // Simple counter for frontend item tracking (not used for backend IDs)
   const [itemCounter, setItemCounter] = useState(2);
+
+    const [showTeam, setShowTeam] = useState(false);
+    const navigation = useNavigate();
+    const [isLoggedIn, setIsLoggedIn] = useState(false);
 
   // Unit options
   const unitOptions = [
@@ -193,9 +200,50 @@ export default function ScheduleMaintenanceAndRequestMaterials() {
     setUrgencyLevel("");
     setError("");
     setItemCounter(2);
+
+    
   };
 
+  // Check login state on mount
+          useEffect(() => {
+            const user = localStorage.getItem("user");
+            setIsLoggedIn(!!user);
+          }, []);
+        
+          // Logout handler
+          const handleLogout = () => {
+            localStorage.removeItem("user");
+            localStorage.removeItem("role");
+            setIsLoggedIn(false);
+            navigation("/login");
+          };
+    
+          const handleLogin = () => {
+        navigation("/login");
+        };
+
   return (
+    <>
+
+    <NavBar
+      links={[
+          { name: "Dashboard", href: "" , onClick: () => navigation("/maintenance/dashboard")},
+          { name: "Task", href: "#", onClick: () => navigation("/maintenance/scheduling")},
+          { name: "Team", href: "#",
+            onClick: () => {
+              // e.preventDefault();
+              console.log("Team link clicked");
+              
+              setShowTeam(true);
+            },
+           },
+          { name: "Equipment Log", href: "#",onClick: () => navigation("/maintenance/equipment")},
+          { name: "Add Technician", href: "#" ,onClick: () => navigation("/maintenance/add-member")},
+        ]}
+        showButton={true}
+        buttonLabel={isLoggedIn ? "Logout" : "Get Started"}
+        onButtonClick={isLoggedIn ? handleLogout : handleLogin}
+    />
     <div className="min-h-screen bg-gray-50 p-6">
       <div className="max-w-6xl mx-auto">
         {/* Header */}
@@ -535,5 +583,20 @@ export default function ScheduleMaintenanceAndRequestMaterials() {
         </div>
       </div>
     </div>
+
+    {/* Overlay and Team Sidebar */}
+          {showTeam && (
+            <>
+              {/* BLUR OVERLAY */}
+              <div
+                className="fixed inset-0 z-40 bg-black bg-opacity-30 backdrop-blur-sm transition-all"
+                onClick={() => setShowTeam(false)}
+                aria-label="Close team sidebar"
+              />
+              {/* TEAM SIDEBAR */}
+              <TeamSection onClose={() => setShowTeam(false)} />
+            </>
+          )}
+    </>
   );
 }
