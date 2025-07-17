@@ -9,8 +9,8 @@ const InventoryDashboard = () => {
          <NavBar 
       links={[
         {name: 'Dashboard', path: '/inventory-dashboard'},
-        {name: 'Maintenance', path: '/maintenance-requests-overview'},
-        {name: 'Dashboard'},
+        {name: 'Inventory Control', path: '/inventory-control'},
+        {name: 'Maintenance Requests', path: '/maintenance-requests-overview'},
         {name: 'Dashboard'},
         {name: 'Dashboard'},
      ]}

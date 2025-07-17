@@ -57,6 +57,16 @@ import { MaintenanceRoute } from "./pages/MaintenanceHead/MaintenanceRoute";
 import VerificationEmailPage from "./components/EmailVerify";
 import BOQPDFReader from "./pages/BOQPDFReader";
 import AddEquipment from "./pages/InventoryManager/AddEquipment";
+import AddMaterial from "./pages/InventoryManager/AddMaterial";
+import InventoryControl from "./pages/InventoryManager/InventoryControl";
+import MaintenanceRequestsOverview from "./pages/InventoryManager/MaintenanceRequestsOverview";
+import MaintenanceRequestPage from "./pages/InventoryManager/MaintenanceRequestPage";
+
+
+
+
+
+
 
 
 import Admin_Dashbaord from "./pages/Admin/Admin-Dashboard";
@@ -218,4 +228,26 @@ export const routes = createBrowserRouter([
   path: "/add-equipment",
   element: <AddEquipment />,
 },
+
+{
+  path: "/add-material",
+  element: <AddMaterial />,
+},
+{
+  path: "/inventory-control",
+  element: <InventoryControl />,
+},
+
+{
+  path: "/maintenance-requests-overview",
+  element: <MaintenanceRequestsOverview />,
+},
+{
+  path: "/maintenance-request-page",
+  element: <MaintenanceRequestPage />,
+},
+
+
+
 ]);
+
