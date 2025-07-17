@@ -1,6 +1,15 @@
 // src/pages/Supplier/MaterialRequests.jsx
 import React, { useState, useEffect } from "react";
-import { FaSearch, FaEye, FaReply, FaChevronDown } from "react-icons/fa";
+import {
+  FaSearch,
+  FaEye,
+  FaReply,
+  FaChevronDown,
+  FaUser,
+  FaFileAlt,
+  FaBoxOpen,
+  FaClock,
+} from "react-icons/fa";
 import { useNavigate } from "react-router-dom";
 import NavBar from "../../components/NavBar";
 
@@ -89,7 +98,7 @@ const MaterialRequests = () => {
       case "High":
         return "bg-red-100 text-red-600 font-medium px-3 py-1 rounded-full text-xs";
       case "Medium":
-        return "bg-blue-100 text-blue-600 font-medium px-3 py-1 rounded-full text-xs";
+        return "bg-yellow-100 text-yellow-800 font-medium px-3 py-1 rounded-full text-xs";
       case "Low":
         return "bg-green-100 text-green-600 font-medium px-3 py-1 rounded-full text-xs";
       default:
@@ -112,7 +121,12 @@ const MaterialRequests = () => {
   const getMaterialNames = (materials) => {
     if (!materials || !materials.length) return "No materials";
     return materials
-      .map((m) => `${m.material?.materialName || ""} (${m.quantity} ${m.material?.unitOfMeasurement || ""})`)
+      .map(
+        (m) =>
+          `${m.material?.materialName || ""} (${m.quantity} ${
+            m.material?.unitOfMeasurement || ""
+          })`
+      )
       .join(", ");
   };
 
@@ -122,17 +136,26 @@ const MaterialRequests = () => {
 
       <div className="max-w-full mx-auto px-16 py-8">
         {/* Header */}
+        <div className="flex">
         <div className="mb-6">
-          <h1 className="text-3xl font-bold text-main_dark mb-1">Material Requests</h1>
-          <p className="text-gray-500">Manage and respond to material requests from managers</p>
+          <h1 className="text-2xl font-bold text-main_dark mb-1">
+            Material Requests
+          </h1>
+          <p className="text-gray-600 text-base">
+            Manage and respond to material requests from managers
+          </p>
         </div>
+        </div>
+        
 
         {/* Filters */}
-        <div className="bg-purewhite border border-gray-200 rounded-lg p-6 mb-6 shadow-sm">
+        <div className="bg-purewhite border border-gray-200 rounded-lg p-6 mb-6">
           <div className="grid grid-cols-1 md:grid-cols-4 gap-4">
             {/* Search */}
             <div className="relative">
-              <label className="block text-sm font-medium text-main_dark mb-2">Search</label>
+              <label className="block text-sm font-medium text-main_dark mb-2">
+                Search
+              </label>
               <div className="relative">
                 <FaSearch className="absolute left-3 top-1/2 transform -translate-y-1/2 text-gray-400" />
                 <input
@@ -140,19 +163,21 @@ const MaterialRequests = () => {
                   placeholder="Search requests..."
                   value={searchTerm}
                   onChange={(e) => setSearchTerm(e.target.value)}
-                  className="w-full pl-10 pr-4 py-2 border border-light_gray rounded-lg focus:outline-none focus:ring-2 focus:ring-web_yellow"
+                  className="w-full text-sm pl-10 pr-4 py-2 border border-light_gray rounded-lg focus:outline-none focus:ring-2 focus:ring-web_yellow"
                 />
               </div>
             </div>
 
             {/* Status Filter */}
             <div>
-              <label className="block text-sm font-medium text-main_dark mb-2">Status</label>
+              <label className="block text-sm font-medium text-main_dark mb-2">
+                Status
+              </label>
               <div className="relative">
                 <select
                   value={statusFilter}
                   onChange={(e) => setStatusFilter(e.target.value)}
-                  className="w-full px-4 py-2 border border-light_gray rounded-lg focus:outline-none focus:ring-2 focus:ring-web_yellow appearance-none bg-white"
+                  className="w-full text-sm px-4 py-2 border border-light_gray rounded-lg focus:outline-none focus:ring-2 focus:ring-web_yellow appearance-none bg-white"
                 >
                   <option>All Status</option>
                   <option>Pending</option>
@@ -166,12 +191,14 @@ const MaterialRequests = () => {
 
             {/* Priority Filter */}
             <div>
-              <label className="block text-sm font-medium text-main_dark mb-2">Priority</label>
+              <label className="block text-sm font-medium text-main_dark mb-2">
+                Priority
+              </label>
               <div className="relative">
                 <select
                   value={priorityFilter}
                   onChange={(e) => setPriorityFilter(e.target.value)}
-                  className="w-full px-4 py-2 border border-light_gray rounded-lg focus:outline-none focus:ring-2 focus:ring-web_yellow appearance-none bg-white"
+                  className="w-full text-sm px-4 py-2 border border-light_gray rounded-lg focus:outline-none focus:ring-2 focus:ring-web_yellow appearance-none bg-white"
                 >
                   <option>All Priorities</option>
                   <option>High</option>
@@ -184,12 +211,14 @@ const MaterialRequests = () => {
 
             {/* Date Range */}
             <div>
-              <label className="block text-sm font-medium text-main_dark mb-2">Date Range</label>
+              <label className="block text-sm font-medium text-main_dark mb-2">
+                Date Range
+              </label>
               <div className="relative">
                 <input
                   type="date"
                   placeholder="mm/dd/yyyy"
-                  className="w-full px-4 py-2 border border-light_gray rounded-lg focus:outline-none focus:ring-2 focus:ring-web_yellow"
+                  className="w-full text-sm px-4 py-2 border border-light_gray rounded-lg focus:outline-none focus:ring-2 focus:ring-web_yellow"
                   value={dateRange}
                   onChange={(e) => setDateRange(e.target.value)}
                 />
@@ -203,15 +232,39 @@ const MaterialRequests = () => {
           <div className="overflow-x-auto">
             <table className="w-full">
               <thead>
-                <tr className="bg-web_yellow">
-                  <th className="px-6 py-4 text-left text-sm font-semibold text-main_dark">Request ID</th>
-                  <th className="px-6 py-4 text-left text-sm font-semibold text-main_dark">Requester</th>
-                  <th className="px-6 py-4 text-left text-sm font-semibold text-main_dark">Type</th>
-                  <th className="px-6 py-4 text-left text-sm font-semibold text-main_dark">Materials</th>
-                  <th className="px-6 py-4 text-left text-sm font-semibold text-main_dark">Quotation Deadline</th>
-                  <th className="px-6 py-4 text-left text-sm font-semibold text-main_dark">Status</th>
-                  <th className="px-6 py-4 text-left text-sm font-semibold text-main_dark">Priority</th>
-                  <th className="px-6 py-4 text-left text-sm font-semibold text-main_dark">Actions</th>
+                <tr className="bg-light_brown/30">
+                  <th className="px-6 py-4 text-left text-sm font-semibold text-main_dark">
+                    Request ID
+                  </th>
+                  <th className="px-6 py-4 text-left text-sm font-semibold text-main_dark">
+                    <span className="flex items-center gap-2">
+                      <FaUser className="inline mb-0.5" /> Requester
+                    </span>
+                  </th>
+                  <th className="px-6 py-4 text-left text-sm font-semibold text-main_dark">
+                    <span className="flex items-center gap-2">
+                      <FaFileAlt className="inline mb-0.5" /> Type
+                    </span>
+                  </th>
+                  <th className="px-6 py-4 text-left text-sm font-semibold text-main_dark">
+                    <span className="flex items-center gap-2">
+                      <FaBoxOpen className="inline mb-0.5" /> Materials
+                    </span>
+                  </th>
+                  <th className="px-6 py-4 text-left text-sm font-semibold text-main_dark">
+                    <span className="flex items-center gap-2">
+                      <FaClock className="inline mb-0.5" /> Quotation Deadline
+                    </span>
+                  </th>
+                  <th className="px-6 py-4 text-left text-sm font-semibold text-main_dark">
+                    Status
+                  </th>
+                  <th className="px-6 py-4 text-left text-sm font-semibold text-main_dark">
+                    Priority
+                  </th>
+                  <th className="px-6 py-4 text-left text-sm font-semibold text-main_dark">
+                    Actions
+                  </th>
                 </tr>
               </thead>
               <tbody className="divide-y divide-light_gray">
@@ -220,10 +273,16 @@ const MaterialRequests = () => {
                     <td className="px-6 py-4 text-sm font-medium text-main_dark">
                       {request.id ? `#${request.id}` : "-"}
                     </td>
-                    <td className="px-6 py-4 text-main_dark">{request.requesterName || "-"}</td>
-                    <td className="px-6 py-4 text-main_dark">{request.quotationType || "-"}</td>
-                    <td className="px-6 py-4 text-main_dark">{getMaterialNames(request.quotationReqMaterials)}</td>
                     <td className="px-6 py-4 text-sm text-main_dark">
+                      {request.requesterName || "-"}
+                    </td>
+                    <td className="px-6 py-4 text-sm text-main_dark">
+                      {request.quotationType || "-"}
+                    </td>
+                    <td className="px-6 py-4 text-sm text-main_dark">
+                      {getMaterialNames(request.quotationReqMaterials)}
+                    </td>
+                    <td className="px-6 py-4 text-sm text-main_dark font-semibold">
                       {formatDate(request.quotationDeadline)}
                     </td>
                     <td className="px-6 py-4">
@@ -253,7 +312,10 @@ const MaterialRequests = () => {
                 ))}
                 {paginatedRequests.length === 0 && (
                   <tr>
-                    <td colSpan={8} className="px-6 py-4 text-center text-gray-400">
+                    <td
+                      colSpan={8}
+                      className="px-6 py-4 text-center text-gray-400"
+                    >
                       No requests found.
                     </td>
                   </tr>
@@ -264,7 +326,9 @@ const MaterialRequests = () => {
           {/* Pagination */}
           <div className="flex justify-between items-center px-6 py-4 border-t border-light_gray bg-purewhite">
             <div className="text-sm text-slatebluegray">
-              Showing {startIndex + 1} to {Math.min(startIndex + itemsPerPage, filteredRequests.length)} of {filteredRequests.length} results
+              Showing {startIndex + 1} to{" "}
+              {Math.min(startIndex + itemsPerPage, filteredRequests.length)} of{" "}
+              {filteredRequests.length} results
             </div>
             <div className="flex items-center gap-2">
               <button
@@ -274,10 +338,18 @@ const MaterialRequests = () => {
               >
                 Previous
               </button>
-              {[...Array(Math.ceil(filteredRequests.length / itemsPerPage)).keys()].map((page) => (
+              {[
+                ...Array(
+                  Math.ceil(filteredRequests.length / itemsPerPage)
+                ).keys(),
+              ].map((page) => (
                 <button
                   key={page}
-                  className={`px-3 py-1 text-sm ${currentPage === page + 1 ? "bg-web_yellow text-main_dark font-medium" : "text-slatebluegray hover:bg-gray-100 rounded"}`}
+                  className={`px-3 py-1 text-sm ${
+                    currentPage === page + 1
+                      ? "bg-web_yellow text-main_dark font-medium"
+                      : "text-slatebluegray hover:bg-gray-100 rounded"
+                  }`}
                   onClick={() => setCurrentPage(page + 1)}
                 >
                   {page + 1}
@@ -285,8 +357,18 @@ const MaterialRequests = () => {
               ))}
               <button
                 className="px-3 py-1 text-sm text-slatebluegray hover:bg-gray-100 rounded"
-                disabled={currentPage === Math.ceil(filteredRequests.length / itemsPerPage)}
-                onClick={() => setCurrentPage((p) => Math.min(Math.ceil(filteredRequests.length / itemsPerPage), p + 1))}
+                disabled={
+                  currentPage ===
+                  Math.ceil(filteredRequests.length / itemsPerPage)
+                }
+                onClick={() =>
+                  setCurrentPage((p) =>
+                    Math.min(
+                      Math.ceil(filteredRequests.length / itemsPerPage),
+                      p + 1
+                    )
+                  )
+                }
               >
                 Next
               </button>

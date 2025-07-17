@@ -96,7 +96,7 @@ const QuotationDetails = () => {
               {deliveryInfos.map((d, idx) => (
                 <div key={idx} className="border border-light_gray p-4 rounded-lg bg-white">
                   <div><strong>Location:</strong> {d.location}</div>
-                  <div><strong>Date:</strong> {d.deliveryDate}</div>
+                  <div><strong>Delivery Date:</strong> {d.deliveryDate}</div>
                   <div><strong>Shipping Cost:</strong> ${d.shippingCost?.toFixed(2)}</div>
                 </div>
               ))}
