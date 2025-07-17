@@ -12,6 +12,8 @@ import {
   X,
 } from "lucide-react";
 import { useNavigate } from "react-router-dom";
+import NavBar from "../../components/NavBar";
+import TeamSection from "../../components/MaintenanceHead/TeamSection";
 
 // Modal component for equipment details
 function EquipmentDetailsModal({ open, onClose, equipment }) {
@@ -86,6 +88,8 @@ export default function UpcomingEquipmentMaintenance() {
   const [selectedEquipment, setSelectedEquipment] = useState(null);
   const [error, setError] = useState("");
   const navigate = useNavigate();
+  const [isLoggedIn, setIsLoggedIn] = useState(false);
+  const [showTeam, setShowTeam] = useState(false);
 
   // Fetch data
   useEffect(() => {
@@ -127,7 +131,45 @@ export default function UpcomingEquipmentMaintenance() {
     navigate(`/maintenance/technician-assignment/${id}`);
   };
 
+  // Check login state on mount
+        useEffect(() => {
+          const user = localStorage.getItem("user");
+          setIsLoggedIn(!!user);
+        }, []);
+      
+        // Logout handler
+        const handleLogout = () => {
+          localStorage.removeItem("user");
+          localStorage.removeItem("role");
+          setIsLoggedIn(false);
+          navigate("/login");
+        };
+  
+        const handleLogin = () => {
+      navigate("/login");
+      };
+
   return (
+    <>
+    <NavBar
+      links={[
+          { name: "Dashboard", href: "#", onClick: () => navigate("/maintenance/dashboard") },
+          { name: "Task", href: "#",onClick: () => navigate("/maintenance/scheduling") },
+          { name: "Team", href: "#",
+            onClick: () => {
+              // e.preventDefault();
+              console.log("Team link clicked");
+              
+              setShowTeam(true);
+            },
+           },
+          { name: "Equipment", href: "#" ,onClick: () => navigate("/maintenance/log")},
+          { name: "Add Technician", href: "#",onClick: () => navigate("/maintenance/add-member") },
+        ]}
+        showButton={true}
+        buttonLabel={isLoggedIn ? "Logout" : "Get Started"}
+        onButtonClick={isLoggedIn ? handleLogout : handleLogin}
+    />
     <div className="min-h-screen bg-[#F8FAFC] p-6">
       <div className="max-w-7xl mx-auto">
         {/* Header */}
@@ -368,5 +410,20 @@ export default function UpcomingEquipmentMaintenance() {
         equipment={selectedEquipment}
       />
     </div>
+
+    {/* Overlay and Team Sidebar */}
+          {showTeam && (
+            <>
+              {/* BLUR OVERLAY */}
+              <div
+                className="fixed inset-0 z-40 bg-black bg-opacity-30 backdrop-blur-sm transition-all"
+                onClick={() => setShowTeam(false)}
+                aria-label="Close team sidebar"
+              />
+              {/* TEAM SIDEBAR */}
+              <TeamSection onClose={() => setShowTeam(false)} />
+            </>
+          )}
+    </>
   );
 }
