@@ -69,6 +69,12 @@ import MaintenanceRequestPage from "./pages/InventoryManager/MaintenanceRequestP
 
 
 
+import Admin_Dashbaord from "./pages/Admin/Admin-Dashboard";
+import Admin_Inventory from "./pages/Admin/Admin-Inventory";
+import ConstructionDashboard from "./components/Admin/admin-dashboard";
+import UserDashboard from "./components/Admin/admin-users";
+import Admin_Users from "./pages/Admin/Admin-User";
+
 export const routes = createBrowserRouter([
   {
     path: "/",
@@ -200,7 +206,19 @@ export const routes = createBrowserRouter([
   },
   {
     path: "/site-manager-profile",
-    element: <SiteManager_Profile />,
+    element: <SiteManager_Profile />
+  },
+  {
+    path: "/admin",
+    element:<ConstructionDashboard/>
+  },
+  {
+    path: "/admin-inventory",
+    element:<Admin_Inventory/>
+  },
+  {
+    path: "/admin-users",
+    element:<Admin_Users/>
   },
   {
     path: "/verify-email",
@@ -210,6 +228,7 @@ export const routes = createBrowserRouter([
   path: "/add-equipment",
   element: <AddEquipment />,
 },
+
 {
   path: "/add-material",
   element: <AddMaterial />,
@@ -231,3 +250,4 @@ export const routes = createBrowserRouter([
 
 
 ]);
+

@@ -3,33 +3,47 @@ import { ChevronDown, Calendar, Send, Clock, Phone, CheckCircle } from 'lucide-r
 import { useLocation, useNavigate } from 'react-router-dom';
 import axios from 'axios';
 
-export default function Material_Request_Form() {
+export default function Material_Request_Form({ project: propProject, phase: propPhase, materials: propMaterials }) {
   const location = useLocation();
   const navigate = useNavigate();
   const [formData, setFormData] = useState({
-    project: '',
-    phase: '',
+    project: propProject || '',
+    phase: propPhase || '',
     requestDate: '2025-06-20',
     notes: '',
     priority: 'Medium'
   });
-  const [materials, setMaterials] = useState([]);
+  const [materials, setMaterials] = useState(propMaterials || []);
   const [materialQuantities, setMaterialQuantities] = useState({});
 
-  // Auto-fill project and phase if passed via router state
+  // Auto-fill project and phase if passed via router state or props
   useEffect(() => {
-    if (location.state) {
+    if (location.state || propProject || propPhase) {
       setFormData(prev => ({
         ...prev,
-        project: location.state.project || prev.project,
-        phase: location.state.phase || prev.phase
+        project: (location.state && location.state.project) || propProject || prev.project,
+        phase: (location.state && location.state.phase) || propPhase || prev.phase
       }));
     }
-  }, [location.state]);
+  }, [location.state, propProject, propPhase]);
 
-  // Fetch materials for the selected phase
+  // If materials are passed as props, use them and set quantities
   useEffect(() => {
-    if (formData.phase) {
+    if (propMaterials && propMaterials.length > 0) {
+      setMaterials(propMaterials);
+      const quantities = {};
+      propMaterials.forEach(material => {
+        if (material.quantity) {
+          quantities[material.materialId] = material.quantity.toString();
+        }
+      });
+      setMaterialQuantities(quantities);
+    }
+  }, [propMaterials]);
+
+  // If no propMaterials, fallback to fetching or mock data
+  useEffect(() => {
+    if ((!propMaterials || propMaterials.length === 0) && formData.phase) {
       // Temporarily use mock data while debugging backend issue
       const mockMaterials = [
         { materialId: 1, materialName: 'Portland Cement', unitOfMeasurement: 'Bags', quantity: 200 },
@@ -38,8 +52,6 @@ export default function Material_Request_Form() {
         { materialId: 4, materialName: 'Sand', unitOfMeasurement: 'Cubic Yards', quantity: 10 }
       ];
       setMaterials(mockMaterials);
-      
-      // Auto-fill mock quantities
       const quantities = {};
       mockMaterials.forEach(material => {
         if (material.quantity) {
@@ -47,14 +59,12 @@ export default function Material_Request_Form() {
         }
       });
       setMaterialQuantities(quantities);
-
       // TODO: Uncomment this when backend issue is fixed
       /*
       const fetchMaterials = async () => {
         try {
           const response = await axios.get(`http://localhost:5454/api/projects/${formData.project}/phases/${formData.phase}/materials`);
           setMaterials(response.data);
-          
           // Auto-fill quantities from phase materials
           const quantities = {};
           response.data.forEach(material => {
@@ -70,7 +80,8 @@ export default function Material_Request_Form() {
       fetchMaterials();
       */
     }
-  }, [formData.phase, formData.project]);
+  }, [formData.phase, formData.project, propMaterials]);
+console.log('Form Data:', formData);
 
   const handleInputChange = (field, value) => {
     setFormData(prev => ({ ...prev, [field]: value }));
@@ -100,21 +111,33 @@ export default function Material_Request_Form() {
     const selectedMaterials = materials
       .filter(material => materialQuantities[material.materialId] && materialQuantities[material.materialId] > 0)
       .map(material => ({
-        materialId: material.materialId,
+        materialId: Number(
+          typeof material.materialId === "string"
+            ? material.materialId.replace(/[^0-9]/g, "")
+            : material.materialId
+        ),
         materialName: material.materialName,
-        quantity: materialQuantities[material.materialId],
+        quantity: Number(materialQuantities[material.materialId]),
         unitOfMeasurement: material.unitOfMeasurement
       }));
+    // NOTE: Ensure formData.project matches the exact project name in the backend (no typos)
 
     if (selectedMaterials.length === 0) {
       alert('Please select at least one material with quantity.');
       return;
     }
 
+    // Prepare payload matching backend DTO
     const requestData = {
-      ...formData,
+      project: formData.project,
+      phase: formData.phase,
+      requestDate: formData.requestDate,
+      notes: formData.notes,
+      priority: formData.priority,
       materials: selectedMaterials
     };
+
+    console.log('Submitting material request:', requestData);
 
     try {
       await axios.post('http://localhost:5454/api/material-requests/create', requestData);
