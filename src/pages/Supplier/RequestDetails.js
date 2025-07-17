@@ -33,6 +33,7 @@ const RequestDetails = () => {
       .then((data) => {
         if (data && data.data) {
           setRequest(data.data);
+          console.log("Fetched request details:", data.data);
         } else {
           setError("No data found for this request.");
         }
@@ -144,6 +145,8 @@ const RequestDetails = () => {
                     <div>
                       <div className="font-medium">{mat.material?.materialName}</div>
                       <div className="text-xs text-slatebluegray">Type : {mat.material?.materialType}</div>
+                      <div className="font-medium mt-3">Estimated Unit Price : {mat.unitPrice}</div>
+
                     </div>
                     <div className="font-semibold">
                       {mat.quantity} {mat.material?.unitOfMeasurement}

@@ -1,8 +1,9 @@
 // src/pages/Supplier/SubmitQuotation.jsx
 import React, { useState, useEffect } from "react";
-import { useParams } from "react-router-dom";
+import { useNavigate,useParams } from "react-router-dom";
 import NavBar from "../../components/NavBar";
 import { FaPaperclip, FaTrash } from "react-icons/fa";
+import { toast } from "react-toastify";
 
 const navLinks = [
   { name: "Dashboard", href: "/dashboard1" },
@@ -14,6 +15,7 @@ const navLinks = [
 
 const SubmitQuotation = () => {
   const { id } = useParams(); // request ID from URL
+  const navigate = useNavigate();
   const [requestSummary, setRequestSummary] = useState(null);
   const [itemsRequested, setItemsRequested] = useState([]);
 
@@ -22,7 +24,7 @@ const SubmitQuotation = () => {
   ]);
   const [advancedPayment, setAdvancedPayment] = useState("");
   const [deliveries, setDeliveries] = useState([
-    { requiredDate: "", deliveryLocation: "", shippingCost: "" },
+    { requiredDate: "", deliveryLocation: "", shippingCost: "", deliveryDate: ""},
   ]);
   const [paymentTerms, setPaymentTerms] = useState("");
   const [notes, setNotes] = useState("");
@@ -52,17 +54,37 @@ const SubmitQuotation = () => {
               item: item.id,
               quantity: "",
               unitPrice: "",
+              estimatedUnitPrice: data.data.quotationReqMaterials?.find(m => m.material.materialId === item.id)?.unitPrice || "",
             }))
           );
+          const reqDate = data.data.deliveryDate || ""; // Use actual field from your data
+          console.log(data.data.quotationReqDelivery);
+          setDeliveries(
+            data.data.quotationReqDelivery.map((delivery)=>({
+              requiredDate: "",
+              deliveryLocation: delivery.location,
+              shippingCost: "",
+              deliveryDate: delivery.deliveryDate,
+            }))
+          )
+          
+          // setDeliveries([
+          //   {
+          //     requiredDate: "",
+          //     deliveryLocation: "",
+          //     shippingCost: "",
+          //     deliveryDate: reqDate,
+          //   },
+          // ]);
         }
       })
       .catch((err) => {
-        setErrorMsg("Failed to load request summary.");
+        toast.error("Failed to load request summary.");
         console.error(err);
       });
   }, [id]);
-  console.log(requestSummary);
-  console.log(itemsRequested);
+  // console.log(requestSummary);
+  // console.log(itemsRequested);
 
   const handlePricingChange = (idx, e) => {
     const { name, value } = e.target;
@@ -84,7 +106,7 @@ const SubmitQuotation = () => {
   const handleAddLocation = () =>
     setDeliveries([
       ...deliveries,
-      { requiredDate: "", deliveryLocation: "", shippingCost: "" },
+      { requiredDate: "", deliveryLocation: "", shippingCost: "",deliveryDate: deliveries[0]?.deliveryDate || "" },
     ]);
   const handleDeleteLocation = (idx) =>
     setDeliveries(deliveries.filter((_, i) => i !== idx));
@@ -121,7 +143,7 @@ const SubmitQuotation = () => {
           isNaN(p.unitPrice)
       )
     ) {
-      setErrorMsg("Please fill all pricing fields correctly.");
+      toast.error("Please fill all pricing fields correctly.");
       return;
     }
 
@@ -134,12 +156,12 @@ const SubmitQuotation = () => {
           isNaN(d.shippingCost)
       )
     ) {
-      setErrorMsg("Please fill all delivery fields correctly.");
+      toast.error("Please fill all delivery fields correctly.");
       return;
     }
 
     if (!paymentTerms) {
-      setErrorMsg("Please select payment terms.");
+      toast.error("Please select payment terms.");
       return;
     }
 
@@ -168,7 +190,7 @@ const SubmitQuotation = () => {
         fileUrl: "", // if needed
       })),
     };
-    console.log("Submitting payload:", payload);
+    // console.log("Submitting payload:", payload);
 
     try {
       const res = await fetch("http://localhost:8080/api/quotations/create", {
@@ -183,22 +205,25 @@ const SubmitQuotation = () => {
       }
       const data = await res.json();
       console.log("Submission response:", data);
-      setSuccessMsg("Quotation submitted successfully!");
+      toast.success("Quotation submitted successfully!");
+      navigate("/quotations");
       setPricing([{ item: "", quantity: "", unitPrice: "" }]);
       setAdvancedPayment("");
       setDeliveries([
-        { requiredDate: "", deliveryLocation: "", shippingCost: "" },
+        { requiredDate: "", deliveryLocation: "", shippingCost: "",deliveryDate: deliveries[0]?.deliveryDate || "" },
       ]);
       setPaymentTerms("");
       setNotes("");
       setAttachments([]);
     } catch (err) {
-      setErrorMsg("Submission failed: " + err.message);
+      toast.error("Submission failed: " + err.message);
     } finally {
       setLoading(false);
     }
   };
 
+  // console.log(deliveries);
+  
   return (
     <div className="bg-[#f6f7f9] min-h-screen font-poppins">
       <NavBar links={navLinks} logoSrc="/logo1.png" />
@@ -275,6 +300,7 @@ const SubmitQuotation = () => {
                     ))}
                   </tbody>
                 </table>
+                
               </div>
             </div>
           </div>
@@ -293,7 +319,7 @@ const SubmitQuotation = () => {
             </div>
             <div className="space-y-4">
               {pricing.map((row, idx) => (
-                <div key={idx} className="grid grid-cols-3 gap-4 items-end">
+                <div key={idx} className="grid grid-cols-4 gap-4 items-end">
                   <div>
                     <label className="block text-sm text-slatebluegray mb-1">
                       Item Requested
@@ -323,6 +349,23 @@ const SubmitQuotation = () => {
                       onChange={(e) => handlePricingChange(idx, e)}
                       className="w-full border border-light_gray rounded-lg px-3 py-2 text-main_dark focus:outline-none"
                       min="0"
+                    />
+                  </div>
+                  <div className="relative">
+                    <label className="block text-sm text-slatebluegray mb-1">
+                      Standard Unit Price
+                    </label>
+                    <span className="absolute left-3 top-9 text-slatebluegray">
+                      $
+                    </span>
+                    <input
+                      type="number"
+                      name="unitPrice"
+                      value={row.estimatedUnitPrice || ""}
+                      readOnly
+                      disabled
+                      className="w-full border border-light_gray rounded-lg pl-7 pr-3 py-2 text-main_dark focus:outline-none"
+                      
                     />
                   </div>
                   <div className="relative">
@@ -405,7 +448,12 @@ const SubmitQuotation = () => {
                 + Add Location
               </button>
             </div>
-            <div className="grid grid-cols-3 gap-x-6 gap-y-4">
+            <div className="grid grid-cols-4 gap-x-6 gap-y-4">
+              <div>
+                <label className="block text-sm text-slatebluegray mb-1">
+                  Required Date
+                </label>
+              </div>
               <div>
                 <label className="block text-sm text-slatebluegray mb-1">
                   Delivery Date
@@ -423,6 +471,17 @@ const SubmitQuotation = () => {
               </div>
               {deliveries.map((row, idx) => (
                 <React.Fragment key={idx}>
+                  <div className="flex items-center">
+                    <input
+                      type="date"
+                      name="deliveryDate"
+                      value={row.deliveryDate}
+                      readOnly
+                      disabled
+                      onChange={(e) => handleDeliveryChange(idx, e)}
+                      className="w-full border border-light_gray rounded-md px-3 py-2 text-main_dark text-sm focus:outline-none"
+                    />
+                  </div>
                   <div className="flex items-center">
                     <input
                       type="date"
