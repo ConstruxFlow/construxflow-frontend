@@ -57,7 +57,27 @@ import { MaintenanceRoute } from "./pages/MaintenanceHead/MaintenanceRoute";
 import VerificationEmailPage from "./components/EmailVerify";
 import BOQPDFReader from "./pages/BOQPDFReader";
 import AddEquipment from "./pages/InventoryManager/AddEquipment";
+import AddMaterial from "./pages/InventoryManager/AddMaterial";
+import InventoryControl from "./pages/InventoryManager/InventoryControl";
+import MaintenanceRequestsOverview from "./pages/InventoryManager/MaintenanceRequestsOverview";
+import MaintenanceRequestPage from "./pages/InventoryManager/MaintenanceRequestPage";
 
+
+
+
+
+
+
+
+import Admin_Dashbaord from "./pages/Admin/Admin-Dashboard";
+import Admin_Inventory from "./pages/Admin/Admin-Inventory";
+import ConstructionDashboard from "./components/Admin/admin-dashboard";
+import UserDashboard from "./components/Admin/admin-users";
+import Admin_Users from "./pages/Admin/Admin-User";
+import Admin_Analysis from "./pages/Admin/Admin-Analysis";
+import ContactSupport from "./pages/Supplier/ContactSupport";
+import QuotationDetail from "./pages/PurchasingManager/Quotations/QuotationDetails";
+import QuotationDetails from "./pages/Supplier/QuotationDetails";
 
 export const routes = createBrowserRouter([
   {
@@ -99,8 +119,9 @@ export const routes = createBrowserRouter([
     path: "/requests/:id",
     element: <RequestDetails />,
   },
-  { path: "/quotations/submit", element: <SubmitQuotation /> },
+  { path: "/quotations/submit/:id", element: <SubmitQuotation /> },
   { path: "/quotations", element: <QuotationStatus /> },
+  { path: "/quotations/:id", element: <QuotationDetails /> },
   { path: "/payments/receive-advanced", element: <ReceiveAdvancedPayment /> },
   { path: "/payments/receive-full", element: <ReceiveFullPayment /> },
 
@@ -115,6 +136,7 @@ export const routes = createBrowserRouter([
   { path: "/payments", element: <PaymentStatus /> },
   { path: "/supplierprofile", element: <SupplierProfile /> },
   { path: "/supplierprofile/edit", element: <SupplierProfileEdit /> },
+  { path:"/contact-support", element: <ContactSupport /> },
 
   {
     path: "/login",
@@ -190,7 +212,23 @@ export const routes = createBrowserRouter([
   },
   {
     path: "/site-manager-profile",
-    element: <SiteManager_Profile />,
+    element: <SiteManager_Profile />
+  },
+  {
+    path: "/admin",
+    element:<ConstructionDashboard/>
+  },
+  {
+    path: "/admin-inventory",
+    element:<Admin_Inventory/>
+  },
+  {
+    path: "/admin-users",
+    element:<Admin_Users/>
+  },
+  {
+    path: "/admin-analysis",
+    element:<Admin_Analysis/>
   },
   {
     path: "/verify-email",
@@ -200,4 +238,26 @@ export const routes = createBrowserRouter([
   path: "/add-equipment",
   element: <AddEquipment />,
 },
+
+{
+  path: "/add-material",
+  element: <AddMaterial />,
+},
+{
+  path: "/inventory-control",
+  element: <InventoryControl />,
+},
+
+{
+  path: "/maintenance-requests-overview",
+  element: <MaintenanceRequestsOverview />,
+},
+{
+  path: "/maintenance-request-page",
+  element: <MaintenanceRequestPage />,
+},
+
+
+
 ]);
+

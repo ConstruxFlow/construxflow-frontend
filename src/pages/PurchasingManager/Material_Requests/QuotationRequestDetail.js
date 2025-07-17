@@ -42,6 +42,7 @@ const QuotationRequestDetail = () => {
         `http://localhost:8080/api/quotationrequest/find/${id}`
       );
       const data = await response.json();
+      // console.log(data);
 
       if (data.status === "success") {
         setRequestData(data.data);
@@ -95,6 +96,14 @@ const QuotationRequestDetail = () => {
     });
   };
 
+  const isWithinOneHour = () => {
+    const createdAt = new Date(requestData.createdDate);
+    const now = new Date();
+    const oneHourInMs = 60 * 60 * 1000; // 1 hour in milliseconds
+
+    return now - createdAt <= oneHourInMs;
+  };
+
   const handleStatusUpdate = async (newStatus) => {
     // try {
     //   const response = await fetch(`http://localhost:8080/api/quotationrequest/${id}/status`, {
@@ -135,7 +144,7 @@ const QuotationRequestDetail = () => {
           { name: 'Material Requests', path: '/purchasing/materialrequests/overview' },
           { name: 'Suppliers', path: '/purchasing/supplier/dashboard' },
           { name: 'Quotation Requests', path: '/purchasing/quotationrequest/overview' },
-          { name: 'Orders', path: '/orders' },
+          { name: 'Purchasing Orders', path: '/purchasing/orders/overview' },
           ]}
         />
         <div className="flex items-center justify-center min-h-screen">
@@ -157,11 +166,17 @@ const QuotationRequestDetail = () => {
     <div className="min-h-screen bg-purewhite font-poppins">
       <NavBar
         links={[
-          { name: 'Dashboard', path: '/purchasing/dashboard' },
-          { name: 'Material Requests', path: '/purchasing/materialrequests/overview' },
-          { name: 'Suppliers', path: '/purchasing/supplier/dashboard' },
-          { name: 'Quotation Requests', path: '/purchasing/quotationrequest/overview' },
-          { name: 'Orders', path: '/orders' },
+          { name: "Dashboard", path: "/purchasing/dashboard" },
+          {
+            name: "Material Requests",
+            path: "/purchasing/materialrequests/overview",
+          },
+          { name: "Suppliers", path: "/purchasing/supplier/dashboard" },
+          {
+            name: "Quotation Requests",
+            path: "/purchasing/quotationrequest/overview",
+          },
+          { name: "Orders", path: "/orders" },
         ]}
       />
 
@@ -211,7 +226,7 @@ const QuotationRequestDetail = () => {
             {/* Action Buttons */}
             <div className="flex flex-col sm:flex-row gap-2 sm:gap-3 w-full sm:w-auto">
               <button
-                onClick={() => navigate('/purchasing/quotations/dashboard')}
+                onClick={() => navigate("/purchasing/quotations/dashboard")}
                 className="px-4 py-2 bg-deep_green text-purewhite rounded-md hover:bg-deep_green/90 transition-colors flex items-center justify-center gap-2 text-sm"
               >
                 <RiNewspaperLine className="w-4 h-4" />
@@ -235,17 +250,26 @@ const QuotationRequestDetail = () => {
                   </button>
                   </>
                   )} */}
-              <button onClick={() => navigate(`/purchasing/quotationrequest/edit/${requestData.id}`)} className="px-4 py-2 border border-gray-300 text-gray-700 rounded-md hover:bg-gray-50 transition-colors flex items-center justify-center gap-2 text-sm">
-                <FaEdit className="w-4 h-4" />
-                Edit
+              {isWithinOneHour() && (
+                <button
+                  onClick={() =>
+                    navigate(
+                      `/purchasing/quotationrequest/edit/${requestData.id}`
+                    )
+                  }
+                  className="px-4 py-2 border border-gray-300 text-gray-700 rounded-md hover:bg-gray-50 transition-colors flex items-center justify-center gap-2 text-sm"
+                >
+                  <FaEdit className="w-4 h-4" />
+                  Edit
+                </button>
+              )}
+              <button
+                onClick={() => handleStatusUpdate("Rejected")}
+                className="px-4 py-2 bg-red-500 text-purewhite rounded-md hover:bg-red-600 transition-colors flex items-center justify-center gap-2 text-sm"
+              >
+                <MdDelete className="w-4 h-4" />
+                Delete Request
               </button>
-                  <button
-                    onClick={() => handleStatusUpdate("Rejected")}
-                    className="px-4 py-2 bg-red-500 text-purewhite rounded-md hover:bg-red-600 transition-colors flex items-center justify-center gap-2 text-sm"
-                  >
-                    <MdDelete className="w-4 h-4" />
-                    Delete Request
-                  </button>
 
               {/* <button className="px-4 py-2 border border-gray-300 text-gray-700 rounded-md hover:bg-gray-50 transition-colors flex items-center justify-center gap-2 text-sm">
                 <FaDownload className="w-4 h-4" />
@@ -579,7 +603,9 @@ const QuotationRequestDetail = () => {
                                   Quantity Split
                                 </label>
                                 <p className="font-semibold text-main_dark">
-                                  {delivery.quantitySplit}
+                                  {delivery.quantitySplit == null
+                                    ? "Not specified"
+                                    : delivery.quantitySplit}
                                 </p>
                               </div>
                             </div>
