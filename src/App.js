@@ -61,6 +61,7 @@ import AddMaterial from "./pages/InventoryManager/AddMaterial";
 import InventoryControl from "./pages/InventoryManager/InventoryControl";
 import MaintenanceRequestsOverview from "./pages/InventoryManager/MaintenanceRequestsOverview";
 import MaintenanceRequestPage from "./pages/InventoryManager/MaintenanceRequestPage";
+import { siteManagerRoutes } from "./pages/SiteManager/Routes";
 
 
 
@@ -146,6 +147,9 @@ export const routes = createBrowserRouter([
   // PURCHASING MANAGER
   purchasingManagerRoutes,
 
+  // SITE MANAGER
+  siteManagerRoutes,
+
   // MAINTENANCE HEAD
   MaintenanceRoute,
 {
@@ -177,14 +181,6 @@ export const routes = createBrowserRouter([
   {
     path: "/projects-list/create-project/project-phase",
     element: <Project_Phase />,
-  },
-  {
-    path: "/material-request-list/material-request",
-    element: <Create_Material_Request />,
-  },
-  {
-    path: "/material-request-list",
-    element: <Material_Request />,
   },
   {
     path: "/site-equipment-info",
