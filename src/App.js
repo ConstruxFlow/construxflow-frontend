@@ -116,7 +116,7 @@ export const routes = createBrowserRouter([
     path: "/requests/:id",
     element: <RequestDetails />,
   },
-  { path: "/quotations/submit", element: <SubmitQuotation /> },
+  { path: "/quotations/submit/:id", element: <SubmitQuotation /> },
   { path: "/quotations", element: <QuotationStatus /> },
   { path: "/payments/receive-advanced", element: <ReceiveAdvancedPayment /> },
   { path: "/payments/receive-full", element: <ReceiveFullPayment /> },
