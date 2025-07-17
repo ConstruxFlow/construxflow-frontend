@@ -64,6 +64,7 @@ import Admin_Inventory from "./pages/Admin/Admin-Inventory";
 import ConstructionDashboard from "./components/Admin/admin-dashboard";
 import UserDashboard from "./components/Admin/admin-users";
 import Admin_Users from "./pages/Admin/Admin-User";
+import Admin_Analysis from "./pages/Admin/Admin-Analysis";
 
 export const routes = createBrowserRouter([
   {
@@ -209,6 +210,10 @@ export const routes = createBrowserRouter([
   {
     path: "/admin-users",
     element:<Admin_Users/>
+  },
+  {
+    path: "/admin-analysis",
+    element:<Admin_Analysis/>
   },
   {
     path: "/verify-email",
