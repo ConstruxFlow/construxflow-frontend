@@ -77,7 +77,7 @@ export const purchasingManagerRoutes = {
       element: <ReviewQuotations />,
     },
     {
-      path: 'quotations/details',
+      path: 'quotations/details/:id',
       element: <QuotationDetail />,
     },
     {
