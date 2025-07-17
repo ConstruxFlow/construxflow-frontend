@@ -33,11 +33,11 @@ export const purchasingManagerRoutes = {
       element: <MaterialRequestsOverview />,
     },
     {
-      path: 'materialrequests',
+      path: 'materialrequests/details/pwise/:id',
       element: <MaterialReqDetails />,
     },
     {
-      path: 'materialrequests/mwise',
+      path: 'materialrequests/details/mwise',
       element: <MaterialReqDetails_MWise />,
     },
     {

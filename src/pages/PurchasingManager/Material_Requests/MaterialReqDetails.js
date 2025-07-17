@@ -1,29 +1,190 @@
-import React, { useState } from "react";
+import React, { useEffect, useState } from "react";
 import { FaDownload, FaUser, FaPlus } from "react-icons/fa";
 import NavBar from "../../../components/NavBar";
 import { IoMdCheckmark } from "react-icons/io";
 import { IoMdClose } from "react-icons/io";
 import { RiInformationLine } from "react-icons/ri";
 import { BsBag } from "react-icons/bs";
-import { useNavigate } from "react-router-dom";
+import { useNavigate, useParams } from "react-router-dom";
+import { toast } from "react-toastify";
 
 const MaterialReqDetails = () => {
+  const { id } = useParams();
   const [internalNote, setInternalNote] = useState("");
+  const [isLoading, setIsLoading] = useState(true);
+  const [isLoadingStatus, setIsLoadingStatus] = useState(false);
+  const [requestData, setRequestData] = useState(null);
   const navigate = useNavigate();
+
+  useEffect(() => {
+    if (id) {
+      RequestDate();
+    }
+  }, [id]);
+
+  const RequestDate = async () => {
+    setIsLoading(true);
+    try {
+      const response = await fetch(
+        `http://localhost:8080/api/material-requests/find/${id}`
+      );
+      const data = await response.json();
+
+      if (response.ok) {
+        setRequestData(data);
+        console.log(data);
+      } else {
+        toast.error("Failed to fetch material request details");
+      }
+    } catch (error) {
+      toast.error("Network error: Failed to fetch material request");
+      console.error("Error fetching material request:", error);
+    } finally {
+      setIsLoading(false);
+    }
+  };
+
+  const getStatusColor = (status) => {
+    switch (status?.toLowerCase()) {
+      case "pending":
+        return "bg-yellow-100 text-yellow-800";
+      case "approved":
+        return "bg-green-100 text-green-800";
+      case "rejected":
+        return "bg-red-100 text-red-800";
+      case "in progress":
+        return "bg-blue-100 text-blue-800";
+      default:
+        return "bg-gray-100 text-gray-800";
+    }
+  };
+
+  const getPriorityColor = (priority) => {
+    switch (priority?.toLowerCase()) {
+      case "urgent":
+        return "bg-red-100 text-red-800";
+      case "high":
+        return "bg-orange-100 text-orange-800";
+      case "medium":
+        return "bg-yellow-100 text-yellow-800";
+      case "low":
+        return "bg-green-100 text-green-800";
+      default:
+        return "bg-gray-100 text-gray-800";
+    }
+  };
+
+  const formatDate = (dateString) => {
+    if (!dateString) return "N/A";
+    return new Date(dateString).toLocaleDateString("en-US", {
+      year: "numeric",
+      month: "long",
+      day: "numeric",
+    });
+  };
+  const handleApproveRequest = (status) => async () => {
+    if (requestData.status?.toLowerCase() !== "pending") {
+      toast.error("Only pending requests can be approved");
+      return;
+    }else{
+      handleApproveRequest1(status);
+    }
+  };
+
+  const handleApproveRequest1 = async (status) => {
+    if (requestData.status?.toLowerCase() !== "pending") {
+      toast.error("Only pending requests can be approved");
+      return;
+    }
+    setIsLoadingStatus(true);
+    try {
+      const response = await fetch(
+        `http://localhost:8080/api/material-requests/${id}/status?status=${status}`,
+        {
+          method: "PUT",
+          headers: {
+            "Content-Type": "application/json",
+          },
+        }
+      );
+
+      if (response.ok) {
+        const updatedRequest = await response.json();
+        setRequestData(updatedRequest);
+        setIsLoadingStatus(false);
+        toast.success(`Material request ${status} successfully`);
+        if(status=="APPROVED"){
+          navigate("/purchasing/materialrequests/create", { state: { id: updatedRequest.requestId } });
+        }else{
+          navigate('/purchasing/materialrequests/overview');
+        }
+      } else {
+          toast.error("Failed to approve material request");
+          setIsLoadingStatus(false);
+      }
+    } catch (error) {
+      toast.error("Network error: Failed to approve material request");
+      console.error("Error approving material request:", error);
+      setIsLoadingStatus(false);
+    } finally {
+      setIsLoadingStatus(false);
+    }
+  };
+
+  if (isLoading) {
+    return (
+      <div className="min-h-screen bg-purewhite font-poppins flex items-center justify-center">
+        <div className="text-center">
+          <div className="animate-spin rounded-full h-12 w-12 border-b-2 border-web_yellow mx-auto mb-4"></div>
+          <p className="text-gray-600">Loading material request details...</p>
+        </div>
+      </div>
+    );
+  }
+  if (isLoadingStatus) {
+    return (
+      <div className="min-h-screen bg-purewhite font-poppins flex items-center justify-center">
+        <div className="text-center">
+          <div className="animate-spin rounded-full h-12 w-12 border-b-2 border-web_yellow mx-auto mb-4"></div>
+          <p className="text-gray-600">Updating material request status...</p>
+        </div>
+      </div>
+    );
+  }
+
+  if (!requestData) {
+    return (
+      <div className="min-h-screen bg-purewhite font-poppins flex items-center justify-center">
+        <div className="text-center">
+          <p className="text-gray-600">No request data found</p>
+          <button
+            onClick={() => navigate("/purchasing/materialrequests/overview")}
+            className="mt-4 px-4 py-2 bg-web_yellow text-main_dark rounded-md hover:bg-web_yellow/90 transition-colors"
+          >
+            Back to Overview
+          </button>
+        </div>
+      </div>
+    );
+  }
 
   return (
     <div className="min-h-screen bg-purewhite font-poppins">
       {/* Header Navigation */}
       <NavBar
-        links={
-            [
-          { name: 'Dashboard', path: '/purchasing/dashboard' },
-          { name: 'Material Requests', path: '/purchasing/materialrequests/overview' },
-          { name: 'Suppliers', path: '/purchasing/supplier/dashboard' },
-          { name: 'Quotation Requests', path: '/purchasing/quotationrequest/overview' },
-          { name: 'Purchasing Orders', path: '/purchasing/orders/overview' },
-        ]
-        }
+        links={[
+          { name: "Dashboard", path: "/purchasing/dashboard" },
+          {
+            name: "Material Requests",
+            path: "/purchasing/materialrequests/overview",
+          },
+          { name: "Suppliers", path: "/purchasing/supplier/dashboard" },
+          {
+            name: "Quotation Requests",
+            path: "/purchasing/quotationrequest/overview",
+          },
+          { name: "Purchasing Orders", path: "/purchasing/orders/overview" },
+        ]}
       />
 
       {/* Main Content */}
@@ -31,26 +192,54 @@ const MaterialReqDetails = () => {
         <div className="max-w-full mx-auto px-2 sm:px-3 lg:px-10">
           {/* Breadcrumb */}
           <div className="flex items-center gap-2 text-sm text-gray-600 mb-4">
-            <a href="/purchasing/materialrequests/overview" className="hover:text-main_dark">
+            <a
+              href="/purchasing/materialrequests/overview"
+              className="hover:text-main_dark"
+            >
               Material Requests
             </a>
             <span>›</span>
-            <span className="text-main_dark font-medium">MR-2024-001</span>
+            <span className="text-main_dark font-medium">
+              MR-{requestData.requestId}
+            </span>
           </div>
 
           {/* Page Header */}
           <div className="flex flex-col lg:flex-row lg:items-center lg:justify-between mb-6">
             <div>
               <h1 className="text-2xl font-bold text-main_dark">
-                Material Request #MR-2024-001
+                Material Request #{requestData.requestId}
               </h1>
-              <span className="text-gray-600 text-xs">Created 2 hours ago</span>
+              <span className="text-gray-600 text-xs">
+                Created on {formatDate(requestData.requestDate)}
+              </span>
             </div>
             <div className="flex gap-3 mt-4 lg:mt-0">
               <div className="flex items-center gap-4">
-                <span className="px-3 py-1 bg-yellow-100 text-yellow-800 rounded-full text-sm font-medium flex items-center gap-2">
-                  <div className="w-2 h-2 bg-yellow-500 rounded-full"></div>
-                  Pending Approval
+                <span
+                  className={`px-3 py-1 rounded-full text-sm font-medium flex items-center gap-2 ${getStatusColor(
+                    requestData.status
+                  )}`}
+                >
+                  <div
+                    className={`w-2 h-2 rounded-full ${
+                      requestData.status?.toLowerCase() === "pending"
+                        ? "bg-yellow-500"
+                        : requestData.status?.toLowerCase() === "approved"
+                        ? "bg-green-500"
+                        : requestData.status?.toLowerCase() === "rejected"
+                        ? "bg-red-500"
+                        : "bg-gray-500"
+                    }`}
+                  ></div>
+                  {requestData.status}
+                </span>
+                <span
+                  className={`px-3 py-1 rounded-full text-sm font-medium ${getPriorityColor(
+                    requestData.priority
+                  )}`}
+                >
+                  {requestData.priority} Priority
                 </span>
               </div>
             </div>
@@ -71,105 +260,92 @@ const MaterialReqDetails = () => {
                       Project Name
                     </label>
                     <p className="text-slatebluegray font-medium">
-                      Downtown Office Complex
+                      {requestData.projectName}
+                    </p>
+                    <p className="text-sm text-gray-500">
+                      {requestData.projectId}
                     </p>
                   </div>
                   <div>
                     <label className="text-sm font-medium text-gray-700 mb-1 block">
-                      Requested By
-                    </label>
-                    <div className="flex items-center gap-2">
-                      <div className="w-6 h-6 bg-blue-500 rounded-full flex items-center justify-center">
-                        <FaUser className="w-3 h-3 text-white" />
-                      </div>
-                      <span className="text-slatebluegray font-medium">
-                        Sarah Johnson
-                      </span>
-                      <span className="text-gray-500 text-sm">
-                        (Site Manager)
-                      </span>
-                    </div>
-                  </div>
-                  <div>
-                    <label className="text-sm font-medium text-gray-700 mb-1 block">
-                      Required Date
-                    </label>
-                    <p className="text-slatebluegray font-medium">March 15, 2024</p>
-                  </div>
-                  <div>
-                    <label className="text-sm font-medium text-gray-700 mb-1 block">
-                      Delivery Location
+                      Project Phase
                     </label>
                     <p className="text-slatebluegray font-medium">
-                      Site A - Building 2
+                      {requestData.phaseName}
                     </p>
                   </div>
+                  <div>
+                    <label className="text-sm font-medium text-gray-700 mb-1 block">
+                      Request Date
+                    </label>
+                    <p className="text-slatebluegray font-medium">
+                      {formatDate(requestData.requestDate)}
+                    </p>
+                  </div>
+                  <div>
+                    <label className="text-sm font-medium text-gray-700 mb-1 block">
+                      Priority Level
+                    </label>
+                    <span
+                      className={`px-2 py-1 rounded-full text-xs font-medium ${getPriorityColor(
+                        requestData.priority
+                      )}`}
+                    >
+                      {requestData.priority}
+                    </span>
+                  </div>
+                  {requestData.additionalInfo && (
+                    <div className="md:col-span-2">
+                      <label className="text-sm font-medium text-gray-700 mb-1 block">
+                        Additional Information
+                      </label>
+                      <p className="text-slatebluegray font-medium bg-gray-50 p-3 rounded-md">
+                        {requestData.additionalInfo}
+                      </p>
+                    </div>
+                  )}
                 </div>
               </div>
 
               {/* Requested Materials */}
               <div className="bg-purewhite border border-gray-200 rounded-lg p-6">
                 <h2 className="text-lg font-semibold text-main_dark mb-4">
-                  Requested Materials
+                  Requested Materials (
+                  {requestData.requestedMaterials?.length || 0} items)
                 </h2>
                 <div className="space-y-4">
-                  <div className="flex items-center gap-4 p-4 bg-light_brown/20 rounded-lg">
-                    {/* <div className="w-10 h-10 bg-deep_green rounded-lg flex items-center justify-center">
-                      <svg
-                        className="w-6 h-6 text-white"
-                        fill="none"
-                        stroke="currentColor"
-                        viewBox="0 0 24 24"
-                      >
-                        <path
-                          strokeLinecap="round"
-                          strokeLinejoin="round"
-                          strokeWidth={2}
-                          d="M19 11H5m14 0a2 2 0 012 2v6a2 2 0 01-2 2H5a2 2 0 01-2-2v-6a2 2 0 012-2m14 0V9a2 2 0 00-2-2M5 11V9a2 2 0 012-2m0 0V5a2 2 0 012-2h6a2 2 0 012 2v2M7 7h10"
-                        />
-                      </svg>
-                    </div> */}
-                    <div className="flex-1">
-                      <h3 className="font-medium text-slatebluegray">
-                        Steel Rebar - Grade 60
-                      </h3>
-                      <p className="text-sm text-gray-600">SKU: STL-RB-60-12</p>
+                  {requestData.requestedMaterials?.map((material, index) => (
+                    <div
+                      key={material.requestedMaterialId}
+                      className="flex items-center gap-4 p-4 bg-light_brown/20 rounded-lg"
+                    >
+                      <div className="flex-1">
+                        <h3 className="font-medium text-slatebluegray">
+                          {material.materialName}
+                        </h3>
+                        {material.materialType && (
+                          <p className="text-sm text-gray-600">
+                            Type: {material.materialType}
+                          </p>
+                        )}
+                        <span
+                          className={`px-2 py-1 rounded-full text-xs font-medium mt-1 inline-block ${getStatusColor(
+                            material.status
+                          )}`}
+                        >
+                          {material.status}
+                        </span>
+                      </div>
+                      <div className="text-right">
+                        <p className="font-medium text-slatebluegray">
+                          {material.quantity} {material.unitOfMeasurement}
+                        </p>
+                        <p className="text-sm text-gray-600">
+                          ID: {material.requestedMaterialId}
+                        </p>
+                      </div>
                     </div>
-                    <div className="text-right">
-                      <p className="font-medium text-slatebluegray">
-                        500 units
-                      </p>
-                      <p className="text-sm text-gray-600">12mm diameter</p>
-                    </div>
-                  </div>
-
-                  <div className="flex items-center gap-4 p-4 bg-light_brown/20 rounded-lg">
-                    {/* <div className="w-10 h-10 bg-deep_green rounded-lg flex items-center justify-center">
-                      <svg
-                        className="w-6 h-6 text-white"
-                        fill="none"
-                        stroke="currentColor"
-                        viewBox="0 0 24 24"
-                      >
-                        <path
-                          strokeLinecap="round"
-                          strokeLinejoin="round"
-                          strokeWidth={2}
-                          d="M20 7l-8-4-8 4m16 0l-8 4m8-4v10l-8 4m0-10L4 7m8 4v10M4 7v10l8 4"
-                        />
-                      </svg>
-                    </div> */}
-                    <div className="flex-1">
-                      <h3 className="font-medium text-slatebluegray">
-                        Concrete Mix - Type II
-                      </h3>
-                      <p className="text-sm text-gray-600">SKU: CON-MX-T2-50</p>
-                    </div>
-                    <div className="text-right">
-                      <p className="font-medium text-slatebluegray">25 bags</p>
-                      <p className="text-sm text-gray-600">50kg each</p>
-                    </div>
-                  </div>
+                  ))}
                 </div>
               </div>
 
@@ -188,38 +364,102 @@ const MaterialReqDetails = () => {
                         Request Created
                       </h3>
                       <p className="text-sm text-gray-600">
-                        Today at 2:30 PM by Sarah Johnson
+                        {formatDate(requestData.requestDate)}
                       </p>
                     </div>
                   </div>
 
                   <div className="flex items-start gap-4">
-                    <div className="w-8 h-8 bg-web_yellow rounded-full flex items-center justify-center flex-shrink-0">
-                      <RiInformationLine />
+                    <div
+                      className={`w-8 h-8 rounded-full flex items-center justify-center flex-shrink-0 ${
+                        requestData.status?.toLowerCase() === "pending"
+                          ? "bg-web_yellow"
+                          : "bg-gray-300"
+                      }`}
+                    >
+                      <RiInformationLine
+                        className={
+                          requestData.status?.toLowerCase() === "pending"
+                            ? "text-main_dark"
+                            : "text-gray-500"
+                        }
+                      />
                     </div>
                     <div className="flex-1">
-                      <h3 className="font-medium text-slatebluegray">
-                        Pending Approval
+                      <h3
+                        className={`font-medium ${
+                          requestData.status?.toLowerCase() === "pending"
+                            ? "text-slatebluegray"
+                            : "text-gray-500"
+                        }`}
+                      >
+                        {requestData.status === "PENDING"
+                          ? "Pending Approval"
+                          : requestData.status}
                       </h3>
-                      <p className="text-sm text-gray-600">
-                        Awaiting purchasing manager review
+                      <p
+                        className={`text-sm ${
+                          requestData.status?.toLowerCase() === "pending"
+                            ? "text-gray-600"
+                            : "text-gray-400"
+                        }`}
+                      >
+                        {requestData.status?.toLowerCase() === "pending"
+                          ? "Awaiting purchasing manager review"
+                          : `Status: ${requestData.status}`}
+                      </p>
+                    </div>
+                  </div>
+
+                  <div
+                    className={`flex items-start gap-4 ${
+                      requestData.status?.toLowerCase() === "approved"
+                        ? "opacity-100"
+                        : "opacity-50"
+                    }`}
+                  >
+                    <div
+                      className={`w-8 h-8 rounded-full flex items-center justify-center flex-shrink-0 ${
+                        requestData.status?.toLowerCase() === "approved"
+                          ? "bg-green-500"
+                          : "bg-gray-300"
+                      }`}
+                    >
+                      <IoMdCheckmark
+                        className={
+                          requestData.status?.toLowerCase() === "approved"
+                            ? "text-white"
+                            : "text-gray-500"
+                        }
+                      />
+                    </div>
+                    <div className="flex-1">
+                      <h3
+                        className={`font-medium ${
+                          requestData.status?.toLowerCase() === "approved"
+                            ? "text-slatebluegray"
+                            : "text-gray-500"
+                        }`}
+                      >
+                        Approved
+                      </h3>
+                      <p
+                        className={`text-sm ${
+                          requestData.status?.toLowerCase() === "approved"
+                            ? "text-gray-600"
+                            : "text-gray-400"
+                        }`}
+                      >
+                        {requestData.status?.toLowerCase() === "approved"
+                          ? "Request approved"
+                          : "Pending"}
                       </p>
                     </div>
                   </div>
 
                   <div className="flex items-start gap-4 opacity-50">
                     <div className="w-8 h-8 bg-gray-300 rounded-full flex items-center justify-center flex-shrink-0">
-                      <IoMdCheckmark />
-                    </div>
-                    <div className="flex-1">
-                      <h3 className="font-medium text-gray-500">Approved</h3>
-                      <p className="text-sm text-gray-400">Pending</p>
-                    </div>
-                  </div>
-
-                  <div className="flex items-start gap-4 opacity-50">
-                    <div className="w-8 h-8 bg-gray-300 rounded-full flex items-center justify-center flex-shrink-0">
-                      <BsBag />
+                      <BsBag className="text-gray-500" />
                     </div>
                     <div className="flex-1">
                       <h3 className="font-medium text-gray-500">Ordered</h3>
@@ -231,22 +471,44 @@ const MaterialReqDetails = () => {
             </div>
 
             {/* Right Column - Sidebar */}
-            <div className="lg:col-span-1 space-y-3 ">
+            <div className="lg:col-span-1 space-y-3">
               {/* Quick Actions */}
               <div className="bg-purewhite border border-gray-200 rounded-lg p-6">
                 <h2 className="text-lg font-semibold text-main_dark mb-4">
                   Quick Actions
                 </h2>
-                <div className="space-y-3">
-                  <button onClick={()=>navigate('/purchasing/materialrequests/create')} className="w-full px-4 py-3 bg-deep_green text-purewhite rounded-md hover:bg-deep_green/90 transition-colors flex items-center justify-center gap-2">
-                    <IoMdCheckmark/>
-                    Approve Request
-                  </button>
-                  <button className="w-full px-4 py-3 bg-red-500 text-purewhite rounded-md hover:bg-red-600 transition-colors flex items-center justify-center gap-2">
-                    <IoMdClose />
-                    Reject Request
-                  </button>
-                </div>
+                {requestData.status?.toLowerCase() === "pending" ? (
+                  <div className="space-y-3">
+                    <button
+                      onClick={handleApproveRequest("APPROVED")}
+                      disabled={requestData.status?.toLowerCase() !== "pending"}
+                      className={`w-full px-4 py-3 rounded-md transition-colors flex items-center justify-center gap-2 ${
+                        requestData.status?.toLowerCase() === "pending"
+                          ? "bg-deep_green text-purewhite hover:bg-deep_green/90"
+                          : "bg-gray-300 text-gray-500 cursor-not-allowed"
+                      }`}
+                    >
+                      <IoMdCheckmark />
+                      Approve Request
+                    </button>
+                    <button
+                      onClick={handleApproveRequest("REJECTED")}
+                      disabled={requestData.status?.toLowerCase() !== "pending"}
+                      className={`w-full px-4 py-3 rounded-md transition-colors flex items-center justify-center gap-2 ${
+                        requestData.status?.toLowerCase() === "pending"
+                          ? "bg-red-500 text-purewhite hover:bg-red-600"
+                          : "bg-gray-300 text-gray-500 cursor-not-allowed"
+                      }`}
+                    >
+                      <IoMdClose />
+                      Reject Request
+                    </button>
+                  </div>
+                ) : (
+                  <p className="text-sm text-gray-500">
+                    This request has been {requestData.status?.toLowerCase()}.
+                  </p>
+                )}
               </div>
 
               {/* Internal Notes */}
@@ -259,21 +521,21 @@ const MaterialReqDetails = () => {
                     <div className="flex items-start gap-2 mb-2">
                       <div className="w-6 h-6 bg-blue-500 rounded-full flex items-center justify-center flex-shrink-0">
                         <span className="text-xs font-semibold text-white">
-                          MC
+                          SY
                         </span>
                       </div>
                       <div className="flex-1">
                         <span className="font-medium text-slatebluegray text-sm">
-                          Mike Chen
+                          System
                         </span>
                         <span className="text-gray-500 text-xs ml-2">
-                          1 hour ago
+                          {formatDate(requestData.requestDate)}
                         </span>
                       </div>
                     </div>
                     <p className="text-sm text-gray-700">
-                      Steel rebar prices have increased 5% this week. Consider
-                      bulk ordering.
+                      Material request created for {requestData.projectName} -{" "}
+                      {requestData.phaseName}
                     </p>
                   </div>
 
@@ -292,67 +554,43 @@ const MaterialReqDetails = () => {
                 </div>
               </div>
 
-              {/* Attachments */}
+              {/* Request Summary */}
               <div className="bg-purewhite border border-gray-200 rounded-lg p-6">
                 <h2 className="text-lg font-semibold text-main_dark mb-4">
-                  Attachments
+                  Request Summary
                 </h2>
                 <div className="space-y-3">
-                  <div className="flex items-center justify-between p-3 border border-gray-200 rounded-lg">
-                    <div className="flex items-center gap-3">
-                      <div className="w-8 h-8 bg-red-100 rounded flex items-center justify-center">
-                        <svg
-                          className="w-4 h-4 text-red-600"
-                          fill="none"
-                          stroke="currentColor"
-                          viewBox="0 0 24 24"
-                        >
-                          <path
-                            strokeLinecap="round"
-                            strokeLinejoin="round"
-                            strokeWidth={2}
-                            d="M9 12h6m-6 4h6m2 5H7a2 2 0 01-2-2V5a2 2 0 012-2h5.586a1 1 0 01.707.293l5.414 5.414a1 1 0 01.293.707V19a2 2 0 01-2 2z"
-                          />
-                        </svg>
-                      </div>
-                      <div>
-                        <p className="font-medium text-main_dark text-sm">
-                          Material Specifications.pdf
-                        </p>
-                      </div>
-                    </div>
-                    <button className="text-deep_green hover:text-deep_green/80">
-                      <FaDownload className="w-4 h-4" />
-                    </button>
+                  <div className="flex justify-between items-center p-3 border border-gray-200 rounded-lg">
+                    <span className="text-sm font-medium text-gray-700">
+                      Total Materials
+                    </span>
+                    <span className="font-semibold text-main_dark">
+                      {requestData.requestedMaterials?.length || 0}
+                    </span>
                   </div>
-
-                  <div className="flex items-center justify-between p-3 border border-gray-200 rounded-lg">
-                    <div className="flex items-center gap-3">
-                      <div className="w-8 h-8 bg-blue-100 rounded flex items-center justify-center">
-                        <svg
-                          className="w-4 h-4 text-blue-600"
-                          fill="none"
-                          stroke="currentColor"
-                          viewBox="0 0 24 24"
-                        >
-                          <path
-                            strokeLinecap="round"
-                            strokeLinejoin="round"
-                            strokeWidth={2}
-                            d="M4 16l4.586-4.586a2 2 0 012.828 0L16 16m-2-2l1.586-1.586a2 2 0 012.828 0L20 14m-6-6h.01M6 20h12a2 2 0 002-2V6a2 2 0 00-2-2H6a2 2 0 00-2 2v12a2 2 0 002 2z"
-                          />
-                        </svg>
-                      </div>
-                      <div>
-                        <p className="font-medium text-main_dark text-sm">
-                          Site Layout.jpg
-                        </p>
-                        <p className="text-xs text-gray-500">1.8 MB</p>
-                      </div>
-                    </div>
-                    <button className="text-deep_green hover:text-deep_green/80">
-                      <FaDownload className="w-4 h-4" />
-                    </button>
+                  <div className="flex justify-between items-center p-3 border border-gray-200 rounded-lg">
+                    <span className="text-sm font-medium text-gray-700">
+                      Status
+                    </span>
+                    <span
+                      className={`px-2 py-1 rounded-full text-xs font-medium ${getStatusColor(
+                        requestData.status
+                      )}`}
+                    >
+                      {requestData.status}
+                    </span>
+                  </div>
+                  <div className="flex justify-between items-center p-3 border border-gray-200 rounded-lg">
+                    <span className="text-sm font-medium text-gray-700">
+                      Priority
+                    </span>
+                    <span
+                      className={`px-2 py-1 rounded-full text-xs font-medium ${getPriorityColor(
+                        requestData.priority
+                      )}`}
+                    >
+                      {requestData.priority}
+                    </span>
                   </div>
                 </div>
               </div>
