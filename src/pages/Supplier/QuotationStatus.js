@@ -63,10 +63,10 @@ const QuotationStatus = () => {
       <NavBar links={navLinks} logoSrc="/logo1.png" />
 
       <div className="max-w-full mx-auto px-16 py-8">
-        <h1 className="text-2xl md:text-3xl font-bold text-gray-800 mb-2">
+        <h1 className="text-xxl md:text-2xl font-bold text-main_dark mb-2">
           Monitor Quotation Status
         </h1>
-        <p className="text-gray-500 mb-8">
+        <p className="text-gray-600 text-base mb-8">
           Track and manage all your submitted quotations
         </p>
 
@@ -77,21 +77,21 @@ const QuotationStatus = () => {
             title="Total Quotations"
             value={quotations.length}
             subtitle="This month"
-            color="deep_green"
+            color="deep_green/10"
           />
           <SummaryCard
             icon={<FaCheckCircle />}
             title="Accepted"
             value={quotations.filter((q) => q.status === "Accepted").length}
             subtitle="Approved by client"
-            color="web_yellow"
+            color="web_yellow/20"
           />
           <SummaryCard
             icon={<FaClock />}
             title="Pending Review"
             value={quotations.filter((q) => q.status === "Pending").length}
             subtitle="Awaiting feedback"
-            color="slatebluegray"
+            color="light_brown/30"
           />
         </div>
 
@@ -104,14 +104,14 @@ const QuotationStatus = () => {
               value={search}
               onChange={(e) => setSearch(e.target.value)}
               placeholder="Search quotations..."
-              className="w-full pl-10 pr-4 py-2 border border-light_gray rounded-lg focus:outline-none focus:ring-2 focus:ring-web_yellow"
+              className="w-full text-sm pl-10 pr-4 py-2 border border-light_gray rounded-lg focus:outline-none focus:ring-2 focus:ring-web_yellow"
             />
           </div>
           <div className="relative">
             <select
               value={status}
               onChange={(e) => setStatus(e.target.value)}
-              className="w-48 px-4 py-2 border border-light_gray rounded-lg focus:outline-none focus:ring-2 focus:ring-web_yellow appearance-none bg-white"
+              className="w-48 text-sm px-4 py-2 border border-light_gray rounded-lg focus:outline-none focus:ring-2 focus:ring-web_yellow appearance-none bg-white"
             >
               <option>All Status</option>
               <option>Pending</option>
@@ -125,7 +125,7 @@ const QuotationStatus = () => {
               type="date"
               value={date}
               onChange={(e) => setDate(e.target.value)}
-              className="w-48 px-4 py-2 border border-light_gray rounded-lg focus:outline-none focus:ring-2 focus:ring-web_yellow"
+              className="w-48 text-sm px-4 py-2 border border-light_gray rounded-lg focus:outline-none focus:ring-2 focus:ring-web_yellow"
             />
           </div>
         </div>
@@ -134,7 +134,7 @@ const QuotationStatus = () => {
         <div className="overflow-x-auto bg-purewhite rounded-lg shadow border border-light_gray">
           <table className="min-w-full">
             <thead>
-              <tr className="bg-web_yellow">
+              <tr className="bg-light_brown/30">
                 <th className="px-6 py-4 text-left text-sm font-semibold text-main_dark">
                   Quotation ID
                 </th>
@@ -181,12 +181,12 @@ const QuotationStatus = () => {
                 return (
                   <tr key={q.id} className="hover:bg-gray-50">
                     <td className="px-6 py-4 text-main_dark font-medium text-sm">{`QT-${q.id}`}</td>
-                    <td className="px-6 py-4">{material}</td>
-                    <td className="px-6 py-4">{quantity}</td>
-                    <td className="px-6 py-4 font-semibold text-main_dark">
+                    <td className="px-6 py-4 text-sm">{material}</td>
+                    <td className="px-6 py-4 text-sm">{quantity}</td>
+                    <td className="px-6 py-4 text-sm font-semibold text-main_dark">
                       {price}
                     </td>
-                    <td className="px-6 py-4">{submitted}</td>
+                    <td className="px-6 py-4 text-sm">{submitted}</td>
                     <td className="px-6 py-4">
                       <span
                         className={`px-3 py-1 rounded-full text-xs font-medium ${
@@ -219,14 +219,14 @@ const QuotationStatus = () => {
 const SummaryCard = ({ icon, title, value, subtitle, color }) => (
   <div className="flex items-center gap-4 bg-purewhite border border-light_gray rounded-xl shadow-sm p-5 hover:shadow-md transition">
     <div
-      className={`flex items-center justify-center h-12 w-12 rounded-lg bg-${color}/10`}
+      className={`flex items-center justify-center h-12 w-12 rounded-lg bg-${color}`}
     >
       {icon}
     </div>
     <div>
-      <div className="text-sm text-slatebluegray font-semibold">{title}</div>
+      <div className="text-base text-main_dark font-medium">{title}</div>
       <div className="text-2xl font-bold text-main_dark">{value}</div>
-      <div className="text-xs text-slatebluegray mt-1">{subtitle}</div>
+      <div className="text-xs text-main_dark mt-1">{subtitle}</div>
     </div>
   </div>
 );
