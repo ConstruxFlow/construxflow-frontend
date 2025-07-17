@@ -140,7 +140,7 @@ console.log('Form Data:', formData);
     console.log('Submitting material request:', requestData);
 
     try {
-      await axios.post('http://localhost:8080/api/material-requests/create', requestData);
+      await axios.post('http://localhost:5454/api/material-requests/create', requestData);
       alert('Material request submitted successfully!');
       // Redirect back to the Material Request List page
       navigate('/material-request-list');
