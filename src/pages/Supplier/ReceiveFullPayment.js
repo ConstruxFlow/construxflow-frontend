@@ -35,10 +35,10 @@ const ReceiveFullPayment = () => (
     <NavBar links={navLinks} logoSrc="/logo1.png" />
 
     <div className="max-w-full mx-auto px-16 py-10">
-      <h1 className="text-2xl md:text-3xl font-bold text-main_dark mb-2">
+      <h1 className="text-xl md:text-2xl font-bold text-main_dark mb-2">
         Receive Full Payment
       </h1>
-      <p className="text-gray-500 mb-8">
+      <p className="text-gray-600 mb-8">
         Review and confirm receipt of your full payment.
       </p>
 
