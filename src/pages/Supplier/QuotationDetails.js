@@ -225,6 +225,13 @@ const QuotationDetails = () => {
                 </div>
               </div>
             </div>
+            {/* --- UPDATE BUTTON ADDED HERE --- */}
+            <button
+              onClick={() => navigate(`/quotations/update/${quotation.id}`)}
+              className="w-full bg-web_yellow text-main_dark font-semibold py-3 mb-2 rounded-lg shadow hover:bg-web_yellow/80 border border-web_yellow transition"
+            >
+              Update Quotation
+            </button>
             <button
               onClick={() => navigate("/quotations")}
               className="w-full bg-deep_green text-white py-3 rounded-lg font-medium hover:bg-main_dark transition"
