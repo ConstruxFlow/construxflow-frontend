@@ -1,6 +1,18 @@
 // src/pages/Supplier/PurchasingOrders.jsx
 import React, { useState } from "react";
-import { FaSearch, FaEye, FaChevronDown,FaReply } from "react-icons/fa";
+import {
+  FaSearch,
+  FaEye,
+  FaChevronDown,
+  FaReply,
+  FaBoxOpen,
+  FaProjectDiagram,
+  FaCalendarAlt,
+  FaTruck,
+  FaMoneyBill,
+  FaSortNumericUp,
+  FaRegCheckCircle,
+} from "react-icons/fa";
 import { MdFilterList } from "react-icons/md";
 import { useNavigate } from "react-router-dom";
 import NavBar from "../../components/NavBar";
@@ -107,8 +119,12 @@ const PurchasingOrders = () => {
         {/* Header */}
         <div className="flex justify-between items-start mb-8">
           <div>
-            <h1 className="text-3xl font-bold text-gray-800 mb-2">Purchasing Orders</h1>
-            <p className="text-gray-500">Manage and track all your purchase orders</p>
+            <h1 className="text-2xl font-bold text-main_dark mb-2">
+              Purchasing Orders
+            </h1>
+            <p className="text-gray-600 text-base">
+              Manage and track all your purchase orders
+            </p>
           </div>
         </div>
 
@@ -117,7 +133,9 @@ const PurchasingOrders = () => {
           <div className="grid grid-cols-1 md:grid-cols-4 gap-4">
             {/* Search */}
             <div className="relative">
-              <label className="block text-sm font-medium text-main_dark mb-2">Search</label>
+              <label className="block text-sm font-medium text-main_dark mb-2">
+                Search
+              </label>
               <div className="relative">
                 <FaSearch className="absolute left-3 top-1/2 transform -translate-y-1/2 text-gray-400" />
                 <input
@@ -125,18 +143,20 @@ const PurchasingOrders = () => {
                   placeholder="Search by PO ID, Project, or Material..."
                   value={searchTerm}
                   onChange={(e) => setSearchTerm(e.target.value)}
-                  className="w-full pl-10 pr-4 py-2 border border-light_gray rounded-lg focus:outline-none focus:ring-2 focus:ring-web_yellow"
+                  className="w-full text-sm pl-10 pr-4 py-2 border border-light_gray rounded-lg focus:outline-none focus:ring-2 focus:ring-web_yellow"
                 />
               </div>
             </div>
             {/* Status Filter */}
             <div>
-              <label className="block text-sm font-medium text-main_dark mb-2">Status</label>
+              <label className="block text-sm font-medium text-main_dark mb-2">
+                Status
+              </label>
               <div className="relative">
                 <select
                   value={statusFilter}
                   onChange={(e) => setStatusFilter(e.target.value)}
-                  className="w-full px-4 py-2 border border-light_gray rounded-lg focus:outline-none focus:ring-2 focus:ring-web_yellow appearance-none bg-white"
+                  className="w-full text-sm px-4 py-2 border border-light_gray rounded-lg focus:outline-none focus:ring-2 focus:ring-web_yellow appearance-none bg-white"
                 >
                   <option>All Status</option>
                   <option>Delivered</option>
@@ -149,21 +169,25 @@ const PurchasingOrders = () => {
             </div>
             {/* Date Range (optional, for symmetry) */}
             <div>
-              <label className="block text-sm font-medium text-main_dark mb-2">Order Date</label>
+              <label className="block text-sm font-medium text-main_dark mb-2">
+                Order Date
+              </label>
               <div className="relative">
                 <input
                   type="date"
-                  className="w-full px-4 py-2 border border-light_gray rounded-lg focus:outline-none focus:ring-2 focus:ring-web_yellow"
+                  className="w-full text-sm px-4 py-2 border border-light_gray rounded-lg focus:outline-none focus:ring-2 focus:ring-web_yellow"
                 />
               </div>
             </div>
             {/* Placeholder for future filter */}
             <div>
-              <label className="block text-sm font-medium text-main_dark mb-2">Delivery Date</label>
+              <label className="block text-sm font-medium text-main_dark mb-2">
+                Delivery Date
+              </label>
               <div className="relative">
                 <input
                   type="date"
-                  className="w-full px-4 py-2 border border-light_gray rounded-lg focus:outline-none focus:ring-2 focus:ring-web_yellow"
+                  className="w-full text-sm px-4 py-2 border border-light_gray rounded-lg focus:outline-none focus:ring-2 focus:ring-web_yellow"
                 />
               </div>
             </div>
@@ -173,7 +197,7 @@ const PurchasingOrders = () => {
         {/* Table */}
         <div className="bg-purewhite rounded-lg shadow-sm overflow-hidden">
           {/* Table Header */}
-          <div className="flex justify-between items-center p-6 border border-light_gray rounded-t-lg">
+          {/* <div className="flex justify-between items-center p-6 border border-light_gray rounded-t-lg">
             <h2 className="text-lg font-semibold text-main_dark">
               Purchasing Orders ({filteredOrders.length})
             </h2>
@@ -181,45 +205,84 @@ const PurchasingOrders = () => {
               <MdFilterList className="text-gray-400" />
               <FaChevronDown className="text-gray-400" />
             </div>
-          </div>
+          </div> */}
           <div className="overflow-x-auto">
             <table className="w-full">
-              <thead className="bg-web_yellow">
+              <thead className="bg-light_brown/35">
                 <tr>
-                  <th className="px-6 py-4 text-left text-sm font-semibold text-main_dark">PO ID</th>
-                  <th className="px-6 py-4 text-left text-sm font-semibold text-main_dark">Project Name</th>
-                  <th className="px-6 py-4 text-left text-sm font-semibold text-main_dark">Order Date</th>
-                  <th className="px-6 py-4 text-left text-sm font-semibold text-main_dark">Delivery Date</th>
-                  <th className="px-6 py-4 text-left text-sm font-semibold text-main_dark">Materials</th>
-                  <th className="px-6 py-4 text-left text-sm font-semibold text-main_dark">Quantity</th>
-                  <th className="px-6 py-4 text-left text-sm font-semibold text-main_dark">Status</th>
-                  <th className="px-6 py-4 text-left text-sm font-semibold text-main_dark">Amount</th>
-                  <th className="px-6 py-4 text-left text-sm font-semibold text-main_dark">Actions</th>
+                  <th className="px-6 py-4 text-left text-sm font-semibold text-main_dark">
+                    PO ID
+                  </th>
+                  <th className="px-6 py-4 text-left text-sm font-semibold text-main_dark">
+                    <span className="flex items-center gap-2">
+                      <FaProjectDiagram className="inline mb-0.5" /> Project
+                      Name
+                    </span>
+                  </th>
+                  <th className="px-6 py-4 text-left text-sm font-semibold text-main_dark">
+                    <span className="flex items-center gap-2">
+                      <FaCalendarAlt className="inline mb-0.5" /> Order Date
+                    </span>
+                  </th>
+                  <th className="px-6 py-4 text-left text-sm font-semibold text-main_dark">
+                    <span className="flex items-center gap-2">
+                      <FaTruck className="inline mb-0.5" /> Delivery Date
+                    </span>
+                  </th>
+                  <th className="px-6 py-4 text-left text-sm font-semibold text-main_dark">
+                    <span className="flex items-center gap-2">
+                      <FaBoxOpen className="inline mb-0.5" /> Materials
+                    </span>
+                  </th>
+                  <th className="px-6 py-4 text-left text-sm font-semibold text-main_dark">
+                    <span className="flex items-center gap-2">
+                      <FaSortNumericUp className="inline mb-0.5" /> Quantity
+                    </span>
+                  </th>
+                  <th className="px-6 py-4 text-left text-sm font-semibold text-main_dark">
+                    <span className="flex items-center gap-2">
+                      <FaRegCheckCircle className="inline mb-0.5" /> Status
+                    </span>
+                  </th>
+                  <th className="px-6 py-4 text-left text-sm font-semibold text-main_dark">
+                    <span className="flex items-center gap-2">
+                      <FaMoneyBill className="inline mb-0.5" /> Amount
+                    </span>
+                  </th>
+                  <th className="px-6 py-4 text-left text-sm font-semibold text-main_dark">
+                    Actions
+                  </th>
                 </tr>
               </thead>
               <tbody className="divide-y divide-light_gray">
                 {filteredOrders.map((order, index) => (
                   <tr key={index} className="bg-purewhite hover:bg-gray-50">
-                    <td className="px-6 py-4 text-sm font-medium text-main_dark">{order.id}</td>
-                    <td className="px-6 py-4">{order.project}</td>
-                    <td className="px-6 py-4">{order.orderDate}</td>
-                    <td className="px-6 py-4">{order.deliveryDate}</td>
-                    <td className="px-6 py-4">{order.materials}</td>
-                    <td className="px-6 py-4">{order.quantity}</td>
+                    <td className="px-6 py-4 text-sm font-medium text-main_dark">
+                      {order.id}
+                    </td>
+                    <td className="px-6 py-4 text-sm">{order.project}</td>
+                    <td className="px-6 py-4 text-sm">{order.orderDate}</td>
+                    <td className="px-6 py-4 text-sm">{order.deliveryDate}</td>
+                    <td className="px-6 py-4 text-sm">{order.materials}</td>
+                    <td className="px-6 py-4 text-sm">{order.quantity}</td>
                     <td className="px-6 py-4">
                       <span className={getStatusBadge(order.status)}>
                         {order.status}
                       </span>
                     </td>
-                    <td className="px-6 py-4 font-bold">{order.amount}</td>
+                    <td className="px-6 py-4 font-bold text-sm">
+                      {order.amount}
+                    </td>
                     <td className="px-6 py-4">
-                      <button className="p-2 text-deep_green hover:bg-gray-100 rounded"
-                        onClick={() => navigate(`/orders/${order.id}`)}>
+                      <button
+                        className="p-2 text-deep_green hover:bg-gray-100 rounded"
+                        onClick={() => navigate(`/orders/${order.id}`)}
+                      >
                         <FaEye />
                       </button>
                       <button className="p-2 text-web_yellow hover:bg-gray-100 rounded">
                         <FaReply />
-                        </button>
+                      </button>
                     </td>
                   </tr>
                 ))}
