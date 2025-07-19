@@ -9,11 +9,11 @@ function Admin_Dashboard() {
     <>
       <NavBar
         links={[
-          { name: "Dashboard", href: "/dashboard1", active: true },
+          { name: "Dashboard", href: "/admin", active: true },
           { name: "Supply Chain", href: "/supplychain" },
-          { name: "Inventory", href: "/inventory" },
+          { name: "Inventory", href: "/admin-inventory" },
           { name: "Insights", href: "/insights" },
-          { name: "Users", href: "/users" },
+          { name: "Users", href: "/admin-users" },
           { name: "Settings", href: "/settings" },
         ]}
       />

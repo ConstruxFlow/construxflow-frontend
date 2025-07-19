@@ -70,7 +70,7 @@ const UserDashboard = () => {
     <div className="min-h-screen bg-gray-100 font-sans">
       {/* Header */}
       {/* Main Content */}
-      <main className="max-w-7xl mx-auto px-4 sm:px-6 lg:px-8 py-8">
+      <main className="max-w-full mx-auto px-4 sm:px-14 lg:px-16 py-8">
         {/* Stats Cards */}
         <div className="grid grid-cols-1 sm:grid-cols-2 lg:grid-cols-4 gap-6 mb-8">
           {stats.map((stat, index) => (
@@ -81,7 +81,7 @@ const UserDashboard = () => {
               <div className="flex items-center justify-between">
                 <div>
                   <p className="text-sm font-medium text-gray-600">{stat.title}</p>
-                  <p className="text-3xl font-bold text-gray-900 mt-1">{stat.value}</p>
+                  <p className="text-2xl font-bold text-main_dark mt-1">{stat.value}</p>
                 </div>
                 <div className={`p-3 rounded-full ${stat.color} text-white`}>
                   <stat.icon className="w-6 h-6" />

@@ -179,7 +179,7 @@ export default function ConstructionDashboard() {
             <h3 className="text-lg font-semibold text-[#191919]">
               Recent Orders
             </h3>
-            <button className="bg-web_yellow text-main_dark px-4 py-2 rounded-lg font-semibold">
+            <button className="bg-web_yellow text-main_dark px-4 py-2 rounded-lg font-medium">
               View All Orders
             </button>
           </div>
