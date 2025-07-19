@@ -19,4 +19,5 @@ function Admin_Inventory() {
   )
 }
 
+
 export default Admin_Inventory;
