@@ -1,4 +1,4 @@
-import React, { useState, useEffect } from 'react';
+import React, { useState, useEffect, useContext } from 'react';
 import NavBar from '../../../components/NavBar';
 import { MdOutlinePendingActions } from "react-icons/md";
 import { LiaNotesMedicalSolid } from "react-icons/lia";
@@ -10,11 +10,14 @@ import { IoSearch } from "react-icons/io5";
 import { SiGoogleanalytics } from "react-icons/si";
 import { useNavigate } from 'react-router-dom';
 import { toast } from 'react-toastify';
+import { AuthContext } from '../../../Context/AuthContext';
+import { Space } from 'lucide-react';
 
 const PurchasingDashboard = () => {
   const navigate = useNavigate();
   const [purchaseOrders, setPurchaseOrders] = useState([]);
   const [loading, setLoading] = useState(true);
+  const { authState } = useContext(AuthContext);
 
   useEffect(() => {
     fetchPurchaseOrders();
@@ -86,7 +89,9 @@ const PurchasingDashboard = () => {
   return (
     <div className="min-h-screen bg-purewhite font-poppins">
       {/* Header Navigation */}
-      <NavBar links={[
+      <NavBar 
+      profileURL="/purchasing/profile"
+      links={[
         { name: 'Dashboard', path: '/purchasing/dashboard' },
         { name: 'Material Requests', path: '/purchasing/materialrequests/overview' },
         { name: 'Suppliers', path: '/purchasing/supplier/dashboard' },
@@ -102,9 +107,13 @@ const PurchasingDashboard = () => {
             <h1 className="text-2xl sm:text-3xl font-semibold text-main_dark mb-1 tracking-tight">
               Purchasing Dashboard
             </h1>
-            <p className="text-slatebluegray text-base">
-              Welcome back, John. Here's your procurement overview.
-            </p>
+            {
+              authState?.user && (
+                <p className="text-slatebluegray text-base">
+                  Welcome back, <span className='font-semibold'>{authState.user.userName || 'User'}</span>. Here's your procurement overview.
+                </p>
+              )
+            }
           </div>
 
           {/* Urgent Actions Alert */}

@@ -19,6 +19,7 @@ import PurchaseOrdersOverview from "./PurchasingOrder/PurchaseOrdersOverview";
 import PurchaseOrderDetails from "./PurchasingOrder/PurchaseOrderDetails";
 import EditQuotationRequest from "./Material_Requests/EditQuotationRequest";
 import EditPurchaseOrder from "./PurchasingOrder/EditPurchaseOrder";
+import ManagerProfileView from "./ManagerProfile";
 
 export const purchasingManagerRoutes = {
   path: '/purchasing',
@@ -103,6 +104,10 @@ export const purchasingManagerRoutes = {
     {
       path: 'orders/edit/:id',
       element: <EditPurchaseOrder />,
+    },
+    {
+      path: 'profile',
+      element: <ManagerProfileView />,
     }
   ]
 };
