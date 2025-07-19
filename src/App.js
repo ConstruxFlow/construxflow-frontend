@@ -219,7 +219,7 @@ export const routes = createBrowserRouter([
   },
   {
     path: "/admin",
-    element:<ConstructionDashboard/>
+    element:<Admin_Dashbaord/>
   },
   {
     path: "/admin-inventory",

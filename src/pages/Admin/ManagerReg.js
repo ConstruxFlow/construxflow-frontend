@@ -309,10 +309,11 @@ const ManagerReg = () => {
       
       <NavBar
         links={[
-          { name: "Dashboard", path: "/admin/dashboard" },
-          { name: "Managers", path: "/admin/managers" },
-          { name: "Users", path: "/admin/users" },
-          { name: "Settings", path: "/admin/settings" },
+          { name: "Dashboard", href: "/admin", active: true },
+          { name: "Supply Chain", href: "/supplychain" },
+          { name: "Inventory", href: "/admin-inventory" },
+          { name: "Users", href: "/admin-users" },
+          
         ]}
       />
 
