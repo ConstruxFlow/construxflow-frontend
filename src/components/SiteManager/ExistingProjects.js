@@ -21,7 +21,7 @@ const ExistingProjects = () => {
   const navigate = useNavigate();
 
   useEffect(() => {
-    axios.get('http://localhost:8080/api/projects/all')
+    axios.get('http://localhost:5454/api/projects/all')
       .then(response => {
         setProjects(response.data);
         setLoading(false);
@@ -36,7 +36,7 @@ const ExistingProjects = () => {
     if (!window.confirm('Are you sure you want to delete this project?')) return;
     setDeletingId(projectId);
     try {
-      await axios.delete(`http://localhost:8080/api/projects/${projectId}`);
+      await axios.delete(`http://localhost:5454/api/projects/${projectId}`);
       setProjects((prev) => prev.filter((p) => (p.projectId || p.id) !== projectId));
     } catch (err) {
       alert('Failed to delete project.');
@@ -102,7 +102,7 @@ const ExistingProjects = () => {
         <button
             className="px-4 py-2 text-black font-semibold rounded-lg"
             style={{ backgroundColor: '#EFC11A' }}
-            onClick={() => window.location.href = '/projects-list/create-project'}
+            onClick={() => window.location.href = '/site-manager/projects-list/create-project'}
         >
             + New Project
         </button>
@@ -156,7 +156,7 @@ const ExistingProjects = () => {
                   <button 
                     className="text-white px-3 py-1 rounded text-sm flex items-center gap-1"
                     style={{backgroundColor: '#236571'}}
-                    onClick={() => navigate(`/projects-list/edit-project/${project.projectId || project.id}`)}
+                    onClick={() => navigate(`/site-manager/projects-list/edit-project/${project.projectId || project.id}`)}
                   >
                     ✏️ Edit
                   </button>
@@ -194,7 +194,7 @@ const ExistingProjects = () => {
                 <button 
                     className="text-black font-semibold px-4 py-2 rounded text-sm flex items-center gap-2"
                     style={{ backgroundColor: '#EFC11A' }}
-                    onClick={() => navigate('/material-request-list')}
+                    onClick={() => navigate('/site-manager/material-request-list')}
                 >
                     🗎 View Materials
                 </button>

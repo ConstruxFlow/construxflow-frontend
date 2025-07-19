@@ -48,7 +48,7 @@ export const MaintenanceRoute = {
         element: <NextScheduleContainer/>,
     },
     {
-        path: 'task-complete',
+        path: 'task-complete/:id',
         element: <TaskCompleteContainer/>,
     },
     {

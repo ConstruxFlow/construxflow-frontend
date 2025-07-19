@@ -62,6 +62,7 @@ import AddMaterial from "./pages/InventoryManager/AddMaterial";
 import InventoryControl from "./pages/InventoryManager/InventoryControl";
 import MaintenanceRequestsOverview from "./pages/InventoryManager/MaintenanceRequestsOverview";
 import MaintenanceRequestPage from "./pages/InventoryManager/MaintenanceRequestPage";
+import { siteManagerRoutes } from "./pages/SiteManager/Routes";
 
 
 
@@ -79,6 +80,8 @@ import Admin_Analysis from "./pages/Admin/Admin-Analysis";
 import ContactSupport from "./pages/Supplier/ContactSupport";
 import QuotationDetail from "./pages/PurchasingManager/Quotations/QuotationDetails";
 import QuotationDetails from "./pages/Supplier/QuotationDetails";
+import { FinanceManagerRoutes } from "./pages/FinancialOfficer/routes";
+import ManagerReg from "./pages/Admin/ManagerReg";
 
 export const routes = createBrowserRouter([
   {
@@ -148,6 +151,12 @@ export const routes = createBrowserRouter([
   // PURCHASING MANAGER
   purchasingManagerRoutes,
 
+  // Finance Officer
+  FinanceManagerRoutes,
+  
+  // SITE MANAGER
+  siteManagerRoutes,
+
   // MAINTENANCE HEAD
   MaintenanceRoute,
 {
@@ -179,14 +188,6 @@ export const routes = createBrowserRouter([
   {
     path: "/projects-list/create-project/project-phase",
     element: <Project_Phase />,
-  },
-  {
-    path: "/material-request-list/material-request",
-    element: <Create_Material_Request />,
-  },
-  {
-    path: "/material-request-list",
-    element: <Material_Request />,
   },
   {
     path: "/site-equipment-info",
@@ -227,6 +228,10 @@ export const routes = createBrowserRouter([
   {
     path: "/admin-users",
     element:<Admin_Users/>
+  },
+  {
+    path: "/admin-managers",
+    element:<ManagerReg/>
   },
   {
     path: "/admin-analysis",
