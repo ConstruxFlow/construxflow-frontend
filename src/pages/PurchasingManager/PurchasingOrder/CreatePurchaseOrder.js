@@ -22,6 +22,7 @@ const CreatePurchaseOrder = () => {
   console.log(id);
   const [quotationData, setQuotationData] = useState(null);
   const [supplierData, setSupplierData] = useState(null);
+  const [quotationRequestDetails, setQuotationRequestDetails] = useState(null);
 
   const [orderData, setOrderData] = useState({
     ponumber: "",
@@ -76,13 +77,16 @@ const CreatePurchaseOrder = () => {
     if (response.ok) {
       const data = await response.json();
       console.log(data.data.ponumber);
-      
+
       const latestPO = data.data.ponumber;
       if (latestPO) {
         const latestNumber = parseInt(latestPO.split("-")[2]);
         setOrderData((prev) => ({
           ...prev,
-          ponumber: `PO-${currentYear}-${String(latestNumber + 1).padStart(4, "0")}`,
+          ponumber: `PO-${currentYear}-${String(latestNumber + 1).padStart(
+            4,
+            "0"
+          )}`,
         }));
       }
     } else {
@@ -99,7 +103,7 @@ const CreatePurchaseOrder = () => {
 
   const fetchQuotation = async () => {
     if (!id) return;
-    
+
     setIsLoading(true);
     try {
       const response = await fetch(
@@ -109,7 +113,7 @@ const CreatePurchaseOrder = () => {
 
       if (response.ok) {
         setQuotationData(data);
-        
+
         // Fetch supplier data using the supplier ID from quotation
         const supplierResponse = await fetch(
           `http://localhost:8080/api/supplier/find/${data?.supplierId}`,
@@ -121,13 +125,26 @@ const CreatePurchaseOrder = () => {
           }
         );
         const supplierResponseData = await supplierResponse.json();
-        
+
         if (supplierResponse.ok) {
           setSupplierData(supplierResponseData.data);
+          const quotationReqResponse = await fetch(
+            `http://localhost:8080/api/quotationrequest/find/${data?.quotationRequestId}`,
+            {
+              method: "GET",
+              headers: {
+                "Content-Type": "application/json",
+              },
+            }
+          );
+          const quotationReqData = await quotationReqResponse.json();
+          if (!quotationReqResponse.ok) {
+            throw new Error("Failed to fetch quotation request");
+          }
+          setQuotationRequestDetails(quotationReqData.data);
         } else {
           toast.error("Failed to fetch supplier details");
         }
-
       } else {
         toast.error("Failed to fetch quotation details");
       }
@@ -147,12 +164,13 @@ const CreatePurchaseOrder = () => {
 
   console.log("Supplier Data:", supplierData);
   console.log("Quotation Data:", quotationData);
+  console.log("Quotation Request Details:", quotationRequestDetails);
 
   // Auto-fill form when quotation data and supplier data are available
   useEffect(() => {
     if (quotationData && supplierData) {
       // Auto-fill supplier information using actual supplier data
-      setOrderData(prev => ({
+      setOrderData((prev) => ({
         ...prev,
         supplier: {
           supplier_id: supplierData.supplierId,
@@ -180,12 +198,14 @@ const CreatePurchaseOrder = () => {
       setOrderItems(autoFilledItems);
 
       // Auto-fill delivery schedule from quotation delivery info
-      const autoFilledDeliveries = quotationData.deliveryInfos.map((delivery, index) => ({
-        id: index + 1,
-        location: delivery.location,
-        requiredDate: delivery.deliveryDate,
-        shippingCost: delivery.shippingCost,
-      }));
+      const autoFilledDeliveries = quotationData.deliveryInfos.map(
+        (delivery, index) => ({
+          id: index + 1,
+          location: delivery.location,
+          requiredDate: delivery.deliveryDate,
+          shippingCost: delivery.shippingCost,
+        })
+      );
       setDeliverySchedule(autoFilledDeliveries);
     }
   }, [quotationData, supplierData]);
@@ -322,6 +342,8 @@ const CreatePurchaseOrder = () => {
         additional_info: orderData.additional_info,
         subTotal: calculateTotal(),
         items: validMaterials.length,
+        material_req_id:quotationData.material_req_id,
+        projectId:quotationData.projectId,
         supplier: {
           supplier_id: orderData.supplier.supplier_id,
         },
@@ -344,7 +366,7 @@ const CreatePurchaseOrder = () => {
       setLoadingProgress(60);
       console.log("Submit Data:", submitData);
       navigate("/purchasing/orders/advance-payment", {
-        state: { orderData: submitData , quotationId: id },
+        state: { orderData: submitData, quotationId: id },
       });
 
       setLoadingProgress(100);
@@ -367,11 +389,17 @@ const CreatePurchaseOrder = () => {
 
       <NavBar
         links={[
-          { name: 'Dashboard', path: '/purchasing/dashboard' },
-          { name: 'Material Requests', path: '/purchasing/materialrequests/overview' },
-          { name: 'Suppliers', path: '/purchasing/supplier/dashboard' },
-          { name: 'Quotation Requests', path: '/purchasing/quotationrequest/overview' },
-          { name: 'Purchasing Orders', path: '/purchasing/orders/overview' },
+          { name: "Dashboard", path: "/purchasing/dashboard" },
+          {
+            name: "Material Requests",
+            path: "/purchasing/materialrequests/overview",
+          },
+          { name: "Suppliers", path: "/purchasing/supplier/dashboard" },
+          {
+            name: "Quotation Requests",
+            path: "/purchasing/quotationrequest/overview",
+          },
+          { name: "Purchasing Orders", path: "/purchasing/orders/overview" },
         ]}
       />
 
@@ -457,7 +485,7 @@ const CreatePurchaseOrder = () => {
                     />
                   </div>
                 </div>
-                
+
                 {/* Additional Supplier Information Display */}
                 {supplierData && (
                   <div className="mt-4 p-4 bg-gray-50 rounded-lg">
@@ -469,13 +497,16 @@ const CreatePurchaseOrder = () => {
                         <strong>Supplier ID:</strong> {supplierData.supplierId}
                       </div>
                       <div>
-                        <strong>Business Reg. No:</strong> {supplierData.business_Registration_Number}
+                        <strong>Business Reg. No:</strong>{" "}
+                        {supplierData.business_Registration_Number}
                       </div>
                       <div>
-                        <strong>Address:</strong> {supplierData.userDetails?.address}
+                        <strong>Address:</strong>{" "}
+                        {supplierData.userDetails?.address}
                       </div>
                       <div>
-                        <strong>Phone 2:</strong> {supplierData.userDetails?.phone_number2}
+                        <strong>Phone 2:</strong>{" "}
+                        {supplierData.userDetails?.phone_number2}
                       </div>
                     </div>
                   </div>
@@ -587,7 +618,8 @@ const CreatePurchaseOrder = () => {
                               {/* Show current material from quotation if available */}
                               {item.material.materialName && (
                                 <option value={item.material.material_id}>
-                                  {item.material.materialName} ({item.material.materialType})
+                                  {item.material.materialName} (
+                                  {item.material.materialType})
                                 </option>
                               )}
                               {/* Other predefined options */}
@@ -689,12 +721,22 @@ const CreatePurchaseOrder = () => {
                         >
                           <option value="">Select Location</option>
                           {/* Show current location from quotation if it's not in predefined options */}
-                          {item.location && !["Warehouse A", "Warehouse B", "Construction Site A", "Main Storage"].includes(item.location) && (
-                            <option value={item.location}>{item.location}</option>
-                          )}
+                          {item.location &&
+                            ![
+                              "Warehouse A",
+                              "Warehouse B",
+                              "Construction Site A",
+                              "Main Storage",
+                            ].includes(item.location) && (
+                              <option value={item.location}>
+                                {item.location}
+                              </option>
+                            )}
                           <option value="Warehouse A">Warehouse A</option>
                           <option value="Warehouse B">Warehouse B</option>
-                          <option value="Construction Site A">Construction Site A</option>
+                          <option value="Construction Site A">
+                            Construction Site A
+                          </option>
                           <option value="Main Storage">Main Storage</option>
                         </select>
                       </div>

@@ -119,9 +119,28 @@ const QuotationDetail = () => {
     status: "Pending",
   };
 
+  const updateStatus = async (newStatus) => {
+    const response = await fetch(
+      `http://localhost:8080/api/quotations/${quotationData1?.id || id}/status`,
+      {
+        method: "PATCH",
+        headers: {
+          "Content-Type": "application/json",
+        },
+        body:newStatus
+      }
+    );
+  };
+
   const handleStatusChange = (newStatus) => {
+    // http://localhost:8080/api/quotations/{id}/status
+    // status
+
+    updateStatus(newStatus);
     setStatus(newStatus);
-    navigate(`/purchasing/orders/create`, { state: { id: quotationData1?.id } });
+    navigate(`/purchasing/orders/create`, {
+      state: { id: quotationData1?.id },
+    });
   };
 
   if (isLoading) {
@@ -174,7 +193,7 @@ const QuotationDetail = () => {
                 <span className="text-gray-600 text-sm sm:text-base">
                   Quotation ID:{" "}
                   <span className="font-semibold text-main_dark">
-                    {quotationData.id}
+                    {quotationData1?.id}
                   </span>
                 </span>
                 <span
@@ -274,9 +293,7 @@ const QuotationDetail = () => {
                         </label>
                         <p className="font-medium text-main_dark text-lg">
                           LKR
-                          {item.material
-                            ? item.unitPrice.toFixed(2)
-                            : '0.00'}
+                          {item.material ? item.unitPrice.toFixed(2) : "0.00"}
                         </p>
                       </div>
                       <div className="bg-light_gray/30 p-3 sm:p-4 rounded-lg">
@@ -287,7 +304,7 @@ const QuotationDetail = () => {
                           $
                           {item.totalPrice
                             ? item.totalPrice.toFixed(2)
-                            : '0.00'}
+                            : "0.00"}
                         </p>
                       </div>
                     </div>
@@ -336,7 +353,8 @@ const QuotationDetail = () => {
                     <p className="font-medium text-main_dark flex items-center gap-2 text-sm sm:text-base">
                       <FaCalendarAlt className="text-web_yellow w-4 h-4" />
                       {new Date(
-                        quotationRequestDetails?.quotationReqDelivery[0].deliveryDate || ""
+                        quotationRequestDetails?.quotationReqDelivery[0]
+                          .deliveryDate || ""
                       ).toLocaleDateString()}
                     </p>
                   </div>
@@ -365,8 +383,7 @@ const QuotationDetail = () => {
                       Delivery Location
                     </label>
                     <p className="font-medium text-main_dark text-sm sm:text-base">
-                      {quotationData1?.deliveryInfos[0]?.location ||
-                      "N/A"}
+                      {quotationData1?.deliveryInfos[0]?.location || "N/A"}
                     </p>
                   </div>
                 </div>
@@ -481,7 +498,7 @@ const QuotationDetail = () => {
                       {quotationData1?.advancedPayment.toFixed(2) || "0.00"}
                     </span>
                   </div>
-                  <hr className="border-gray-400" />
+                  {/* <hr className="border-gray-400" />
                   <div className="flex justify-between">
                     <span className="font-bold text-main_dark text-base sm:text-lg">
                       Total:
@@ -489,7 +506,7 @@ const QuotationDetail = () => {
                     <span className="font-bold text-web_yellow text-lg sm:text-xl">
                       ${quotationData.pricingInformation.finalTotal.toFixed(2)}
                     </span>
-                  </div>
+                  </div> */}
                 </div>
               </div>
 
@@ -513,7 +530,7 @@ const QuotationDetail = () => {
                     </label>
                     <p className="font-medium text-main_dark text-sm sm:text-base">
                       {new Date(
-                        quotationData1?.createdAt || ""  
+                        quotationData1?.createdAt || ""
                       ).toLocaleDateString()}
                     </p>
                   </div>

@@ -9,7 +9,9 @@ import {
   FaCalendarAlt,
   FaClock,
   FaUser,
-  FaFileAlt
+  FaFileAlt,
+  FaBox,
+  FaMapMarkerAlt
 } from "react-icons/fa";
 import { useNavigate } from "react-router-dom";
 import { toast } from "react-toastify";
@@ -28,6 +30,7 @@ const MaterialRequestsOverview = () => {
   const navigate = useNavigate();
   const [materialRequests, setMaterialRequests] = useState([]);
   const [filteredRequests, setFilteredRequests] = useState([]);
+  const [materialWiseData, setMaterialWiseData] = useState([]);
   const itemsPerPage = 10;
 
   useEffect(() => {
@@ -36,6 +39,7 @@ const MaterialRequestsOverview = () => {
 
   useEffect(() => {
     filterRequests();
+    processMaterialWiseData();
   }, [materialRequests, searchTerm, selectedStatus, selectedPriority, selectedPhase]);
 
   const getRequest = async () => {
@@ -77,7 +81,8 @@ const MaterialRequestsOverview = () => {
                 statusColor: getStatusColor(item.status),
                 priorityColor: getPriorityColor(item.priority || "Medium"),
                 additionalInfo: item.additionalInfo || "",
-                requestedMaterials: item.requestedMaterials
+                requestedMaterials: item.requestedMaterials,
+                location: item.location || item.projectName // Use location if available, otherwise use project name
               }))
             : []
         );
@@ -91,6 +96,79 @@ const MaterialRequestsOverview = () => {
     } finally {
       setLoading(false);
     }
+  };
+
+  const processMaterialWiseData = () => {
+    const materialMap = new Map();
+
+    materialRequests.forEach(request => {
+      request.requestedMaterials.forEach(material => {
+        const key = material.materialName;
+        
+        if (!materialMap.has(key)) {
+          materialMap.set(key, {
+            materialName: material.materialName,
+            unitOfMeasurement: material.unitOfMeasurement,
+            totalQuantity: 0,
+            locationBreakdown: new Map(),
+            requests: [],
+            statuses: new Set(),
+            priorities: new Set(),
+            phases: new Set()
+          });
+        }
+
+        const materialData = materialMap.get(key);
+        const location = request.location || request.projectName;
+        
+        // Add to total quantity
+        materialData.totalQuantity += material.quantity;
+        
+        // Add to location breakdown
+        if (!materialData.locationBreakdown.has(location)) {
+          materialData.locationBreakdown.set(location, {
+            quantity: 0,
+            requests: []
+          });
+        }
+        
+        const locationData = materialData.locationBreakdown.get(location);
+        locationData.quantity += material.quantity;
+        locationData.requests.push({
+          requestId: request.id,
+          projectName: request.projectName,
+          phase: request.phase,
+          status: request.status,
+          priority: request.priority,
+          requestDate: request.requestDate
+        });
+        
+        // Track unique values
+        materialData.statuses.add(request.status);
+        materialData.priorities.add(request.priority);
+        materialData.phases.add(request.phase);
+        materialData.requests.push(request.id);
+      });
+    });
+
+    // Convert to array format
+    const processedData = Array.from(materialMap.entries()).map(([materialName, data]) => ({
+      materialName,
+      unitOfMeasurement: data.unitOfMeasurement,
+      totalQuantity: data.totalQuantity,
+      locationBreakdown: Array.from(data.locationBreakdown.entries()).map(([location, locationData]) => ({
+        location,
+        quantity: locationData.quantity,
+        requests: locationData.requests
+      })),
+      uniqueStatuses: Array.from(data.statuses),
+      uniquePriorities: Array.from(data.priorities),
+      uniquePhases: Array.from(data.phases),
+      totalRequests: data.requests.length,
+      requestIds: [...new Set(data.requests)]
+    }));
+
+    setMaterialWiseData(processedData);
   };
 
   const filterRequests = () => {
@@ -179,10 +257,29 @@ const MaterialRequestsOverview = () => {
   const priorities = ['All Priority', 'Urgent', 'High', 'Medium', 'Low'];
   const phases = ['All Phases', ...new Set(materialRequests.map(r => r.phase))];
 
-  // Pagination
-  const totalPages = Math.ceil(filteredRequests.length / itemsPerPage);
+  // Filter material-wise data
+  const filteredMaterialWiseData = materialWiseData.filter(material => {
+    const matchesSearch = material.materialName.toLowerCase().includes(searchTerm.toLowerCase());
+    
+    const matchesStatus = selectedStatus === 'All Status' || 
+      material.uniqueStatuses.includes(selectedStatus);
+    
+    const matchesPriority = selectedPriority === 'All Priority' || 
+      material.uniquePriorities.includes(selectedPriority);
+    
+    const matchesPhase = selectedPhase === 'All Phases' || 
+      material.uniquePhases.includes(selectedPhase);
+    
+    return matchesSearch && matchesStatus && matchesPriority && matchesPhase;
+  });
+
+  // Pagination for both views
+  const totalPages = Math.ceil(
+    (activeView === "project-wise" ? filteredRequests : filteredMaterialWiseData).length / itemsPerPage
+  );
   const startIndex = (currentPage - 1) * itemsPerPage;
   const paginatedRequests = filteredRequests.slice(startIndex, startIndex + itemsPerPage);
+  const paginatedMaterialData = filteredMaterialWiseData.slice(startIndex, startIndex + itemsPerPage);
 
   if (loading) {
     return (
@@ -258,12 +355,18 @@ const MaterialRequestsOverview = () => {
             <div className="flex flex-col lg:flex-row gap-4 items-start lg:items-end">
               {/* Search Bar */}
               <div className="flex-1 w-full lg:max-w-md">
-                <label className="block text-sm font-medium text-gray-700 mb-2">Search Requests</label>
+                <label className="block text-sm font-medium text-gray-700 mb-2">
+                  Search {activeView === "project-wise" ? "Requests" : "Materials"}
+                </label>
                 <div className="relative">
                   <FaSearch className="absolute left-3 top-3 h-4 w-4 text-gray-400" />
                   <input
                     type="text"
-                    placeholder="Search by project, phase, materials, or requestor..."
+                    placeholder={
+                      activeView === "project-wise" 
+                        ? "Search by project, phase, materials, or requestor..."
+                        : "Search by material name..."
+                    }
                     value={searchTerm}
                     onChange={(e) => setSearchTerm(e.target.value)}
                     className="w-full pl-10 pr-4 py-2 border border-gray-300 rounded-md focus:outline-none focus:ring-2 focus:ring-web_yellow focus:border-transparent text-sm"
@@ -328,7 +431,9 @@ const MaterialRequestsOverview = () => {
           {/* Results Summary */}
           <div className="flex flex-col sm:flex-row sm:items-center sm:justify-between mb-4 gap-2">
             <p className="text-sm text-gray-600">
-              Showing {startIndex + 1} to {Math.min(startIndex + itemsPerPage, filteredRequests.length)} of {filteredRequests.length} requests
+              Showing {startIndex + 1} to {Math.min(startIndex + itemsPerPage, 
+                activeView === "project-wise" ? filteredRequests.length : filteredMaterialWiseData.length
+              )} of {activeView === "project-wise" ? filteredRequests.length : filteredMaterialWiseData.length} {activeView === "project-wise" ? "requests" : "materials"}
             </p>
           </div>
 
@@ -442,7 +547,7 @@ const MaterialRequestsOverview = () => {
                 </table>
               </div>
 
-              {/* Mobile Cards */}
+              {/* Mobile Cards for Project-wise */}
               <div className="lg:hidden divide-y divide-gray-200">
                 {paginatedRequests.map((request) => (
                   <div key={request.id} className="p-4">
@@ -488,21 +593,213 @@ const MaterialRequestsOverview = () => {
               </div>
             </div>
           ) : (
-            // Material-wise view would go here - similar structure
+            // Material-wise view
             <div className="bg-purewhite border border-gray-200 rounded-lg overflow-hidden mb-6">
-              <div className="px-6 py-4 border-b border-gray-200">
-                <h2 className="text-lg font-semibold text-gray-900">
-                  Material-wise Material Requests
-                </h2>
+              {/* Desktop Table for Material-wise */}
+              <div className="hidden lg:block overflow-x-auto">
+                <table className="w-full">
+                  <thead className="bg-light_brown/30">
+                    <tr>
+                      <th className="px-6 py-4 text-left text-sm font-semibold text-main_dark">
+                        <div className="flex items-center gap-2">
+                          <FaBox className="w-4 h-4" />
+                          Material Name
+                        </div>
+                      </th>
+                      <th className="px-6 py-4 text-left text-sm font-semibold text-main_dark">
+                        Total Quantity
+                      </th>
+                      <th className="px-6 py-4 text-left text-sm font-semibold text-main_dark">
+                        <div className="flex items-center gap-2">
+                          <FaMapMarkerAlt className="w-4 h-4" />
+                          Location Breakdown
+                        </div>
+                      </th>
+                      <th className="px-6 py-4 text-left text-sm font-semibold text-main_dark">
+                        Total Requests
+                      </th>
+                      <th className="px-6 py-4 text-left text-sm font-semibold text-main_dark">
+                        Statuses
+                      </th>
+                      <th className="px-6 py-4 text-left text-sm font-semibold text-main_dark">
+                        Priorities
+                      </th>
+                      <th className="px-6 py-4 text-left text-sm font-semibold text-main_dark">Actions</th>
+                    </tr>
+                  </thead>
+                  <tbody className="divide-y divide-gray-200">
+                    {paginatedMaterialData.map((material, index) => (
+                      <tr key={`${material.materialName}-${index}`} className="hover:bg-gray-50 transition-colors">
+                        <td className="px-6 py-4">
+                          <div className="font-semibold text-main_dark text-sm">
+                            {material.materialName}
+                          </div>
+                          <div className="text-xs text-gray-500">
+                            Unit: {material.unitOfMeasurement}
+                          </div>
+                        </td>
+                        <td className="px-6 py-4">
+                          <div className="font-semibold text-main_dark text-sm">
+                            {material.totalQuantity} {material.unitOfMeasurement}
+                          </div>
+                        </td>
+                        <td className="px-6 py-4">
+                          <div className="space-y-2">
+                            {material.locationBreakdown.map((location, locIndex) => (
+                              <div key={locIndex} className="bg-gray-50 p-2 rounded text-xs">
+                                <div className="font-medium text-gray-700">
+                                  📍 {location.location}
+                                </div>
+                                <div className="text-gray-600">
+                                  {location.quantity} {material.unitOfMeasurement}
+                                </div>
+                                <div className="text-gray-500 text-xs">
+                                  {location.requests.length} request(s)
+                                </div>
+                              </div>
+                            ))}
+                          </div>
+                        </td>
+                        <td className="px-6 py-4">
+                          <span className="font-semibold text-main_dark">
+                            {material.totalRequests}
+                          </span>
+                        </td>
+                        <td className="px-6 py-4">
+                          <div className="flex flex-wrap gap-1">
+                            {material.uniqueStatuses.map((status, statusIndex) => (
+                              <span
+                                key={statusIndex}
+                                className={`px-2 py-1 rounded-full text-xs font-medium ${getStatusColor(status)}`}
+                              >
+                                {status}
+                              </span>
+                            ))}
+                          </div>
+                        </td>
+                        <td className="px-6 py-4">
+                          <div className="flex flex-wrap gap-1">
+                            {material.uniquePriorities.map((priority, priorityIndex) => (
+                              <span
+                                key={priorityIndex}
+                                className={`px-2 py-1 rounded-full text-xs font-medium ${getPriorityColor(priority)}`}
+                              >
+                                {priority}
+                              </span>
+                            ))}
+                          </div>
+                        </td>
+                        <td className="px-6 py-4">
+                          <button
+                            onClick={() => {
+                              // Navigate to a detailed view showing all requests for this material
+                              navigate(`/purchasing/materialrequests/material-details/${encodeURIComponent(material.materialName)}`);
+                            }}
+                            className="text-deep_green hover:text-deep_green/80 transition-colors"
+                            title="View all requests for this material"
+                          >
+                            <FaEye className="w-4 h-4" />
+                          </button>
+                        </td>
+                      </tr>
+                    ))}
+                  </tbody>
+                </table>
               </div>
-              {/* Add material-wise table implementation here */}
+
+              {/* Mobile Cards for Material-wise */}
+              <div className="lg:hidden divide-y divide-gray-200">
+                {paginatedMaterialData.map((material, index) => (
+                  <div key={`${material.materialName}-mobile-${index}`} className="p-4">
+                    <div className="flex justify-between items-start mb-3">
+                      <div className="flex-1">
+                        <h3 className="font-semibold text-main_dark text-sm mb-1">
+                          {material.materialName}
+                        </h3>
+                        <p className="text-xs text-gray-500 mb-2">
+                          Unit: {material.unitOfMeasurement}
+                        </p>
+                        <div className="text-sm font-medium text-main_dark">
+                          Total: {material.totalQuantity} {material.unitOfMeasurement}
+                        </div>
+                      </div>
+                      <div className="text-right">
+                        <div className="text-sm font-semibold text-main_dark">
+                          {material.totalRequests} Requests
+                        </div>
+                      </div>
+                    </div>
+                    
+                    {/* Location Breakdown */}
+                    <div className="mb-3">
+                      <div className="text-xs font-medium text-gray-700 mb-2">Location Breakdown:</div>
+                      <div className="space-y-2">
+                        {material.locationBreakdown.map((location, locIndex) => (
+                          <div key={locIndex} className="bg-gray-50 p-2 rounded text-xs">
+                            <div className="font-medium text-gray-700">
+                              📍 {location.location}
+                            </div>
+                            <div className="text-gray-600">
+                              {location.quantity} {material.unitOfMeasurement} ({location.requests.length} requests)
+                            </div>
+                          </div>
+                        ))}
+                      </div>
+                    </div>
+
+                    {/* Status and Priority Tags */}
+                    <div className="space-y-2 mb-3">
+                      <div>
+                        <div className="text-xs font-medium text-gray-700 mb-1">Statuses:</div>
+                        <div className="flex flex-wrap gap-1">
+                          {material.uniqueStatuses.map((status, statusIndex) => (
+                            <span
+                              key={statusIndex}
+                              className={`px-2 py-1 rounded-full text-xs font-medium ${getStatusColor(status)}`}
+                            >
+                              {status}
+                            </span>
+                          ))}
+                        </div>
+                      </div>
+                      <div>
+                        <div className="text-xs font-medium text-gray-700 mb-1">Priorities:</div>
+                        <div className="flex flex-wrap gap-1">
+                          {material.uniquePriorities.map((priority, priorityIndex) => (
+                            <span
+                              key={priorityIndex}
+                              className={`px-2 py-1 rounded-full text-xs font-medium ${getPriorityColor(priority)}`}
+                            >
+                              {priority}
+                            </span>
+                          ))}
+                        </div>
+                      </div>
+                    </div>
+                    
+                    <div className="flex justify-end">
+                      <button
+                        onClick={() => {
+                          navigate(`/purchasing/materialrequests/material-details/${encodeURIComponent(material.materialName)}`);
+                        }}
+                        className="text-deep_green hover:text-deep_green/80 transition-colors"
+                        title="View all requests for this material"
+                      >
+                        <FaEye className="w-4 h-4" />
+                      </button>
+                    </div>
+                  </div>
+                ))}
+              </div>
             </div>
           )}
 
           {/* Pagination */}
           <div className="flex flex-col sm:flex-row sm:items-center sm:justify-between gap-4">
             <div className="text-sm text-gray-600">
-              Showing {startIndex + 1} to {Math.min(startIndex + itemsPerPage, filteredRequests.length)} of {filteredRequests.length} results
+              Showing {startIndex + 1} to {Math.min(startIndex + itemsPerPage, 
+                activeView === "project-wise" ? filteredRequests.length : filteredMaterialWiseData.length
+              )} of {activeView === "project-wise" ? filteredRequests.length : filteredMaterialWiseData.length} results
             </div>
             <div className="flex items-center gap-2">
               <button 
