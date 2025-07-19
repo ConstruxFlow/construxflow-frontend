@@ -1,6 +1,6 @@
-// src/pages/Supplier/SubmitQuotation.jsx
+// src/pages/Supplier/UpdateQuotation.jsx
 import React, { useState, useEffect } from "react";
-import { useNavigate,useParams } from "react-router-dom";
+import { useNavigate, useParams } from "react-router-dom";
 import NavBar from "../../components/NavBar";
 import { FaPaperclip, FaTrash } from "react-icons/fa";
 import { toast } from "react-toastify";
@@ -13,78 +13,79 @@ const navLinks = [
   { name: "Payments", href: "/payments" },
 ];
 
-const SubmitQuotation = () => {
-  const { id } = useParams(); // request ID from URL
+const UpdateQuotation = () => {
+  const { id } = useParams(); // quotation ID from URL
   const navigate = useNavigate();
   const [requestSummary, setRequestSummary] = useState(null);
   const [itemsRequested, setItemsRequested] = useState([]);
 
-  const [pricing, setPricing] = useState([
-    { item: "", quantity: "", unitPrice: "" },
-  ]);
+  // Maintain similar structure as SubmitQuotation
+  const [pricing, setPricing] = useState([]);
   const [advancedPayment, setAdvancedPayment] = useState("");
-  const [deliveries, setDeliveries] = useState([
-    { requiredDate: "", deliveryLocation: "", shippingCost: "", deliveryDate: ""},
-  ]);
+  const [deliveries, setDeliveries] = useState([]);
   const [paymentTerms, setPaymentTerms] = useState("");
   const [notes, setNotes] = useState("");
   const [attachments, setAttachments] = useState([]);
+  const [initAttachmentNames, setInitAttachmentNames] = useState([]);
 
   const [loading, setLoading] = useState(false);
-  const [successMsg, setSuccessMsg] = useState("");
-  const [errorMsg, setErrorMsg] = useState("");
 
-  // ✅ Fetch quotation request details
+  // Fetch the quotation details (to edit)
   useEffect(() => {
     if (!id) return;
-    fetch(`http://localhost:8080/api/quotationrequest/find/${id}`)
-      .then((res) => res.json())
-      .then((data) => {
-        if (data && data.data) {
-          setRequestSummary(data.data);
-          const materials =
-            data.data.quotationReqMaterials?.map((m) => ({
-              id: m.material.materialId,
-              name: m.material.materialName,
-              quantity: `${m.quantity} ${m.material.unitOfMeasurement || ""}`,
-            })) || [];
-          setItemsRequested(materials);
-          setPricing(
-            materials.map((item) => ({
-              item: item.id,
-              quantity: "",
-              unitPrice: "",
-              estimatedUnitPrice: data.data.quotationReqMaterials?.find(m => m.material.materialId === item.id)?.unitPrice || "",
-            }))
-          );
-          const reqDate = data.data.deliveryDate || ""; // Use actual field from your data
-          console.log(data.data.quotationReqDelivery);
-          setDeliveries(
-            data.data.quotationReqDelivery.map((delivery)=>({
-              requiredDate: "",
-              deliveryLocation: delivery.location,
-              shippingCost: "",
-              deliveryDate: delivery.deliveryDate,
-            }))
-          )
-          
-          // setDeliveries([
-          //   {
-          //     requiredDate: "",
-          //     deliveryLocation: "",
-          //     shippingCost: "",
-          //     deliveryDate: reqDate,
-          //   },
-          // ]);
-        }
-      })
-      .catch((err) => {
-        toast.error("Failed to load request summary.");
+    (async () => {
+      try {
+        const res = await fetch(`http://localhost:8080/api/quotations/find/${id}`);
+        if (!res.ok) throw new Error("Could not load quotation.");
+        const data = await res.json();
+        const q = data;
+        // Get the quotation request to map item names and original delivery dates (if needed)
+        const reqRes = await fetch(`http://localhost:8080/api/quotationrequest/find/${q.quotationRequestId}`);
+        const reqData = await reqRes.json();
+
+        setRequestSummary(reqData.data);
+
+        const materials =
+          reqData.data.quotationReqMaterials?.map((m) => ({
+            id: m.material.materialId,
+            name: m.material.materialName,
+            quantity: `${m.quantity} ${m.material.unitOfMeasurement || ""}`,
+          })) || [];
+        setItemsRequested(materials);
+
+        // Pre-populate pricing from loaded quotation
+        setPricing(
+          (q.items || []).map((item) => ({
+            item: item.material.materialId,
+            quantity: item.quantity,
+            unitPrice: item.unitPrice,
+            estimatedUnitPrice:
+              reqData.data.quotationReqMaterials?.find((m) => m.material.materialId === item.material.materialId)?.unitPrice || "",
+          }))
+        );
+        setAdvancedPayment(q.advancedPayment || "");
+        setDeliveries(
+          (q.deliveryInfos || []).map((d, i) => ({
+            requiredDate: d.deliveryDate,
+            deliveryLocation: d.location,
+            shippingCost: d.shippingCost,
+            deliveryDate: (
+              reqData.data.quotationReqDelivery?.[i]?.deliveryDate ||
+              d.deliveryDate
+            ),
+          }))
+        );
+        setPaymentTerms(q.paymentTerms || "");
+        setNotes(q.notes || "");
+        // Existing attachments (show file names, you may want to support removal/preview)
+        setInitAttachmentNames(q.attachments?.map((a) => a.fileName) || []);
+        setAttachments([]);
+      } catch (err) {
+        toast.error("Failed to load quotation for update.");
         console.error(err);
-      });
+      }
+    })();
   }, [id]);
-  // console.log(requestSummary);
-  // console.log(itemsRequested);
 
   const handlePricingChange = (idx, e) => {
     const { name, value } = e.target;
@@ -106,7 +107,7 @@ const SubmitQuotation = () => {
   const handleAddLocation = () =>
     setDeliveries([
       ...deliveries,
-      { requiredDate: "", deliveryLocation: "", shippingCost: "",deliveryDate: deliveries[0]?.deliveryDate || "" },
+      { requiredDate: "", deliveryLocation: "", shippingCost: "", deliveryDate: deliveries[0]?.deliveryDate || "" },
     ]);
   const handleDeleteLocation = (idx) =>
     setDeliveries(deliveries.filter((_, i) => i !== idx));
@@ -129,10 +130,8 @@ const SubmitQuotation = () => {
 
   const handleSubmit = async (e) => {
     e.preventDefault();
-    setSuccessMsg("");
-    setErrorMsg("");
 
-    // Validation
+    // Validation similar to SubmitQuotation
     if (
       pricing.some(
         (p) =>
@@ -166,8 +165,9 @@ const SubmitQuotation = () => {
     }
 
     setLoading(true);
+
+    // If updating, handle only new files: backend must also persist pre-existing attachments (not shown here)
     const payload = {
-      quotationRequestId: id,
       advancedPayment: parseFloat(advancedPayment || 0),
       paymentTerms,
       notes,
@@ -187,14 +187,13 @@ const SubmitQuotation = () => {
       attachments: attachments.map((file) => ({
         fileName: file.name,
         fileType: file.type,
-        fileUrl: "", // if needed
+        fileUrl: "",
       })),
     };
-    // console.log("Submitting payload:", payload);
 
     try {
-      const res = await fetch("http://localhost:8080/api/quotations/create", {
-        method: "POST",
+      const res = await fetch(`http://localhost:8080/api/quotations/update/${id}`, {
+        method: "PUT",
         headers: { "Content-Type": "application/json" },
         body: JSON.stringify(payload),
       });
@@ -203,27 +202,15 @@ const SubmitQuotation = () => {
         const err = await res.text();
         throw new Error(err);
       }
-      const data = await res.json();
-      console.log("Submission response:", data);
-      toast.success("Quotation submitted successfully!");
+      toast.success("Quotation updated successfully!");
       navigate("/quotations");
-      setPricing([{ item: "", quantity: "", unitPrice: "" }]);
-      setAdvancedPayment("");
-      setDeliveries([
-        { requiredDate: "", deliveryLocation: "", shippingCost: "",deliveryDate: deliveries[0]?.deliveryDate || "" },
-      ]);
-      setPaymentTerms("");
-      setNotes("");
-      setAttachments([]);
     } catch (err) {
-      toast.error("Submission failed: " + err.message);
+      toast.error("Update failed: " + err.message);
     } finally {
       setLoading(false);
     }
   };
 
-  // console.log(deliveries);
-  
   return (
     <div className="bg-[#f6f7f9] min-h-screen font-poppins">
       <NavBar links={navLinks} logoSrc="/logo1.png" />
@@ -235,30 +222,15 @@ const SubmitQuotation = () => {
             Dashboard
           </a>{" "}
           &nbsp;/&nbsp;
-          <a href="/requests" className="hover:underline text-deep_green">
-            Request
+          <a href="/quotations" className="hover:underline text-deep_green">
+            Quotations
           </a>{" "}
           &nbsp;/&nbsp;
-          <span className="font-semibold">Submit Quotation</span>
+          <span className="font-semibold">Update Quotation</span>
         </div>
 
-        <h1 className="text-2xl font-bold text-main_dark mb-1">
-          Submit Quotation
-        </h1>
-        <p className="text-gray-500 mb-6">
-          Provide your best quote for the requested items.
-        </p>
-
-        {successMsg && (
-          <div className="bg-green-100 text-green-800 p-3 rounded mb-4">
-            {successMsg}
-          </div>
-        )}
-        {errorMsg && (
-          <div className="bg-red-100 text-red-800 p-3 rounded mb-4">
-            {errorMsg}
-          </div>
-        )}
+        <h1 className="text-2xl font-bold text-main_dark mb-1">Update Quotation</h1>
+        <p className="text-gray-500 mb-6">Edit your quotation if further changes are required.</p>
 
         {/* Request Summary Block */}
         {requestSummary && (
@@ -282,9 +254,7 @@ const SubmitQuotation = () => {
                 <div>
                   <span className="text-slatebluegray">Quotation Deadline:</span>
                   <span className="ml-2 text-web_yellow font-semibold">
-                    {new Date(
-                      requestSummary.quotationDeadline
-                    ).toLocaleDateString()}
+                    {new Date(requestSummary.quotationDeadline).toLocaleDateString()}
                   </span>
                 </div>
               </div>
@@ -300,16 +270,10 @@ const SubmitQuotation = () => {
                     ))}
                   </tbody>
                 </table>
-                
               </div>
             </div>
           </div>
         )}
-
-        {/* ✅ FORM START (keep all your existing section components from previous code) */}
-
-        {/* CUT: Pricing / Advanced Payment / Delivery / Terms / Notes / Attachments / Quotation Summary */}
-        {/* ✅ Already included in your previous code. You can paste that code after this summary block and it will work. */}
 
         <form onSubmit={handleSubmit}>
           {/* Pricing Information */}
@@ -365,7 +329,6 @@ const SubmitQuotation = () => {
                       readOnly
                       disabled
                       className="w-full border border-light_gray rounded-lg pl-7 pr-3 py-2 text-main_dark focus:outline-none"
-                      
                     />
                   </div>
                   <div className="relative">
@@ -450,24 +413,16 @@ const SubmitQuotation = () => {
             </div>
             <div className="grid grid-cols-4 gap-x-6 gap-y-4">
               <div>
-                <label className="block text-sm text-slatebluegray mb-1">
-                  Required Date
-                </label>
+                <label className="block text-sm text-slatebluegray mb-1">Required Date</label>
               </div>
               <div>
-                <label className="block text-sm text-slatebluegray mb-1">
-                  Delivery Date
-                </label>
+                <label className="block text-sm text-slatebluegray mb-1">Delivery Date</label>
               </div>
               <div>
-                <label className="block text-sm text-slatebluegray mb-1">
-                  Delivery Location
-                </label>
+                <label className="block text-sm text-slatebluegray mb-1">Delivery Location</label>
               </div>
               <div>
-                <label className="block text-sm text-slatebluegray mb-1">
-                  Shipping Cost
-                </label>
+                <label className="block text-sm text-slatebluegray mb-1">Shipping Cost</label>
               </div>
               {deliveries.map((row, idx) => (
                 <React.Fragment key={idx}>
@@ -533,9 +488,7 @@ const SubmitQuotation = () => {
 
           {/* Terms & Conditions */}
           <section className="bg-purewhite border border-light_gray rounded-lg p-6 mb-6">
-            <div className="font-semibold text-main_dark mb-4">
-              Terms & Conditions
-            </div>
+            <div className="font-semibold text-main_dark mb-4">Terms & Conditions</div>
             <div>
               <label className="block text-sm text-slatebluegray mb-1">
                 Payment Terms
@@ -575,6 +528,18 @@ const SubmitQuotation = () => {
           {/* Attachments */}
           <section className="bg-purewhite border border-light_gray rounded-lg p-6 mb-6">
             <div className="font-semibold text-main_dark mb-4">Attachments</div>
+            {/* Show original attachment file names, if any */}
+            {initAttachmentNames.length > 0 && (
+              <div className="mb-2 text-slatebluegray text-xs font-semibold">
+                Existing Attachments:
+                <ul className="list-disc pl-6 mt-1">
+                  {initAttachmentNames.map((name, idx) => (
+                    <li key={idx}>{name}</li>
+                  ))}
+                </ul>
+                <span className="block text-slatebluegray text-xs mt-1">Uploading new files will not remove these.</span>
+              </div>
+            )}
             <div className="flex flex-col items-center justify-center border-2 border-dashed border-light_gray rounded-lg py-8 bg-gray-50">
               <FaPaperclip className="text-2xl text-slatebluegray mb-2" />
               <div className="text-slatebluegray text-sm mb-2 font-medium">
@@ -642,7 +607,14 @@ const SubmitQuotation = () => {
               className="bg-web_yellow text-main_dark px-6 py-3 rounded-lg font-medium hover:opacity-90 transition"
               disabled={loading}
             >
-              {loading ? "Submitting..." : "Submit Quotation"}
+              {loading ? "Updating..." : "Update Quotation"}
+            </button>
+            <button
+              type="button"
+              onClick={() => navigate('/quotations')}
+              className="bg-deep_green text-purewhite px-6 py-3 rounded-lg font-medium hover:bg-main_dark transition"
+            >
+              Cancel
             </button>
           </div>
         </form>
@@ -651,4 +623,4 @@ const SubmitQuotation = () => {
   );
 };
 
-export default SubmitQuotation;
+export default UpdateQuotation;

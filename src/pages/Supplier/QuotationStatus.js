@@ -9,6 +9,10 @@ import {
   FaSearch,
   FaChevronDown,
   FaEye,
+  FaBoxOpen,
+  FaSortNumericUp,
+  FaMoneyBill,
+  FaRegCheckCircle,
 } from "react-icons/fa";
 
 const navLinks = [
@@ -139,19 +143,29 @@ const QuotationStatus = () => {
                   Quotation ID
                 </th>
                 <th className="px-6 py-4 text-left text-sm font-semibold text-main_dark">
-                  Material
+                  <span className="flex items-center gap-2">
+                    <FaBoxOpen className="inline mb-0.5" /> Materials
+                  </span>
                 </th>
                 <th className="px-6 py-4 text-left text-sm font-semibold text-main_dark">
-                  Quantity
+                  <span className="flex items-center gap-2">
+                    <FaSortNumericUp className="inline mb-0.5" /> Quantity
+                  </span>
                 </th>
                 <th className="px-6 py-4 text-left text-sm font-semibold text-main_dark">
-                  Quoted Price
+                  <span className="flex items-center gap-2">
+                    <FaMoneyBill className="inline mb-0.5" /> Quoted Price
+                  </span>
                 </th>
                 <th className="px-6 py-4 text-left text-sm font-semibold text-main_dark">
-                  Submitted
+                  <span className="flex items-center gap-2">
+                    <FaClock className="inline mb-0.5" /> Submitted
+                  </span>
                 </th>
                 <th className="px-6 py-4 text-left text-sm font-semibold text-main_dark">
-                  Status
+                  <span className="flex items-center gap-2">
+                    <FaRegCheckCircle className="inline mb-0.5" /> Status
+                  </span>
                 </th>
                 <th className="px-6 py-4 text-left text-sm font-semibold text-main_dark">
                   Action
@@ -248,23 +262,22 @@ const SummaryCard = ({ icon, title, value, subtitle, type }) => {
 
   return (
     <div
-      className={`shadow group transition-all duration-200 hover:scale-[1.02] 
-       rounded-lg px-6 py-6 flex items-center gap-4`}
+      className={`bg-purewhite border border-gray-200 rounded-xl p-4 sm:p-5 flex items-center gap-3 sm:gap-4 shadow-sm hover:shadow-md hover:-translate-y-0.5 transition-all duration-150`}
     >
+      <div className="flex-1">
+        <div className="text-slatebluegray font-medium text-sm mb-0.5 truncate">
+          {title}
+        </div>
+        <div className="text-xl sm:text-2xl font-bold text-main_dark leading-tight mb-0.5">
+          {value}
+        </div>
+        <div className="text-deep_green text-xs">{subtitle}</div>
+      </div>
       <div
         className={`flex items-center justify-center h-10 w-10 rounded-xl shadow 
         ${style.iconBg} ${style.iconColor} group-hover:scale-110 transition-all text-lg`}
       >
         {icon}
-      </div>
-      <div className="flex-1">
-        <div className="text-sm uppercase tracking-widest font-bold text-slatebluegray mb-1">
-          {title}
-        </div>
-        <div className="text-3xl font-extrabold text-main_dark mb-1">
-          {value}
-        </div>
-        <div className="text-xs text-slatebluegray font-medium">{subtitle}</div>
       </div>
     </div>
   );
