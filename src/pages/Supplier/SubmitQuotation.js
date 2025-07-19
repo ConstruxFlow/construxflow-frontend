@@ -549,7 +549,7 @@ const SubmitQuotation = () => {
                 <option value="">Select payment terms</option>
                 <option value="Net 30">Net 30</option>
                 <option value="Net 60">Net 60</option>
-                <option value="Advance">Advance</option>
+                {/* <option value="Advance">Advance</option> */}
               </select>
             </div>
           </section>
@@ -623,10 +623,10 @@ const SubmitQuotation = () => {
                 <span>Shipping:</span>
                 <span>${totalShipping.toFixed(2)}</span>
               </div>
-              <div className="flex justify-between">
+              {/* <div className="flex justify-between">
                 <span>Tax:</span>
                 <span>$0.00</span>
-              </div>
+              </div> */}
               <hr className="border-gray-300 my-2" />
               <div className="flex justify-between font-bold text-lg">
                 <span>Total:</span>
