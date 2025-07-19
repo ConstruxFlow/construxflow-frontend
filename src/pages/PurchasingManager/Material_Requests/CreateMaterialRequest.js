@@ -1,4 +1,4 @@
-import React, { useState, useEffect } from "react";
+import React, { useState, useEffect, useContext } from "react";
 import {
   FaArrowLeft,
   FaPlus,
@@ -11,11 +11,13 @@ import { useFormValidation } from "./functions/UseformValidation";
 import { toast } from "react-toastify";
 import LoadingOverlay from "../../../components/LoadingOverlay";
 import { useLocation, useNavigate } from "react-router-dom";
+import { AuthContext } from "../../../Context/AuthContext";
 
 const CreateMaterialRequest = () => {
   const [isLoading, setIsLoading] = useState(false);
   const [loadingProgress, setLoadingProgress] = useState(0);
   const [projectData, setProjectData] = useState();
+  const {authState} = useContext(AuthContext);
   const { validateForm, validateField, isSubmitting, setIsSubmitting } =
     useFormValidation();
 
@@ -36,6 +38,8 @@ const CreateMaterialRequest = () => {
     status: "Pending",
     additional_info: "",
     estimated_cost: 0,
+    material_req_id: id || null,
+    projectId: null,
     quotationReqMaterials: [],
     quotationReqDelivery: [],
     quotationReqDocs: [],
@@ -76,7 +80,7 @@ const CreateMaterialRequest = () => {
         if (!res.ok) {
           toast.error("Failed to fetch material request details");
           return;
-        }else{
+        } else {
           const projectdataResponse = await fetch(`http://localhost:8080/api/projects/${data.projectId}`);
           const projectdata1 = await projectdataResponse.json();
           if (!projectdataResponse.ok) {
@@ -84,22 +88,30 @@ const CreateMaterialRequest = () => {
             return;
           }
           console.log("Project data:", projectdata1);
-          setProjectData((prev) => ( projectdata1));
+          setProjectData(projectdata1);
+          
+          // Set the initial delivery schedule with project location
+          setDeliverySchedule([
+            { 
+              id: Date.now(), 
+              location: projectdata1.location || "", 
+              deliveryDate: "", 
+              quantitySplit: 0.0 
+            }
+          ]);
         }
 
         // 1) store raw data
         setRequestData(data);
-        
 
         // 2) map top‐level fields into your form
         setRequestdata((prev) => ({
           ...prev,
           requesterName: data.projectName || "",
           request_date: data.requestDate || "",
-          // quotation_deadline: data.quotation_deadline || "",
           priority_level: data.priority || "",
-          // quotation_type: data.quotation_type || "",
           additional_info: data.additionalInfo || "",
+          projectId: data.projectId,
         }));
 
         // 3) map requestedMaterials into your materials array
@@ -107,14 +119,17 @@ const CreateMaterialRequest = () => {
           setMaterials(
             data.requestedMaterials.map((rm) => ({
               id: rm.requestedMaterialId,
-              material: { material_id: rm.materialId, material_name: rm.materialName || "", material_type: rm.materialType || "" },
+              material: { 
+                material_id: rm.materialId, 
+                material_name: rm.materialName || "", 
+                material_type: rm.materialType || "" 
+              },
               quantity: rm.quantity,
               unitPrice: rm.unitPrice || "",
               estimatedCost: (rm.quantity || 0) * (rm.unitPrice || 0),
             }))
           );
         }
-        // (You can also map deliverySchedule here if your API returns it)
 
       } catch (err) {
         toast.error("Network error: Failed to fetch material request");
@@ -127,14 +142,7 @@ const CreateMaterialRequest = () => {
     fetchRequest();
   }, [id]);
 
-  useEffect(() => {
-  console.log("Project data state updated:", projectData);
-}, [projectData]);
-
-
-  // console.log(materials);
-  
-  // Auto‐recalculate form’s total estimated cost
+  // Auto‐recalculate form's total estimated cost
   useEffect(() => {
     const total = materials.reduce(
       (sum, m) => sum + (m.estimatedCost || 0),
@@ -145,6 +153,9 @@ const CreateMaterialRequest = () => {
       estimated_cost: total,
     }));
   }, [materials]);
+
+  // Check if we should show quantity split (only when there's exactly one material)
+  const shouldShowQuantitySplit = materials.length === 1;
 
   // Field change for top‐level form
   const handleChange = (e) => {
@@ -195,30 +206,16 @@ const CreateMaterialRequest = () => {
     );
   };
 
-  useEffect(() => {
-  if (Array.isArray(projectData) && projectData.length > 0) {
-    const newLocations = projectData.map((project, index) => ({
-      id: Date.now() + index,
-      location: project.location || "",
-      deliveryDate: "",
-      quantitySplit: 0.0,
-    }));
-    
-    setDeliverySchedule(newLocations);
-  }
-}, [projectData]);
-
-
-  console.log("Delivery Schedule:", deliverySchedule);
-  
-
-
   // Delivery schedule handlers
   const addLocation = () =>
     setDeliverySchedule((prev) => [
       ...prev,
       { id: Date.now(), location: "", deliveryDate: "", quantitySplit: 0 },
     ]);
+  
+  const removeLocation = (sid) =>
+    setDeliverySchedule((prev) => prev.filter((s) => s.id !== sid));
+  
   const updateDeliverySchedule = (sid, field, val) =>
     setDeliverySchedule((prev) =>
       prev.map((s) =>
@@ -233,8 +230,6 @@ const CreateMaterialRequest = () => {
             }
       )
     );
-    // console.log(materials);
-    
 
   // Submit handler
   const handleOnSubmit = async (e) => {
@@ -263,19 +258,20 @@ const CreateMaterialRequest = () => {
         .map((s) => ({
           location: s.location,
           deliveryDate: s.deliveryDate,
-          quantitySplit: s.quantitySplit,
+          quantitySplit: shouldShowQuantitySplit ? s.quantitySplit : 0,
         }));
 
       const payload = {
         ...Requestdata,
         quotationReqMaterials: transformedMaterials,
         quotationReqDelivery: transformedDelivery,
+        manager_id: authState?.user?.managerId || null,
         quotationReqDocs: [],
         estimated_cost: Requestdata.estimated_cost,
       };
-      // console.log("Submitting payload:", payload);
-      
 
+      console.log("Submitting payload:", payload);
+      
       setLoadingProgress(50);
       const res = await fetch(
         "http://localhost:8080/api/quotationrequest/create",
@@ -459,7 +455,12 @@ const CreateMaterialRequest = () => {
                           }
                           className="w-full px-3 py-2 border border-gray-300 rounded-md focus:ring-2 focus:ring-web_yellow"
                         >
-                          <option value={m.material.material_id || ""}>{m.material.material_name || ""}-{m.material.materila_type || ""}</option>
+                          <option value="">Select Material</option>
+                          {m.material.material_id && (
+                            <option value={m.material.material_id}>
+                              {m.material.material_name || ""} - {m.material.material_type || ""}
+                            </option>
+                          )}
                         </select>
                       </div>
                       <div>
@@ -525,7 +526,8 @@ const CreateMaterialRequest = () => {
                   <h2 className="text-lg font-semibold text-main_dark">
                     Delivery Schedule
                   </h2>
-                  {materials.length === 1 && (
+                  {/* Only show Add Location button if there's exactly one material */}
+                  {shouldShowQuantitySplit && (
                     <button
                       onClick={addLocation}
                       className="px-4 py-2 bg-deep_green text-purewhite rounded-md hover:bg-deep_green/90 flex items-center gap-2"
@@ -545,18 +547,23 @@ const CreateMaterialRequest = () => {
                         <th className="px-4 py-2 text-left text-sm font-semibold text-main_dark">
                           Required Date
                         </th>
-                        {materials.length === 1 && (
+                        {/* Only show Quantity Split column if there's exactly one material */}
+                        {shouldShowQuantitySplit && (
                           <th className="px-4 py-2 text-left text-sm font-semibold text-main_dark">
                             Quantity Split
                           </th>
                         )}
+                        <th className="px-4 py-2 text-left text-sm font-semibold text-main_dark">
+                          Actions
+                        </th>
                       </tr>
                     </thead>
                     <tbody>
                       {deliverySchedule.map((s) => (
                         <tr key={s.id} className="border-b border-gray-200">
                           <td className="px-4 py-2">
-                            <select
+                            <input
+                              type="text"
                               value={s.location}
                               onChange={(e) =>
                                 updateDeliverySchedule(
@@ -565,20 +572,9 @@ const CreateMaterialRequest = () => {
                                   e.target.value
                                 )
                               }
+                              placeholder="Enter location"
                               className="w-full px-2 py-1 text-sm border border-gray-300 rounded-md focus:ring-2 focus:ring-web_yellow"
-                            >
-                              <option value="">Select Location</option>
-                              <option value="Construction Site A, Downtown">
-                                Construction Site A, Downtown
-                              </option>
-                              <option value="Construction Site B, Uptown">
-                                Construction Site B, Uptown
-                              </option>
-                              <option value="Warehouse A">Warehouse A</option>
-                              <option value="Warehouse B">Warehouse B</option>
-                              <option value="Site Office">Site Office</option>
-                              <option value="Main Storage">Main Storage</option>
-                            </select>
+                            />
                           </td>
                           <td className="px-4 py-2">
                             <input
@@ -594,7 +590,8 @@ const CreateMaterialRequest = () => {
                               className="w-full px-2 py-1 text-sm border border-gray-300 rounded-md focus:ring-2 focus:ring-web_yellow"
                             />
                           </td>
-                          {materials.length === 1 && (
+                          {/* Only show Quantity Split input if there's exactly one material */}
+                          {shouldShowQuantitySplit && (
                             <td className="px-4 py-2">
                               <input
                                 type="number"
@@ -611,6 +608,18 @@ const CreateMaterialRequest = () => {
                               />
                             </td>
                           )}
+                          <td className="px-4 py-2">
+                            {/* Only show remove button if there's exactly one material AND more than one location */}
+                            {shouldShowQuantitySplit && deliverySchedule.length > 1 && (
+                              <button
+                                onClick={() => removeLocation(s.id)}
+                                className="text-red-500 hover:text-red-700 text-sm flex items-center gap-1"
+                              >
+                                <FaTrash className="w-3 h-3" />
+                                Remove
+                              </button>
+                            )}
+                          </td>
                         </tr>
                       ))}
                     </tbody>
@@ -707,6 +716,9 @@ const CreateMaterialRequest = () => {
                         <div key={s.id}>
                           <p>{s.location || "Location not selected"}</p>
                           <p>Required: {s.deliveryDate || "Date not set"}</p>
+                          {shouldShowQuantitySplit && (
+                            <p>Quantity: {s.quantitySplit || 0}</p>
+                          )}
                         </div>
                       ))}
                     </div>
@@ -717,7 +729,6 @@ const CreateMaterialRequest = () => {
                       onClick={handleOnSubmit}
                       className="w-full px-4 py-3 bg-web_yellow text-main_dark rounded-md hover:bg-web_yellow/90 flex items-center justify-center gap-2 font-semibold"
                     >
-                      {/* <FaSave /> */}
                       Submit Request
                     </button>
                     <button className="w-full px-4 py-2 border border-gray-300 text-gray-700 rounded-md hover:bg-gray-50 flex items-center justify-center gap-2">
