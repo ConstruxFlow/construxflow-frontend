@@ -7,12 +7,10 @@ function Admin_Inventory() {
     <>
       <NavBar
         links={[
-          { name: "Dashboard", href: "/admin" },
-          { name: "Supply Chain", href: "#" },
+          { name: "Dashboard", href: "/admin", active: true },
+          { name: "Supply Chain", href: "/supplychain" },
           { name: "Inventory", href: "/admin-inventory" },
-          { name: "Insights", href: "#" },
           { name: "Users", href: "/admin-users" },
-          { name: "Settings", href: "#" },
         ]}
         showButton={true}
     />

@@ -12,9 +12,7 @@ function Admin_Dashboard() {
           { name: "Dashboard", href: "/admin", active: true },
           { name: "Supply Chain", href: "/supplychain" },
           { name: "Inventory", href: "/admin-inventory" },
-          { name: "Insights", href: "/insights" },
           { name: "Users", href: "/admin-users" },
-          { name: "Settings", href: "/settings" },
         ]}
       />
         <ConstructionDashboard />

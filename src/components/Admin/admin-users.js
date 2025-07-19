@@ -1,7 +1,23 @@
 import React, { useState } from 'react';
 import { Users, UserPlus, Clock, CheckCircle, Plus, X, Mail, Lock, Download, Clipboard } from 'lucide-react';
+import { useNavigate } from "react-router-dom";
 
+function ActionTile({ onClick, icon, label, iconColorClass, hoverClass }) {
+  return (
+    <button
+      onClick={onClick}
+      className={`flex items-center gap-3 px-4 py-3 bg-white border border-light_gray rounded-lg shadow-sm
+        hover:shadow-md transition-all focus:outline-none w-full text-left ${hoverClass}`}
+    >
+      <span className={`rounded-full p-2 bg-light_gray/40 flex items-center justify-center ${iconColorClass}`}>
+        {icon}
+      </span>
+      <span className="font-medium text-base text-main_dark">{label}</span>
+    </button>
+  );
+}
 const UserDashboard = () => {
+  const navigate = useNavigate();
   const [showAddUser, setShowAddUser] = useState(false);
   const [newUser, setNewUser] = useState({ name: '', email: '', status: 'Active', role: 'Team Member' });
   const [users, setUsers] = useState([
@@ -11,7 +27,7 @@ const UserDashboard = () => {
       email: 'john@example.com',
       status: 'Active',
       role: 'Inventory Manager',
-      avatar: 'https://api.dicebear.com/9.x/initials/svg?seed=John%20Smith'
+      avatar: 'https://api.dicebear.com/9.x/initials/svg?seed=John%20Smith&backgroundColor=236571'
     },
     {
       id: 2,
@@ -19,7 +35,7 @@ const UserDashboard = () => {
       email: 'sarah@example.com',
       status: 'Pending',
       role: 'Supply Chain Coordinator',
-      avatar: 'https://api.dicebear.com/9.x/initials/svg?seed=Sarah%20Johnson'
+      avatar: 'https://api.dicebear.com/9.x/initials/svg?seed=Sarah%20Johnson&backgroundColor=EFC11A'
     }
   ]);
 
@@ -43,10 +59,10 @@ const UserDashboard = () => {
   };
 
   const stats = [
-    { title: 'Total Users', value: '2,847', icon: Users, color: 'bg-blue-500' },
-    { title: 'Active Users', value: '1,234', icon: CheckCircle, color: 'bg-green-500' },
-    { title: 'New This Month', value: '156', icon: UserPlus, color: 'bg-purple-500' },
-    { title: 'Pending Approval', value: '23', icon: Clock, color: 'bg-yellow-500' }
+    { title: 'Total Users', value: '2,847', icon: Users, color: 'bg-light_brown' },
+    { title: 'Active Users', value: '1,234', icon: CheckCircle, color: 'bg-deep_green' },
+    { title: 'New This Month', value: '156', icon: UserPlus, color: 'bg-web_yellow' },
+    { title: 'Pending Approval', value: '23', icon: Clock, color: 'bg-light_gray' }
   ];
 
   const siteManagers = [
@@ -67,16 +83,20 @@ const UserDashboard = () => {
   ];
 
   return (
-    <div className="min-h-screen bg-gray-100 font-sans">
+    <div className="min-h-screen bg-purewhite font-sans">
       {/* Header */}
       {/* Main Content */}
       <main className="max-w-full mx-auto px-4 sm:px-14 lg:px-16 py-8">
+        <h2 className="text-2xl font-bold mb-2 text-gray-800">User details</h2>
+        <p className="text-gray-600 mb-8 text-base">
+          Manage your team members, track their activities, and perform bulk actions to streamline operations.
+        </p>
         {/* Stats Cards */}
-        <div className="grid grid-cols-1 sm:grid-cols-2 lg:grid-cols-4 gap-6 mb-8">
+        <div className="grid grid-cols-1 sm:grid-cols-2 lg:grid-cols-4 gap-3 mb-8">
           {stats.map((stat, index) => (
             <div
               key={index}
-              className="bg-white rounded-xl shadow-md p-6 transform hover:scale-105 transition-transform duration-200"
+              className="bg-purewhite border border-gray-200 rounded-lg p-4 sm:p-5 shadow-sm hover:shadow-md hover:-translate-y-0.5 transition-all duration-150"
             >
               <div className="flex items-center justify-between">
                 <div>
@@ -96,13 +116,13 @@ const UserDashboard = () => {
           {/* Recent Users */}
           <div className="lg:col-span-2 bg-white rounded-xl shadow-md p-6">
             <div className="flex items-center justify-between mb-6">
-              <h3 className="text-xl font-semibold text-gray-900">Team Members</h3>
+              <h3 className="text-xl font-semibold text-gray-900">Manager Details</h3>
               <button
-                onClick={() => setShowAddUser(true)}
-                className="flex items-center space-x-2 bg-blue-600 text-white px-4 py-2 rounded-lg hover:bg-blue-700 transition-colors duration-200"
+                onClick={() => navigate('/admin-managers') }
+                className="flex items-center space-x-2 bg-web_yellow text-main_dark px-3 py-2 rounded-lg font-medium"
               >
                 <Plus className="w-4 h-4" />
-                <span>Add Team Member</span>
+                <span>Add Managers</span>
               </button>
             </div>
             <div className="space-y-4">
@@ -142,11 +162,11 @@ const UserDashboard = () => {
             <h3 className="text-xl font-semibold text-gray-900 mb-6">Recent Activity</h3>
             <div className="space-y-6">
               {[
-                { action: 'New user registered', time: '2 minutes ago', color: 'bg-blue-500' },
-                { action: 'Site visit logged', time: '30 minutes ago', color: 'bg-teal-500' },
+                { action: 'New user registered', time: '2 minutes ago', color: 'bg-light_brown' },
+                { action: 'Site visit logged', time: '30 minutes ago', color: 'bg-deep_green' },
                 { action: 'User profile updated', time: '1 hour ago', color: 'bg-green-500' },
-                { action: 'Bulk email sent', time: '2 hours ago', color: 'bg-indigo-500' },
-                { action: 'Password reset initiated', time: '3 hours ago', color: 'bg-orange-500' }
+                { action: 'Bulk email sent', time: '2 hours ago', color: 'bg-web_yellow' },
+                { action: 'Password reset initiated', time: '3 hours ago', color: 'bg-light_gray' }
               ].map((activity, index) => (
                 <div key={index} className="flex items-start space-x-3">
                   <div className={`w-3 h-3 ${activity.color} rounded-full mt-1.5`}></div>
@@ -159,40 +179,43 @@ const UserDashboard = () => {
             </div>
           </div>
 
-          {/* Bulk Actions Panel */}
-          <div className="lg:col-span-2 bg-white rounded-xl shadow-md p-6">
-            <h3 className="text-xl font-semibold text-gray-900 mb-6">Bulk Actions</h3>
-            <div className="grid grid-cols-1 sm:grid-cols-2 gap-4">
-              <button
-                onClick={() => handleBulkAction('Send Emails')}
-                className="flex items-center space-x-2 bg-indigo-600 text-white px-4 py-2 rounded-lg hover:bg-indigo-700 transition-colors duration-200"
-              >
-                <Mail className="w-5 h-5" />
-                <span>Send Emails</span>
-              </button>
-              <button
-                onClick={() => handleBulkAction('Suspend/Activate Accounts')}
-                className="flex items-center space-x-2 bg-yellow-600 text-white px-4 py-2 rounded-lg hover:bg-yellow-700 transition-colors duration-200"
-              >
-                <Users className="w-5 h-5" />
-                <span>Suspend/Activate</span>
-              </button>
-              <button
-                onClick={() => handleBulkAction('Reset Passwords')}
-                className="flex items-center space-x-2 bg-orange-600 text-white px-4 py-2 rounded-lg hover:bg-orange-700 transition-colors duration-200"
-              >
-                <Lock className="w-5 h-5" />
-                <span>Reset Passwords</span>
-              </button>
-              <button
-                onClick={() => handleBulkAction('Export User List')}
-                className="flex items-center space-x-2 bg-green-600 text-white px-4 py-2 rounded-lg hover:bg-green-700 transition-colors duration-200"
-              >
-                <Download className="w-5 h-5" />
-                <span>Export User List</span>
-              </button>
-            </div>
-          </div>
+          {/* Bulk Actions Panel - Styled Like ActionTile Buttons */}
+<div className="lg:col-span-2 bg-purewhite border border-gray-200 rounded-xl p-5 shadow mb-6">
+  <div className="font-semibold text-main_dark text-lg mb-4 border-b border-light_gray/60 pb-1">
+    Bulk Actions
+  </div>
+  <div className="grid grid-cols-1 sm:grid-cols-2 gap-4 mt-4">
+    <ActionTile
+      onClick={() => handleBulkAction('Send Emails')}
+      icon={<Mail className="text-xl" />}
+      iconColorClass="text-deep_green"
+      label="Send Emails"
+      hoverClass="hover:bg-deep_green/10"
+    />
+    <ActionTile
+      onClick={() => handleBulkAction('Suspend/Activate Accounts')}
+      icon={<Users className="text-xl" />}
+      iconColorClass="text-light_brown"
+      label="Suspend/Activate"
+      hoverClass="hover:bg-light_brown/15"
+    />
+    <ActionTile
+      onClick={() => handleBulkAction('Reset Passwords')}
+      icon={<Lock className="text-xl" />}
+      iconColorClass="text-main_dark"
+      label="Reset Passwords"
+      hoverClass="hover:bg-light_gray/70"
+    />
+    <ActionTile
+      onClick={() => handleBulkAction('Export User List')}
+      icon={<Download className="text-xl" />}
+      iconColorClass="text-web_yellow"
+      label="Export User List"
+      hoverClass="hover:bg-web_yellow/15"
+    />
+  </div>
+</div>
+
 
           {/* Site Manager Overview */}
           <div className="bg-white rounded-xl shadow-md p-6">
@@ -205,7 +228,7 @@ const UserDashboard = () => {
                 >
                   <div className="flex items-center space-x-4 mb-2">
                     <img
-                      src={`https://api.dicebear.com/9.x/initials/svg?seed=${manager.name}`}
+                      src={`https://api.dicebear.com/9.x/initials/svg?seed=${manager.name}&backgroundColor=236571`}
                       alt={manager.name}
                       className="w-12 h-12 rounded-full object-cover"
                     />
