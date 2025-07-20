@@ -63,85 +63,7 @@
   import InventoryControl from "./pages/InventoryManager/InventoryControl";
   import MaintenanceRequestsOverview from "./pages/InventoryManager/MaintenanceRequestsOverview";
   import MaintenanceRequestPage from "./pages/InventoryManager/MaintenanceRequestPage";
-
-import { createBrowserRouter } from "react-router-dom";
-import Home from "./pages/Home";
-import Login from "./pages/Login";
-import PurchasingDashboard from "./pages/PurchasingManager/DashBoard/Dashboard";
-import InventoryDashboard from "./pages/InventoryManager/InventoryDashboard";
-import InventoryMonitoring from "./pages/InventoryManager/InventoryMonitoring";
-import EquipmentScheduling from "./pages/InventoryManager/EquipmentScheduling";
-import Maintenance from "./pages/InventoryManager/Maintenance";
-import MaterialRequest from "./pages/InventoryManager/MaterialRequest";
-import Create_Project from "./pages/SiteManager/Create_Project";
-import MaintenanceDashboard from "./pages/MaintenanceHead/MaintenanceDashboard";
-import MaintenanceMaterialRequest from "./pages/MaintenanceHead/MaintenanceMaterialRequest";
-import MaintenanceRequestTracker from "./pages/MaintenanceHead/MaintenanceTracker";
-import EquipmentLogContainer from "./pages/MaintenanceHead/EquipmentLog";
-import ServiceHistoryContainer from "./pages/MaintenanceHead/MaintenanceLog";
-import TechnicianAssignmentMain from "./pages/MaintenanceHead/TechnicianAssign";
-import TechnicianAssignmentContainer from "./pages/MaintenanceHead/UpcomingSchedule";
-import NextScheduleContainer from "./pages/MaintenanceHead/UpcomingSchedule";
-import TaskCompleteContainer from "./pages/MaintenanceHead/TaskComplete";
-import WorkerProfile from "./pages/MaintenanceHead/WorkerProfile";
-import ProfileManagement from "./pages/MaintenanceHead/MaintenanceProfile";
-import MaintenanceScheduling from "./pages/MaintenanceHead/MaintenanceScheduling";
-import SupplierDashboard from "./pages/Supplier/SupplierDashboard";
-import MaterialRequests from "./pages/Supplier/MaterialRequests";
-import RequestDetails from "./pages/Supplier/RequestDetails";
-import SubmitQuotation from "./pages/Supplier/SubmitQuotation";
-import QuotationStatus from "./pages/Supplier/QuotationStatus";
-import PurchasingOrders from "./pages/Supplier/PurchasingOrders";
-import OrderDetails from "./pages/Supplier/OrderDetails";
-import PaymentStatus from "./pages/Supplier/PaymentStatus";
-import ReceiveAdvancedPayment from "./pages/Supplier/ReceiveAdvancedPayment";
-import ReceiveFullPayment from "./pages/Supplier/ReceiveFullPayment";
-import SupplierProfile from "./pages/Supplier/Profile";
-import SupplierProfileEdit from "./pages/Supplier/EditProfile";
-import UpdateQuotation from "./pages/Supplier/UpdateQuotation";
-import Edit_Project from "./pages/SiteManager/Edit_Project";
-import Project_Phase from "./pages/SiteManager/Project_Phase";
-import Create_Material_Request from "./pages/SiteManager/Create_Material_Request";
-import Material_Request from "./pages/SiteManager/Material_Request";
-import Site_EquipmentInfo from "./pages/SiteManager/Site_EquipmentInfo";
-import Site_EquipmentRequest from "./pages/SiteManager/Site_EquipmentRequest";
-import Site_MaterialInfo from "./pages/SiteManager/Site_MaterialInfo";
-import Site_MaterialAdd from "./pages/SiteManager/Site_MaterialAdd";
-import Site_MaterialUpdate from "./pages/SiteManager/Site_MaterialUpdate";
-import Purchase_Order from "./pages/SiteManager/Purchase_Order";
-import SiteManager_Profile from "./pages/SiteManager/SiteManager_Profile";
-import SiteManagerDashboard from "./pages/SiteManager/SiteManagerDashboard";
-import Existing_Projects_List from "./pages/SiteManager/Existing_Projects_List";
-import MaterialReqDetails from "./pages/PurchasingManager/Material_Requests/MaterialReqDetails";
-import MaterialReqDetails_MWise from "./pages/PurchasingManager/Material_Requests/MaterialReqDetails_MWise";
-import CreateMaterialRequest from "./pages/PurchasingManager/Material_Requests/CreateMaterialRequest";
-import SupplierPerformanceEvaluation from "./pages/PurchasingManager/Suppliers/SupplierPerformanceEvaluation";
-import {
-  purchasingManagerRoutes,
-  PurchasingManagerroutes,
-} from "./pages/PurchasingManager/Routes";
-import { MaintenanceRoute } from "./pages/MaintenanceHead/MaintenanceRoute";
-import VerificationEmailPage from "./components/EmailVerify";
-import BOQPDFReader from "./pages/BOQPDFReader";
-import AddEquipment from "./pages/InventoryManager/AddEquipment";
-import AddMaterial from "./pages/InventoryManager/AddMaterial";
-import InventoryControl from "./pages/InventoryManager/InventoryControl";
-import MaintenanceRequestsOverview from "./pages/InventoryManager/MaintenanceRequestsOverview";
-import MaintenanceRequestPage from "./pages/InventoryManager/MaintenanceRequestPage";
 import { siteManagerRoutes } from "./pages/SiteManager/Routes";
-
-
-
-
-
-
-
-
-import Admin_Dashbaord from "./pages/Admin/Admin-Dashboard";
-import Admin_Inventory from "./pages/Admin/Admin-Inventory";
-import ConstructionDashboard from "./components/Admin/admin-dashboard";
-import UserDashboard from "./components/Admin/admin-users";
-import Admin_Users from "./pages/Admin/Admin-User";
 import Admin_Analysis from "./pages/Admin/Admin-Analysis";
 import ContactSupport from "./pages/Supplier/ContactSupport";
 import QuotationDetail from "./pages/PurchasingManager/Quotations/QuotationDetails";
@@ -149,47 +71,6 @@ import QuotationDetails from "./pages/Supplier/QuotationDetails";
 import { FinanceManagerRoutes } from "./pages/FinancialOfficer/routes";
 import ManagerReg from "./pages/Admin/ManagerReg";
 import { SupplierRoutes } from "./pages/Supplier/routes";
-
-export const routes = createBrowserRouter([
-  {
-    path: "/",
-    element: <Home />,
-  },
-  
-  {
-    path: "/dashboard",
-    element: <PurchasingDashboard />
-  },
-  {
-  path: "/inventory-dashboard",
-  element: <InventoryDashboard />
-  },
-  {
-  path: "/inventory-monitoring",
-  element: <InventoryMonitoring />
-},
-{
-  path: "/equipment-scheduling",
-  element: <EquipmentScheduling />,
-},
-{
-  path: "/maintenance",
-  element: <Maintenance />,
-},
-{
-  path: "/material-request",
-  element: <MaterialRequest />,
-},
-  
-
-
-
-
-
-
-
-
-
 
   import Admin_Dashbaord from "./pages/Admin/Admin-Dashboard";
   import Admin_Inventory from "./pages/Admin/Admin-Inventory";
@@ -223,7 +104,7 @@ import ReorderMaterialPage from "./pages/InventoryManager/ReorderMaterialPage";
     {
     path: "/inventory-monitoring",
     element: <InventoryMonitoring />
-
+    },
   // Supplier
   SupplierRoutes,
 
