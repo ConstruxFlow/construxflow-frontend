@@ -1,4 +1,4 @@
-import React, { useEffect, useState } from "react";
+import React, { useContext, useEffect, useState } from "react";
 import axios from "axios";
 import NavBar from "../../components/NavBar";
 import { useNavigate } from "react-router-dom";
@@ -14,13 +14,14 @@ import {
   FaMoneyBill,
   FaRegCheckCircle,
 } from "react-icons/fa";
+import { AuthContext } from "../../Context/AuthContext";
 
 const navLinks = [
-  { name: "Dashboard", href: "/dashboard1" },
-  { name: "Requests", href: "/requests" },
-  { name: "Quotations", href: "/quotations", active: true },
-  { name: "Orders", href: "/orders" },
-  { name: "Payments", href: "/payments" },
+  { name: "Dashboard", href: "/supplier/dashboard" },
+  { name: "Requests", href: "/supplier/requests" },
+  { name: "Quotations", href: "/supplier/quotations", active: true },
+  { name: "Orders", href: "/supplier/orders" },
+  { name: "Payments", href: "/supplier/payments" },
 ];
 
 const statusColors = {
@@ -35,18 +36,29 @@ const QuotationStatus = () => {
   const [status, setStatus] = useState("All Status");
   const [date, setDate] = useState("");
   const navigate = useNavigate();
+  const { authState } = useContext(AuthContext);
+  const [loading, setLoading] = useState(true);
 
   // Fetch quotations on page load
   useEffect(() => {
+    const supplierId = authState?.user?.supplierId;
+    if (!supplierId) {
+      setQuotations([]);
+      return;
+    }
+
     axios
       .get("http://localhost:8080/api/quotations/all")
       .then((res) => {
-        setQuotations(res.data);
+        setQuotations(
+          res.data.filter((q) => q.supplierId === supplierId)
+        );
+        setLoading(false);
       })
       .catch((err) => {
         console.error("Failed to fetch quotations", err);
       });
-  }, []);
+  }, [authState?.user?.supplierId]);
 
   // Processed list
   const filteredQuotations = quotations.filter((q) => {
@@ -62,9 +74,20 @@ const QuotationStatus = () => {
     );
   });
 
+  if (loading) {
+    return (
+      <div className="min-h-screen bg-purewhite font-poppins flex items-center justify-center">
+        <div className="text-center">
+          <div className="animate-spin rounded-full h-12 w-12 border-b-2 border-web_yellow mx-auto mb-4"></div>
+          <p className="text-gray-600">Loading Quotations...</p>
+        </div>
+      </div>
+    );
+  }
+
   return (
     <div className="bg-purewhite min-h-screen font-poppins">
-      <NavBar links={navLinks} logoSrc="/logo1.png" />
+      <NavBar links={navLinks} profileURL="/supplier/profile" logoSrc="/logo1.png" />
 
       <div className="max-w-full mx-auto px-16 py-8">
         <h1 className="text-xxl md:text-2xl font-bold text-main_dark mb-2">
@@ -212,7 +235,7 @@ const QuotationStatus = () => {
                     </td>
                     <td className="px-6 py-4">
                       <button
-                        onClick={() => navigate(`/quotations/${q.id}`)}
+                        onClick={() => navigate(`/supplier/quotations/${q.id}`)}
                         className="p-2 text-deep_green hover:bg-gray-100 rounded"
                       >
                         <FaEye />

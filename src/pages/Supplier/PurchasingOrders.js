@@ -18,11 +18,11 @@ import { useNavigate } from "react-router-dom";
 import NavBar from "../../components/NavBar";
 
 const navLinks = [
-  { name: "Dashboard", href: "/dashboard1" },
-  { name: "Requests", href: "/requests" },
-  { name: "Quotations", href: "/quotations" },
-  { name: "Orders", href: "/orders", active: true },
-  { name: "Payments", href: "/payments" },
+  { name: "Dashboard", href: "/supplier/dashboard" },
+  { name: "Requests", href: "/supplier/requests" },
+  { name: "Quotations", href: "/supplier/quotations" },
+  { name: "Orders", href: "/supplier/orders", active: true },
+  { name: "Payments", href: "/supplier/payments" },
 ];
 
 const orders = [
@@ -113,7 +113,7 @@ const PurchasingOrders = () => {
 
   return (
     <div className="bg-purewhite min-h-screen">
-      <NavBar links={navLinks} logoSrc="/logo1.png" />
+      <NavBar links={navLinks} profileURL="/supplier/profile" logoSrc="/logo1.png" />
 
       <div className="max-w-full mx-auto px-16 py-8">
         {/* Header */}
@@ -276,7 +276,7 @@ const PurchasingOrders = () => {
                     <td className="px-6 py-4">
                       <button
                         className="p-2 text-deep_green hover:bg-gray-100 rounded"
-                        onClick={() => navigate(`/orders/${order.id}`)}
+                        onClick={() => navigate(`/supplier/orders/${order.id}`)}
                       >
                         <FaEye />
                       </button>

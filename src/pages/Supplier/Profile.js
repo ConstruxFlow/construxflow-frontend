@@ -1,50 +1,73 @@
 // src/pages/Supplier/Profile.jsx
 
-import React, { useEffect, useState } from "react";
+import React, { useContext, useEffect, useState } from "react";
 import axios from "axios";
 import { FaEdit, FaDownload, FaTrash, FaLock, FaPaperclip } from "react-icons/fa";
 import { useNavigate } from "react-router-dom";
 import NavBar from "../../components/NavBar";
+import { AuthContext } from "../../Context/AuthContext";
 
 const navLinks = [
-  { name: "Dashboard", href: "/dashboard1" },
-  { name: "Requests", href: "/requests" },
-  { name: "Quotations", href: "/quotations" },
-  { name: "Orders", href: "/orders" },
-  { name: "Payments", href: "/payments" },
-  { name: "Profile", href: "/profile", active: true }
+  { name: "Dashboard", href: "/supplier/dashboard" },
+  { name: "Requests", href: "/supplier/requests" },
+  { name: "Quotations", href: "/supplier/quotations" },
+  { name: "Orders", href: "/supplier/orders" },
+  { name: "Payments", href: "/supplier/payments" },
 ];
 
 const Profile = () => {
   const [supplierData, setSupplierData] = useState(null);
   const [loading, setLoading] = useState(true);
   const [error, setError] = useState(null);
+  const {authState}=useContext(AuthContext);
+  console.log("Auth State:", authState?.user?.supplierId);
+  
 
     const navigate = useNavigate();
 
+    // console.log("Supplier ID:");
+    
   // Replace with actual supplier ID logic (from auth or route params)
-  const supplierId = "S001";
+  const supplierId = authState?.user?.supplierId;
+  console.log("Supplier ID:", supplierId);
 
   useEffect(() => {
-    const fetchSupplier = async () => {
-      try {
-        const res = await axios.get(`http://localhost:8080/api/supplier/find/${supplierId}`);
-        setSupplierData(res.data.data);
-      } catch (err) {
-        setError("Failed to load supplier details");
-      } finally {
-        setLoading(false);
-      }
-    };
-    fetchSupplier();
-  }, [supplierId]);
+  if (!supplierId) {
+    setError("Supplier ID not found");
+    setLoading(false);
+    return;
+  }
 
-  if (loading) return <div>Loading...</div>;
-  if (error) return <div>{error}</div>;
+  setError(null);
+  setLoading(true);
 
+  const fetchSupplier = async () => {
+    try {
+      const res = await axios.get(`http://localhost:8080/api/supplier/find/${supplierId}`);
+      setSupplierData(res.data.data);
+    } catch (err) {
+      setError("Failed to load supplier details");
+    } finally {
+      setLoading(false);
+    }
+  };
+  fetchSupplier();
+}, [supplierId]);
+
+
+  if (loading) {
+    return (
+      <div className="min-h-screen bg-purewhite font-poppins flex items-center justify-center">
+        <div className="text-center">
+          <div className="animate-spin rounded-full h-12 w-12 border-b-2 border-web_yellow mx-auto mb-4"></div>
+          <p className="text-gray-600">Loading...</p>
+        </div>
+      </div>
+    );
+  }
   return (
     <div className="bg-purewhite min-h-screen font-poppins">
-      <NavBar links={navLinks} logoSrc="/logo1.png" />
+      <NavBar links={navLinks} profileURL="/supplier/profile" logoSrc="/logo1.png" />
 
       <div className="max-w-full mx-auto px-16 py-8">
         {/* Header */}
@@ -56,13 +79,13 @@ const Profile = () => {
             <p className="text-gray-500 mb-5">
               Premium construction materials and equipment supplier
             </p>
-            <button onClick={() => navigate('/supplierprofile/edit')} className="bg-web_yellow text-main_dark px-4 py-2 rounded-lg font-medium flex items-center gap-2 hover:opacity-90 transition">
+            <button onClick={() => navigate('/supplier/profile/edit')} className="bg-web_yellow text-main_dark px-4 py-2 rounded-lg font-medium flex items-center gap-2 hover:opacity-90 transition">
               <FaEdit /> Edit Profile
             </button>
           </div>
           <div className="flex items-center gap-4">
             <div className="w-28 h-28 rounded-full bg-light_gray flex items-center justify-center overflow-hidden border-2 border-web_yellow mr-5">
-              <img src="/company-logo.png" alt="Company Logo" className="w-24 h-24 object-contain" />
+              <img src="/assets/profile/supplier.jpg" alt="Company Logo" className="w-52 h-52 object-contain" />
             </div>
           </div>
         </div>
@@ -220,9 +243,9 @@ const Profile = () => {
 
         {/* Save Button */}
         <div className="flex gap-4 justify-center mt-6">
-          <button className="bg-web_yellow text-main_dark px-8 py-3 rounded-lg font-semibold text-lg shadow hover:opacity-90 transition">
+          {/* <button className="bg-web_yellow text-main_dark px-8 py-3 rounded-lg font-semibold text-lg shadow hover:opacity-90 transition">
             Save All Changes
-          </button>
+          </button> */}
           <button className="flex items-center gap-2 bg-deep_green text-purewhite px-4 py-2 rounded-lg font-medium hover:bg-gray-800 transition">
             <FaLock /> Change Password
           </button>

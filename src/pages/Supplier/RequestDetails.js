@@ -5,11 +5,11 @@ import { useNavigate, useParams } from "react-router-dom";
 import { FiDownload, FiInfo, FiCheckCircle } from "react-icons/fi";
 
 const navLinks = [
-  { name: "Dashboard", href: "/dashboard1" },
-  { name: "Requests", href: "/requests", active: true },
-  { name: "Quotations", href: "/quotations" },
-  { name: "Orders", href: "/orders" },
-  { name: "Payments", href: "/payments" }
+  { name: "Dashboard", href: "/supplier/dashboard" },
+  { name: "Requests", href: "/supplier/requests", active: true },
+  { name: "Quotations", href: "/supplier/quotations" },
+  { name: "Orders", href: "/supplier/orders" },
+  { name: "Payments", href: "/supplier/payments" }
 ];
 
 function InfoBlock({ icon, label, value, iconClass = "" }) {
@@ -70,7 +70,7 @@ const RequestDetails = () => {
   return (
     <div className="bg-purewhite min-h-screen font-poppins w-full overflow-x-hidden">
       {/* NavBar */}
-      <NavBar links={navLinks} logoSrc="/logo1.png" />
+      <NavBar links={navLinks} profileURL="/supplier/profile" logoSrc="/logo1.png" />
       
       {/* Page Title and Info Banner */}
       {/* <div className="w-full bg-gradient-to-r from-slate-100 to-white px-6 md:px-16 pt-8 pb-4">
@@ -87,9 +87,9 @@ const RequestDetails = () => {
 
       {/* Breadcrumb */}
       <div className="w-full max-w-full px-24 pt-7 pb-3 text-sm text-slatebluegray bg-purewhite">
-        <a href="/dashboard1" className="hover:underline text-deep_green font-semibold">Dashboard</a>
+        <a href="/supplier/dashboard" className="hover:underline text-deep_green font-semibold">Dashboard</a>
         &nbsp;/&nbsp;
-        <a href="/requests" className="hover:underline text-deep_green font-semibold">Requests</a>
+        <a href="/supplier/requests" className="hover:underline text-deep_green font-semibold">Requests</a>
         &nbsp;/&nbsp;
         <span className="font-extrabold">Request Details</span>
       </div>
@@ -229,11 +229,11 @@ const RequestDetails = () => {
             {/* Action Buttons */}
             <div className="flex flex-col md:flex-row gap-4 pt-1 pb-8">
               <button className="flex-1 bg-web_yellow text-main_dark font-semibold text-base py-3 rounded-lg shadow hover:opacity-90 transition"
-                onClick={() => navigate(`/quotations/submit/${request.id}`)}>
+                onClick={() => navigate(`/supplier/quotations/submit/${request.id}`)}>
                 Send Quotation
               </button>
               <button className="flex-1 flex items-center justify-center bg-deep_green text-purewhite font-semibold text-base py-3 rounded-lg shadow hover:opacity-90 transition"
-                onClick={() => navigate("/requests")}>
+                onClick={() => navigate("/supplier/requests")}>
                 &larr; Back to Requests
               </button>
             </div>

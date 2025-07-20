@@ -8,11 +8,11 @@ import { FiDownload } from "react-icons/fi";
 import NavBar from "../../components/NavBar";
 
 const navLinks = [
-  { name: "Dashboard", href: "/dashboard1" },
-  { name: "Requests", href: "/requests" },
-  { name: "Quotations", href: "/quotations", active: true },
-  { name: "Orders", href: "/orders" },
-  { name: "Payments", href: "/payments" },
+  { name: "Dashboard", href: "/supplier/dashboard" },
+  { name: "Requests", href: "/supplier/requests" },
+  { name: "Quotations", href: "/supplier/quotations", active: true },
+  { name: "Orders", href: "/supplier/orders" },
+  { name: "Payments", href: "/supplier/payments" },
 ];
 
 const SectionTitle = ({ children }) => (
@@ -51,11 +51,11 @@ const QuotationDetails = () => {
 
   return (
     <div className="min-h-screen bg-[#f7fafa] font-poppins">
-      <NavBar links={navLinks} logoSrc="/logo1.png" />
+      <NavBar links={navLinks} profileURL="/supplier/profile" logoSrc="/logo1.png" />
       {/* Breadcrumb */}
       <div className="max-w-full mx-auto pt-8 pb-0 px-12 md:px-16 text-sm text-slatebluegray">
-        <a href="/dashboard1" className=" text-deep_green font-semibold">Dashboard</a> /{" "}
-        <a href="/quotations" className=" text-deep_green font-semibold">Quotations</a> /
+        <a href="/supplier/dashboard" className=" text-deep_green font-semibold">Dashboard</a> /{" "}
+        <a href="/supplier/quotations" className=" text-deep_green font-semibold">Quotations</a> /
         <span className="font-bold text-main_dark"> Quotation Details</span>
       </div>
 
@@ -227,13 +227,13 @@ const QuotationDetails = () => {
             </div>
             {/* --- UPDATE BUTTON ADDED HERE --- */}
             <button
-              onClick={() => navigate(`/quotations/update/${quotation.id}`)}
+              onClick={() => navigate(`/supplier/quotations/update/${quotation.id}`)}
               className="w-full bg-web_yellow text-main_dark font-semibold py-3 mb-2 rounded-lg shadow hover:bg-web_yellow/80 border border-web_yellow transition"
             >
               Update Quotation
             </button>
             <button
-              onClick={() => navigate("/quotations")}
+              onClick={() => navigate("/supplier/quotations")}
               className="w-full bg-deep_green text-white py-3 rounded-lg font-medium hover:bg-main_dark transition"
             >
               ← Back to Quotations
