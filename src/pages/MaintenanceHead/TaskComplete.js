@@ -163,6 +163,12 @@ export default function TaskCompleteContainer() {
         links={[
           { name: "Dashboard", href: "#", onClick: () => navigate("/maintenance/dashboard") },
           { name: "Task", href: "#",onClick: () => navigate("/maintenance/scheduling") },
+          {
+            name: "Schedule",
+            href: "#",
+            onClick: () =>
+              navigate("/maintenance/update-equipment-maintenance"),
+          },
           { name: "Team", href: "#",
             onClick: () => {
               // e.preventDefault();
@@ -171,7 +177,7 @@ export default function TaskCompleteContainer() {
               setShowTeam(true);
             },
            },
-          { name: "Equipment", href: "#" ,onClick: () => navigate("/maintenance/log")},
+          { name: "Equipment", href: "#" ,onClick: () => navigate("/maintenance/equipment")},
           { name: "Add Technician", href: "#",onClick: () => navigate("/maintenance/add-member") },
         ]}
         showButton={true}
@@ -335,7 +341,11 @@ export default function TaskCompleteContainer() {
                 <button className="w-full bg-[#EFC11A] hover:bg-yellow-400 text-[#236571] font-semibold rounded-md py-2 transition">
                   Generate Work Report
                 </button>
-                <button className="w-full bg-[#236571] hover:bg-[#17484b] text-white font-semibold rounded-md py-2 transition">
+                <button className="w-full bg-[#236571] hover:bg-[#17484b] text-white font-semibold rounded-md py-2 transition"
+                onClick={() => {
+                  navigate("/maintenance/log");
+                }}
+                >
                   Equipment Log
                 </button>
                 <button className="w-full border border-gray-400 text-gray-800 font-semibold rounded-md py-2 transition"

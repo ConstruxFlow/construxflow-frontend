@@ -4,6 +4,8 @@ import { UserPlus } from "lucide-react";
 import TechnicianCard from "../../components/MaintenanceHead/TechnicianCard";
 import NavBar from "../../components/NavBar";
 import TeamSection from "../../components/MaintenanceHead/TeamSection";
+import { toast } from "react-toastify";
+import LoadingOverlay from "../../components/LoadingOverlay";
 
 export default function TechnicianAssignmentMain() {
   const { id } = useParams();
@@ -26,6 +28,8 @@ export default function TechnicianAssignmentMain() {
   const [submitMsg, setSubmitMsg] = useState("");
   const [submitting, setSubmitting] = useState(false);
   const navigation = useNavigate();
+  const [loadingProgress, setLoadingProgress] = useState(0);
+  const [isLoading, setIsLoading] = useState(false);
 
   // Fetch equipment details
   useEffect(() => {
@@ -58,102 +62,185 @@ export default function TechnicianAssignmentMain() {
   }, []);
 
   console.log(teamMembers);
-  
 
   // Assignment submit handler
   const handleAssign = async (e) => {
-    e.preventDefault();
-    setSubmitting(true);
-    setSubmitMsg("");
+  e.preventDefault();
+  setSubmitting(true);
+  setSubmitMsg("");
+  setIsLoading(true);
+  setLoadingProgress(0);
 
-    const reqBody = {
-      equipmentSchedulingId: id,
-      technicianId: selectedTech,
-      duration,
-      notes: instructions,
-      startDate: startDate || null,
-      endDate: null,
-      startTime: startTime || null,
-      endTime: null,
-      status: "ASSIGNED"
-    };
+  const progressInterval = setInterval(() => {
+    setLoadingProgress((p) => (p >= 90 ? p : p + Math.random() * 5));
+  }, 200);
 
-    try {
-      const res = await fetch("http://localhost:8080/api/equipmentassigntechnician/addassign", {
+  const reqBody = {
+    equipmentSchedulingId: id,
+    technicianId: selectedTech,
+    duration,
+    notes: instructions,
+    startDate: startDate || null,
+    endDate: null,
+    startTime: startTime || null,
+    endTime: null,
+    status: "ASSIGNED",
+  };
+
+  try {
+    setLoadingProgress(10);
+
+    const res = await fetch(
+      "http://localhost:8080/api/equipmentassigntechnician/addassign",
+      {
         method: "POST",
         headers: { "Content-Type": "application/json" },
         body: JSON.stringify(reqBody),
-      });
-      if (res.ok) {
-        setSubmitMsg("Technician assigned successfully!");
-        // Optionally reset form fields here
-      } else {
-        const errText = await res.text();
-        setSubmitMsg("Error: " + errText);
       }
-    } catch (err) {
-      setSubmitMsg("Network error: " + err.message);
+    );
+
+    setLoadingProgress(50);
+
+    if (res.ok) {
+
+      // Update scheduling status
+      await updateSchedulingStatus(id, "ASSIGNED");
+      setLoadingProgress(100); // Final progress
+      toast.success("Technician assigned successfully!");
+      navigation("/maintenance/update-equipment-maintenance");
+    } else {
+      const errText = await res.text();
+      toast.error(`Failed to assign technician: ${errText}`);
     }
+  } catch (err) {
+    toast.error(`Error assigning technician: ${err.message}`);
+  } finally {
     setSubmitting(false);
+    setIsLoading(false);
+    clearInterval(progressInterval);
+    setLoadingProgress(0);
+  }
+};
+;
+
+  useEffect(() => {
+    const user = localStorage.getItem("user");
+    setIsLoggedIn(!!user);
+  }, []);
+
+  // Logout handler
+  const handleLogout = () => {
+    localStorage.removeItem("user");
+    localStorage.removeItem("role");
+    setIsLoggedIn(false);
+    navigation("/login");
   };
 
-   useEffect(() => {
-          const user = localStorage.getItem("user");
-          setIsLoggedIn(!!user);
-        }, []);
-      
-        // Logout handler
-        const handleLogout = () => {
-          localStorage.removeItem("user");
-          localStorage.removeItem("role");
-          setIsLoggedIn(false);
-          navigation("/login");
-        };
-  
-        const handleLogin = () => {
-      navigation("/login");
-      };
+  const handleLogin = () => {
+    navigation("/login");
+  };
+
+  const updateSchedulingStatus = async (id, newStatus) => {
+    try {
+      const res = await fetch(
+        `http://localhost:8080/api/equipment-scheduling/status?id=${id}`,
+        {
+          method: "PUT",
+          headers: {
+            "Content-Type": "application/json",
+          },
+          body: newStatus, // Just the string "ASSIGNED"
+        }
+      );
+
+      if (!res.ok) {
+        throw new Error("Failed to update scheduling status");
+      }
+
+      const result = await res.json();
+      console.log("Status updated:", result);
+    } catch (err) {
+      console.error("Status update error:", err);
+    }
+  };
 
   return (
     <>
       <NavBar
-      links={[
-          { name: "Dashboard", href: "#", onClick: () => navigation("/maintenance/dashboard") },
-          { name: "Task", href: "#",onClick: () => navigation("/maintenance/scheduling") },
-          { name: "Team", href: "#",
+        links={[
+          {
+            name: "Dashboard",
+            href: "#",
+            onClick: () => navigation("/maintenance/dashboard"),
+          },
+          {
+            name: "Task",
+            href: "#",
+            onClick: () => navigation("/maintenance/scheduling"),
+          },
+          {
+            name: "Schedule",
+            href: "#",
+            onClick: () =>
+              navigation("/maintenance/update-equipment-maintenance"),
+          },
+          {
+            name: "Team",
+            href: "#",
             onClick: () => {
               // e.preventDefault();
               console.log("Team link clicked");
-              
+
               setShowTeam(true);
             },
-           },
-          { name: "Equipment", href: "#" ,onClick: () => navigation("/maintenance/log")},
-          { name: "Add Technician", href: "#",onClick: () => navigation("/maintenance/add-member") },
+          },
+          {
+            name: "Equipment",
+            href: "#",
+            onClick: () => navigation("/maintenance/equipment"),
+          },
+          {
+            name: "Add Technician",
+            href: "#",
+            onClick: () => navigation("/maintenance/add-member"),
+          },
         ]}
         showButton={true}
         buttonLabel={isLoggedIn ? "Logout" : "Get Started"}
         onButtonClick={isLoggedIn ? handleLogout : handleLogin}
-    />
-
+      />
+            {isLoading && (
+              <LoadingOverlay
+                progress={loadingProgress}
+                message="Processing..."
+              />
+            )}
       <div className="min-h-screen bg-[#F8FAFC] flex flex-col md:flex-row items-start justify-center py-8 px-4 gap-8">
         {/* Main Content */}
         <div className="flex-1 max-w-3xl">
           {/* Page Title */}
           <div className="mb-6">
-            <h1 className="text-2xl font-bold text-gray-900">Technician Assignment</h1>
-            <p className="text-gray-600">Assign maintenance requests to available technicians</p>
+            <h1 className="text-2xl font-bold text-gray-900">
+              Technician Assignment
+            </h1>
+            <p className="text-gray-600">
+              Assign maintenance requests to available technicians
+            </p>
           </div>
 
           {/* Maintenance Request Details */}
           <div className="bg-white rounded-xl shadow p-6 mb-6">
-            <div className="text-[#236571] font-semibold mb-4 text-lg">Maintenance Request Details</div>
+            <div className="text-[#236571] font-semibold mb-4 text-lg">
+              Maintenance Request Details
+            </div>
             {loading ? (
               <div className="text-gray-500">Loading...</div>
             ) : equipment ? (
               <div className="grid grid-cols-1 md:grid-cols-2 gap-4 mb-4">
                 <div>
-                  <label className="block text-sm font-medium text-gray-600 mb-1">Equipment ID</label>
+                  <label className="block text-sm font-medium text-gray-600 mb-1">
+                    Equipment ID
+                  </label>
                   <input
                     className="w-full border border-gray-200 rounded-md px-3 py-2 text-gray-800 bg-gray-50"
                     value={equipment.id}
@@ -161,17 +248,23 @@ export default function TechnicianAssignmentMain() {
                   />
                 </div>
                 <div>
-                  <label className="block text-sm font-medium text-gray-600 mb-1">Status</label>
-                  <span className={`inline-block px-3 py-1 rounded-full ${
-                    equipment.status === "Pending"
-                      ? "bg-red-100 text-red-600"
-                      : "bg-green-100 text-green-600"
-                  } text-xs font-semibold`}>
+                  <label className="block text-sm font-medium text-gray-600 mb-1">
+                    Status
+                  </label>
+                  <span
+                    className={`inline-block px-3 py-1 rounded-full ${
+                      equipment.status === "Pending"
+                        ? "bg-red-100 text-red-600"
+                        : "bg-green-100 text-green-600"
+                    } text-xs font-semibold`}
+                  >
                     {equipment.status}
                   </span>
                 </div>
                 <div>
-                  <label className="block text-sm font-medium text-gray-600 mb-1">Type</label>
+                  <label className="block text-sm font-medium text-gray-600 mb-1">
+                    Type
+                  </label>
                   <input
                     className="w-full border border-gray-200 rounded-md px-3 py-2 text-gray-800 bg-gray-50"
                     value={equipment.equipmentType}
@@ -179,7 +272,9 @@ export default function TechnicianAssignmentMain() {
                   />
                 </div>
                 <div>
-                  <label className="block text-sm font-medium text-gray-600 mb-1">Name</label>
+                  <label className="block text-sm font-medium text-gray-600 mb-1">
+                    Name
+                  </label>
                   <input
                     className="w-full border border-gray-200 rounded-md px-3 py-2 text-gray-800 bg-gray-50"
                     value={equipment.equipmentName}
@@ -187,7 +282,9 @@ export default function TechnicianAssignmentMain() {
                   />
                 </div>
                 <div>
-                  <label className="block text-sm font-medium text-gray-600 mb-1">Date</label>
+                  <label className="block text-sm font-medium text-gray-600 mb-1">
+                    Date
+                  </label>
                   <input
                     className="w-full border border-gray-200 rounded-md px-3 py-2 text-gray-800 bg-gray-50"
                     value={equipment.date ? equipment.date.slice(0, 10) : ""}
@@ -195,7 +292,9 @@ export default function TechnicianAssignmentMain() {
                   />
                 </div>
                 <div>
-                  <label className="block text-sm font-medium text-gray-600 mb-1">Time</label>
+                  <label className="block text-sm font-medium text-gray-600 mb-1">
+                    Time
+                  </label>
                   <input
                     className="w-full border border-gray-200 rounded-md px-3 py-2 text-gray-800 bg-gray-50"
                     value={equipment.time}
@@ -203,7 +302,9 @@ export default function TechnicianAssignmentMain() {
                   />
                 </div>
                 <div className="md:col-span-2">
-                  <label className="block text-sm font-medium text-gray-600 mb-1">Description</label>
+                  <label className="block text-sm font-medium text-gray-600 mb-1">
+                    Description
+                  </label>
                   <textarea
                     className="w-full border border-gray-200 rounded-md px-3 py-2 text-gray-800 bg-gray-50"
                     rows={2}
@@ -218,11 +319,18 @@ export default function TechnicianAssignmentMain() {
           </div>
 
           {/* Assignment Details */}
-          <form className="bg-white rounded-xl shadow p-6" onSubmit={handleAssign}>
-            <div className="text-[#236571] font-semibold mb-4 text-lg">Assignment Details</div>
+          <form
+            className="bg-white rounded-xl shadow p-6"
+            onSubmit={handleAssign}
+          >
+            <div className="text-[#236571] font-semibold mb-4 text-lg">
+              Assignment Details
+            </div>
             <div className="grid grid-cols-1 md:grid-cols-2 gap-4 mb-4">
               <div>
-                <label className="block text-sm font-medium text-gray-600 mb-1">Select Technician</label>
+                <label className="block text-sm font-medium text-gray-600 mb-1">
+                  Select Technician
+                </label>
                 <select
                   className="w-full border border-gray-200 rounded-md px-3 py-2 text-gray-800 bg-gray-50"
                   value={selectedTech}
@@ -234,7 +342,9 @@ export default function TechnicianAssignmentMain() {
                     <option>Loading...</option>
                   ) : (
                     teamMembers
-                      .filter((member) => member.availabilityStatus === "AVAILABLE")
+                      .filter(
+                        (member) => member.availabilityStatus === "AVAILABLE"
+                      )
                       .map((member) => (
                         <option key={member.empId} value={member.empId}>
                           {member.name} ({member.specializations?.join(", ")})
@@ -244,7 +354,9 @@ export default function TechnicianAssignmentMain() {
                 </select>
               </div>
               <div>
-                <label className="block text-sm font-medium text-gray-600 mb-1">Expected Duration</label>
+                <label className="block text-sm font-medium text-gray-600 mb-1">
+                  Expected Duration
+                </label>
                 <select
                   className="w-full border border-gray-200 rounded-md px-3 py-2 text-gray-800 bg-gray-50"
                   value={duration}
@@ -257,7 +369,9 @@ export default function TechnicianAssignmentMain() {
                 </select>
               </div>
               <div>
-                <label className="block text-sm font-medium text-gray-600 mb-1">Start Date</label>
+                <label className="block text-sm font-medium text-gray-600 mb-1">
+                  Start Date
+                </label>
                 <input
                   type="date"
                   className="w-full border border-gray-200 rounded-md px-3 py-2 text-gray-800 bg-gray-50"
@@ -267,7 +381,9 @@ export default function TechnicianAssignmentMain() {
                 />
               </div>
               <div>
-                <label className="block text-sm font-medium text-gray-600 mb-1">Start Time</label>
+                <label className="block text-sm font-medium text-gray-600 mb-1">
+                  Start Time
+                </label>
                 <input
                   type="time"
                   className="w-full border border-gray-200 rounded-md px-3 py-2 text-gray-800 bg-gray-50"
@@ -278,7 +394,9 @@ export default function TechnicianAssignmentMain() {
               </div>
             </div>
             <div>
-              <label className="block text-sm font-medium text-gray-600 mb-1">Special Instructions</label>
+              <label className="block text-sm font-medium text-gray-600 mb-1">
+                Special Instructions
+              </label>
               <textarea
                 className="w-full border border-gray-200 rounded-md px-3 py-2 text-gray-800 bg-gray-50"
                 rows={2}
@@ -288,7 +406,13 @@ export default function TechnicianAssignmentMain() {
               />
             </div>
             {submitMsg && (
-              <div className={`mt-3 text-sm ${submitMsg.startsWith("Technician assigned") ? "text-green-600" : "text-red-600"}`}>
+              <div
+                className={`mt-3 text-sm ${
+                  submitMsg.startsWith("Technician assigned")
+                    ? "text-green-600"
+                    : "text-red-600"
+                }`}
+              >
                 {submitMsg}
               </div>
             )}
@@ -322,7 +446,9 @@ export default function TechnicianAssignmentMain() {
 
         {/* Technicians List */}
         <aside className="w-full md:w-80 bg-white rounded-xl shadow p-5">
-          <div className="text-[#236571] font-semibold mb-4 text-lg">Available Technicians</div>
+          <div className="text-[#236571] font-semibold mb-4 text-lg">
+            Available Technicians
+          </div>
           <div>
             {loadingTeam ? (
               <div className="text-gray-500">Loading...</div>
@@ -339,7 +465,11 @@ export default function TechnicianAssignmentMain() {
                       .toUpperCase()}
                     name={member.name}
                     skills={member.specializations?.join(", ")}
-                    status={member.availabilityStatus === "AVAILABLE" ? "Active" : "Unavailable"}
+                    status={
+                      member.availabilityStatus === "AVAILABLE"
+                        ? "Active"
+                        : "Unavailable"
+                    }
                   />
                 ))
             )}
@@ -348,18 +478,18 @@ export default function TechnicianAssignmentMain() {
       </div>
 
       {/* Overlay and Team Sidebar */}
-            {showTeam && (
-              <>
-                {/* BLUR OVERLAY */}
-                <div
-                  className="fixed inset-0 z-40 bg-black bg-opacity-30 backdrop-blur-sm transition-all"
-                  onClick={() => setShowTeam(false)}
-                  aria-label="Close team sidebar"
-                />
-                {/* TEAM SIDEBAR */}
-                <TeamSection onClose={() => setShowTeam(false)} />
-              </>
-            )}
+      {showTeam && (
+        <>
+          {/* BLUR OVERLAY */}
+          <div
+            className="fixed inset-0 z-40 bg-black bg-opacity-30 backdrop-blur-sm transition-all"
+            onClick={() => setShowTeam(false)}
+            aria-label="Close team sidebar"
+          />
+          {/* TEAM SIDEBAR */}
+          <TeamSection onClose={() => setShowTeam(false)} />
+        </>
+      )}
     </>
   );
 }

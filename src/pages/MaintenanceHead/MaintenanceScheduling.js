@@ -3,6 +3,8 @@ import { Calendar, ChevronDown, Upload, Plus } from "lucide-react";
 import { useNavigate } from "react-router-dom";
 import NavBar from "../../components/NavBar";
 import TeamSection from "../../components/MaintenanceHead/TeamSection";
+import LoadingOverlay from "../../components/LoadingOverlay";
+import { toast } from "react-toastify";
 
 export default function ScheduleMaintenanceAndRequestMaterials() {
   // Schedule Maintenance Form State
@@ -33,9 +35,11 @@ export default function ScheduleMaintenanceAndRequestMaterials() {
   // Simple counter for frontend item tracking (not used for backend IDs)
   const [itemCounter, setItemCounter] = useState(2);
 
-    const [showTeam, setShowTeam] = useState(false);
-    const navigation = useNavigate();
-    const [isLoggedIn, setIsLoggedIn] = useState(false);
+  const [showTeam, setShowTeam] = useState(false);
+  const navigation = useNavigate();
+  const [isLoggedIn, setIsLoggedIn] = useState(false);
+  const [equipdata, setEquipmentData] = useState([]);
+  const [loadingProgress, setLoadingProgress] = useState(0);
 
   // Unit options
   const unitOptions = [
@@ -56,7 +60,7 @@ export default function ScheduleMaintenanceAndRequestMaterials() {
       measurement: "",
     };
     setMaterialItems([...materialItems, newItem]);
-    setItemCounter(prev => prev + 1);
+    setItemCounter((prev) => prev + 1);
   };
 
   const updateMaterialItem = (index, field, value) => {
@@ -73,27 +77,6 @@ export default function ScheduleMaintenanceAndRequestMaterials() {
     }
   };
 
-  // Equipment type mapping
-  const getEquipmentTypeName = (value) => {
-    const mapping = {
-      hvac: "HVAC System",
-      electrical: "Electrical Equipment",
-      plumbing: "Plumbing System",
-      mechanical: "Mechanical Equipment",
-    };
-    return mapping[value] || value;
-  };
-
-  // Equipment name mapping
-  const getEquipmentName = (value) => {
-    const mapping = {
-      "unit-1": "HVAC Unit 1",
-      "unit-2": "HVAC Unit 2",
-      generator: "Generator",
-      pump: "Water Pump",
-    };
-    return mapping[value] || value;
-  };
 
   // Form validation
   const validateForm = () => {
@@ -102,7 +85,9 @@ export default function ScheduleMaintenanceAndRequestMaterials() {
       return false;
     }
 
-    if (materialItems.some((item) => !item.name || !item.qty || !item.measurement)) {
+    if (
+      materialItems.some((item) => !item.name || !item.qty || !item.measurement)
+    ) {
       setError("Please fill in all material items including quantity and unit");
       return false;
     }
@@ -144,47 +129,85 @@ export default function ScheduleMaintenanceAndRequestMaterials() {
 
   // Handle form submission
   const handleSubmit = async () => {
-    if (!validateForm()) return;
+  if (!validateForm()) return;
 
-    setIsLoading(true);
-    setError("");
+  setIsLoading(true);
+  setError("");
+  setLoadingProgress(0);
 
-    try {
-      const requestBody = {
-        equipmentType: getEquipmentTypeName(equipmentType),
-        equipmentName: getEquipmentName(equipment),
-        maintenanceType: maintenanceType,
-        priority: priority,
-        scheduleDate: scheduleDate,
-        scheduleTime: scheduleTime + ":00",
-        scheduleNotes: scheduleNotes,
-        materialItems: materialItems.map((item) => ({
-          itemName: item.name,
-          quantity: parseFloat(item.qty),
-          measurement: item.measurement,
-        })),
-        justification: justification,
-        urgencyLevel: urgencyLevel.toUpperCase(),
-      };
+  const progressInterval = setInterval(() => {
+    setLoadingProgress((p) => (p >= 90 ? p : p + Math.random() * 5));
+  }, 200);
 
-      console.log(
-        "Sending Request Body:",
-        JSON.stringify(requestBody, null, 2)
-      );
+  try {
+    setLoadingProgress(10);
 
-      const result = await submitToBackend(requestBody);
+    const selectedEquipmentObj = equipdata.find(
+      (eq) => eq.id === parseInt(equipment)
+    );
 
-      console.log("Success Response:", result);
-      alert("Maintenance scheduled and materials requested successfully!");
+    setLoadingProgress(25);
 
-      resetForm();
-    } catch (error) {
-      setError(`Failed to submit request: ${error.message}`);
-      console.error("Submission Error:", error);
-    } finally {
-      setIsLoading(false);
-    }
-  };
+    const requestBody = {
+      equipmentType: equipmentType,
+      equipmentId: parseInt(equipment),
+      equipmentName: selectedEquipmentObj?.name || "",
+      maintenanceType: maintenanceType,
+      priority: priority,
+      scheduleDate: scheduleDate,
+      scheduleTime: scheduleTime + ":00",
+      scheduleNotes: scheduleNotes,
+      materialItems: materialItems.map((item) => ({
+        itemName: item.name,
+        quantity: parseFloat(item.qty),
+        measurement: item.measurement,
+      })),
+      justification: justification,
+      urgencyLevel: urgencyLevel.toUpperCase(),
+    };
+
+    console.log("Sending Request Body:", JSON.stringify(requestBody, null, 2));
+
+    setLoadingProgress(50);
+
+    const result = await submitToBackend(requestBody);
+
+    setLoadingProgress(90);
+
+    console.log("Success Response:", result);
+    resetForm();
+    setLoadingProgress(100); // Only after navigation
+    toast.success("Request submitted successfully!");
+    navigation("/maintenance/update-equipment-maintenance");
+  } catch (error) {
+    toast.error("Failed to submit request. Please try again.");
+    console.error("Submission Error:", error);
+  } finally {
+    setIsLoading(false);
+    clearInterval(progressInterval);
+    setLoadingProgress(0);
+  }
+};
+
+
+  useEffect(() => {
+    // Define an async function to fetch data
+    const fetchData = async () => {
+      try {
+        const response = await fetch("http://localhost:8080/api/equipment/all");
+        if (!response.ok) {
+          throw new Error("Failed to fetch equipment data");
+        }
+        const result = await response.json();
+        setEquipmentData(result);
+      } catch (err) {
+        setError(err.message);
+      }
+    };
+    fetchData();
+  }, []);
+
+  console.log("Equipment Data:", equipdata);
 
   // Reset form function
   const resetForm = () => {
@@ -200,403 +223,446 @@ export default function ScheduleMaintenanceAndRequestMaterials() {
     setUrgencyLevel("");
     setError("");
     setItemCounter(2);
-
-    
   };
 
   // Check login state on mount
-          useEffect(() => {
-            const user = localStorage.getItem("user");
-            setIsLoggedIn(!!user);
-          }, []);
-        
-          // Logout handler
-          const handleLogout = () => {
-            localStorage.removeItem("user");
-            localStorage.removeItem("role");
-            setIsLoggedIn(false);
-            navigation("/login");
-          };
-    
-          const handleLogin = () => {
-        navigation("/login");
-        };
+  useEffect(() => {
+    const user = localStorage.getItem("user");
+    setIsLoggedIn(!!user);
+  }, []);
+
+  // Logout handler
+  const handleLogout = () => {
+    localStorage.removeItem("user");
+    localStorage.removeItem("role");
+    setIsLoggedIn(false);
+    navigation("/login");
+  };
+
+  const handleLogin = () => {
+    navigation("/login");
+  };
+
+  const uniqueTypes = Array.from(new Set(equipdata.map((item) => item.type)));
+
+  const filteredEquipment = equipdata.filter(
+    (item) => item.type === equipmentType
+  );
 
   return (
     <>
-
-    <NavBar
-      links={[
-          { name: "Dashboard", href: "" , onClick: () => navigation("/maintenance/dashboard")},
-          { name: "Task", href: "#", onClick: () => navigation("/maintenance/scheduling")},
-          { name: "Team", href: "#",
+      <NavBar
+        links={[
+          {
+            name: "Dashboard",
+            href: "",
+            onClick: () => navigation("/maintenance/dashboard"),
+          },
+          {
+            name: "Task",
+            href: "#",
+            onClick: () => navigation("/maintenance/scheduling"),
+          },
+          {
+            name: "Schedule",
+            href: "#",
+            onClick: () =>
+              navigation("/maintenance/update-equipment-maintenance"),
+          },
+          {
+            name: "Team",
+            href: "#",
             onClick: () => {
               // e.preventDefault();
               console.log("Team link clicked");
-              
+
               setShowTeam(true);
             },
-           },
-          { name: "Equipment Log", href: "#",onClick: () => navigation("/maintenance/equipment")},
-          { name: "Add Technician", href: "#" ,onClick: () => navigation("/maintenance/add-member")},
+          },
+          {
+            name: "Equipment",
+            href: "#",
+            onClick: () => navigation("/maintenance/equipment"),
+          },
+          {
+            name: "Add Technician",
+            href: "#",
+            onClick: () => navigation("/maintenance/add-member"),
+          },
         ]}
         showButton={true}
         buttonLabel={isLoggedIn ? "Logout" : "Get Started"}
         onButtonClick={isLoggedIn ? handleLogout : handleLogin}
-    />
-    <div className="min-h-screen bg-gray-50 p-6">
-      <div className="max-w-6xl mx-auto">
-        {/* Header */}
-        <div className="mb-6">
-          <h1 className="text-2xl font-bold text-gray-900 mb-2">
-            Schedule Maintenance and Request Materials
-          </h1>
-          <p className="text-gray-600">
-            Manage equipment maintenance schedules and request inventory materials
-          </p>
-        </div>
-
-        {/* Error Message */}
-        {error && (
-          <div className="mb-6 p-4 bg-red-50 border border-red-200 rounded-md">
-            <p className="text-red-600 text-sm">{error}</p>
+      />
+      {isLoading && (
+              <LoadingOverlay
+                progress={loadingProgress}
+                message="Processing..."
+              />
+            )}
+      <div className="min-h-screen bg-gray-50 p-6">
+        <div className="max-w-6xl mx-auto">
+          {/* Header */}
+          <div className="mb-6">
+            <h1 className="text-2xl font-bold text-gray-900 mb-2">
+              Schedule Maintenance and Request Materials
+            </h1>
+            <p className="text-gray-600">
+              Manage equipment maintenance schedules and request inventory
+              materials
+            </p>
           </div>
-        )}
 
-        <div className="grid grid-cols-1 lg:grid-cols-2 gap-8">
-          {/* Left Column - Schedule Maintenance */}
-          <div className="bg-white rounded-lg shadow-sm border border-gray-200 p-6">
-            <div className="flex items-center mb-4">
-              <div className="bg-[#236571] rounded-full p-2 mr-3">
-                <Calendar className="w-5 h-5 text-white" />
-              </div>
-              <h2 className="text-lg font-semibold text-gray-900">
-                Schedule Maintenance
-              </h2>
+          {/* Error Message */}
+          {error && (
+            <div className="mb-6 p-4 bg-red-50 border border-red-200 rounded-md">
+              <p className="text-red-600 text-sm">{error}</p>
             </div>
+          )}
 
-            <form className="space-y-4">
-              {/* Equipment Type */}
-              <div>
-                <label className="block text-sm font-medium text-gray-700 mb-1">
-                  Select Equipment Type <span className="text-red-500">*</span>
-                </label>
-                <div className="relative">
-                  <select
-                    value={equipmentType}
-                    onChange={(e) => setEquipmentType(e.target.value)}
-                    className="w-full px-3 py-2 border border-gray-300 rounded-md bg-white text-gray-700 appearance-none focus:outline-none focus:ring-2 focus:ring-[#236571] focus:border-transparent"
-                    required
-                    disabled={isLoading}
-                  >
-                    <option value="">Choose equipment type...</option>
-                    <option value="hvac">HVAC System</option>
-                    <option value="electrical">Electrical Equipment</option>
-                    <option value="plumbing">Plumbing System</option>
-                    <option value="mechanical">Mechanical Equipment</option>
-                  </select>
-                  <ChevronDown className="absolute right-3 top-2.5 h-4 w-4 text-gray-400 pointer-events-none" />
+          <div className="grid grid-cols-1 lg:grid-cols-2 gap-8">
+            {/* Left Column - Schedule Maintenance */}
+            <div className="bg-white rounded-lg shadow-sm border border-gray-200 p-6">
+              <div className="flex items-center mb-4">
+                <div className="bg-[#236571] rounded-full p-2 mr-3">
+                  <Calendar className="w-5 h-5 text-white" />
                 </div>
+                <h2 className="text-lg font-semibold text-gray-900">
+                  Schedule Maintenance
+                </h2>
               </div>
 
-              {/* Select Equipment */}
-              <div>
-                <label className="block text-sm font-medium text-gray-700 mb-1">
-                  Select Equipment <span className="text-red-500">*</span>
-                </label>
-                <div className="relative">
-                  <select
-                    value={equipment}
-                    onChange={(e) => setEquipment(e.target.value)}
-                    className="w-full px-3 py-2 border border-gray-300 rounded-md bg-white text-gray-700 appearance-none focus:outline-none focus:ring-2 focus:ring-[#236571] focus:border-transparent"
-                    required
-                    disabled={isLoading}
-                  >
-                    <option value="">Choose equipment...</option>
-                    <option value="unit-1">HVAC Unit 1</option>
-                    <option value="unit-2">HVAC Unit 2</option>
-                    <option value="generator">Generator</option>
-                    <option value="pump">Water Pump</option>
-                  </select>
-                  <ChevronDown className="absolute right-3 top-2.5 h-4 w-4 text-gray-400 pointer-events-none" />
-                </div>
-
-              </div>
-              {/* Maintenance Type */}
-              <div>
-                <label className="block text-sm font-medium text-gray-700 mb-1">
-                  Maintenance Type <span className="text-red-500">*</span>
-                </label>
-                <div className="relative">
-                  <select
-                    value={maintenanceType}
-                    onChange={(e) => setMaintenanceType(e.target.value)}
-                    className="w-full px-3 py-2 border border-gray-300 rounded-md bg-white text-gray-700 appearance-none focus:outline-none focus:ring-2 focus:ring-[#236571] focus:border-transparent"
-                    required
-                    disabled={isLoading}
-                  >
-                    <option value="">Choose Maintenance Type</option>
-                    <option value="Preventive">Preventive</option>
-                    <option value="Corrective">Corrective</option>
-                    <option value="Emergancy">Emergancy</option>
-
+              <form className="space-y-4">
+                {/* Equipment Type */}
+                <div>
+                  <label className="block text-sm font-medium text-gray-700 mb-1">
+                    Select Equipment Type{" "}
+                    <span className="text-red-500">*</span>
+                  </label>
+                  <div className="relative">
+                    <select
+                      value={equipmentType}
+                      onChange={(e) => {
+                        setEquipmentType(e.target.value);
+                        setEquipment(""); // reset selected equipment on type change
+                      }}
+                      className="w-full px-3 py-2 border border-gray-300 rounded-md bg-white text-gray-700 appearance-none focus:outline-none focus:ring-2 focus:ring-[#236571] focus:border-transparent"
+                      required
+                      disabled={isLoading}
+                    >
+                      <option value="">Choose equipment type...</option>
+                      {uniqueTypes.map((type, index) => (
+                        <option key={index} value={type}>
+                          {type}
+                        </option>
+                      ))}
                     </select>
-                  <ChevronDown className="absolute right-3 top-2.5 h-4 w-4 text-gray-400 pointer-events-none" />
+                    <ChevronDown className="absolute right-3 top-2.5 h-4 w-4 text-gray-400 pointer-events-none" />
+                  </div>
                 </div>
-              </div>
-              {/* Priority Level */}
-              <div>
-                <label className="block text-sm font-medium text-gray-700 mb-1">
-                  Priority Level <span className="text-red-500">*</span>
-                </label>
-                <div className="relative">
-                  <select
-                    value={priority}
-                    onChange={(e) => setPriority(e.target.value)}
-                    className="w-full px-3 py-2 border border-gray-300 rounded-md bg-white text-gray-700 appearance-none focus:outline-none focus:ring-2 focus:ring-[#236571] focus:border-transparent"
-                    required
-                    disabled={isLoading}
-                  >
-                    <option value="">Select priority...</option>
-                    <option value="low">Low</option>
-                    <option value="medium">Medium</option>
-                    <option value="high">High</option>
-                  </select>
-                  <ChevronDown className="absolute right-3 top-2.5 h-4 w-4 text-gray-400 pointer-events-none" />
+
+                {/* Select Equipment */}
+                <div>
+                  <label className="block text-sm font-medium text-gray-700 mb-1">
+                    Select Equipment <span className="text-red-500">*</span>
+                  </label>
+                  <div className="relative">
+                    <select
+                      value={equipment}
+                      onChange={(e) => setEquipment(e.target.value)}
+                      className="w-full px-3 py-2 border border-gray-300 rounded-md bg-white text-gray-700 appearance-none focus:outline-none focus:ring-2 focus:ring-[#236571] focus:border-transparent"
+                      required
+                      disabled={isLoading || !equipmentType}
+                    >
+                      <option value="">Choose equipment...</option>
+                      {filteredEquipment.map((item) => (
+                        <option key={item.id} value={item.id}>
+                          {item.name} ({item.model})
+                        </option>
+                      ))}
+                    </select>
+                    <ChevronDown className="absolute right-3 top-2.5 h-4 w-4 text-gray-400 pointer-events-none" />
+                  </div>
                 </div>
-              </div>
-              {/* Select Date */}
-              <div>
-                <label className="block text-sm font-medium text-gray-700 mb-1">
-                  Select Date <span className="text-red-500">*</span>
-                </label>
-                <div className="relative">
-                  <input
-                    type="date"
-                    value={scheduleDate}
-                    onChange={(e) => setScheduleDate(e.target.value)}
-                    className="w-full px-3 py-2 border border-gray-300 rounded-md bg-white text-gray-700 focus:outline-none focus:ring-2 focus:ring-[#236571] focus:border-transparent"
-                    required
+
+                {/* Maintenance Type */}
+                <div>
+                  <label className="block text-sm font-medium text-gray-700 mb-1">
+                    Maintenance Type <span className="text-red-500">*</span>
+                  </label>
+                  <div className="relative">
+                    <select
+                      value={maintenanceType}
+                      onChange={(e) => setMaintenanceType(e.target.value)}
+                      className="w-full px-3 py-2 border border-gray-300 rounded-md bg-white text-gray-700 appearance-none focus:outline-none focus:ring-2 focus:ring-[#236571] focus:border-transparent"
+                      required
+                      disabled={isLoading}
+                    >
+                      <option value="">Choose Maintenance Type</option>
+                      <option value="Preventive">Preventive</option>
+                      <option value="Corrective">Corrective</option>
+                      <option value="Emergancy">Emergancy</option>
+                    </select>
+                    <ChevronDown className="absolute right-3 top-2.5 h-4 w-4 text-gray-400 pointer-events-none" />
+                  </div>
+                </div>
+                {/* Priority Level */}
+                <div>
+                  <label className="block text-sm font-medium text-gray-700 mb-1">
+                    Priority Level <span className="text-red-500">*</span>
+                  </label>
+                  <div className="relative">
+                    <select
+                      value={priority}
+                      onChange={(e) => setPriority(e.target.value)}
+                      className="w-full px-3 py-2 border border-gray-300 rounded-md bg-white text-gray-700 appearance-none focus:outline-none focus:ring-2 focus:ring-[#236571] focus:border-transparent"
+                      required
+                      disabled={isLoading}
+                    >
+                      <option value="">Select priority...</option>
+                      <option value="low">Low</option>
+                      <option value="medium">Medium</option>
+                      <option value="high">High</option>
+                    </select>
+                    <ChevronDown className="absolute right-3 top-2.5 h-4 w-4 text-gray-400 pointer-events-none" />
+                  </div>
+                </div>
+                {/* Select Date */}
+                <div>
+                  <label className="block text-sm font-medium text-gray-700 mb-1">
+                    Select Date <span className="text-red-500">*</span>
+                  </label>
+                  <div className="relative">
+                    <input
+                      type="date"
+                      value={scheduleDate}
+                      onChange={(e) => setScheduleDate(e.target.value)}
+                      className="w-full px-3 py-2 border border-gray-300 rounded-md bg-white text-gray-700 focus:outline-none focus:ring-2 focus:ring-[#236571] focus:border-transparent"
+                      required
+                      disabled={isLoading}
+                    />
+                  </div>
+                </div>
+
+                {/* Select Time */}
+                <div>
+                  <label className="block text-sm font-medium text-gray-700 mb-1">
+                    Select Time <span className="text-red-500">*</span>
+                  </label>
+                  <div className="relative">
+                    <input
+                      type="time"
+                      value={scheduleTime}
+                      onChange={(e) => setScheduleTime(e.target.value)}
+                      className="w-full px-3 py-2 border border-gray-300 rounded-md bg-white text-gray-700 focus:outline-none focus:ring-2 focus:ring-[#236571] focus:border-transparent"
+                      required
+                      disabled={isLoading}
+                    />
+                  </div>
+                </div>
+
+                {/* Add Notes */}
+                <div>
+                  <label className="block text-sm font-medium text-gray-700 mb-1">
+                    Add Notes
+                  </label>
+                  <textarea
+                    value={scheduleNotes}
+                    onChange={(e) => setScheduleNotes(e.target.value)}
+                    placeholder="Describe the maintenance requirements..."
+                    rows={3}
+                    className="w-full px-3 py-2 border border-gray-300 rounded-md bg-white text-gray-700 focus:outline-none focus:ring-2 focus:ring-[#236571] focus:border-transparent resize-none"
                     disabled={isLoading}
                   />
                 </div>
-              </div>
-
-              {/* Select Time */}
-              <div>
-                <label className="block text-sm font-medium text-gray-700 mb-1">
-                  Select Time <span className="text-red-500">*</span>
-                </label>
-                <div className="relative">
-                  <input
-                    type="time"
-                    value={scheduleTime}
-                    onChange={(e) => setScheduleTime(e.target.value)}
-                    className="w-full px-3 py-2 border border-gray-300 rounded-md bg-white text-gray-700 focus:outline-none focus:ring-2 focus:ring-[#236571] focus:border-transparent"
-                    required
-                    disabled={isLoading}
-                  />
-                </div>
-              </div>
-
-              {/* Add Notes */}
-              <div>
-                <label className="block text-sm font-medium text-gray-700 mb-1">
-                  Add Notes
-                </label>
-                <textarea
-                  value={scheduleNotes}
-                  onChange={(e) => setScheduleNotes(e.target.value)}
-                  placeholder="Describe the maintenance requirements..."
-                  rows={3}
-                  className="w-full px-3 py-2 border border-gray-300 rounded-md bg-white text-gray-700 focus:outline-none focus:ring-2 focus:ring-[#236571] focus:border-transparent resize-none"
-                  disabled={isLoading}
-                />
-              </div>
-            </form>
-          </div>
-
-          {/* Right Column - Request Inventory Materials */}
-          <div className="bg-white rounded-lg shadow-sm border border-gray-200 p-6">
-            <div className="flex items-center mb-4">
-              <div className="bg-[#236571] rounded-full p-2 mr-3">
-                <Upload className="w-5 h-5 text-white" />
-              </div>
-              <h2 className="text-lg font-semibold text-gray-900">
-                Request Inventory Materials
-              </h2>
+              </form>
             </div>
 
-            <form className="space-y-4">
-              {/* Items Needed */}
-              <div>
-                <label className="block text-sm font-medium text-gray-700 mb-2">
-                  Items Needed <span className="text-red-500">*</span>
-                </label>
-                <div className="space-y-3">
-                  {materialItems.map((item, index) => (
-                    <div key={item.id} className="space-y-2">
-                      {/* Item Number Display (for user reference only) */}
-                      <div className="text-xs text-gray-500 font-mono">
-                        Item #{item.id}
-                      </div>
+            {/* Right Column - Request Inventory Materials */}
+            <div className="bg-white rounded-lg shadow-sm border border-gray-200 p-6">
+              <div className="flex items-center mb-4">
+                <div className="bg-[#236571] rounded-full p-2 mr-3">
+                  <Upload className="w-5 h-5 text-white" />
+                </div>
+                <h2 className="text-lg font-semibold text-gray-900">
+                  Request Inventory Materials
+                </h2>
+              </div>
 
-                      {/* Item Input Row */}
-                      <div className="flex gap-2">
-                        <input
-                          type="text"
-                          value={item.name}
-                          onChange={(e) =>
-                            updateMaterialItem(index, "name", e.target.value)
-                          }
-                          placeholder="Item name (e.g., Oil)"
-                          className="flex-1 px-3 py-2 border border-gray-300 rounded-md bg-white text-gray-700 focus:outline-none focus:ring-2 focus:ring-[#236571] focus:border-transparent"
-                          required
-                          disabled={isLoading}
-                        />
-
-                        <input
-                          type="number"
-                          value={item.qty}
-                          onChange={(e) =>
-                            updateMaterialItem(index, "qty", e.target.value)
-                          }
-                          placeholder="Amount"
-                          min="0"
-                          step="0.1"
-                          className="w-24 px-3 py-2 border border-gray-300 rounded-md bg-white text-gray-700 focus:outline-none focus:ring-2 focus:ring-[#236571] focus:border-transparent"
-                          required
-                          disabled={isLoading}
-                        />
-
-                        <div className="relative">
-                          <select
-                            value={item.measurement}
-                            onChange={(e) =>
-                              updateMaterialItem(index, "measurement", e.target.value)
-                            }
-                            className="w-20 px-2 py-2 border border-gray-300 rounded-md bg-white text-gray-700 appearance-none focus:outline-none focus:ring-2 focus:ring-[#236571] focus:border-transparent text-sm"
-                            required
-                            disabled={isLoading}
-                          >
-                            <option value="">Unit</option>
-                            {unitOptions.map((unit) => (
-                              <option key={unit.value} value={unit.value}>
-                                {unit.label}
-                              </option>
-                            ))}
-                          </select>
-                          <ChevronDown className="absolute right-1 top-2.5 h-3 w-3 text-gray-400 pointer-events-none" />
+              <form className="space-y-4">
+                {/* Items Needed */}
+                <div>
+                  <label className="block text-sm font-medium text-gray-700 mb-2">
+                    Items Needed <span className="text-red-500">*</span>
+                  </label>
+                  <div className="space-y-3">
+                    {materialItems.map((item, index) => (
+                      <div key={item.id} className="space-y-2">
+                        {/* Item Number Display (for user reference only) */}
+                        <div className="text-xs text-gray-500 font-mono">
+                          Item #{item.id}
                         </div>
 
-                        {materialItems.length > 1 && (
-                          <button
-                            type="button"
-                            onClick={() => removeMaterialItem(index)}
-                            className="px-3 py-2 text-red-500 hover:text-red-700 border border-red-300 rounded-md hover:bg-red-50 transition-colors"
+                        {/* Item Input Row */}
+                        <div className="flex gap-2">
+                          <input
+                            type="text"
+                            value={item.name}
+                            onChange={(e) =>
+                              updateMaterialItem(index, "name", e.target.value)
+                            }
+                            placeholder="Item name (e.g., Oil)"
+                            className="flex-1 px-3 py-2 border border-gray-300 rounded-md bg-white text-gray-700 focus:outline-none focus:ring-2 focus:ring-[#236571] focus:border-transparent"
+                            required
                             disabled={isLoading}
-                          >
-                            ×
-                          </button>
-                        )}
+                          />
+
+                          <input
+                            type="number"
+                            value={item.qty}
+                            onChange={(e) =>
+                              updateMaterialItem(index, "qty", e.target.value)
+                            }
+                            placeholder="Amount"
+                            min="0"
+                            step="0.1"
+                            className="w-24 px-3 py-2 border border-gray-300 rounded-md bg-white text-gray-700 focus:outline-none focus:ring-2 focus:ring-[#236571] focus:border-transparent"
+                            required
+                            disabled={isLoading}
+                          />
+
+                          <div className="relative">
+                            <select
+                              value={item.measurement}
+                              onChange={(e) =>
+                                updateMaterialItem(
+                                  index,
+                                  "measurement",
+                                  e.target.value
+                                )
+                              }
+                              className="w-20 px-2 py-2 border border-gray-300 rounded-md bg-white text-gray-700 appearance-none focus:outline-none focus:ring-2 focus:ring-[#236571] focus:border-transparent text-sm"
+                              required
+                              disabled={isLoading}
+                            >
+                              <option value="">Unit</option>
+                              {unitOptions.map((unit) => (
+                                <option key={unit.value} value={unit.value}>
+                                  {unit.label}
+                                </option>
+                              ))}
+                            </select>
+                            <ChevronDown className="absolute right-1 top-2.5 h-3 w-3 text-gray-400 pointer-events-none" />
+                          </div>
+
+                          {materialItems.length > 1 && (
+                            <button
+                              type="button"
+                              onClick={() => removeMaterialItem(index)}
+                              className="px-3 py-2 text-red-500 hover:text-red-700 border border-red-300 rounded-md hover:bg-red-50 transition-colors"
+                              disabled={isLoading}
+                            >
+                              ×
+                            </button>
+                          )}
+                        </div>
                       </div>
-                    </div>
-                  ))}
-                </div>
+                    ))}
+                  </div>
 
-                <button
-                  type="button"
-                  onClick={addMaterialItem}
-                  className="mt-3 flex items-center text-[#236571] hover:text-[#17484b] font-medium text-sm disabled:opacity-50 transition-colors"
-                  disabled={isLoading}
-                >
-                  <Plus className="w-4 h-4 mr-1" />
-                  Add another item
-                </button>
-              </div>
-
-              {/* Justification */}
-              <div>
-                <label className="block text-sm font-medium text-gray-700 mb-1">
-                  Justification <span className="text-red-500">*</span>
-                </label>
-                <textarea
-                  value={justification}
-                  onChange={(e) => setJustification(e.target.value)}
-                  placeholder="Explain why these materials are needed..."
-                  rows={3}
-                  className="w-full px-3 py-2 border border-gray-300 rounded-md bg-white text-gray-700 focus:outline-none focus:ring-2 focus:ring-[#236571] focus:border-transparent resize-none"
-                  required
-                  disabled={isLoading}
-                />
-              </div>
-
-              {/* Urgency Level */}
-              <div>
-                <label className="block text-sm font-medium text-gray-700 mb-1">
-                  Urgency Level <span className="text-red-500">*</span>
-                </label>
-                <div className="relative">
-                  <select
-                    value={urgencyLevel}
-                    onChange={(e) => setUrgencyLevel(e.target.value)}
-                    className="w-full px-3 py-2 border border-gray-300 rounded-md bg-white text-gray-700 appearance-none focus:outline-none focus:ring-2 focus:ring-[#236571] focus:border-transparent"
-                    required
+                  <button
+                    type="button"
+                    onClick={addMaterialItem}
+                    className="mt-3 flex items-center text-[#236571] hover:text-[#17484b] font-medium text-sm disabled:opacity-50 transition-colors"
                     disabled={isLoading}
                   >
-                    <option value="">Select urgency...</option>
-                    <option value="low">Low</option>
-                    <option value="medium">Medium</option>
-                    <option value="high">High</option>
-                    <option value="critical">Critical</option>
-                  </select>
-                  <ChevronDown className="absolute right-3 top-2.5 h-4 w-4 text-gray-400 pointer-events-none" />
+                    <Plus className="w-4 h-4 mr-1" />
+                    Add another item
+                  </button>
                 </div>
-              </div>
-            </form>
+
+                {/* Justification */}
+                <div>
+                  <label className="block text-sm font-medium text-gray-700 mb-1">
+                    Justification <span className="text-red-500">*</span>
+                  </label>
+                  <textarea
+                    value={justification}
+                    onChange={(e) => setJustification(e.target.value)}
+                    placeholder="Explain why these materials are needed..."
+                    rows={3}
+                    className="w-full px-3 py-2 border border-gray-300 rounded-md bg-white text-gray-700 focus:outline-none focus:ring-2 focus:ring-[#236571] focus:border-transparent resize-none"
+                    required
+                    disabled={isLoading}
+                  />
+                </div>
+
+                {/* Urgency Level */}
+                <div>
+                  <label className="block text-sm font-medium text-gray-700 mb-1">
+                    Urgency Level <span className="text-red-500">*</span>
+                  </label>
+                  <div className="relative">
+                    <select
+                      value={urgencyLevel}
+                      onChange={(e) => setUrgencyLevel(e.target.value)}
+                      className="w-full px-3 py-2 border border-gray-300 rounded-md bg-white text-gray-700 appearance-none focus:outline-none focus:ring-2 focus:ring-[#236571] focus:border-transparent"
+                      required
+                      disabled={isLoading}
+                    >
+                      <option value="">Select urgency...</option>
+                      <option value="low">Low</option>
+                      <option value="medium">Medium</option>
+                      <option value="high">High</option>
+                      <option value="critical">Critical</option>
+                    </select>
+                    <ChevronDown className="absolute right-3 top-2.5 h-4 w-4 text-gray-400 pointer-events-none" />
+                  </div>
+                </div>
+              </form>
+            </div>
+          </div>
+
+          {/* Bottom Action Buttons */}
+          <div className="flex justify-center gap-4 mt-8">
+            <button
+              onClick={resetForm}
+              className="px-8 py-3 border border-gray-300 text-gray-700 rounded-md font-medium hover:bg-gray-50 transition-colors disabled:opacity-50"
+              disabled={isLoading}
+            >
+              Cancel
+            </button>
+            <button
+              onClick={handleSubmit}
+              className="px-8 py-3 bg-[#EFC11A] hover:bg-yellow-400 text-yellow-900 rounded-md font-semibold transition-colors disabled:opacity-50 flex items-center gap-2"
+              disabled={isLoading}
+            >
+              {isLoading ? (
+                <>
+                  <div className="animate-spin rounded-full h-4 w-4 border-b-2 border-yellow-900"></div>
+                  Submitting...
+                </>
+              ) : (
+                "Submit"
+              )}
+            </button>
           </div>
         </div>
-
-        {/* Bottom Action Buttons */}
-        <div className="flex justify-center gap-4 mt-8">
-          <button
-            onClick={resetForm}
-            className="px-8 py-3 border border-gray-300 text-gray-700 rounded-md font-medium hover:bg-gray-50 transition-colors disabled:opacity-50"
-            disabled={isLoading}
-          >
-            Cancel
-          </button>
-          <button
-            onClick={handleSubmit}
-            className="px-8 py-3 bg-[#EFC11A] hover:bg-yellow-400 text-yellow-900 rounded-md font-semibold transition-colors disabled:opacity-50 flex items-center gap-2"
-            disabled={isLoading}
-          >
-            {isLoading ? (
-              <>
-                <div className="animate-spin rounded-full h-4 w-4 border-b-2 border-yellow-900"></div>
-                Submitting...
-              </>
-            ) : (
-              "Submit"
-            )}
-          </button>
-        </div>
       </div>
-    </div>
 
-    {/* Overlay and Team Sidebar */}
-          {showTeam && (
-            <>
-              {/* BLUR OVERLAY */}
-              <div
-                className="fixed inset-0 z-40 bg-black bg-opacity-30 backdrop-blur-sm transition-all"
-                onClick={() => setShowTeam(false)}
-                aria-label="Close team sidebar"
-              />
-              {/* TEAM SIDEBAR */}
-              <TeamSection onClose={() => setShowTeam(false)} />
-            </>
-          )}
+      {/* Overlay and Team Sidebar */}
+      {showTeam && (
+        <>
+          {/* BLUR OVERLAY */}
+          <div
+            className="fixed inset-0 z-40 bg-black bg-opacity-30 backdrop-blur-sm transition-all"
+            onClick={() => setShowTeam(false)}
+            aria-label="Close team sidebar"
+          />
+          {/* TEAM SIDEBAR */}
+          <TeamSection onClose={() => setShowTeam(false)} />
+        </>
+      )}
     </>
   );
 }
