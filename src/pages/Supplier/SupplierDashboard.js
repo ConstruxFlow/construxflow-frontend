@@ -1,4 +1,4 @@
-import React from "react";
+import React, { useContext, useEffect, useState } from "react";
 import {
   FaRegUserCircle, FaTruck, FaRegFileAlt, FaEye, FaUser,
   FaHeadset, FaRegCheckCircle, FaRegFolderOpen
@@ -12,6 +12,8 @@ import {
   Chart as ChartJS, CategoryScale, LinearScale, PointElement,
   LineElement, Title, Tooltip, Legend,
 } from "chart.js";
+import { AuthContext } from "../../Context/AuthContext";
+import axios from "axios";
 
 ChartJS.register(
   CategoryScale, LinearScale, PointElement,
@@ -19,11 +21,11 @@ ChartJS.register(
 );
 
 const navLinks = [
-  { name: "Dashboard", href: "/" },
-  { name: "Requests", href: "/requests" },
-  { name: "Quotations", href: "/quotations" },
-  { name: "Orders", href: "/orders" },
-  { name: "Payments", href: "/payments" },
+  { name: "Dashboard", href: "/supplier/dashboard" },
+  { name: "Requests", href: "/supplier/requests" },
+  { name: "Quotations", href: "/supplier/quotations" },
+  { name: "Orders", href: "/supplier/orders" },
+  { name: "Payments", href: "/supplier/payments" },
 ];
 
 const materialRequestsData = {
@@ -89,13 +91,54 @@ function ActionTile({ onClick, icon, label, iconColorClass, hoverClass }) {
 }
 
 const SupplierDashboard = () => {
+  const [supplierData, setSupplierData] = useState(null);
+    const [loading, setLoading] = useState(true);
+    const [error, setError] = useState(null);
+    const {authState}=useContext(AuthContext);
+    console.log("Auth State:", authState?.user?.supplierId);
   const navigate = useNavigate();
 
+  const supplierId = authState?.user?.supplierId;
+  console.log("Supplier ID:", supplierId);
+
+  useEffect(() => {
+  if (!supplierId) {
+    setError("Supplier ID not found");
+    setLoading(false);
+    return;
+  }
+
+  setError(null);
+  setLoading(true);
+
+  const fetchSupplier = async () => {
+    try {
+      const res = await axios.get(`http://localhost:8080/api/supplier/find/${supplierId}`);
+      setSupplierData(res.data.data);
+    } catch (err) {
+      setError("Failed to load supplier details");
+    } finally {
+      setLoading(false);
+    }
+  };
+  fetchSupplier();
+}, [supplierId]);
+
+if (loading) {
+    return (
+      <div className="min-h-screen bg-purewhite font-poppins flex items-center justify-center">
+        <div className="text-center">
+          <div className="animate-spin rounded-full h-12 w-12 border-b-2 border-web_yellow mx-auto mb-4"></div>
+          <p className="text-gray-600">Loading...</p>
+        </div>
+      </div>
+    );
+  }
   return (
     <div className="bg-purewhite min-h-screen">
-      <NavBar links={navLinks} logoSrc="/logo1.png" />
+      <NavBar links={navLinks} profileURL="/supplier/profile" logoSrc="/logo1.png" />
       <div className="max-w-full mx-auto px-6 sm:px-8 lg:px-16 py-6">
-        <h2 className="text-2xl font-bold mb-2 text-gray-800">Welcome back, John!</h2>
+        <h2 className="text-2xl font-bold mb-2 text-gray-800">Welcome back, {supplierData?.userDetails?.user_name || "N/A"}!</h2>
         <p className="text-gray-600 mb-8 text-base">
           Here’s what’s happening with your supply chain today.
         </p>
@@ -168,28 +211,28 @@ const SupplierDashboard = () => {
           </div>
           <div className="grid grid-cols-1 sm:grid-cols-2 lg:grid-cols-4 gap-4 mt-2">
             <ActionTile
-              onClick={() => navigate('/requests')}
+              onClick={() => navigate('/supplier/requests')}
               icon={<FaEye className="text-xl" />}
               iconColorClass="text-deep_green"
               label="View Requests"
               hoverClass="hover:bg-deep_green/10"
             />
             <ActionTile
-              onClick={() => navigate('/quotations')}
+              onClick={() => navigate('/supplier/quotations')}
               icon={<FaRegFileAlt className="text-xl" />}
               iconColorClass="text-web_yellow"
               label="View Quotations"
               hoverClass="hover:bg-web_yellow/15"
             />
             <ActionTile
-              onClick={() => navigate('/supplierprofile/edit')}
+              onClick={() => navigate('/supplier/profile/edit')}
               icon={<FaUser className="text-xl" />}
               iconColorClass="text-main_dark"
               label="Update Profile"
               hoverClass="hover:bg-light_gray/70"
             />
             <ActionTile
-              onClick={() => navigate('/contact-support')}
+              onClick={() => navigate('/supplier/contact-support')}
               icon={<FaHeadset className="text-xl" />}
               iconColorClass="text-deep_green"
               label="Contact Support"

@@ -16,11 +16,11 @@ import { useNavigate } from "react-router-dom";
 import NavBar from "../../components/NavBar";
 
 const navLinks = [
-  { name: "Dashboard", href: "/dashboard1" },
-  { name: "Requests", href: "/requests", active: true },
-  { name: "Quotations", href: "/quotations" },
-  { name: "Orders", href: "/orders" },
-  { name: "Payments", href: "/payments" },
+  { name: "Dashboard", href: "/supplier/dashboard" },
+  { name: "Requests", href: "/supplier/requests", active: true },
+  { name: "Quotations", href: "/supplier/quotations" },
+  { name: "Orders", href: "/supplier/orders" },
+  { name: "Payments", href: "/supplier/payments" },
 ];
 
 const MaterialRequests = () => {
@@ -30,6 +30,8 @@ const MaterialRequests = () => {
   const [priorityFilter, setPriorityFilter] = useState("All Priorities");
   const [dateRange, setDateRange] = useState("");
   const [currentPage, setCurrentPage] = useState(1);
+  const [loading, setLoading] = useState(true);
+
 
   const navigate = useNavigate();
 
@@ -40,6 +42,7 @@ const MaterialRequests = () => {
       .then((data) => {
         // If your API wraps data in { data: [...] }, adjust accordingly
         setRequests(data.data || []);
+        setLoading(false);
       })
       .catch((err) => {
         console.error("Failed to fetch requests:", err);
@@ -132,9 +135,20 @@ const MaterialRequests = () => {
       .join(", ");
   };
 
+  if (loading) {
+    return (
+      <div className="min-h-screen bg-purewhite font-poppins flex items-center justify-center">
+        <div className="text-center">
+          <div className="animate-spin rounded-full h-12 w-12 border-b-2 border-web_yellow mx-auto mb-4"></div>
+          <p className="text-gray-600">Loading Material requests...</p>
+        </div>
+      </div>
+    );
+  }
+
   return (
     <div className="bg-[#f8f9fa] min-h-screen font-poppins">
-      <NavBar links={navLinks} logoSrc="/logo1.png" />
+      <NavBar links={navLinks} profileURL="/supplier/profile" logoSrc="/logo1.png" />
 
       <div className="max-w-full mx-auto px-16 py-8">
         {/* Header */}
@@ -304,7 +318,7 @@ const MaterialRequests = () => {
                       <div className="flex items-center gap-2">
                         <button
                           className="p-2 text-deep_green hover:bg-gray-100 rounded"
-                          onClick={() => navigate(`/requests/${request.id}`)}
+                          onClick={() => navigate(`/supplier/requests/${request.id}`)}
                         >
                           <FaEye />
                         </button>
