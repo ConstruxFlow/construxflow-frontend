@@ -130,6 +130,7 @@ console.log(supplierData);
     <div className="min-h-screen bg-purewhite font-poppins">
       {/* Header Navigation */}
       <NavBar
+      profileURL="/financial/profile"
         links={[
           { name: 'Dashboard', path: '/financial/dashboard' },
           { name: 'Payment Approvals', path: '/financial/payment-list' },

@@ -89,6 +89,7 @@ const SupplierPerformanceEvaluation = () => {
     <div className="min-h-screen bg-purewhite font-poppins">
       {/* Header Navigation */}
       <NavBar
+      profileURL="/purchasing/profile"
         links={[
           { name: 'Dashboard', path: '/purchasing/dashboard' },
           { name: 'Material Requests', path: '/purchasing/materialrequests/overview' },
