@@ -82,6 +82,7 @@ import { SupplierRoutes } from "./pages/Supplier/routes";
   import ScheduleForm from "./pages/InventoryManager/ScheduleForm";
 import ViewSchedulePage from "./pages/InventoryManager/ViewSchedulePage";
 import ReorderMaterialPage from "./pages/InventoryManager/ReorderMaterialPage";
+import Admin_Dashboard from "./pages/Admin/Admin-Dashboard";
 
 
   export const routes = createBrowserRouter([
@@ -270,7 +271,7 @@ import ReorderMaterialPage from "./pages/InventoryManager/ReorderMaterialPage";
     },
     {
       path: "/admin",
-      element:<ConstructionDashboard/>
+      element:<Admin_Dashboard/>
     },
     {
       path: "/admin-inventory",
@@ -293,7 +294,8 @@ import ReorderMaterialPage from "./pages/InventoryManager/ReorderMaterialPage";
 
     path: "/add-material",
     element: <AddMaterial />,
-  },{
+  },
+  {
     path: "/admin",
     element:<Admin_Dashbaord/>
 
@@ -311,7 +313,8 @@ import ReorderMaterialPage from "./pages/InventoryManager/ReorderMaterialPage";
 
     path: "/maintenance-request-page",
     element: <MaintenanceRequestPage />,
-
+  },
+  {
     path: "/admin-managers",
     element:<ManagerReg/>
   },

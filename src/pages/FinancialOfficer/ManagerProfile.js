@@ -60,7 +60,7 @@ const ManagerProfileView = () => {
     return (
       <div className="min-h-screen bg-purewhite font-poppins">
         <NavBar 
-        profileURL="/purchasing/profile"
+        profileURL="/financial/profile"
         links={[
           { name: 'Dashboard', path: '/purchasing/dashboard' },
           { name: 'Material Requests', path: '/purchasing/materialrequests/overview' },
@@ -78,12 +78,11 @@ const ManagerProfileView = () => {
   return (
     <div className="min-h-screen bg-purewhite font-poppins">
       {/* Header Navigation */}
-      <NavBar links={[
-        { name: 'Dashboard', path: '/purchasing/dashboard' },
-        { name: 'Material Requests', path: '/purchasing/materialrequests/overview' },
-        { name: 'Suppliers', path: '/purchasing/supplier/dashboard' },
-        { name: 'Quotation Requests', path: '/purchasing/quotationrequest/overview' },
-        { name: 'Purchasing Orders', path: '/purchasing/orders/overview' },
+      <NavBar profileURL="/financial/profile" links={[
+        { name: 'Dashboard', path: '/financial/dashboard' },
+          { name: 'Payment Approvals', path: '/financial/payment-list' },
+          { name: 'Purchase Orders', path: '/financial/purchase-order-list' },
+          { name: 'Projects', path: '/financial/financial-projects' },
       ]} />
 
       {/* Main Content */}

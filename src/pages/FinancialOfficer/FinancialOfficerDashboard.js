@@ -349,6 +349,7 @@ const FinancialOfficerDashboard = () => {
       {isLoading && <LoadingOverlay />}
       
       <NavBar
+        profileURL="/financial/profile"
         links={[
           { name: 'Dashboard', path: '/financial/dashboard' },
           { name: 'Payment Approvals', path: '/financial/payment-list' },

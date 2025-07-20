@@ -7,6 +7,8 @@ import { RiInformationLine } from "react-icons/ri";
 import { BsBag } from "react-icons/bs";
 import { useNavigate, useParams } from "react-router-dom";
 import { toast } from "react-toastify";
+import { Button, Modal, ModalBody, ModalHeader } from "flowbite-react";
+import { HiOutlineExclamationCircle } from "react-icons/hi";
 
 const MaterialReqDetails = () => {
   const { id } = useParams();
@@ -14,6 +16,8 @@ const MaterialReqDetails = () => {
   const [isLoading, setIsLoading] = useState(true);
   const [isLoadingStatus, setIsLoadingStatus] = useState(false);
   const [requestData, setRequestData] = useState(null);
+  const [showApproveModal, setShowApproveModal] = useState(false);
+  const [showRejectModal, setShowRejectModal] = useState(false);
   const navigate = useNavigate();
 
   useEffect(() => {
@@ -82,13 +86,39 @@ const MaterialReqDetails = () => {
       day: "numeric",
     });
   };
+
+  const handleApproveRequest2 = (status) => () => {
+
+      if (requestData.status === "APPROVED") {
+        navigate("/purchasing/materialrequests/create", {
+            state: { id: requestData.requestId },
+          });
+      } else {
+        navigate("/purchasing/materialrequests/overview");
+      }
+  };
+
   const handleApproveRequest = (status) => async () => {
     if (requestData.status?.toLowerCase() !== "pending") {
       toast.error("Only pending requests can be approved");
       return;
-    }else{
-      handleApproveRequest1(status);
+    } else {
+      if (status === "APPROVED") {
+        setShowApproveModal(true);
+      } else {
+        setShowRejectModal(true);
+      }
     }
+  };
+
+  const confirmApproveRequest = async () => {
+    setShowApproveModal(false);
+    await handleApproveRequest1("APPROVED");
+  };
+
+  const confirmRejectRequest = async () => {
+    setShowRejectModal(false);
+    await handleApproveRequest1("REJECTED");
   };
 
   const handleApproveRequest1 = async (status) => {
@@ -113,14 +143,16 @@ const MaterialReqDetails = () => {
         setRequestData(updatedRequest);
         setIsLoadingStatus(false);
         toast.success(`Material request ${status} successfully`);
-        if(status=="APPROVED"){
-          navigate("/purchasing/materialrequests/create", { state: { id: updatedRequest.requestId } });
-        }else{
-          navigate('/purchasing/materialrequests/overview');
+        if (status == "APPROVED") {
+          navigate("/purchasing/materialrequests/create", {
+            state: { id: updatedRequest.requestId },
+          });
+        } else {
+          navigate("/purchasing/materialrequests/overview");
         }
       } else {
-          toast.error("Failed to approve material request");
-          setIsLoadingStatus(false);
+        toast.error("Failed to approve material request");
+        setIsLoadingStatus(false);
       }
     } catch (error) {
       toast.error("Network error: Failed to approve material request");
@@ -172,6 +204,7 @@ const MaterialReqDetails = () => {
     <div className="min-h-screen bg-purewhite font-poppins">
       {/* Header Navigation */}
       <NavBar
+      profileURL="/purchasing/profile"
         links={[
           { name: "Dashboard", path: "/purchasing/dashboard" },
           {
@@ -186,6 +219,66 @@ const MaterialReqDetails = () => {
           { name: "Purchasing Orders", path: "/purchasing/orders/overview" },
         ]}
       />
+
+      {/* Approve Modal */}
+      <Modal
+        show={showApproveModal}
+        size="md"
+        onClose={() => setShowApproveModal(false)}
+        popup
+      >
+        <ModalHeader />
+        <ModalBody>
+          <div className="text-center">
+            <IoMdCheckmark className="mx-auto mb-4 h-14 w-14 text-green-400" />
+            <h3 className="mb-5 text-lg font-normal text-gray-500">
+              Are you sure you want to approve this material request?
+            </h3>
+            <p className="mb-5 text-sm text-gray-400">
+              Request #{requestData.requestId} will be approved and moved to the
+              next stage.
+            </p>
+            <div className="flex justify-center gap-4">
+              <Button color="green" onClick={confirmApproveRequest}>
+                Yes, approve it
+              </Button>
+              <Button color="gray" onClick={() => setShowApproveModal(false)}>
+                No, cancel
+              </Button>
+            </div>
+          </div>
+        </ModalBody>
+      </Modal>
+
+      {/* Reject Modal */}
+      <Modal
+        show={showRejectModal}
+        size="md"
+        onClose={() => setShowRejectModal(false)}
+        popup
+      >
+        <ModalHeader />
+        <ModalBody>
+          <div className="text-center">
+            <HiOutlineExclamationCircle className="mx-auto mb-4 h-14 w-14 text-red-400" />
+            <h3 className="mb-5 text-lg font-normal text-gray-500">
+              Are you sure you want to reject this material request?
+            </h3>
+            <p className="mb-5 text-sm text-gray-400">
+              Request #{requestData.requestId} will be rejected and cannot be
+              processed further.
+            </p>
+            <div className="flex justify-center gap-4">
+              <Button color="red" onClick={confirmRejectRequest}>
+                Yes, reject it
+              </Button>
+              <Button color="gray" onClick={() => setShowRejectModal(false)}>
+                No, cancel
+              </Button>
+            </div>
+          </div>
+        </ModalBody>
+      </Modal>
 
       {/* Main Content */}
       <main className="py-6">
@@ -504,54 +597,27 @@ const MaterialReqDetails = () => {
                       Reject Request
                     </button>
                   </div>
+                ) : requestData.status?.toLowerCase() === "approved" ? (
+                  <>
+                    <p className="text-sm text-gray-500">
+                      This request has been {requestData.status?.toLowerCase()}.
+                    </p>
+                    <button
+                      onClick={handleApproveRequest2("APPROVED")}
+                      disabled={
+                        requestData.status?.toLowerCase() !== "approved"
+                      }
+                      className={`w-full px-4 py-3 rounded-md transition-colors flex items-center justify-center gap-2 bg-web_yellow text-purewhite hover:bg-web_yellow/90`}
+                    >
+                      <IoMdCheckmark />
+                      Create Quotation Request
+                    </button>
+                  </>
                 ) : (
                   <p className="text-sm text-gray-500">
                     This request has been {requestData.status?.toLowerCase()}.
                   </p>
                 )}
-              </div>
-
-              {/* Internal Notes */}
-              <div className="bg-purewhite border border-gray-200 rounded-lg p-6">
-                <h2 className="text-lg font-semibold text-main_dark mb-4">
-                  Internal Notes
-                </h2>
-                <div className="space-y-4">
-                  <div className="p-3 bg-light_brown/30 rounded-lg">
-                    <div className="flex items-start gap-2 mb-2">
-                      <div className="w-6 h-6 bg-blue-500 rounded-full flex items-center justify-center flex-shrink-0">
-                        <span className="text-xs font-semibold text-white">
-                          SY
-                        </span>
-                      </div>
-                      <div className="flex-1">
-                        <span className="font-medium text-slatebluegray text-sm">
-                          System
-                        </span>
-                        <span className="text-gray-500 text-xs ml-2">
-                          {formatDate(requestData.requestDate)}
-                        </span>
-                      </div>
-                    </div>
-                    <p className="text-sm text-gray-700">
-                      Material request created for {requestData.projectName} -{" "}
-                      {requestData.phaseName}
-                    </p>
-                  </div>
-
-                  <div>
-                    <textarea
-                      value={internalNote}
-                      onChange={(e) => setInternalNote(e.target.value)}
-                      placeholder="Add internal note..."
-                      className="w-full p-3 border border-gray-300 rounded-md focus:outline-none focus:ring-2 focus:ring-web_yellow focus:border-transparent text-sm"
-                      rows={3}
-                    />
-                    <button className="w-full mt-2 px-4 py-2 bg-web_yellow text-main_dark rounded-md hover:bg-web_yellow/90 transition-colors font-medium">
-                      Add Note
-                    </button>
-                  </div>
-                </div>
               </div>
 
               {/* Request Summary */}

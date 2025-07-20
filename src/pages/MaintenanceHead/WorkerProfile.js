@@ -88,6 +88,12 @@ export default function WorkerProfile() {
       links={[
           { name: "Dashboard", href: "#", onClick: () => navigation("/maintenance/dashboard") },
           { name: "Task", href: "#",onClick: () => navigation("/maintenance/scheduling") },
+          {
+            name: "Schedule",
+            href: "#",
+            onClick: () =>
+              navigation("/maintenance/update-equipment-maintenance"),
+          },
           { name: "Team", href: "#",
             onClick: () => {
               // e.preventDefault();
@@ -96,7 +102,7 @@ export default function WorkerProfile() {
               setShowTeam(true);
             },
            },
-          { name: "Equipment", href: "#" ,onClick: () => navigation("/maintenance/log")},
+          { name: "Equipment", href: "#" ,onClick: () => navigation("/maintenance/equipment")},
           { name: "Add Technician", href: "#",onClick: () => navigation("/maintenance/add-member") },
         ]}
         showButton={true}
