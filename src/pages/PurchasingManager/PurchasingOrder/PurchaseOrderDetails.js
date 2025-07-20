@@ -19,21 +19,28 @@ import { toast } from 'react-toastify';
 import NavBar from '../../../components/NavBar';
 
 const PurchaseOrderDetails = () => {
-//   const { poId } = useParams();
-    const poId="PO-2025-0002";
+  const { id } = useParams();
+  
+    // const poId="PO-2025-0002";
   const navigate = useNavigate();
   const [orderData, setOrderData] = useState(null);
   const [loading, setLoading] = useState(true);
 
-  console.log(poId);
+  // console.log(poId);
   
   useEffect(() => {
-    fetchOrderDetails();
-  }, [poId]);
+    if (id) {
+      fetchOrderDetails();
+      console.log(id);
+      
+    }else{
+      setLoading(false);
+    }
+  }, [id]);
 
   const fetchOrderDetails = async () => {
     try {
-      const response = await fetch(`http://localhost:8080/api/purchasingorder/ponumber/${poId}`);
+      const response = await fetch(`http://localhost:8080/api/purchasingorder/ponumber/${id}`);
       const data = await response.json();
       
       if (data.status === 'success') {
@@ -48,6 +55,8 @@ const PurchaseOrderDetails = () => {
       setLoading(false);
     }
   };
+  console.log('Order Data:', orderData);
+  
 
   const getStatusColor = (status) => {
     switch (status?.toLowerCase()) {
@@ -129,6 +138,15 @@ const PurchaseOrderDetails = () => {
   if (!orderData) {
     return (
       <div className="min-h-screen bg-purewhite font-poppins flex items-center justify-center">
+        <NavBar
+          links={[
+            { name: 'Dashboard', path: '/purchasing/dashboard' },
+            { name: 'Material Requests', path: '/purchasing/materialrequests/overview' },
+            { name: 'Suppliers', path: '/purchasing/supplier/dashboard' },
+            { name: 'Quotation Requests', path: '/purchasing/quotationrequest/overview' },
+            { name: 'Purchasing Orders', path: '/purchasing/orders/overview' },
+          ]}
+        />
         <div className="text-center">
           <FaExclamationTriangle className="w-16 h-16 text-gray-400 mx-auto mb-4" />
           <p className="text-gray-600">Order not found</p>
@@ -144,8 +162,10 @@ const PurchaseOrderDetails = () => {
       <NavBar
         links={[
           { name: 'Dashboard', path: '/purchasing/dashboard' },
-          { name: 'Purchase Orders', path: '/purchasing/purchaseorders/overview' },
-          { name: 'Order Details', path: '#' },
+          { name: 'Material Requests', path: '/purchasing/materialrequests/overview' },
+          { name: 'Suppliers', path: '/purchasing/supplier/dashboard' },
+          { name: 'Quotation Requests', path: '/purchasing/quotationrequest/overview' },
+          { name: 'Purchasing Orders', path: '/purchasing/orders/overview' },
         ]}
       />
 
@@ -169,7 +189,7 @@ const PurchaseOrderDetails = () => {
                 <FaDownload className="w-4 h-4" />
                 Download Invoice
               </button>
-              <button className="px-4 py-2 bg-web_yellow text-main_dark rounded-md hover:bg-web_yellow/90 transition-colors flex items-center gap-2">
+              <button onClick={() => navigate(`/purchasing/orders/edit/${orderData.ponumber}`)} className="px-4 py-2 bg-web_yellow text-main_dark rounded-md hover:bg-web_yellow/90 transition-colors flex items-center gap-2">
                 <FaEdit className="w-4 h-4" />
                 Edit Order
               </button>

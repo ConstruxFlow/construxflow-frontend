@@ -19,13 +19,13 @@ const RequestAdvancePayment = () => {
   const [loadingProgress, setLoadingProgress] = useState(0);
   const navigate = useNavigate();
   const location = useLocation();
-  const { orderData } = location.state || {};
+  const { orderData, quotationId } = location.state || {};
   const [orderDetails, setOrderDetails] = useState(null);
+  const [quotationData, setQuotationData] = useState(null);
   useEffect(() => {
     setOrderDetails(orderData);
   }, [orderData]);
-
-
+  
   const [paymentRequest, setPaymentRequest] = useState({
     requestId: "#ADV-2024-001",
     orderReference: "",
@@ -36,6 +36,45 @@ const RequestAdvancePayment = () => {
     additionalDetails: "",
     supportingDocs: [],
   });
+  console.log(quotationId);
+
+  const fetchQuotation = async () => {
+      if (!quotationId) return;
+      
+      setIsLoading(true);
+      try {
+        const response = await fetch(
+          `http://localhost:8080/api/quotations/find/${quotationId}`
+        );
+        const data = await response.json();
+  
+        if (response.ok) {
+          setQuotationData(data);
+          setPaymentRequest((prev) => ({
+            ...prev,
+            requestedAmount:data.advancedPayment || "",
+          }));
+        } else {
+          toast.error("Failed to fetch quotation details");
+        }
+      } catch (error) {
+        toast.error("Network error: Failed to fetch quotation details");
+        console.error("Error fetching quotation details:", error);
+      } finally {
+        setIsLoading(false);
+      }
+    };
+  
+    useEffect(() => {
+      if (quotationId) {
+        fetchQuotation();
+      }
+    }, [quotationId]);
+
+    console.log(quotationData);
+    
+
+
 
   useEffect(() => {
     if (orderDetails) {
@@ -116,6 +155,7 @@ const RequestAdvancePayment = () => {
           toast.success("Advance payment request submitted successfully!");
           setIsLoading(false);
           setLoadingProgress(0);
+          navigate("/purchasing/orders/overview");
         }, 800);
       } else {
         throw new Error("Failed to submit advance payment request");
@@ -134,9 +174,10 @@ const RequestAdvancePayment = () => {
       <NavBar
         links={[
           { name: 'Dashboard', path: '/purchasing/dashboard' },
-          { name: 'Purchase Orders', path: '/purchasing/orders/overview' },
-          { name: 'Payments', path: '/purchasing/payments/overview' },
+          { name: 'Material Requests', path: '/purchasing/materialrequests/overview' },
           { name: 'Suppliers', path: '/purchasing/supplier/dashboard' },
+          { name: 'Quotation Requests', path: '/purchasing/quotationrequest/overview' },
+          { name: 'Purchasing Orders', path: '/purchasing/orders/overview' },
         ]}
       />
 

@@ -1,9 +1,21 @@
 // src/pages/Supplier/PaymentStatus.jsx
 import React, { useState } from "react";
-import { FaEye, FaReply } from "react-icons/fa";
+import {
+  FaEye,
+  FaReply,
+  FaRegCheckCircle,
+  FaFileInvoice,
+  FaProjectDiagram,
+  FaMoneyBill,
+  FaCalendarCheck,
+} from "react-icons/fa";
 import NavBar from "../../components/NavBar";
 import { useNavigate } from "react-router-dom";
-import { HiCheckCircle, HiExclamationTriangle, HiOutlineClock } from "react-icons/hi2";
+import {
+  HiCheckCircle,
+  HiExclamationTriangle,
+  HiOutlineClock,
+} from "react-icons/hi2";
 const navLinks = [
   { name: "Dashboard", href: "/dashboard1" },
   { name: "Requests", href: "/requests" },
@@ -123,22 +135,26 @@ const PaymentStatus = () => {
       <NavBar links={navLinks} logoSrc="/logo1.png" />
 
       <div className="max-w-full mx-auto px-16 py-10">
-        <h1 className="text-3xl font-bold text-gray-800 mb-1">Monitor Payment Status</h1>
-        <p className="text-gray-500 mb-8">Track and manage payment details for all purchasing orders</p>
+        <h1 className="text-2xl font-bold text-main_dark mb-1">
+          Monitor Payment Status
+        </h1>
+        <p className="text-gray-600 text-base mb-8">
+          Track and manage payment details for all purchasing orders
+        </p>
 
         {/* Search and Filter */}
-        <div className="bg-purewhite rounded-xl shadow border border-light_gray p-6 mb-8 flex flex-col md:flex-row md:items-center gap-4">
+        <div className="bg-purewhite rounded-xl border border-light_gray p-6 mb-8 flex flex-col md:flex-row md:items-center gap-4">
           <input
             type="text"
             value={search}
-            onChange={e => setSearch(e.target.value)}
+            onChange={(e) => setSearch(e.target.value)}
             placeholder="Search by PO ID, Invoice Number, or Project..."
-            className="flex-1 border border-light_gray rounded-lg px-5 py-2 text-main_dark bg-purewhite focus:outline-none focus:ring-2 focus:ring-web_yellow"
+            className="flex-1 text-sm border border-light_gray rounded-lg px-5 py-2 text-main_dark bg-purewhite focus:outline-none focus:ring-2 focus:ring-web_yellow"
           />
           <select
             value={status}
-            onChange={e => setStatus(e.target.value)}
-            className="w-48 border border-light_gray rounded-lg px-4 py-2 bg-purewhite text-main_dark focus:outline-none focus:ring-2 focus:ring-web_yellow"
+            onChange={(e) => setStatus(e.target.value)}
+            className="w-48 text-sm border border-light_gray rounded-lg px-4 py-2 bg-purewhite text-main_dark focus:outline-none focus:ring-2 focus:ring-web_yellow"
           >
             <option>All Status</option>
             <option>Fully Paid</option>
@@ -149,34 +165,44 @@ const PaymentStatus = () => {
           <input
             type="date"
             value={date}
-            onChange={e => setDate(e.target.value)}
-            className="w-48 border border-light_gray rounded-lg px-4 py-2 bg-purewhite text-main_dark focus:outline-none focus:ring-2 focus:ring-web_yellow"
+            onChange={(e) => setDate(e.target.value)}
+            className="w-48 text-sm border border-light_gray rounded-lg px-4 py-2 bg-purewhite text-main_dark focus:outline-none focus:ring-2 focus:ring-web_yellow"
             placeholder="mm/dd/yyyy"
           />
         </div>
 
         {/* Payment Table */}
-        <div className="rounded-lg shadow border border-light_gray overflow-hidden mb-10">
+        <div className="rounded-lg border border-light_gray overflow-hidden mb-10">
           <table className="w-full">
             <thead>
-              <tr className="bg-web_yellow">
+              <tr className="bg-light_brown/35">
                 <th className="px-5 py-4 text-left text-main_dark font-semibold text-sm">
                   PO ID
                 </th>
                 <th className="px-5 py-4 text-left text-main_dark font-semibold text-sm">
-                  Invoice #
+                  <span className="flex items-center gap-2">
+                    <FaFileInvoice className="inline mb-0.5" /> Invoice #
+                  </span>
                 </th>
                 <th className="px-5 py-4 text-left text-main_dark font-semibold text-sm">
-                  Project
+                  <span className="flex items-center gap-2">
+                    <FaProjectDiagram className="inline mb-0.5" /> Project
+                  </span>
                 </th>
                 <th className="px-5 py-4 text-left text-main_dark font-semibold text-sm">
-                  Amount
+                  <span className="flex items-center gap-2">
+                    <FaMoneyBill className="inline mb-0.5" /> Amount
+                  </span>
                 </th>
                 <th className="px-5 py-4 text-left text-main_dark font-semibold text-sm">
-                  Payment Date
+                  <span className="flex items-center gap-2">
+                    <FaCalendarCheck className="inline mb-0.5" /> Payment Date
+                  </span>
                 </th>
                 <th className="px-5 py-4 text-left text-main_dark font-semibold text-sm">
-                  Status
+                  <span className="flex items-center gap-2">
+                    <FaRegCheckCircle className="inline mb-0.5" /> Status
+                  </span>
                 </th>
                 <th className="px-5 py-4 text-left text-main_dark font-semibold text-sm">
                   Action
@@ -186,18 +212,25 @@ const PaymentStatus = () => {
             <tbody className="divide-y divide-light_gray">
               {filtered.map((p, idx) => (
                 <tr key={p.po} className="bg-purewhite">
-                  <td className="px-5 py-4 font-semibold">{p.po}</td>
-                  <td className="px-5 py-4">{p.invoice}</td>
-                  <td className="px-5 py-4">{p.project}</td>
-                  <td className="px-5 py-4 font-bold">{p.amount}</td>
-                  <td className="px-5 py-4">{p.date}</td>
+                  <td className="px-5 py-4 text-sm">{p.po}</td>
+                  <td className="px-5 py-4 text-sm">{p.invoice}</td>
+                  <td className="px-5 py-4 text-sm">{p.project}</td>
+                  <td className="px-5 py-4 font-bold text-sm">{p.amount}</td>
+                  <td className="px-5 py-4 text-sm">{p.date}</td>
                   <td className="px-5 py-4">
-                    <span className={`px-3 py-1 rounded-full text-xs font-medium ${statusBadge[p.status]}`}>
+                    <span
+                      className={`px-3 py-1 rounded-full text-xs font-medium ${
+                        statusBadge[p.status]
+                      }`}
+                    >
                       {p.status}
                     </span>
                   </td>
                   <td className="px-5 py-4 flex gap-2">
-                    <button onClick={() => handleViewClick(p.status)} className="p-2 text-deep_green hover:bg-gray-100 rounded">
+                    <button
+                      onClick={() => handleViewClick(p.status)}
+                      className="p-2 text-deep_green hover:bg-gray-100 rounded"
+                    >
                       <FaEye />
                     </button>
                     <button className="p-2 text-web_yellow hover:bg-gray-100 rounded">
@@ -219,13 +252,19 @@ const PaymentStatus = () => {
             {notifications.map((note, idx) => (
               <div
                 key={idx}
-                className={`flex items-start rounded ${notificationStyle[note.type]} px-6 py-4`}
+                className={`flex items-start rounded ${
+                  notificationStyle[note.type]
+                } px-6 py-4`}
               >
                 {/* Icon */}
                 <div className="mt-1">{notificationIcon[note.type]}</div>
                 <div>
-                  <div className="text-main_dark text-sm font-medium">{note.message}</div>
-                  <div className="text-xs text-slatebluegray mt-1">{note.time}</div>
+                  <div className="text-main_dark text-sm font-medium">
+                    {note.message}
+                  </div>
+                  <div className="text-xs text-slatebluegray mt-1">
+                    {note.time}
+                  </div>
                 </div>
               </div>
             ))}

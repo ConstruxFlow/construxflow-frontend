@@ -18,6 +18,8 @@ import RequestAdvancePayment from "./PurchasingOrder/RequestAdvancePayment";
 import PurchaseOrdersOverview from "./PurchasingOrder/PurchaseOrdersOverview";
 import PurchaseOrderDetails from "./PurchasingOrder/PurchaseOrderDetails";
 import EditQuotationRequest from "./Material_Requests/EditQuotationRequest";
+import EditPurchaseOrder from "./PurchasingOrder/EditPurchaseOrder";
+import ManagerProfileView from "./ManagerProfile";
 
 export const purchasingManagerRoutes = {
   path: '/purchasing',
@@ -32,11 +34,11 @@ export const purchasingManagerRoutes = {
       element: <MaterialRequestsOverview />,
     },
     {
-      path: 'materialrequests',
+      path: 'materialrequests/details/pwise/:id',
       element: <MaterialReqDetails />,
     },
     {
-      path: 'materialrequests/mwise',
+      path: 'materialrequests/details/mwise',
       element: <MaterialReqDetails_MWise />,
     },
     {
@@ -76,7 +78,7 @@ export const purchasingManagerRoutes = {
       element: <ReviewQuotations />,
     },
     {
-      path: 'quotations/details',
+      path: 'quotations/details/:id',
       element: <QuotationDetail />,
     },
     {
@@ -98,6 +100,14 @@ export const purchasingManagerRoutes = {
     {
       path: 'orders/details/:id',
       element: <PurchaseOrderDetails />,
+    },
+    {
+      path: 'orders/edit/:id',
+      element: <EditPurchaseOrder />,
+    },
+    {
+      path: 'profile',
+      element: <ManagerProfileView />,
     }
   ]
 };

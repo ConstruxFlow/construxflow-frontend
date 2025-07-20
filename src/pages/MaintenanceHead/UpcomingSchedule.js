@@ -2,6 +2,7 @@ import { use, useEffect, useState } from "react";
 import { Filter, Plus, Calendar, ChevronDown, User } from "lucide-react";
 import NavBar from "../../components/NavBar";
 import { useNavigate } from "react-router-dom";
+import TeamSection from "../../components/MaintenanceHead/TeamSection";
 
 const getStatusColor = (type) => {
   switch (type) {
@@ -32,7 +33,7 @@ export default function NextScheduleContainer() {
   // const [requestId, setRequestId] = useState("MR-2024-001");
   const [priority, setPriority] = useState("");
   const [currentStatus, setCurrentStatus] = useState("In Progress");
-  const [newStatus, setNewStatus] = useState("");
+  const [newStatus, setNewStatus] = useState(selectedMaintenance?.newStatus || "");
   const [equipment, setEquipment] = useState("HVAC System - Building A");
   const [description, setDescription] = useState("");
   const [assignedTechnician, setAssignedTechnician] = useState("John Smith");
@@ -67,6 +68,26 @@ export default function NextScheduleContainer() {
 
   const navigation = useNavigate();
 
+  const [isLoggedIn, setIsLoggedIn] = useState(false);
+      
+        // Check login state on mount
+        useEffect(() => {
+          const user = localStorage.getItem("user");
+          setIsLoggedIn(!!user);
+        }, []);
+      
+        // Logout handler
+        const handleLogout = () => {
+          localStorage.removeItem("user");
+          localStorage.removeItem("role");
+          setIsLoggedIn(false);
+          navigation("/login");
+        };
+  
+        const handleLogin = () => {
+      navigation("/login");
+      };
+
   // Fetch equipment schedules
   useEffect(() => {
     fetch("http://localhost:8080/api/equipment-scheduling")
@@ -78,6 +99,7 @@ export default function NextScheduleContainer() {
   useEffect(() => {
     if (upcomingMaintenance.length > 0 && !selectedMaintenance) {
       setSelectedMaintenance(upcomingMaintenance[0]);
+      setNewStatus(upcomingMaintenance[0].newStatus || "");
     }
   }, [upcomingMaintenance]);
 
@@ -155,8 +177,8 @@ export default function NextScheduleContainer() {
 
       if (!assignRes.ok) throw new Error("Failed to update assignment status");
       const assignData = await assignRes.json();
-      setUpdateStatus(newStatus);
 
+      console.log("Assignment updated: ddbcjdnkcmdc", assignData);
       // 2. Update equipment scheduling status
       const equipRes = await fetch(
         `http://localhost:8080/api/equipment-scheduling/status?id=${encodeURIComponent(
@@ -167,15 +189,17 @@ export default function NextScheduleContainer() {
           headers: {
             "Content-Type": "application/json",
           },
-          body:newStatus,
+          body: newStatus,
         }
       );
 
       if (!equipRes.ok) throw new Error("Failed to update equipment status");
       const equipData = await equipRes.json();
       alert("Status updated successfully for both assignment and equipment!");
+      e.preventDefault();
       console.log("Assignment updated:", assignData);
       console.log("Equipment updated:", equipData);
+      setUpdateStatus(equipData.newStatus);
 
       // Optional: Refresh UI, refetch data or update state
     } catch (err) {
@@ -244,7 +268,7 @@ export default function NextScheduleContainer() {
       const data = await res.json();
       alert("Maintenance scheduled successfully!");
       console.log("Scheduled:", data);
-      navigation("/maintenance/task-complete");
+      navigation(`/maintenance/task-complete/${selectedMaintenance.id}?assignId=${assignments.assignId}`);
     } catch (err) {
       console.error("Schedule Error:", err);
       alert("Error: " + err.message);
@@ -255,22 +279,22 @@ export default function NextScheduleContainer() {
     <>
       <NavBar
         links={[
-          { name: "Dashboard", href: "#" },
-          { name: "Task", href: "#" },
-          {
-            name: "Team",
-            href: "#",
+          { name: "Dashboard", href: "#", onClick: () => navigation("/maintenance/dashboard") },
+          { name: "Task", href: "#",onClick: () => navigation("/maintenance/scheduling") },
+          { name: "Team", href: "#",
             onClick: () => {
               // e.preventDefault();
               console.log("Team link clicked");
-
+              
               setShowTeam(true);
             },
-          },
-          { name: "Equipment", href: "#" },
-          { name: "Request Tracker", href: "#" },
+           },
+          { name: "Equipment", href: "#" ,onClick: () => navigation("/maintenance/log")},
+          { name: "Add Technician", href: "#",onClick: () => navigation("/maintenance/add-member") },
         ]}
         showButton={true}
+        buttonLabel={isLoggedIn ? "Logout" : "Get Started"}
+        onButtonClick={isLoggedIn ? handleLogout : handleLogin}
       />
 
       <div className="min-h-screen bg-gray-100 p-6">
@@ -333,7 +357,10 @@ export default function NextScheduleContainer() {
                           ? "border-[#236571] bg-[#f1f9f9]"
                           : "border-gray-200"
                       }`}
-                      onClick={() => setSelectedMaintenance(item)}
+                      onClick={() => {
+                        setSelectedMaintenance(item);
+                        setNewStatus(item.newStatus || "");
+                      }}
                     >
                       <div className="flex items-center justify-between mb-2">
                         <span
@@ -418,10 +445,10 @@ export default function NextScheduleContainer() {
                       <select
                         className="w-full border border-gray-300 rounded-md px-3 py-2 text-sm appearance-none bg-[#236571] text-white"
                         onChange={(e) => setNewStatus(e.target.value)}
-                        value={newStatus || assignments?.status || ""}
+                        value={newStatus}
                       >
                         <option value="">Select new status</option>
-                        <option >Completed</option>
+                        <option>Completed</option>
                         <option>On Hold</option>
                         <option>Cancelled</option>
                       </select>
@@ -532,8 +559,7 @@ export default function NextScheduleContainer() {
                   <button className="px-6 py-2 border border-gray-300 text-gray-700 rounded-md text-sm font-medium hover:bg-gray-50 transition">
                     Cancel
                   </button>
-                  {(newStatus || assignments?.status)?.toUpperCase() !==
-                    "COMPLETED" && (
+                  {selectedMaintenance?.newStatus?.toUpperCase() !== "COMPLETED" && (
                     <button
                       className="px-6 py-2 bg-[#236571] text-white rounded-md text-sm font-medium hover:bg-[#1e5a63] transition"
                       onClick={handleChangeStatus}
@@ -661,38 +687,6 @@ export default function NextScheduleContainer() {
                     </div>
                   </div>
 
-                  {/* Quick Presets */}
-                  <div>
-                    <label className="block text-sm font-medium text-gray-700 mb-2">
-                      Quick Schedule Presets
-                    </label>
-                    <div className="flex flex-wrap gap-2">
-                      {quickSchedulePresets.map((preset) => (
-                        <button
-                          key={preset.value}
-                          onClick={() => {
-                            const futureDate = new Date();
-                            futureDate.setDate(
-                              futureDate.getDate() + preset.value
-                            );
-                            const yyyy = futureDate.getFullYear();
-                            const mm = String(
-                              futureDate.getMonth() + 1
-                            ).padStart(2, "0");
-                            const dd = String(futureDate.getDate()).padStart(
-                              2,
-                              "0"
-                            );
-                            setScheduledDate(`${yyyy}-${mm}-${dd}`);
-                          }}
-                          className="px-3 py-1 bg-gray-100 text-gray-700 rounded text-xs font-medium hover:bg-gray-200 transition"
-                        >
-                          {preset.label}
-                        </button>
-                      ))}
-                    </div>
-                  </div>
-
                   {/* Preview */}
                   {isExpanded && (
                     <div className="border-t pt-4">
@@ -740,6 +734,20 @@ export default function NextScheduleContainer() {
           </div>
         </div>
       </div>
+
+      {/* Overlay and Team Sidebar */}
+            {showTeam && (
+              <>
+                {/* BLUR OVERLAY */}
+                <div
+                  className="fixed inset-0 z-40 bg-black bg-opacity-30 backdrop-blur-sm transition-all"
+                  onClick={() => setShowTeam(false)}
+                  aria-label="Close team sidebar"
+                />
+                {/* TEAM SIDEBAR */}
+                <TeamSection onClose={() => setShowTeam(false)} />
+              </>
+            )}
     </>
   );
 }

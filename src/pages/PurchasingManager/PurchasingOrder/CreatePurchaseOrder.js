@@ -11,12 +11,18 @@ import {
 import NavBar from "../../../components/NavBar";
 import { toast } from "react-toastify";
 import LoadingOverlay from "../../../components/LoadingOverlay";
-import { useNavigate } from "react-router-dom";
+import { useLocation, useNavigate } from "react-router-dom";
 
 const CreatePurchaseOrder = () => {
   const [isLoading, setIsLoading] = useState(false);
   const [loadingProgress, setLoadingProgress] = useState(0);
   const navigate = useNavigate();
+  const location = useLocation();
+  const { id } = location.state || {};
+  console.log(id);
+  const [quotationData, setQuotationData] = useState(null);
+  const [supplierData, setSupplierData] = useState(null);
+  const [quotationRequestDetails, setQuotationRequestDetails] = useState(null);
 
   const [orderData, setOrderData] = useState({
     ponumber: "",
@@ -31,40 +37,6 @@ const CreatePurchaseOrder = () => {
     additional_info: "",
     status: "Pending",
   });
-
-  //   Get Latest PO Number
-  const getLatestPONumber = async () => {
-    const currentYear = new Date().getFullYear();
-    const responce = await fetch(
-      "http://localhost:8080/api/purchasingorder/latest",
-      {
-        method: "GET",
-        headers: {
-          "Content-Type": "application/json",
-        },
-      }
-    );
-    if (responce.ok) {
-      const data = await responce.json();
-      console.log(data.data.ponumber);
-      
-      const latestPO = data.data.ponumber;
-      if (latestPO) {
-        const latestNumber = parseInt(latestPO.split("-")[2]);
-        setOrderData((prev) => ({
-          ...prev,
-          ponumber: `PO-${currentYear}-${String(latestNumber + 1).padStart(4, "0")}`,
-        }));
-      }
-    }else{
-        // hadanna ona
-    }
-  };
-  useEffect(() => {
-    getLatestPONumber();
-  },[])
-
-  
 
   const [orderItems, setOrderItems] = useState([
     {
@@ -89,6 +61,154 @@ const CreatePurchaseOrder = () => {
 
   // Add documents state
   const [documents, setDocuments] = useState([]);
+
+  // Get Latest PO Number
+  const getLatestPONumber = async () => {
+    const currentYear = new Date().getFullYear();
+    const response = await fetch(
+      "http://localhost:8080/api/purchasingorder/latest",
+      {
+        method: "GET",
+        headers: {
+          "Content-Type": "application/json",
+        },
+      }
+    );
+    if (response.ok) {
+      const data = await response.json();
+      console.log(data.data.ponumber);
+
+      const latestPO = data.data.ponumber;
+      if (latestPO) {
+        const latestNumber = parseInt(latestPO.split("-")[2]);
+        setOrderData((prev) => ({
+          ...prev,
+          ponumber: `PO-${currentYear}-${String(latestNumber + 1).padStart(
+            4,
+            "0"
+          )}`,
+        }));
+      }
+    } else {
+      setOrderData((prev) => ({
+        ...prev,
+        ponumber: `PO-${currentYear}-0001`,
+      }));
+    }
+  };
+
+  useEffect(() => {
+    getLatestPONumber();
+  }, []);
+
+  const fetchQuotation = async () => {
+    if (!id) return;
+
+    setIsLoading(true);
+    try {
+      const response = await fetch(
+        `http://localhost:8080/api/quotations/find/${id}`
+      );
+      const data = await response.json();
+
+      if (response.ok) {
+        setQuotationData(data);
+
+        // Fetch supplier data using the supplier ID from quotation
+        const supplierResponse = await fetch(
+          `http://localhost:8080/api/supplier/find/${data?.supplierId}`,
+          {
+            method: "GET",
+            headers: {
+              "Content-Type": "application/json",
+            },
+          }
+        );
+        const supplierResponseData = await supplierResponse.json();
+
+        if (supplierResponse.ok) {
+          setSupplierData(supplierResponseData.data);
+          const quotationReqResponse = await fetch(
+            `http://localhost:8080/api/quotationrequest/find/${data?.quotationRequestId}`,
+            {
+              method: "GET",
+              headers: {
+                "Content-Type": "application/json",
+              },
+            }
+          );
+          const quotationReqData = await quotationReqResponse.json();
+          if (!quotationReqResponse.ok) {
+            throw new Error("Failed to fetch quotation request");
+          }
+          setQuotationRequestDetails(quotationReqData.data);
+        } else {
+          toast.error("Failed to fetch supplier details");
+        }
+      } else {
+        toast.error("Failed to fetch quotation details");
+      }
+    } catch (error) {
+      toast.error("Network error: Failed to fetch quotation details");
+      console.error("Error fetching quotation details:", error);
+    } finally {
+      setIsLoading(false);
+    }
+  };
+
+  useEffect(() => {
+    if (id) {
+      fetchQuotation();
+    }
+  }, [id]);
+
+  console.log("Supplier Data:", supplierData);
+  console.log("Quotation Data:", quotationData);
+  console.log("Quotation Request Details:", quotationRequestDetails);
+
+  // Auto-fill form when quotation data and supplier data are available
+  useEffect(() => {
+    if (quotationData && supplierData) {
+      // Auto-fill supplier information using actual supplier data
+      setOrderData((prev) => ({
+        ...prev,
+        supplier: {
+          supplier_id: supplierData.supplierId,
+          supplier: supplierData.company_name,
+          contactPerson: supplierData.name,
+          email: supplierData.userDetails?.email || "",
+          phone: supplierData.userDetails?.phone_number1 || "",
+        },
+        additional_info: "",
+        status: quotationData.status || "Pending",
+      }));
+
+      // Auto-fill order items from quotation items
+      const autoFilledItems = quotationData.items.map((item, index) => ({
+        id: index + 1,
+        material: {
+          material_id: item.material.materialId,
+          materialName: item.material.materialName,
+          materialType: item.material.materialType,
+        },
+        quantity: item.quantity.toString(),
+        unitPrice: item.unitPrice.toString(),
+        cost: item.totalPrice,
+      }));
+      setOrderItems(autoFilledItems);
+
+      // Auto-fill delivery schedule from quotation delivery info
+      const autoFilledDeliveries = quotationData.deliveryInfos.map(
+        (delivery, index) => ({
+          id: index + 1,
+          location: delivery.location,
+          requiredDate: delivery.deliveryDate,
+          shippingCost: delivery.shippingCost,
+        })
+      );
+      setDeliverySchedule(autoFilledDeliveries);
+    }
+  }, [quotationData, supplierData]);
 
   const handleChange = (e) => {
     const { name, value } = e.target;
@@ -222,6 +342,8 @@ const CreatePurchaseOrder = () => {
         additional_info: orderData.additional_info,
         subTotal: calculateTotal(),
         items: validMaterials.length,
+        material_req_id:quotationData.material_req_id,
+        projectId:quotationData.projectId,
         supplier: {
           supplier_id: orderData.supplier.supplier_id,
         },
@@ -244,35 +366,11 @@ const CreatePurchaseOrder = () => {
       setLoadingProgress(60);
       console.log("Submit Data:", submitData);
       navigate("/purchasing/orders/advance-payment", {
-        state: { orderData: submitData },
+        state: { orderData: submitData, quotationId: id },
       });
 
-      // Uncomment when ready to submit to API
-      // const response = await fetch("http://localhost:8080/api/purchaseorder/create", {
-      //   method: "POST",
-      //   headers: {
-      //     "Content-Type": "application/json",
-      //   },
-      //   body: JSON.stringify(submitData),
-      // });
-
-      setLoadingProgress(90);
-
-      // if (response.ok) {
-      //   setLoadingProgress(100);
-      //   setTimeout(() => {
-      //     toast.success("Purchase Order created successfully!");
-      //     setIsLoading(false);
-      //     setLoadingProgress(0);
-      //   }, 800);
-      // } else {
-      //   throw new Error("Failed to create purchase order");
-      // }
-
-      // For testing - simulate success
       setLoadingProgress(100);
       setTimeout(() => {
-        toast.success("Purchase Order created successfully!");
         setIsLoading(false);
         setLoadingProgress(0);
       }, 800);
@@ -301,7 +399,7 @@ const CreatePurchaseOrder = () => {
             name: "Quotation Requests",
             path: "/purchasing/quotationrequest/overview",
           },
-          { name: "Orders", path: "/orders" },
+          { name: "Purchasing Orders", path: "/purchasing/orders/overview" },
         ]}
       />
 
@@ -336,41 +434,16 @@ const CreatePurchaseOrder = () => {
                 <div className="grid grid-cols-1 md:grid-cols-2 gap-4">
                   <div>
                     <label className="block text-sm font-medium text-gray-700 mb-2">
-                      Select Supplier
+                      Company Name
                     </label>
-                    <select
+                    <input
+                      type="text"
                       name="supplier.supplier"
                       value={orderData.supplier.supplier}
-                      onChange={(e) => {
-                        handleChange(e);
-                        // Set supplier_id based on selection
-                        const supplierIds = {
-                          "ABC Manufacturing Co.": "S001",
-                          "XYZ Industrial Supply": "S002",
-                          "BuildTech Materials": "S003",
-                        };
-                        setOrderData((prev) => ({
-                          ...prev,
-                          supplier: {
-                            ...prev.supplier,
-                            supplier: e.target.value,
-                            supplier_id: supplierIds[e.target.value] || "",
-                          },
-                        }));
-                      }}
+                      onChange={handleChange}
+                      placeholder="Company Name"
                       className="w-full px-3 py-2 border border-gray-300 rounded-md focus:outline-none focus:ring-2 focus:ring-web_yellow focus:border-transparent"
-                    >
-                      <option value="">Select Supplier</option>
-                      <option value="ABC Manufacturing Co.">
-                        ABC Manufacturing Co.
-                      </option>
-                      <option value="XYZ Industrial Supply">
-                        XYZ Industrial Supply
-                      </option>
-                      <option value="BuildTech Materials">
-                        BuildTech Materials
-                      </option>
-                    </select>
+                    />
                   </div>
                   <div>
                     <label className="block text-sm font-medium text-gray-700 mb-2">
@@ -381,7 +454,7 @@ const CreatePurchaseOrder = () => {
                       name="supplier.contactPerson"
                       value={orderData.supplier.contactPerson}
                       onChange={handleChange}
-                      placeholder="John Smith"
+                      placeholder="Contact Person"
                       className="w-full px-3 py-2 border border-gray-300 rounded-md focus:outline-none focus:ring-2 focus:ring-web_yellow focus:border-transparent"
                     />
                   </div>
@@ -394,7 +467,7 @@ const CreatePurchaseOrder = () => {
                       name="supplier.email"
                       value={orderData.supplier.email}
                       onChange={handleChange}
-                      placeholder="john@abcmanufacturing.com"
+                      placeholder="Email"
                       className="w-full px-3 py-2 border border-gray-300 rounded-md focus:outline-none focus:ring-2 focus:ring-web_yellow focus:border-transparent"
                     />
                   </div>
@@ -407,11 +480,37 @@ const CreatePurchaseOrder = () => {
                       name="supplier.phone"
                       value={orderData.supplier.phone}
                       onChange={handleChange}
-                      placeholder="+1 (555) 123-4567"
+                      placeholder="Phone Number"
                       className="w-full px-3 py-2 border border-gray-300 rounded-md focus:outline-none focus:ring-2 focus:ring-web_yellow focus:border-transparent"
                     />
                   </div>
                 </div>
+
+                {/* Additional Supplier Information Display */}
+                {supplierData && (
+                  <div className="mt-4 p-4 bg-gray-50 rounded-lg">
+                    <h3 className="text-sm font-medium text-gray-700 mb-2">
+                      Additional Supplier Details
+                    </h3>
+                    <div className="grid grid-cols-1 md:grid-cols-2 gap-2 text-sm text-gray-600">
+                      <div>
+                        <strong>Supplier ID:</strong> {supplierData.supplierId}
+                      </div>
+                      <div>
+                        <strong>Business Reg. No:</strong>{" "}
+                        {supplierData.business_Registration_Number}
+                      </div>
+                      <div>
+                        <strong>Address:</strong>{" "}
+                        {supplierData.userDetails?.address}
+                      </div>
+                      <div>
+                        <strong>Phone 2:</strong>{" "}
+                        {supplierData.userDetails?.phone_number2}
+                      </div>
+                    </div>
+                  </div>
+                )}
               </div>
 
               {/* Order Details */}
@@ -516,6 +615,14 @@ const CreatePurchaseOrder = () => {
                               className="w-full px-3 py-2 border border-gray-300 rounded-md bg-gray-50 text-gray-500"
                             >
                               <option value="">Select Material</option>
+                              {/* Show current material from quotation if available */}
+                              {item.material.materialName && (
+                                <option value={item.material.material_id}>
+                                  {item.material.materialName} (
+                                  {item.material.materialType})
+                                </option>
+                              )}
+                              {/* Other predefined options */}
                               <option value="1">Steel Bolts M6</option>
                               <option value="2">Washers M6</option>
                               <option value="3">Nuts M6</option>
@@ -613,6 +720,18 @@ const CreatePurchaseOrder = () => {
                           className="w-full px-3 py-2 border border-gray-300 rounded-md focus:outline-none focus:ring-2 focus:ring-web_yellow focus:border-transparent"
                         >
                           <option value="">Select Location</option>
+                          {/* Show current location from quotation if it's not in predefined options */}
+                          {item.location &&
+                            ![
+                              "Warehouse A",
+                              "Warehouse B",
+                              "Construction Site A",
+                              "Main Storage",
+                            ].includes(item.location) && (
+                              <option value={item.location}>
+                                {item.location}
+                              </option>
+                            )}
                           <option value="Warehouse A">Warehouse A</option>
                           <option value="Warehouse B">Warehouse B</option>
                           <option value="Construction Site A">

@@ -253,6 +253,8 @@ const Create_ProjectForm = () => {
     }));
     form.append('phases', JSON.stringify(phasesPayload));
 
+    console.log(phasesPayload);
+    
     try {
       const res = await fetch('http://localhost:5454/api/projects/create', {
         method: 'POST',

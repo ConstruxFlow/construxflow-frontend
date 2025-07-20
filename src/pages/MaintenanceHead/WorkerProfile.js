@@ -1,7 +1,9 @@
-import { useState } from "react";
+import { useEffect, useState } from "react";
 import { Plus, FileText, Phone } from "lucide-react";
 import TaskCard from "../../components/MaintenanceHead/TaskCard";
 import NavBar from "../../components/NavBar";
+import { useNavigate } from "react-router-dom";
+import TeamSection from "../../components/MaintenanceHead/TeamSection";
 
 const tasks = [
   {
@@ -59,13 +61,33 @@ const filters = ["All", "In Progress", "Pending", "Completed"];
 export default function WorkerProfile() {
   const [activeFilter, setActiveFilter] = useState("All");
   const [showTeam, setShowTeam] = useState(false);  
+  const [isLoggedIn, setIsLoggedIn] = useState(false);
+  const navigation = useNavigate();
+
+  // Check login state on mount
+        useEffect(() => {
+          const user = localStorage.getItem("user");
+          setIsLoggedIn(!!user);
+        }, []);
+      
+        // Logout handler
+        const handleLogout = () => {
+          localStorage.removeItem("user");
+          localStorage.removeItem("role");
+          setIsLoggedIn(false);
+          navigation("/login");
+        };
+  
+        const handleLogin = () => {
+      navigation("/login");
+      };
 
   return (
     <>
     <NavBar
       links={[
-          { name: "Dashboard", href: "#" },
-          { name: "Task", href: "#" },
+          { name: "Dashboard", href: "#", onClick: () => navigation("/maintenance/dashboard") },
+          { name: "Task", href: "#",onClick: () => navigation("/maintenance/scheduling") },
           { name: "Team", href: "#",
             onClick: () => {
               // e.preventDefault();
@@ -74,10 +96,12 @@ export default function WorkerProfile() {
               setShowTeam(true);
             },
            },
-          { name: "Equipment", href: "#" },
-          { name: "Request Tracker", href: "#" },
+          { name: "Equipment", href: "#" ,onClick: () => navigation("/maintenance/log")},
+          { name: "Add Technician", href: "#",onClick: () => navigation("/maintenance/add-member") },
         ]}
         showButton={true}
+        buttonLabel={isLoggedIn ? "Logout" : "Get Started"}
+        onButtonClick={isLoggedIn ? handleLogout : handleLogin}
     />
 
     <div className="min-h-screen bg-gray-50 p-6">
@@ -208,6 +232,20 @@ export default function WorkerProfile() {
         </div>
       </div>
     </div>
+
+    {/* Overlay and Team Sidebar */}
+          {showTeam && (
+            <>
+              {/* BLUR OVERLAY */}
+              <div
+                className="fixed inset-0 z-40 bg-black bg-opacity-30 backdrop-blur-sm transition-all"
+                onClick={() => setShowTeam(false)}
+                aria-label="Close team sidebar"
+              />
+              {/* TEAM SIDEBAR */}
+              <TeamSection onClose={() => setShowTeam(false)} />
+            </>
+          )}
     </>
   );
 }
