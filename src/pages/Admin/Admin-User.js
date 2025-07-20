@@ -6,13 +6,13 @@ function Admin_Users() {
   return (
     <>
       <NavBar
+       profileURL='/admin/profile'
         links={[
           { name: "Dashboard", href: "/admin", active: true },
-          { name: "Supply Chain", href: "/supplychain" },
+          { name: "Projects", href: "/admin/projects-list" },
           { name: "Inventory", href: "/admin-inventory" },
           { name: "Users", href: "/admin-users" },
         ]}
-        showButton={true}
     />
     <UserDashboard />
     </>

@@ -163,7 +163,7 @@ const Login = () => {
       // Role-based navigation
       const role = user.userRole.toUpperCase();
       const roleRoutes = {
-        ADMIN: "/admin/dashboard",
+        ADMIN: "/admin",
         SITE_MANAGER: "/site-manager",
         INVENTORY_MANAGER: "/inventory/dashboard",
         FINANCE_OFFICER: "/finance/dashboard",
