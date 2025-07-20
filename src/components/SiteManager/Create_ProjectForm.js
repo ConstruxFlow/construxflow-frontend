@@ -1,4 +1,4 @@
-import React, { useState } from 'react';
+import React, { useState, useEffect } from 'react';
 import { Calendar, Upload, FolderPlus, Save, X, Plus, Trash2, ChevronDown, ChevronRight } from 'lucide-react';
 import { pdfjs } from 'react-pdf';
 import { useNavigate } from 'react-router-dom';
@@ -8,6 +8,7 @@ pdfjs.GlobalWorkerOptions.workerSrc = `${process.env.PUBLIC_URL}/pdf.worker.min.
 const Create_ProjectForm = () => {
   const [formData, setFormData] = useState({
     projectName: '',
+    managerId: '', // <-- add this line
     location: '',
     startDate: '',
     endDate: '',
@@ -15,6 +16,16 @@ const Create_ProjectForm = () => {
     boqFile: null
   });
   const navigate = useNavigate();
+
+  useEffect(() => {
+    const user = JSON.parse(localStorage.getItem('user'));
+    if (user && user.id) {
+      setFormData(prev => ({
+        ...prev,
+        managerId: user.id
+      }));
+    }
+  }, []);
 
   // --- PHASES STATE AND HANDLERS ---
   const [phases, setPhases] = useState([]);
@@ -216,6 +227,7 @@ const Create_ProjectForm = () => {
   const handleCreateProject = async () => {
     const form = new FormData();
     form.append('projectName', formData.projectName);
+    form.append('managerId', formData.managerId);
     form.append('location', formData.location);
     form.append('startDate', formData.startDate);
     form.append('endDate', formData.endDate);
@@ -302,7 +314,18 @@ const Create_ProjectForm = () => {
                 className="w-full px-4 py-3 border border-gray-300 rounded-lg focus:outline-none focus:ring-2 focus:ring-web_yellow focus:border-transparent placeholder-gray-400 transition-all duration-150"
               />
             </div>
-            
+            <div>
+              <label className="block text-sm font-medium text-slatebluegray mb-2">
+                Manager ID
+              </label>
+              <input
+                type="text"
+                name="managerId"
+                value={formData.managerId}
+                readOnly
+                className="w-full px-4 py-3 border border-gray-300 rounded-lg bg-gray-100 cursor-not-allowed"
+              />
+            </div>
             <div>
               <label className="block text-sm font-medium text-slatebluegray mb-2">
                 Location
