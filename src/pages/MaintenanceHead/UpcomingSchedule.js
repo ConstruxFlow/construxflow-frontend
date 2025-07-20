@@ -3,6 +3,17 @@ import { Filter, Plus, Calendar, ChevronDown, User } from "lucide-react";
 import NavBar from "../../components/NavBar";
 import { useNavigate } from "react-router-dom";
 import TeamSection from "../../components/MaintenanceHead/TeamSection";
+import { toast } from "react-toastify";
+import LoadingOverlay from "../../components/LoadingOverlay";
+import {
+  isThisWeek,
+  isThisMonth,
+  isPast,
+  parseISO,
+  endOfWeek,
+  startOfMonth,
+  endOfMonth,
+} from "date-fns";
 
 const getStatusColor = (type) => {
   switch (type) {
@@ -33,7 +44,9 @@ export default function NextScheduleContainer() {
   // const [requestId, setRequestId] = useState("MR-2024-001");
   const [priority, setPriority] = useState("");
   const [currentStatus, setCurrentStatus] = useState("In Progress");
-  const [newStatus, setNewStatus] = useState(selectedMaintenance?.newStatus || "");
+  const [newStatus, setNewStatus] = useState(
+    selectedMaintenance?.newStatus || ""
+  );
   const [equipment, setEquipment] = useState("HVAC System - Building A");
   const [description, setDescription] = useState("");
   const [assignedTechnician, setAssignedTechnician] = useState("John Smith");
@@ -65,28 +78,32 @@ export default function NextScheduleContainer() {
   const [nextassignedTech, setNextAssignedTech] = useState("");
   const [nextteamMembers, setNextTeamMembers] = useState([]);
   const [updaeStatus, setUpdateStatus] = useState("ASSIGNED");
+  const [isSubmitting, setIsSubmitting] = useState(false);
+  const [loadingProgress, setLoadingProgress] = useState(0);
+  const [isLoading, setIsLoading] = useState(false);
+  const [showNextSchedule, setShowNextSchedule] = useState(false);
 
   const navigation = useNavigate();
 
   const [isLoggedIn, setIsLoggedIn] = useState(false);
-      
-        // Check login state on mount
-        useEffect(() => {
-          const user = localStorage.getItem("user");
-          setIsLoggedIn(!!user);
-        }, []);
-      
-        // Logout handler
-        const handleLogout = () => {
-          localStorage.removeItem("user");
-          localStorage.removeItem("role");
-          setIsLoggedIn(false);
-          navigation("/login");
-        };
-  
-        const handleLogin = () => {
-      navigation("/login");
-      };
+
+  // Check login state on mount
+  useEffect(() => {
+    const user = localStorage.getItem("user");
+    setIsLoggedIn(!!user);
+  }, []);
+
+  // Logout handler
+  const handleLogout = () => {
+    localStorage.removeItem("user");
+    localStorage.removeItem("role");
+    setIsLoggedIn(false);
+    navigation("/login");
+  };
+
+  const handleLogin = () => {
+    navigation("/login");
+  };
 
   // Fetch equipment schedules
   useEffect(() => {
@@ -96,12 +113,12 @@ export default function NextScheduleContainer() {
       .catch(console.error);
   }, []);
 
-  useEffect(() => {
-    if (upcomingMaintenance.length > 0 && !selectedMaintenance) {
-      setSelectedMaintenance(upcomingMaintenance[0]);
-      setNewStatus(upcomingMaintenance[0].newStatus || "");
-    }
-  }, [upcomingMaintenance]);
+  // useEffect(() => {
+  //   if (upcomingMaintenance.length > 0 && !selectedMaintenance) {
+  //     setSelectedMaintenance(upcomingMaintenance[0]);
+  //     setNewStatus(upcomingMaintenance[0].newStatus || "");
+  //   }
+  // }, [upcomingMaintenance]);
 
   useEffect(() => {
     if (!selectedMaintenance?.id) return;
@@ -147,9 +164,7 @@ export default function NextScheduleContainer() {
   console.log("Assignments Data:", assignments);
   console.log("details of technician", technicianDetails);
 
-  const handleChangeStatus = async (e) => {
-    e.preventDefault();
-
+  const handleChangeStatus = async () => {
     if (!newStatus) {
       alert("Please select a new status");
       return;
@@ -160,8 +175,16 @@ export default function NextScheduleContainer() {
       return;
     }
 
+    setIsLoading(true);
+    setLoadingProgress(0);
+
+    const progressInterval = setInterval(() => {
+      setLoadingProgress((p) => (p >= 90 ? p : p + Math.random() * 5));
+    }, 150);
+
     try {
-      // 1. Update technician assignment status
+      setLoadingProgress(10);
+
       const assignRes = await fetch(
         `http://localhost:8080/api/equipmentassigntechnician/status?id=${encodeURIComponent(
           assignments.assignId
@@ -176,10 +199,11 @@ export default function NextScheduleContainer() {
       );
 
       if (!assignRes.ok) throw new Error("Failed to update assignment status");
-      const assignData = await assignRes.json();
+      setLoadingProgress(50);
 
-      console.log("Assignment updated: ddbcjdnkcmdc", assignData);
-      // 2. Update equipment scheduling status
+      const assignData = await assignRes.json();
+      console.log("Assignment updated:", assignData);
+
       const equipRes = await fetch(
         `http://localhost:8080/api/equipment-scheduling/status?id=${encodeURIComponent(
           selectedMaintenance.id
@@ -194,20 +218,26 @@ export default function NextScheduleContainer() {
       );
 
       if (!equipRes.ok) throw new Error("Failed to update equipment status");
+      setLoadingProgress(80);
+
       const equipData = await equipRes.json();
-      alert("Status updated successfully for both assignment and equipment!");
-      e.preventDefault();
-      console.log("Assignment updated:", assignData);
+      setLoadingProgress(100);
+
+      toast.success("Status updated successfully!");
       console.log("Equipment updated:", equipData);
       setUpdateStatus(equipData.newStatus);
-
-      // Optional: Refresh UI, refetch data or update state
+      navigation("/maintenance/task-complete/" + selectedMaintenance.id);
     } catch (err) {
       console.error("Status update error:", err);
-      alert("Status update failed: " + err.message);
+      toast.error("Status update failed: " + err.message);
+    } finally {
+      clearInterval(progressInterval);
+      setTimeout(() => {
+        setIsLoading(false); // hide overlay
+        setLoadingProgress(0); // reset progress
+      }, 500); // smooth out exit
     }
   };
-
   useEffect(() => {
     fetch("http://localhost:8080/api/team/all")
       .then((res) => {
@@ -241,6 +271,15 @@ export default function NextScheduleContainer() {
       return;
     }
 
+    setIsSubmitting(true);
+    setIsLoading(true);
+    setLoadingProgress(0);
+
+    // Incremental simulated progress bar
+    const progressInterval = setInterval(() => {
+      setLoadingProgress((p) => (p >= 90 ? p : p + Math.random() * 5));
+    }, 150);
+
     const requestBody = {
       assignId: assignments.assignId,
       equipmentScheduleId: selectedMaintenance?.id,
@@ -252,6 +291,8 @@ export default function NextScheduleContainer() {
     };
 
     try {
+      setLoadingProgress(10);
+      handleChangeStatus();
       const res = await fetch(
         "http://localhost:8080/api/nextschedule/setnextschedule",
         {
@@ -263,40 +304,117 @@ export default function NextScheduleContainer() {
         }
       );
 
+      setLoadingProgress(70);
+
       if (!res.ok) throw new Error("Failed to schedule maintenance");
 
       const data = await res.json();
-      alert("Maintenance scheduled successfully!");
+
+      setLoadingProgress(100);
+      toast.success("Maintenance scheduled successfully!");
       console.log("Scheduled:", data);
-      navigation(`/maintenance/task-complete/${selectedMaintenance.id}?assignId=${assignments.assignId}`);
+      navigation(
+        `/maintenance/task-complete/${selectedMaintenance.id}?assignId=${assignments.assignId}`
+      );
     } catch (err) {
       console.error("Schedule Error:", err);
-      alert("Error: " + err.message);
+      toast.error(`Failed to schedule maintenance: ${err.message}`);
+    } finally {
+      setIsSubmitting(false);
+      setIsLoading(false);
+      clearInterval(progressInterval);
+      setLoadingProgress(0);
     }
   };
+
+  const resetFormFields = () => {
+    setPriority("");
+    setDescription("");
+    setEquipment("");
+    setStartDate("");
+    setDuration("1-2 hours");
+    setNotes("");
+    setNewStatus("");
+    setTechnicianDetails(null);
+    setAssignments({});
+  };
+
+  useEffect(() => {
+    if (!selectedMaintenance) {
+      resetFormFields();
+    }
+  }, [selectedMaintenance]);
+
+  const filteredMaintenance = upcomingMaintenance.filter((item) => {
+    if (!item.date) return false;
+
+    const dueDate = parseISO(item.date); // Only include items with ASSIGNED status
+
+    if (item.status !== "ASSIGNED") return false;
+
+    switch (selectedTab) {
+      case "Due This Week":
+        return isThisWeek(dueDate, { weekStartsOn: 1 }); // Monday as start
+
+      case "Due This Month":
+        return isThisMonth(dueDate);
+
+      case "Overdue":
+        return isPast(dueDate) && item.status === "ASSIGNED";
+
+      default:
+        return true;
+    }
+  });
 
   return (
     <>
       <NavBar
         links={[
-          { name: "Dashboard", href: "#", onClick: () => navigation("/maintenance/dashboard") },
-          { name: "Task", href: "#",onClick: () => navigation("/maintenance/scheduling") },
-          { name: "Team", href: "#",
+          {
+            name: "Dashboard",
+            href: "#",
+            onClick: () => navigation("/maintenance/dashboard"),
+          },
+          {
+            name: "Task",
+            href: "#",
+            onClick: () => navigation("/maintenance/scheduling"),
+          },
+          {
+            name: "Schedule",
+            href: "#",
+            onClick: () =>
+              navigation("/maintenance/update-equipment-maintenance"),
+          },
+          {
+            name: "Team",
+            href: "#",
             onClick: () => {
               // e.preventDefault();
               console.log("Team link clicked");
-              
+
               setShowTeam(true);
             },
-           },
-          { name: "Equipment", href: "#" ,onClick: () => navigation("/maintenance/log")},
-          { name: "Add Technician", href: "#",onClick: () => navigation("/maintenance/add-member") },
+          },
+          {
+            name: "Equipment",
+            href: "#",
+            onClick: () => navigation("/maintenance/equipment"),
+          },
+          {
+            name: "Add Technician",
+            href: "#",
+            onClick: () => navigation("/maintenance/add-member"),
+          },
         ]}
         showButton={true}
         buttonLabel={isLoggedIn ? "Logout" : "Get Started"}
         onButtonClick={isLoggedIn ? handleLogout : handleLogin}
       />
-
+      {isLoading && (
+        <LoadingOverlay progress={loadingProgress} message="Processing..." />
+      )}
       <div className="min-h-screen bg-gray-100 p-6">
         <div className="max-w-7xl mx-auto">
           {/* Header */}
@@ -349,7 +467,7 @@ export default function NextScheduleContainer() {
 
                 {/* Maintenance Cards */}
                 <div className="grid grid-cols-1 md:grid-cols-3 gap-4">
-                  {upcomingMaintenance.map((item, index) => (
+                  {filteredMaintenance.map((item, index) => (
                     <div
                       key={index}
                       className={`border rounded-lg p-4 cursor-pointer transition ${
@@ -555,11 +673,12 @@ export default function NextScheduleContainer() {
                   />
                 </div>
 
-                <div className="flex justify-end gap-3">
+                {/* <div className="flex justify-end gap-3">
                   <button className="px-6 py-2 border border-gray-300 text-gray-700 rounded-md text-sm font-medium hover:bg-gray-50 transition">
                     Cancel
                   </button>
-                  {selectedMaintenance?.newStatus?.toUpperCase() !== "COMPLETED" && (
+                  {selectedMaintenance?.newStatus?.toUpperCase() !==
+                    "COMPLETED" && (
                     <button
                       className="px-6 py-2 bg-[#236571] text-white rounded-md text-sm font-medium hover:bg-[#1e5a63] transition"
                       onClick={handleChangeStatus}
@@ -567,168 +686,197 @@ export default function NextScheduleContainer() {
                       Confirm
                     </button>
                   )}
-                </div>
+                </div> */}
               </div>
             </div>
 
             {/* Right Column - Schedule Next Maintenance */}
             <div className="lg:col-span-1">
-              <div className="bg-white rounded-lg shadow-sm p-6">
-                <div className="flex items-center justify-between mb-4">
-                  <h2 className="text-lg font-semibold text-gray-900">
-                    Schedule Next Maintenance
-                  </h2>
-                  <button
-                    onClick={() => setIsExpanded(!isExpanded)}
-                    className="text-gray-400 hover:text-gray-600"
-                  >
-                    <ChevronDown
-                      className={`w-5 h-5 transition-transform ${
-                        isExpanded ? "rotate-180" : ""
-                      }`}
-                    />
-                  </button>
-                </div>
+              {/* ✅ Checkbox toggler */}
+              <div className="flex items-center gap-2 mb-4">
+                <input
+                  type="checkbox"
+                  id="toggle-next-schedule"
+                  checked={showNextSchedule}
+                  onChange={(e) => setShowNextSchedule(e.target.checked)}
+                  className="h-4 w-4 text-[#236571] border-gray-300 rounded"
+                />
+                <label
+                  htmlFor="toggle-next-schedule"
+                  className="text-sm text-gray-700"
+                >
+                  Schedule Next Maintenance
+                </label>
+              </div>
 
-                <div className="space-y-4">
-                  {/* Maintenance Type */}
-                  <div>
-                    <label className="block text-sm font-medium text-gray-700 mb-1">
-                      Next Maintenance Type
-                    </label>
-                    <div className="relative">
-                      <select
-                        value={maintenanceType}
-                        onChange={(e) => setMaintenanceType(e.target.value)}
-                        className="w-full border border-gray-300 rounded-md px-3 py-2 text-sm appearance-none"
-                      >
-                        <option>Preventive Maintenance</option>
-                        <option>Corrective Maintenance</option>
-                        <option>Emergency Maintenance</option>
-                      </select>
-                      <ChevronDown className="absolute right-3 top-2.5 h-4 w-4 text-gray-400 pointer-events-none" />
-                    </div>
-                  </div>
-
-                  {/* Scheduled Date */}
-                  <div>
-                    <label className="block text-sm font-medium text-gray-700 mb-1">
-                      Scheduled Date
-                    </label>
-                    <div className="relative">
-                      <input
-                        type="date"
-                        value={scheduledDate}
-                        onChange={(e) => setScheduledDate(e.target.value)}
-                        className="w-full border border-gray-300 rounded-md px-3 py-2 text-sm"
+              {/* ✅ Conditionally show schedule form */}
+              {showNextSchedule && (
+                <div className="bg-white rounded-lg shadow-sm p-6">
+                  <div className="flex items-center justify-between mb-4">
+                    <h2 className="text-lg font-semibold text-gray-900">
+                      Schedule Next Maintenance
+                    </h2>
+                    <button
+                      onClick={() => setIsExpanded(!isExpanded)}
+                      className="text-gray-400 hover:text-gray-600"
+                    >
+                      <ChevronDown
+                        className={`w-5 h-5 transition-transform ${
+                          isExpanded ? "rotate-180" : ""
+                        }`}
                       />
-                      <Calendar className="absolute right-3 top-2.5 h-4 w-4 text-gray-400 pointer-events-none" />
-                    </div>
+                    </button>
                   </div>
 
-                  {/* Estimated Duration */}
-                  <div>
-                    <label className="block text-sm font-medium text-gray-700 mb-1">
-                      Estimated Duration
-                    </label>
-                    <div className="relative">
-                      <select
-                        value={estimatedDuration}
-                        onChange={(e) => setEstimatedDuration(e.target.value)}
-                        className="w-full border border-gray-300 rounded-md px-3 py-2 text-sm appearance-none"
-                      >
-                        <option>1 hour</option>
-                        <option>2 hours</option>
-                        <option>4 hours</option>
-                        <option>1 day</option>
-                      </select>
-                      <ChevronDown className="absolute right-3 top-2.5 h-4 w-4 text-gray-400 pointer-events-none" />
-                    </div>
-                  </div>
-
-                  {/* Priority Level */}
-                  <div>
-                    <label className="block text-sm font-medium text-gray-700 mb-1">
-                      Priority Level
-                    </label>
-                    <div className="relative">
-                      <select
-                        value={priorityLevel}
-                        onChange={(e) => setPriorityLevel(e.target.value)}
-                        className="w-full border border-gray-300 rounded-md px-3 py-2 text-sm appearance-none"
-                      >
-                        <option>Low</option>
-                        <option>Medium</option>
-                        <option>High</option>
-                      </select>
-                      <ChevronDown className="absolute right-3 top-2.5 h-4 w-4 text-gray-400 pointer-events-none" />
-                    </div>
-                  </div>
-
-                  {/* Assigned Technician */}
-                  <div>
-                    <label className="block text-sm font-medium text-gray-700 mb-1">
-                      Assigned Technician
-                    </label>
-                    <div className="relative">
-                      <select
-                        value={assignedTech}
-                        onChange={(e) => setAssignedTech(e.target.value)}
-                        className="w-full border border-gray-300 rounded-md px-3 py-2 text-sm appearance-none"
-                      >
-                        <option value="">Select Technician</option>
-                        {teamMembers.map((member) => (
-                          <option key={member.empId} value={member.empId}>
-                            {member.name} ({member.specializations?.join(", ")})
-                          </option>
-                        ))}
-                      </select>
-                      <ChevronDown className="absolute right-3 top-2.5 h-4 w-4 text-gray-400 pointer-events-none" />
-                    </div>
-                  </div>
-
-                  {/* Preview */}
-                  {isExpanded && (
-                    <div className="border-t pt-4">
-                      <div className="bg-gray-50 rounded-lg p-4">
-                        <h3 className="font-medium text-gray-900 mb-2">
-                          Scheduled Maintenance Preview
-                        </h3>
-                        <div className="text-sm text-gray-600 space-y-1">
-                          <p>
-                            <span className="font-medium">Type:</span>{" "}
-                            {maintenanceType}
-                          </p>
-                          <p>
-                            <span className="font-medium">Date:</span>{" "}
-                            {scheduledDate}
-                          </p>
-                          <p>
-                            <span className="font-medium">Technician:</span>{" "}
-                            {assignedTech || "Not assigned"}
-                          </p>
-                          <p>
-                            <span className="font-medium">Duration:</span>{" "}
-                            {estimatedDuration}
-                          </p>
-                        </div>
+                  <div className="space-y-4">
+                    {/* Maintenance Type */}
+                    <div>
+                      <label className="block text-sm font-medium text-gray-700 mb-1">
+                        Next Maintenance Type
+                      </label>
+                      <div className="relative">
+                        <select
+                          value={maintenanceType}
+                          onChange={(e) => setMaintenanceType(e.target.value)}
+                          className="w-full border border-gray-300 rounded-md px-3 py-2 text-sm appearance-none"
+                        >
+                          <option>Preventive Maintenance</option>
+                          <option>Corrective Maintenance</option>
+                          <option>Emergency Maintenance</option>
+                        </select>
+                        <ChevronDown className="absolute right-3 top-2.5 h-4 w-4 text-gray-400 pointer-events-none" />
                       </div>
                     </div>
-                  )}
 
-                  {/* Submit */}
-                  <div className="flex gap-3 pt-4">
-                    <button
-                      onClick={handleScheduleSubmit}
-                      className="flex-1 bg-[#EFC11A] hover:bg-yellow-400 text-yellow-900 font-medium py-2 rounded-md text-sm transition"
-                    >
-                      Schedule Maintenance
-                    </button>
-                    <button className="px-4 py-2 border border-gray-300 text-gray-700 rounded-md text-sm font-medium hover:bg-gray-50 transition">
-                      Save as Draft
-                    </button>
+                    {/* Scheduled Date */}
+                    <div>
+                      <label className="block text-sm font-medium text-gray-700 mb-1">
+                        Scheduled Date
+                      </label>
+                      <div className="relative">
+                        <input
+                          type="date"
+                          value={scheduledDate}
+                          onChange={(e) => setScheduledDate(e.target.value)}
+                          className="w-full border border-gray-300 rounded-md px-3 py-2 text-sm"
+                        />
+                        <Calendar className="absolute right-3 top-2.5 h-4 w-4 text-gray-400 pointer-events-none" />
+                      </div>
+                    </div>
+
+                    {/* Estimated Duration */}
+                    <div>
+                      <label className="block text-sm font-medium text-gray-700 mb-1">
+                        Estimated Duration
+                      </label>
+                      <div className="relative">
+                        <select
+                          value={estimatedDuration}
+                          onChange={(e) => setEstimatedDuration(e.target.value)}
+                          className="w-full border border-gray-300 rounded-md px-3 py-2 text-sm appearance-none"
+                        >
+                          <option>1 hour</option>
+                          <option>2 hours</option>
+                          <option>4 hours</option>
+                          <option>1 day</option>
+                        </select>
+                        <ChevronDown className="absolute right-3 top-2.5 h-4 w-4 text-gray-400 pointer-events-none" />
+                      </div>
+                    </div>
+
+                    {/* Priority Level */}
+                    <div>
+                      <label className="block text-sm font-medium text-gray-700 mb-1">
+                        Priority Level
+                      </label>
+                      <div className="relative">
+                        <select
+                          value={priorityLevel}
+                          onChange={(e) => setPriorityLevel(e.target.value)}
+                          className="w-full border border-gray-300 rounded-md px-3 py-2 text-sm appearance-none"
+                        >
+                          <option>Low</option>
+                          <option>Medium</option>
+                          <option>High</option>
+                        </select>
+                        <ChevronDown className="absolute right-3 top-2.5 h-4 w-4 text-gray-400 pointer-events-none" />
+                      </div>
+                    </div>
+
+                    {/* Assigned Technician */}
+                    <div>
+                      <label className="block text-sm font-medium text-gray-700 mb-1">
+                        Assigned Technician
+                      </label>
+                      <div className="relative">
+                        <select
+                          value={assignedTech}
+                          onChange={(e) => setAssignedTech(e.target.value)}
+                          className="w-full border border-gray-300 rounded-md px-3 py-2 text-sm appearance-none"
+                        >
+                          <option value="">Select Technician</option>
+                          {teamMembers.map((member) => (
+                            <option key={member.empId} value={member.empId}>
+                              {member.name} (
+                              {member.specializations?.join(", ")})
+                            </option>
+                          ))}
+                        </select>
+                        <ChevronDown className="absolute right-3 top-2.5 h-4 w-4 text-gray-400 pointer-events-none" />
+                      </div>
+                    </div>
+
+                    {/* Schedule Preview (Optional) */}
+                    {isExpanded && (
+                      <div className="border-t pt-4">
+                        <div className="bg-gray-50 rounded-lg p-4">
+                          <h3 className="font-medium text-gray-900 mb-2">
+                            Scheduled Maintenance Preview
+                          </h3>
+                          <div className="text-sm text-gray-600 space-y-1">
+                            <p>
+                              <span className="font-medium">Type:</span>{" "}
+                              {maintenanceType}
+                            </p>
+                            <p>
+                              <span className="font-medium">Date:</span>{" "}
+                              {scheduledDate}
+                            </p>
+                            <p>
+                              <span className="font-medium">Technician:</span>{" "}
+                              {assignedTech || "Not assigned"}
+                            </p>
+                            <p>
+                              <span className="font-medium">Duration:</span>{" "}
+                              {estimatedDuration}
+                            </p>
+                          </div>
+                        </div>
+                      </div>
+                    )}
                   </div>
                 </div>
+              )}
+
+              {/* ✅ Submit Buttons - Always Visible */}
+              <div className="flex gap-3 pt-4">
+                <button
+                  onClick={
+                    showNextSchedule ? handleScheduleSubmit : handleChangeStatus
+                  }
+                  className="flex-1 bg-[#EFC11A] hover:bg-yellow-400 text-yellow-900 font-medium py-2 rounded-md text-sm transition"
+                >
+                  {showNextSchedule
+                    ? "Schedule Maintenance"
+                    : "Update Status Only"}
+                </button>
+
+                <button
+                  className="px-4 py-2 border border-gray-300 text-gray-700 rounded-md text-sm font-medium hover:bg-gray-50 transition"
+                  onClick={resetFormFields}
+                >
+                  Cancel
+                </button>
               </div>
             </div>
           </div>
@@ -736,18 +884,18 @@ export default function NextScheduleContainer() {
       </div>
 
       {/* Overlay and Team Sidebar */}
-            {showTeam && (
-              <>
-                {/* BLUR OVERLAY */}
-                <div
-                  className="fixed inset-0 z-40 bg-black bg-opacity-30 backdrop-blur-sm transition-all"
-                  onClick={() => setShowTeam(false)}
-                  aria-label="Close team sidebar"
-                />
-                {/* TEAM SIDEBAR */}
-                <TeamSection onClose={() => setShowTeam(false)} />
-              </>
-            )}
+      {showTeam && (
+        <>
+          {/* BLUR OVERLAY */}
+          <div
+            className="fixed inset-0 z-40 bg-black bg-opacity-30 backdrop-blur-sm transition-all"
+            onClick={() => setShowTeam(false)}
+            aria-label="Close team sidebar"
+          />
+          {/* TEAM SIDEBAR */}
+          <TeamSection onClose={() => setShowTeam(false)} />
+        </>
+      )}
     </>
   );
 }

@@ -1,25 +1,24 @@
-// src/pages/ReorderMaterialPage.js
 import React from 'react';
 import NavBar from '../../components/NavBar';
 import ReorderForm from '../../components/InventoryManager/ReorderForm';
 
+const navLinks = [
+  { name: 'Dashboard', href: '/inventory-dashboard' },
+  { name: 'Inventory Control', href: '/inventory-control' },
+  { name: 'Inventory Monitoring', href: '/inventory-monitoring' },
+  { name: 'Maintenance Requests', href: '/maintenance-requests-overview' },
+  { name: 'Equipment Scheduling', href: '/equipment-scheduling' },
+];
+
 const ReorderMaterialPage = () => {
   return (
-    <>
+    <div className="bg-purewhite min-h-screen">
       <NavBar 
-        links={[
-          { name: 'Dashboard', path: '/inventory-dashboard' },
-          { name: 'Inventory Control', path: '/inventory-control' },
-          { name: 'Inventory Monitoring', path: '/inventory-monitoring' },
-          { name: 'Maintenance Requests', path: '/maintenance-requests-overview' },
-          { name: 'Equipment Scheduling', path: '/equipment-scheduling' },
-        ]}
+        links={navLinks}
+        logoSrc="/logo1.png"
       />
-      <div className="bg-[#FCFCFC] min-h-screen py-8 px-4">
-        <h1 className="text-3xl font-bold text-[#236571] text-center mb-6">Reorder Inventory Material</h1>
-        <ReorderForm />
-      </div>
-    </>
+      <ReorderForm />
+    </div>
   );
 };
 

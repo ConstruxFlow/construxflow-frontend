@@ -1,10 +1,16 @@
-// src/pages/inventorymanager/AddMaterial.js
 import React from 'react';
 import NavBar from '../../components/NavBar';
 import AddMaterialForm from '../../components/InventoryManager/AddMaterialForm';
 
-const AddMaterial = () => {
+const navLinks = [
+  { name: 'Dashboard', href: '/inventory-dashboard' },
+  { name: 'Inventory Control', href: '/inventory-control' },
+  { name: 'Inventory Monitoring', href: '/inventory-monitoring' },
+  { name: 'Maintenance Requests', href: '/maintenance-requests-overview' },
+  { name: 'Equipment Scheduling', href: '/equipment-scheduling' },
+];
 
+const AddMaterial = () => {
   const handleAddMaterial = async (formData) => {
     try {
       const response = await fetch("http://localhost:8080/api/inventory/add", {
@@ -27,22 +33,13 @@ const AddMaterial = () => {
   };
 
   return (
-    <>
+    <div className="bg-purewhite min-h-screen">
       <NavBar
-        links={[
-        {name: 'Dashboard', path: '/inventory-dashboard'},
-        {name: 'Inventory Control', path: '/inventory-control'},
-        {name: 'Inventory Monitoring', path: '/inventory-monitoring'},
-        {name: 'Maintenance Requests', path: '/maintenance-requests-overview'},
-        {name: 'Equipment Sheduling', path: '/equipment-scheduling'},
-        
-     ]}
+        links={navLinks}
+        logoSrc="/logo1.png"
       />
-      <div className="bg-[#FCFCFC] min-h-screen py-8 px-4">
-        <h1 className="text-3xl font-bold text-[#236571] text-center mb-6">Add New Inventory Material</h1>
-        <AddMaterialForm onSubmit={handleAddMaterial} />
-      </div>
-    </>
+      <AddMaterialForm onSubmit={handleAddMaterial} />
+    </div>
   );
 };
 
