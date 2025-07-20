@@ -17,11 +17,11 @@ import {
   HiOutlineClock,
 } from "react-icons/hi2";
 const navLinks = [
-  { name: "Dashboard", href: "/dashboard1" },
-  { name: "Requests", href: "/requests" },
-  { name: "Quotations", href: "/quotations" },
-  { name: "Orders", href: "/orders" },
-  { name: "Payments", href: "/payments", active: true },
+  { name: "Dashboard", href: "/supplier/dashboard" },
+  { name: "Requests", href: "/supplier/requests" },
+  { name: "Quotations", href: "/supplier/quotations" },
+  { name: "Orders", href: "/supplier/orders" },
+  { name: "Payments", href: "/supplier/payments", active: true },
 ];
 
 const payments = [
@@ -124,15 +124,15 @@ const PaymentStatus = () => {
   // Handle payment view click
   const handleViewClick = (paymentStatus) => {
     if (paymentStatus === "Advanced Paid") {
-      navigate("/payments/receive-advanced");
+      navigate("/supplier/payments/receive-advanced");
     } else if (paymentStatus === "Fully Paid") {
-      navigate("/payments/receive-full");
+      navigate("/supplier/payments/receive-full");
     }
   };
 
   return (
     <div className="bg-purewhite min-h-screen font-poppins">
-      <NavBar links={navLinks} logoSrc="/logo1.png" />
+      <NavBar links={navLinks} profileURL="/supplier/profile" logoSrc="/logo1.png" />
 
       <div className="max-w-full mx-auto px-16 py-10">
         <h1 className="text-2xl font-bold text-main_dark mb-1">

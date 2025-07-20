@@ -1,7 +1,10 @@
 import React from 'react';
-import NavBar from '../../components/NavBar';  // ✅ Import the navbar
+import { useNavigate } from 'react-router-dom';
+import NavBar from '../../components/NavBar';
 
 const InventoryMonitoring = () => {
+  const navigate = useNavigate();
+
   const inventoryData = [
     {
       name: 'Hydraulic Pump – CAT 320',
@@ -19,7 +22,7 @@ const InventoryMonitoring = () => {
       stock: 150,
       minLevel: 50,
       status: 'Good',
-      action: 'View Details',
+      action: 'Reorder',
     },
     {
       name: 'Concrete Mixer Blades',
@@ -28,31 +31,21 @@ const InventoryMonitoring = () => {
       stock: 8,
       minLevel: 10,
       status: 'Medium',
-      action: 'Update Stock',
-    },
-    {
-      name: 'Excavator Tracks',
-      serial: 'Compatible: CAT 320/330',
-      category: 'Excavator Parts',
-      stock: 2,
-      minLevel: 4,
-      status: 'Low Stock',
       action: 'Reorder',
-    },
-    {
-      name: 'Safety Helmets',
-      serial: 'Type: Hard Hat, Color: Yellow',
-      category: 'Safety Equipment',
-      stock: 45,
-      minLevel: 20,
-      status: 'Good',
-      action: 'View Details',
     },
   ];
 
   return (
     <>
-      <NavBar /> {/* ✅ NavBar at top */}
+      <NavBar
+        links={[
+          { name: 'Dashboard', path: '/inventory-dashboard' },
+          { name: 'Inventory Control', path: '/inventory-control' },
+          { name: 'Inventory Monitoring', path: '/inventory-monitoring' },
+          { name: 'Maintenance Requests', path: '/maintenance-requests-overview' },
+          { name: 'Equipment Scheduling', path: '/equipment-scheduling' },
+        ]}
+      />
 
       <div className="p-6 bg-[#FCFCFC] min-h-screen">
         <h2 className="text-3xl font-bold text-[#236571] mb-1">Inventory Monitoring</h2>
@@ -67,7 +60,6 @@ const InventoryMonitoring = () => {
           />
           <div className="flex gap-3">
             <button className="bg-[#efc11a] text-white px-4 py-2 rounded hover:opacity-90">Search</button>
-            <button className="bg-[#236571] text-white px-4 py-2 rounded hover:opacity-90">+ Add New Item</button>
           </div>
         </div>
 
@@ -123,15 +115,10 @@ const InventoryMonitoring = () => {
                   </td>
                   <td className="p-3">
                     <button
-                      className={`px-3 py-1 rounded text-sm font-semibold ${
-                        item.action === 'Reorder'
-                          ? 'bg-[#236571] text-white'
-                          : item.action === 'Update Stock'
-                          ? 'bg-yellow-400 text-white'
-                          : 'bg-[#2E2F34] text-white'
-                      }`}
+                      onClick={() => navigate('/reorder-material-page')}
+                      className="px-3 py-1 rounded text-sm font-semibold bg-[#236571] text-white hover:opacity-90"
                     >
-                      {item.action}
+                      Reorder
                     </button>
                   </td>
                 </tr>

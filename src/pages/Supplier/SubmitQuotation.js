@@ -1,16 +1,18 @@
 // src/pages/Supplier/SubmitQuotation.jsx
-import React, { useState, useEffect } from "react";
+import React, { useState, useEffect, useContext } from "react";
 import { useNavigate,useParams } from "react-router-dom";
 import NavBar from "../../components/NavBar";
 import { FaPaperclip, FaTrash } from "react-icons/fa";
 import { toast } from "react-toastify";
+import { AuthContext } from "../../Context/AuthContext";
+import LoadingOverlay from "../../components/LoadingOverlay";
 
 const navLinks = [
-  { name: "Dashboard", href: "/dashboard1" },
-  { name: "Requests", href: "/requests" },
-  { name: "Quotations", href: "/quotations", active: true },
-  { name: "Orders", href: "/orders" },
-  { name: "Payments", href: "/payments" },
+  { name: "Dashboard", href: "/supplier/dashboard" },
+  { name: "Requests", href: "/supplier/requests" },
+  { name: "Quotations", href: "/supplier/quotations", active: true },
+  { name: "Orders", href: "/supplier/orders" },
+  { name: "Payments", href: "/supplier/payments" },
 ];
 
 const SubmitQuotation = () => {
@@ -18,6 +20,10 @@ const SubmitQuotation = () => {
   const navigate = useNavigate();
   const [requestSummary, setRequestSummary] = useState(null);
   const [itemsRequested, setItemsRequested] = useState([]);
+  const{authState}=useContext(AuthContext);
+  const [isLoading, setIsLoading] = useState(false);
+  const [loadingProgress, setLoadingProgress] = useState(0);
+
 
   const [pricing, setPricing] = useState([
     { item: "", quantity: "", unitPrice: "" },
@@ -132,6 +138,9 @@ const SubmitQuotation = () => {
     setSuccessMsg("");
     setErrorMsg("");
 
+    setIsLoading(true);
+    setLoadingProgress(0);
+
     // Validation
     if (
       pricing.some(
@@ -146,6 +155,7 @@ const SubmitQuotation = () => {
       toast.error("Please fill all pricing fields correctly.");
       return;
     }
+    setLoadingProgress(20);
 
     if (
       deliveries.some(
@@ -165,6 +175,8 @@ const SubmitQuotation = () => {
       return;
     }
 
+    setLoadingProgress(40);
+
     setLoading(true);
     const payload = {
       quotationRequestId: id,
@@ -173,6 +185,7 @@ const SubmitQuotation = () => {
       notes,
       totalAmount: total,
       status: "Pending",
+      supplierId: authState?.user.supplierId || "S001", 
       items: pricing.map((p) => ({
         material: { materialId: p.item },
         quantity: parseInt(p.quantity, 10),
@@ -190,6 +203,7 @@ const SubmitQuotation = () => {
         fileUrl: "", // if needed
       })),
     };
+    setLoadingProgress(50);
     // console.log("Submitting payload:", payload);
 
     try {
@@ -199,14 +213,18 @@ const SubmitQuotation = () => {
         body: JSON.stringify(payload),
       });
 
+      setLoadingProgress(80);
+
       if (!res.ok) {
         const err = await res.text();
         throw new Error(err);
       }
+      setLoadingProgress(100);
+      setIsLoading(false);
       const data = await res.json();
       console.log("Submission response:", data);
       toast.success("Quotation submitted successfully!");
-      navigate("/quotations");
+      navigate("/supplier/quotations");
       setPricing([{ item: "", quantity: "", unitPrice: "" }]);
       setAdvancedPayment("");
       setDeliveries([
@@ -216,8 +234,10 @@ const SubmitQuotation = () => {
       setNotes("");
       setAttachments([]);
     } catch (err) {
+      setIsLoading(false);
       toast.error("Submission failed: " + err.message);
     } finally {
+      setIsLoading(false);
       setLoading(false);
     }
   };
@@ -226,16 +246,23 @@ const SubmitQuotation = () => {
   
   return (
     <div className="bg-[#f6f7f9] min-h-screen font-poppins">
-      <NavBar links={navLinks} logoSrc="/logo1.png" />
+      <NavBar links={navLinks} profileURL="/supplier/profile" logoSrc="/logo1.png" />
+
+      {isLoading && (
+        <LoadingOverlay
+          progress={loadingProgress}
+          message="Registering supplier details..."
+        />
+      )}
 
       <div className="max-w-full mx-auto px-20 py-8">
         {/* Breadcrumb */}
         <div className="text-sm text-slatebluegray mb-2">
-          <a href="/dashboard1" className="hover:underline text-deep_green">
+          <a href="/supplier/dashboard" className="hover:underline text-deep_green">
             Dashboard
           </a>{" "}
           &nbsp;/&nbsp;
-          <a href="/requests" className="hover:underline text-deep_green">
+          <a href="/supplier/requests" className="hover:underline text-deep_green">
             Request
           </a>{" "}
           &nbsp;/&nbsp;

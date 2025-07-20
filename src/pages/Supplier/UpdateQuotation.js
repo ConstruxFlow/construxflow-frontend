@@ -6,11 +6,11 @@ import { FaPaperclip, FaTrash } from "react-icons/fa";
 import { toast } from "react-toastify";
 
 const navLinks = [
-  { name: "Dashboard", href: "/dashboard1" },
-  { name: "Requests", href: "/requests" },
-  { name: "Quotations", href: "/quotations", active: true },
-  { name: "Orders", href: "/orders" },
-  { name: "Payments", href: "/payments" },
+  { name: "Dashboard", href: "/supplier/dashboard" },
+  { name: "Requests", href: "/supplier/requests" },
+  { name: "Quotations", href: "/supplier/quotations", active: true },
+  { name: "Orders", href: "/supplier/orders" },
+  { name: "Payments", href: "/supplier/payments" },
 ];
 
 const UpdateQuotation = () => {
@@ -203,7 +203,7 @@ const UpdateQuotation = () => {
         throw new Error(err);
       }
       toast.success("Quotation updated successfully!");
-      navigate("/quotations");
+      navigate("/supplier/quotations");
     } catch (err) {
       toast.error("Update failed: " + err.message);
     } finally {
@@ -213,12 +213,12 @@ const UpdateQuotation = () => {
 
   return (
     <div className="bg-[#f6f7f9] min-h-screen font-poppins">
-      <NavBar links={navLinks} logoSrc="/logo1.png" />
+      <NavBar links={navLinks} profileURL="/supplier/profile" logoSrc="/logo1.png" />
 
       <div className="max-w-full mx-auto px-20 py-8">
         {/* Breadcrumb */}
         <div className="text-sm text-slatebluegray mb-2">
-          <a href="/dashboard1" className="hover:underline text-deep_green">
+          <a href="/supplier/dashboard" className="hover:underline text-deep_green">
             Dashboard
           </a>{" "}
           &nbsp;/&nbsp;
@@ -611,7 +611,7 @@ const UpdateQuotation = () => {
             </button>
             <button
               type="button"
-              onClick={() => navigate('/quotations')}
+              onClick={() => navigate('/supplier/quotations')}
               className="bg-deep_green text-purewhite px-6 py-3 rounded-lg font-medium hover:bg-main_dark transition"
             >
               Cancel
