@@ -1,16 +1,18 @@
-import React from 'react';
+import React, { useState } from 'react';
+import { useNavigate } from 'react-router-dom'; // ✅ import navigate hook
 import NavBar from '../../components/NavBar';
-import EquipmentCard from '../../components/InventoryManager/EquipmentCard';
 
 const EquipmentScheduling = () => {
-  const equipmentList = [
+  const navigate = useNavigate(); // ✅ initialize navigate
+
+  const originalList = [
     {
       name: 'Excavator CAT 320',
       status: 'Available',
       utilization: '0%',
       buttonText: 'Schedule',
       color: 'bg-[#efc11a] text-white',
-      icon: '🚜',
+      
     },
     {
       name: 'Tower Crane TC–400',
@@ -18,59 +20,131 @@ const EquipmentScheduling = () => {
       utilization: '85%',
       buttonText: 'View Schedule',
       color: 'bg-white text-[#2E2F34] border border-[#E4E4E4]',
-      icon: '🏗️',
-    },
-    {
-      name: 'Dump Truck Fleet',
-      status: 'Partially Available',
-      utilization: '60%',
-      buttonText: 'Request Unit',
-      color: 'bg-[#efc11a] text-white',
-      icon: '🚛',
+      
     },
     {
       name: 'Generator Set 500KW',
       status: 'Under Maintenance',
       utilization: 'N/A',
-      buttonText: 'Maintenance Status',
-      color: 'bg-[#236571] text-white',
-      icon: '⚡',
+    
     },
   ];
 
+  const [searchQuery, setSearchQuery] = useState('');
+  const [filterStatus, setFilterStatus] = useState('All');
+
+  const statusOptions = ['All', 'Available', 'In Use', 'Under Maintenance'];
+
+  const filteredEquipment = originalList.filter((item) => {
+    const matchesSearch = item.name.toLowerCase().includes(searchQuery.toLowerCase());
+    const matchesStatus = filterStatus === 'All' || item.status === filterStatus;
+    return matchesSearch && matchesStatus;
+  });
+
+  // ✅ Function to handle button click and navigate
+  const handleButtonClick = (item) => {
+    if (item.buttonText === 'Schedule') {
+      navigate(`/shedule-form`);
+    } else if (item.buttonText === 'View Schedule') {
+      navigate(`/view-schedule-page`);
+    } 
+  };
+
   return (
     <>
-      <NavBar />
+      <NavBar
+        links={[
+          { name: 'Dashboard', path: '/inventory-dashboard' },
+          { name: 'Inventory Control', path: '/inventory-control' },
+          { name: 'Inventory Monitoring', path: '/inventory-monitoring' },
+          { name: 'Maintenance Requests', path: '/maintenance-requests-overview' },
+          { name: 'Equipment Sheduling', path: '/equipment-scheduling' },
+        ]}
+      />
 
       <div className="p-6 bg-[#FCFCFC] min-h-screen">
-        <h2 className="text-2xl font-bold text-[#2E2F34] mb-2">Site-Based Equipment Scheduling</h2>
+        <h2 className="text-2xl font-bold text-[#2E2F34] mb-4">Site-Based Equipment Scheduling</h2>
 
-        <div className="mb-6">
-          <label htmlFor="siteSelect" className="block mb-1 font-medium text-[#2E2F34]">
-            Select Site:
-          </label>
-          <select
-            id="siteSelect"
+        {/* Search & Filters */}
+        <div className="flex flex-col md:flex-row md:items-center md:justify-between gap-4 mb-4">
+          <input
+            type="text"
+            placeholder="Search equipment..."
             className="px-4 py-2 border border-[#E4E4E4] rounded w-full md:w-1/3"
-          >
-            <option>Downtown Construction Site</option>
-            <option>Uptown High-Rise Project</option>
-            <option>Bridge Expansion Site</option>
-          </select>
+            value={searchQuery}
+            onChange={(e) => setSearchQuery(e.target.value)}
+          />
+
+          <div className="flex gap-2 flex-wrap">
+            {statusOptions.map((status) => (
+              <button
+                key={status}
+                onClick={() => setFilterStatus(status)}
+                className={`px-3 py-1 rounded-full border text-sm font-medium ${
+                  filterStatus === status
+                    ? 'bg-[#efc11a] text-white'
+                    : 'bg-white text-[#2E2F34] border-[#E4E4E4]'
+                }`}
+              >
+                {status}
+              </button>
+            ))}
+          </div>
         </div>
 
-        <div className="grid grid-cols-1 sm:grid-cols-2 lg:grid-cols-4 gap-6">
-          {equipmentList.map((item, idx) => (
-            <EquipmentCard
-              key={idx}
-              icon={item.icon}
-              name={item.name}
-              status={item.status}
-              utilization={item.utilization}
-              buttonText={item.buttonText}
-              color={item.color}
-            />
-          ))}
+        {/* Equipment Table */}
+        <div className="overflow-x-auto rounded-lg shadow border border-[#E4E4E4] bg-white">
+          <table className="min-w-full text-sm text-left text-[#2E2F34]">
+            <thead className="bg-[#efc11a] text-white">
+              <tr>
+                <th className="px-6 py-3">#</th>
+                <th className="px-6 py-3">Equipment Name</th>
+                <th className="px-6 py-3">Status</th>
+                <th className="px-6 py-3">Action</th>
+              </tr>
+            </thead>
+            <tbody>
+              {filteredEquipment.length > 0 ? (
+                filteredEquipment.map((item, index) => (
+                  <tr key={index} className="border-b hover:bg-[#f9f9f9]">
+                    <td className="px-6 py-4">{index + 1}</td>
+                    <td className="px-6 py-4 font-medium">
+                      {item.icon} {item.name}
+                    </td>
+                    <td className="px-6 py-4">
+                      <span
+                        className={
+                          item.status === 'Available'
+                            ? 'text-green-600'
+                            : item.status === 'In Use'
+                            ? 'text-red-600'
+                            : item.status === 'Under Maintenance'
+                            ? 'text-blue-600'
+                            : 'text-gray-600'
+                        }
+                      >
+                        {item.status}
+                      </span>
+                    </td>
+                    <td className="px-6 py-4">
+                      <button
+                        onClick={() => handleButtonClick(item)} // ✅ navigate on click
+                        className={`px-3 py-1 rounded font-semibold text-sm ${item.color}`}
+                      >
+                        {item.buttonText}
+                      </button>
+                    </td>
+                  </tr>
+                ))
+              ) : (
+                <tr>
+                  <td colSpan="4" className="text-center py-6 text-gray-500">
+                    No matching equipment found.
+                  </td>
+                </tr>
+              )}
+            </tbody>
+          </table>
         </div>
       </div>
     </>
