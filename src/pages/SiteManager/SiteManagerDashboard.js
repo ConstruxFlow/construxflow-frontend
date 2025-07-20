@@ -18,11 +18,11 @@ import NavBar from '../../components/NavBar'
 import { useNavigate } from "react-router-dom";
 
 const navLinks = [
-  { name: "Dashboard", href: "/" },
-  { name: "Requests", href: "/requests" },
-  { name: "Quotations", href: "/quotations" },
-  { name: "Orders", href: "/orders" },
-  { name: "Payments", href: "/payments" },
+  { name: "Dashboard", href: "/site-manager" },
+          { name: "Projects", href: "/site-manager/projects-list" },
+          { name: "Materials", href: "/site-manager/material-request-list" },
+          { name: "Inventory", href: "/site-manager/site-material-info" },
+          // { name: "Purchase Orders", href: "/site-manager" },
 ];
 
 function ActionTile({ onClick, icon, label, iconColorClass, hoverClass }) {
@@ -97,7 +97,7 @@ const SiteManagerDashboard = () => {
 
   return (
     <div className="bg-purewhite min-h-screen">
-      <NavBar links={navLinks} showButton={true} logoSrc="/logo1.png" />
+      <NavBar links={navLinks} showButton={true} logoSrc="/logo1.png" profileURL="profile" />
       <div className="max-w-full mx-auto px-6 sm:px-8 lg:px-16 py-6">
         <h2 className="text-2xl font-bold mb-2 text-gray-800">Welcome back, John!</h2>
         <p className="text-gray-600 mb-8 text-base">

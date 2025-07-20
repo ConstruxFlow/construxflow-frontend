@@ -9,14 +9,15 @@ function Create_Material_Request() {
   return (
     <>
       <NavBar
+        profileURL='profile'
         links={[
-          { name: "Dashboard", href: "#" },
-          { name: "Projects", href: "#" },
-          { name: "Materials", href: "#" },
-          { name: "Inventory", href: "#" },
-          { name: "Purchase Orders", href: "#" },
+          { name: "Dashboard", href: "/site-manager" },
+          { name: "Projects", href: "/site-manager/projects-list" },
+          { name: "Materials", href: "/site-manager/material-request-list" },
+          { name: "Inventory", href: "/site-manager/site-material-info" },
+          // { name: "Purchase Orders", href: "/site-manager/projects-list" },
         ]}
-        showButton={true}
+        // showButton={true}
       />
       <Material_Request_Form project={project} phase={phase} materials={materials} />
     </>
