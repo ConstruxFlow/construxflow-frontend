@@ -89,13 +89,15 @@ const ManagerProfileView = () => {
     <div className="min-h-screen bg-purewhite font-poppins">
       {/* Header Navigation */}
       <NavBar
-        profileURL="/financial/profile"
+        profileURL='profile'
         links={[
-          { name: "Dashboard", path: "/financial/dashboard" },
-          { name: "Payment Approvals", path: "/financial/payment-list" },
-          { name: "Purchase Orders", path: "/financial/purchase-order-list" },
-          { name: "Projects", path: "/financial/financial-projects" },
+          { name: "Dashboard", href: "/site-manager" },
+          { name: "Projects", href: "/site-manager/projects-list" },
+          { name: "Materials", href: "/site-manager/material-request-list" },
+          { name: "Inventory", href: "/site-manager/site-material-info" },
+          // { name: "Purchase Orders", href: "/site-manager/projects-list" },
         ]}
+        // showButton={true}
       />
 
       {/* Main Content */}
