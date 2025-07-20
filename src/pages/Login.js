@@ -138,6 +138,7 @@ const Login = () => {
       console.log(res);
 
       if (!res.ok) {
+        setLoading(false);
         const error = await res.text();
         console.error("Login failed: " + error);
         toast.error("Login failed: " + error);
@@ -152,6 +153,7 @@ const Login = () => {
       const user = data.user;
       console.log("User data:", user);
       if (!user || !user.userRole) {
+        setLoading(false);
         console.error("User data or userRole is missing from the response.");
         toast.error("Invalid user data received from the server.");
         return;
@@ -166,7 +168,7 @@ const Login = () => {
         ADMIN: "/admin",
         SITE_MANAGER: "/site-manager",
         INVENTORY_MANAGER: "/inventory/dashboard",
-        FINANCE_OFFICER: "/finance/dashboard",
+        FINANCE_OFFICER: "/financial/dashboard",
         MAINTENANCE_HEAD: "/maintenance/dashboard",
         SUPPLIER: "/supplier/dashboard",
         PURCHASING_MANAGER: "/purchasing/dashboard",
