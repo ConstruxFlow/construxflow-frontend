@@ -6,13 +6,14 @@ import InventoryControlPanel from '../../components/InventoryManager/InventoryCo
 const InventoryControl = () => {
   return (
     <>
-      <NavBar
-         links={[
+     <NavBar
+        links={[
         {name: 'Dashboard', path: '/inventory-dashboard'},
         {name: 'Inventory Control', path: '/inventory-control'},
+        {name: 'Inventory Monitoring', path: '/inventory-monitoring'},
         {name: 'Maintenance Requests', path: '/maintenance-requests-overview'},
-        {name: 'Dashboard'},
-        {name: 'Dashboard'},
+        {name: 'Equipment Sheduling', path: '/equipment-scheduling'},
+        
      ]}
       />
       <InventoryControlPanel />

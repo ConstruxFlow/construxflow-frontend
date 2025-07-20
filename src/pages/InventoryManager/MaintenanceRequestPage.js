@@ -1,54 +1,47 @@
-// pages/InventoryManager/MaintenanceRequestPage.js
-import React from 'react';
+import React, { useEffect, useState } from 'react';
+import { useParams } from 'react-router-dom';
+import axios from 'axios';
+import NavBar from '../../components/NavBar';
 import MaintenanceRequestDetails from '../../components/InventoryManager/MaintenanceRequestDetails';
-import NavBar from '../../components/NavBar'; // adjust path if needed
-
-const dummyRequest = {
-  equipmentName: 'Hydraulic Excavator - CAT 320D',
-  requestedBy: 'Mike Rodriguez - Maintenance Supervisor',
-  schedule: 'January 15, 2024 - 9:00 AM',
-  priority: 'High Priority',
-  availability: 'Currently assigned to Site B - Available after Jan 18, 2024',
-  comments:
-    'Routine maintenance for hydraulic system. Needs to replace filters and check fluid levels.',
-  materials: [
-    {
-      name: 'Hydraulic Filter - HF6177',
-      desc: 'Primary hydraulic system filter',
-      qty: 2,
-      stock: 15,
-      notes: 'Replace both primary and secondary filters',
-    },
-    {
-      name: 'Hydraulic Fluid - ISO 46',
-      desc: 'High-performance hydraulic oil',
-      qty: '20L',
-      stock: '85L',
-      notes: 'Top-up and system flush',
-    },
-    {
-      name: 'O-Ring Seal Kit',
-      desc: 'Complete seal replacement kit',
-      qty: 1,
-      stock: 3,
-    },
-  ],
-};
 
 const MaintenanceRequestPage = () => {
+  const { equipmentId } = useParams();
+  const [request, setRequest] = useState(null);
+  const [loading, setLoading] = useState(true);
+
+  useEffect(() => {
+    axios.get(`http://localhost:8080/api/schedule-maintenance-materials/details/${equipmentId}`)
+      .then((res) => {
+        setRequest(res.data);
+        setLoading(false);
+      })
+      .catch((err) => {
+        console.error("Failed to load request details:", err);
+        setLoading(false);
+      });
+  }, [equipmentId]);
+
   return (
     <div className="bg-[#FCFCFC] min-h-screen">
-      <NavBar 
+      <NavBar
         links={[
         {name: 'Dashboard', path: '/inventory-dashboard'},
-        {name: 'Maintenance', path: '/maintenance-requests-overview'},
-        {name: 'Dashboard'},
-        {name: 'Dashboard'},
-        {name: 'Dashboard'},
-     ]}/>
-     
+        {name: 'Inventory Control', path: '/inventory-control'},
+        {name: 'Inventory Monitoring', path: '/inventory-monitoring'},
+        {name: 'Maintenance Requests', path: '/maintenance-requests-overview'},
+        {name: 'Equipment Sheduling', path: '/equipment-scheduling'},
+        
+     ]}
+      />
+      
       <div className="max-w-5xl mx-auto p-6">
-        <MaintenanceRequestDetails request={dummyRequest} />
+        {loading ? (
+          <p className="text-gray-500">Loading maintenance request...</p>
+        ) : request ? (
+          <MaintenanceRequestDetails request={request} />
+        ) : (
+          <p className="text-red-500">Failed to load maintenance request.</p>
+        )}
       </div>
     </div>
   );

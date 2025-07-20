@@ -39,11 +39,12 @@ const MaintenanceRequestRow = ({ request }) => {
         </span>
       </td>
       <td className="p-3">
-        <button className="bg-[#2E2F34] text-white text-sm px-4 py-1 rounded hover:opacity-90"
-        onClick={()=>navigate("/maintenance-request-page")}
-        >
-          View Material Requests
-        </button>
+      <button
+        className="bg-[#2E2F34] text-white text-sm px-4 py-1 rounded hover:opacity-90"
+        onClick={() => navigate(`/maintenance-request-page/${request.id}`)}
+      >
+       View Material Requests
+      </button>
       </td>
     </tr>
   );
