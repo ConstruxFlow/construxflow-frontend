@@ -1,4 +1,4 @@
-import React, { useState, useEffect, useContext } from 'react';
+import React, { useState, useEffect, useContext, useRef } from 'react';
 import NavBar from '../../../components/NavBar';
 import { MdOutlinePendingActions } from "react-icons/md";
 import { LiaNotesMedicalSolid } from "react-icons/lia";
@@ -12,6 +12,31 @@ import { useNavigate } from 'react-router-dom';
 import { toast } from 'react-toastify';
 import { AuthContext } from '../../../Context/AuthContext';
 import { Space } from 'lucide-react';
+import {
+  Chart as ChartJS,
+  CategoryScale,
+  LinearScale,
+  PointElement,
+  LineElement,
+  BarElement,
+  Title,
+  Tooltip,
+  Legend,
+  ArcElement,
+} from 'chart.js';
+import { Line, Doughnut } from 'react-chartjs-2';
+
+ChartJS.register(
+  CategoryScale,
+  LinearScale,
+  PointElement,
+  LineElement,
+  BarElement,
+  Title,
+  Tooltip,
+  Legend,
+  ArcElement
+);
 
 const PurchasingDashboard = () => {
   const navigate = useNavigate();
@@ -39,6 +64,174 @@ const PurchasingDashboard = () => {
     } finally {
       setLoading(false);
     }
+  };
+
+  // Chart data preparation
+  const prepareProcurementTrendsData = () => {
+    const last6Months = [];
+    const currentDate = new Date();
+    
+    for (let i = 5; i >= 0; i--) {
+      const date = new Date(currentDate.getFullYear(), currentDate.getMonth() - i, 1);
+      last6Months.push({
+        month: date.toLocaleDateString('en-US', { month: 'short', year: 'numeric' }),
+        orders: 0,
+        amount: 0
+      });
+    }
+
+    // Process purchase orders data
+    purchaseOrders.forEach(order => {
+      const orderDate = new Date(order.createdDate);
+      const monthKey = orderDate.toLocaleDateString('en-US', { month: 'short', year: 'numeric' });
+      
+      const monthData = last6Months.find(m => m.month === monthKey);
+      if (monthData) {
+        monthData.orders += 1;
+        monthData.amount += order.subTotal || 0;
+      }
+    });
+
+    return {
+      labels: last6Months.map(m => m.month),
+      datasets: [
+        {
+          label: 'Purchase Orders',
+          data: last6Months.map(m => m.orders),
+          borderColor: '#efc11a',
+          backgroundColor: 'rgba(245, 158, 11, 0.1)',
+          tension: 0.4,
+          yAxisID: 'y',
+        },
+        {
+          label: 'Amount ($)',
+          data: last6Months.map(m => m.amount),
+          borderColor: '#236571',
+          backgroundColor: 'rgba(16, 185, 129, 0.1)',
+          tension: 0.4,
+          yAxisID: 'y1',
+        },
+      ],
+    };
+  };
+
+  const prepareDeliveryPerformanceData = () => {
+    // Sample data - you can replace with actual supplier performance data
+    const performanceData = [
+      { status: 'On Time', count: 85, color: '#236571' },
+      { status: 'Delayed', count: 12, color: '#efc11a' },
+      { status: 'Early', count: 3, color: '#CEB8AD' },
+    ];
+
+    return {
+      labels: performanceData.map(d => d.status),
+      datasets: [
+        {
+          data: performanceData.map(d => d.count),
+          backgroundColor: performanceData.map(d => d.color),
+          borderWidth: 2,
+          borderColor: '#ffffff',
+        },
+      ],
+    };
+  };
+
+  const procurementTrendsOptions = {
+    responsive: true,
+    maintainAspectRatio: false,
+    plugins: {
+      legend: {
+        position: 'top',
+        labels: {
+          usePointStyle: true,
+          padding: 20,
+          font: {
+            size: 12,
+          },
+        },
+      },
+    },
+    scales: {
+      x: {
+        grid: {
+          display: false,
+        },
+        ticks: {
+          font: {
+            size: 11,
+          },
+        },
+      },
+      y: {
+        type: 'linear',
+        display: true,
+        position: 'left',
+        grid: {
+          color: 'rgba(0, 0, 0, 0.1)',
+        },
+        ticks: {
+          font: {
+            size: 11,
+          },
+        },
+        title: {
+          display: true,
+          text: 'Orders',
+          font: {
+            size: 12,
+          },
+        },
+      },
+      y1: {
+        type: 'linear',
+        display: true,
+        position: 'right',
+        grid: {
+          drawOnChartArea: false,
+        },
+        ticks: {
+          font: {
+            size: 11,
+          },
+          callback: function(value) {
+            return '$' + value.toLocaleString();
+          },
+        },
+        title: {
+          display: true,
+          text: 'Amount ($)',
+          font: {
+            size: 12,
+          },
+        },
+      },
+    },
+  };
+
+  const deliveryPerformanceOptions = {
+    responsive: true,
+    maintainAspectRatio: false,
+    plugins: {
+      legend: {
+        position: 'bottom',
+        labels: {
+          usePointStyle: true,
+          padding: 15,
+          font: {
+            size: 12,
+          },
+        },
+      },
+      tooltip: {
+        callbacks: {
+          label: function(context) {
+            const total = context.dataset.data.reduce((a, b) => a + b, 0);
+            const percentage = ((context.raw / total) * 100).toFixed(1);
+            return `${context.label}: ${context.raw} (${percentage}%)`;
+          },
+        },
+      },
+    },
   };
 
   const getStatusColor = (status) => {
@@ -206,19 +399,19 @@ const PurchasingDashboard = () => {
                 <span className="font-medium text-main_dark text-xs sm:text-sm">Register Supplier</span>
               </div>
 
-              <div className="bg-purewhite border-2 hover:border-web_yellow rounded-lg p-4 sm:p-5 text-center cursor-pointer hover:-translate-y-0.5 hover:shadow-md transition-all duration-150">
+              <div onClick={() => navigate('/purchasing/materialrequests/create')} className="bg-purewhite border-2 hover:border-web_yellow rounded-lg p-4 sm:p-5 text-center cursor-pointer hover:-translate-y-0.5 hover:shadow-md transition-all duration-150">
                 <div className="text-xl flex justify-center text-deep_green sm:text-2xl mb-2"><TfiWrite/></div>
                 <span className="font-medium text-main_dark text-xs sm:text-sm">Create Request</span>
               </div>
 
-              <div className="bg-purewhite border-2 hover:border-web_yellow rounded-lg p-4 sm:p-5 text-center cursor-pointer hover:-translate-y-0.5 hover:shadow-md transition-all duration-150">
+              <div onClick={() => navigate('/purchasing/quotationrequest/overview')} className="bg-purewhite border-2 hover:border-web_yellow rounded-lg p-4 sm:p-5 text-center cursor-pointer hover:-translate-y-0.5 hover:shadow-md transition-all duration-150">
                 <div className="text-xl flex justify-center text-deep_green sm:text-2xl mb-2"><IoSearch/></div>
                 <span className="font-medium text-main_dark text-xs sm:text-sm">Review Quotes</span>
               </div>
 
-              <div className="bg-purewhite border-2 hover:border-web_yellow rounded-lg p-4 sm:p-5 text-center cursor-pointer hover:-translate-y-0.5 hover:shadow-md transition-all duration-150">
+              <div onClick={() => navigate('/purchasing/orders/overview')} className="bg-purewhite border-2 hover:border-web_yellow rounded-lg p-4 sm:p-5 text-center cursor-pointer hover:-translate-y-0.5 hover:shadow-md transition-all duration-150">
                 <div className="text-xl flex justify-center text-deep_green sm:text-2xl mb-2"><SiGoogleanalytics/></div>
-                <span className="font-medium text-main_dark text-xs sm:text-sm">View Reports</span>
+                <span className="font-medium text-main_dark text-xs sm:text-sm">View POs</span>
               </div>
             </div>
           </div>
@@ -229,18 +422,22 @@ const PurchasingDashboard = () => {
               <h3 className="font-semibold text-main_dark mb-4 text-base">
                 Procurement Trends
               </h3>
-              <div className="h-36 sm:h-45 bg-gray-50 border border-dashed border-gray-300 rounded-md"></div>
+              <div className="h-64 w-full">
+                <Line data={prepareProcurementTrendsData()} options={procurementTrendsOptions} />
+              </div>
             </div>
             
             <div className="bg-purewhite border border-gray-200 rounded-lg p-4 sm:p-5">
               <h3 className="font-semibold text-main_dark mb-4 text-base">
                 Supplier Delivery Performance
               </h3>
-              <div className="h-36 sm:h-45 bg-gray-50 border border-dashed border-gray-300 rounded-md"></div>
+              <div className="h-64 w-full">
+                <Doughnut data={prepareDeliveryPerformanceData()} options={deliveryPerformanceOptions} />
+              </div>
             </div>
           </div>
 
-          {/* Recent Orders Full Table */}
+          {/* Recent Orders Full Table - Rest of your existing table code remains unchanged */}
           <div className="mb-8">
             <div className="flex flex-col sm:flex-row sm:justify-between sm:items-center mb-4 gap-2">
               <h2 className="text-lg font-semibold text-main_dark tracking-tight text-center sm:text-left">

@@ -295,6 +295,7 @@ const MaterialRequestsOverview = () => {
   return (
     <div className="min-h-screen bg-purewhite font-poppins">
       <NavBar
+      profileURL="/purchasing/profile"
         links={[
           { name: "Dashboard", path: "/purchasing/dashboard" },
           {

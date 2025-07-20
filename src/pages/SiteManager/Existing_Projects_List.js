@@ -13,7 +13,6 @@ function Existing_Projects_List() {
           { name: "Inventory", href: "#" },
           { name: "Purchase Orders", href: "#" },
         ]}
-        showButton={true}
     />
     <ExistingProjects />
     </>

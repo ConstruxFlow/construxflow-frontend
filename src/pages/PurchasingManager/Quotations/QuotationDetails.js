@@ -158,6 +158,7 @@ const QuotationDetail = () => {
     <div className="min-h-screen bg-purewhite font-poppins">
       {/* Header Navigation */}
       <NavBar
+      profileURL="/purchasing/profile"
         links={[
           { name: "Dashboard", path: "/purchasing/dashboard" },
           {

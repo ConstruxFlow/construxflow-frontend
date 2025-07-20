@@ -13,6 +13,7 @@ import Site_MaterialAdd from "./Site_MaterialAdd";
 import Site_MaterialUpdate from "./Site_MaterialUpdate";
 import Purchase_Order from "./Purchase_Order";
 import SiteManager_Profile from "./SiteManager_Profile";
+import ManagerProfileView from "./ManagerProfile";
 
 export const siteManagerRoutes = {
   path: '/site-manager',
@@ -75,8 +76,8 @@ export const siteManagerRoutes = {
       element: <Purchase_Order />,
     },
     {
-      path: 'site-manager-profile',
-      element: <SiteManager_Profile />,
-    },
+      path: 'profile',
+      element: <ManagerProfileView/>,
+    }
   ]
 }; 

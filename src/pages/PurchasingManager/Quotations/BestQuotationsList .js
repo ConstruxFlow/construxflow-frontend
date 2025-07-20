@@ -358,6 +358,7 @@ const BestQuotationsList = () => {
   return (
     <div className="min-h-screen bg-purewhite font-poppins">
       <NavBar
+      profileURL="/purchasing/profile"
         links={[
           { name: 'Dashboard', path: '/purchasing/dashboard' },
           { name: 'Material Requests', path: '/purchasing/materialrequests/overview' },

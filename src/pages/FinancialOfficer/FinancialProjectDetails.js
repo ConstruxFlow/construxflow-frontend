@@ -191,6 +191,7 @@ const FinancialProjectDetails = () => {
     return (
       <div className="min-h-screen bg-purewhite font-poppins">
         <NavBar
+        profileURL="/financial/profile"
           links={[
             { name: 'Dashboard', path: '/financial/dashboard' },
           { name: 'Payment Approvals', path: '/financial/payment-list' },

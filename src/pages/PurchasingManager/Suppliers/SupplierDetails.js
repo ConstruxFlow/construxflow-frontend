@@ -2,6 +2,7 @@ import React, { useState, useEffect } from 'react';
 import { FaArrowLeft, FaEdit, FaDownload, FaStar, FaMapMarkerAlt, FaPhone, FaEnvelope, FaBuilding, FaCalendarAlt, FaTruck, FaFileAlt, FaPlus, FaTrash, FaEye } from 'react-icons/fa';
 import NavBar from '../../../components/NavBar';
 import { toast } from 'react-toastify';
+import { CiViewList } from "react-icons/ci";
 import { useLocation } from 'react-router-dom';
 
 const SupplierDetail = () => {
@@ -128,6 +129,7 @@ console.log(supplierData);
     <div className="min-h-screen bg-purewhite font-poppins">
       {/* Header Navigation */}
       <NavBar
+      profileURL="/purchasing/profile"
         links={[
           { name: 'Dashboard', path: '/purchasing/dashboard' },
           { name: 'Material Requests', path: '/purchasing/materialrequests/overview' },
@@ -171,8 +173,8 @@ console.log(supplierData);
                 Edit Supplier
               </button>
               <button className="px-4 py-2 border border-gray-300 text-gray-700 rounded-md hover:bg-gray-50 transition-colors flex items-center justify-center gap-2 text-sm">
-                <FaDownload className="w-4 h-4" />
-                Export Details
+                <CiViewList className="w-4 h-4" />
+                Blacklist Supplier
               </button>
             </div>
           </div>
