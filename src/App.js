@@ -86,6 +86,7 @@ import Admin_Dashboard from "./pages/Admin/Admin-Dashboard";
 import ManagerProfileView from "./pages/Admin/ManagerProfile";
 import AdminProjectsList from "./pages/Admin/AdminProjectsList";
 import AdminProjectDetails from "./pages/Admin/AdminProjectDetails";
+import ManagerReg from "./pages/Admin/ManagerReg";
 
 
   export const routes = createBrowserRouter([
@@ -314,6 +315,10 @@ import AdminProjectDetails from "./pages/Admin/AdminProjectDetails";
     path: "/admin",
     element:<Admin_Dashbaord/>
 
+  },
+  {
+    path: "/admin-managers",
+    element: <ManagerReg />,
   },
   {
     path: "/inventory-control",
