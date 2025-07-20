@@ -27,9 +27,10 @@ const AddEquipment = () => {
        links={[
         {name: 'Dashboard', path: '/inventory-dashboard'},
         {name: 'Inventory Control', path: '/inventory-control'},
-        {name: 'Dashboard'},
-        {name: 'Dashboard'},
-        {name: 'Dashboard'},
+        {name: 'Inventory Monitoring', path: '/inventory-monitoring'},
+        {name: 'Maintenance Requests', path: '/maintenance-requests-overview'},
+        {name: 'Equipment Sheduling', path: '/equipment-scheduling'},
+        
      ]}
         />
       <div className="bg-[#FCFCFC] min-h-screen py-8 px-4">
