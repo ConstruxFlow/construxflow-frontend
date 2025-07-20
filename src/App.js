@@ -293,7 +293,7 @@ import ReorderMaterialPage from "./pages/InventoryManager/ReorderMaterialPage";
 
     path: "/add-material",
     element: <AddMaterial />,
-
+  },{
     path: "/admin",
     element:<Admin_Dashbaord/>
 
