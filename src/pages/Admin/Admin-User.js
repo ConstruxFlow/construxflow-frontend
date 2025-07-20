@@ -7,12 +7,10 @@ function Admin_Users() {
     <>
       <NavBar
         links={[
-          { name: "Dashboard", href: "#" },
-          { name: "Supply Chain", href: "#" },
-          { name: "Inventory", href: "#" },
-          { name: "Insights", href: "#" },
-          { name: "Users", href: "#" },
-          { name: "Settings", href: "#" },
+          { name: "Dashboard", href: "/admin", active: true },
+          { name: "Supply Chain", href: "/supplychain" },
+          { name: "Inventory", href: "/admin-inventory" },
+          { name: "Users", href: "/admin-users" },
         ]}
         showButton={true}
     />

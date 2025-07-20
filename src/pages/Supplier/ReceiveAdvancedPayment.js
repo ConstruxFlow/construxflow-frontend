@@ -4,11 +4,11 @@ import { FaRegCalendarAlt } from "react-icons/fa";
 import NavBar from "../../components/NavBar";
 
 const navLinks = [
-  { name: "Dashboard", href: "/dashboard1" },
-  { name: "Requests", href: "/requests", active: true },
-  { name: "Quotations", href: "/quotations" },
-  { name: "Orders", href: "/orders" },
-  { name: "Payments", href: "/payments" },
+  { name: "Dashboard", href: "/supplier/dashboard" },
+  { name: "Requests", href: "/supplier/requests", active: true },
+  { name: "Quotations", href: "/supplier/quotations" },
+  { name: "Orders", href: "/supplier/orders" },
+  { name: "Payments", href: "/supplier/payments" },
 ];
 
 const payment = {
@@ -33,13 +33,13 @@ const statusBadge = {
 
 const ReceiveAdvancedPayment = () => (
   <div className="bg-purewhite min-h-screen font-poppins">
-    <NavBar links={navLinks} logoSrc="/logo1.png" />
+    <NavBar links={navLinks} profileURL="/supplier/profile" logoSrc="/logo1.png" />
 
-    <div className="max-w-7xl mx-auto px-16 py-10">
-      <h1 className="text-2xl md:text-3xl font-bold text-main_dark mb-2">
+    <div className="max-w-full mx-auto px-16 py-10">
+      <h1 className="text-xl md:text-2xl font-bold text-main_dark mb-2">
         Receive Advanced Payment
       </h1>
-      <p className="text-gray-500 mb-8">
+      <p className="text-gray-600 mb-8">
         Review and confirm receipt of your advanced payment
       </p>
 
@@ -66,7 +66,7 @@ const ReceiveAdvancedPayment = () => (
         </div>
         <div className="flex flex-col items-end min-w-[220px]">
           <div className="text-sm text-slatebluegray mb-1">Amount Received</div>
-          <div className="text-3xl font-extrabold text-red-600 mb-2">
+          <div className="text-3xl font-extrabold text-yellow-500 mb-2">
             ${payment.amount.toLocaleString(undefined, { minimumFractionDigits: 2 })}
           </div>
           <span className={`px-3 py-1 rounded-full text-xs font-semibold ${statusBadge[payment.status]}`}>

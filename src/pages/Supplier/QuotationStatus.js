@@ -1,4 +1,4 @@
-import React, { useEffect, useState } from "react";
+import React, { useContext, useEffect, useState } from "react";
 import axios from "axios";
 import NavBar from "../../components/NavBar";
 import { useNavigate } from "react-router-dom";
@@ -9,14 +9,19 @@ import {
   FaSearch,
   FaChevronDown,
   FaEye,
+  FaBoxOpen,
+  FaSortNumericUp,
+  FaMoneyBill,
+  FaRegCheckCircle,
 } from "react-icons/fa";
+import { AuthContext } from "../../Context/AuthContext";
 
 const navLinks = [
-  { name: "Dashboard", href: "/dashboard1" },
-  { name: "Requests", href: "/requests" },
-  { name: "Quotations", href: "/quotations", active: true },
-  { name: "Orders", href: "/orders" },
-  { name: "Payments", href: "/payments" },
+  { name: "Dashboard", href: "/supplier/dashboard" },
+  { name: "Requests", href: "/supplier/requests" },
+  { name: "Quotations", href: "/supplier/quotations", active: true },
+  { name: "Orders", href: "/supplier/orders" },
+  { name: "Payments", href: "/supplier/payments" },
 ];
 
 const statusColors = {
@@ -31,18 +36,29 @@ const QuotationStatus = () => {
   const [status, setStatus] = useState("All Status");
   const [date, setDate] = useState("");
   const navigate = useNavigate();
+  const { authState } = useContext(AuthContext);
+  const [loading, setLoading] = useState(true);
 
   // Fetch quotations on page load
   useEffect(() => {
+    const supplierId = authState?.user?.supplierId;
+    if (!supplierId) {
+      setQuotations([]);
+      return;
+    }
+
     axios
       .get("http://localhost:8080/api/quotations/all")
       .then((res) => {
-        setQuotations(res.data);
+        setQuotations(
+          res.data.filter((q) => q.supplierId === supplierId)
+        );
+        setLoading(false);
       })
       .catch((err) => {
         console.error("Failed to fetch quotations", err);
       });
-  }, []);
+  }, [authState?.user?.supplierId]);
 
   // Processed list
   const filteredQuotations = quotations.filter((q) => {
@@ -58,9 +74,20 @@ const QuotationStatus = () => {
     );
   });
 
+  if (loading) {
+    return (
+      <div className="min-h-screen bg-purewhite font-poppins flex items-center justify-center">
+        <div className="text-center">
+          <div className="animate-spin rounded-full h-12 w-12 border-b-2 border-web_yellow mx-auto mb-4"></div>
+          <p className="text-gray-600">Loading Quotations...</p>
+        </div>
+      </div>
+    );
+  }
+
   return (
     <div className="bg-purewhite min-h-screen font-poppins">
-      <NavBar links={navLinks} logoSrc="/logo1.png" />
+      <NavBar links={navLinks} profileURL="/supplier/profile" logoSrc="/logo1.png" />
 
       <div className="max-w-full mx-auto px-16 py-8">
         <h1 className="text-xxl md:text-2xl font-bold text-main_dark mb-2">
@@ -139,19 +166,29 @@ const QuotationStatus = () => {
                   Quotation ID
                 </th>
                 <th className="px-6 py-4 text-left text-sm font-semibold text-main_dark">
-                  Material
+                  <span className="flex items-center gap-2">
+                    <FaBoxOpen className="inline mb-0.5" /> Materials
+                  </span>
                 </th>
                 <th className="px-6 py-4 text-left text-sm font-semibold text-main_dark">
-                  Quantity
+                  <span className="flex items-center gap-2">
+                    <FaSortNumericUp className="inline mb-0.5" /> Quantity
+                  </span>
                 </th>
                 <th className="px-6 py-4 text-left text-sm font-semibold text-main_dark">
-                  Quoted Price
+                  <span className="flex items-center gap-2">
+                    <FaMoneyBill className="inline mb-0.5" /> Quoted Price
+                  </span>
                 </th>
                 <th className="px-6 py-4 text-left text-sm font-semibold text-main_dark">
-                  Submitted
+                  <span className="flex items-center gap-2">
+                    <FaClock className="inline mb-0.5" /> Submitted
+                  </span>
                 </th>
                 <th className="px-6 py-4 text-left text-sm font-semibold text-main_dark">
-                  Status
+                  <span className="flex items-center gap-2">
+                    <FaRegCheckCircle className="inline mb-0.5" /> Status
+                  </span>
                 </th>
                 <th className="px-6 py-4 text-left text-sm font-semibold text-main_dark">
                   Action
@@ -198,7 +235,7 @@ const QuotationStatus = () => {
                     </td>
                     <td className="px-6 py-4">
                       <button
-                        onClick={() => navigate(`/quotations/${q.id}`)}
+                        onClick={() => navigate(`/supplier/quotations/${q.id}`)}
                         className="p-2 text-deep_green hover:bg-gray-100 rounded"
                       >
                         <FaEye />
@@ -248,23 +285,22 @@ const SummaryCard = ({ icon, title, value, subtitle, type }) => {
 
   return (
     <div
-      className={`shadow group transition-all duration-200 hover:scale-[1.02] 
-       rounded-lg px-6 py-6 flex items-center gap-4`}
+      className={`bg-purewhite border border-gray-200 rounded-xl p-4 sm:p-5 flex items-center gap-3 sm:gap-4 shadow-sm hover:shadow-md hover:-translate-y-0.5 transition-all duration-150`}
     >
+      <div className="flex-1">
+        <div className="text-slatebluegray font-medium text-sm mb-0.5 truncate">
+          {title}
+        </div>
+        <div className="text-xl sm:text-2xl font-bold text-main_dark leading-tight mb-0.5">
+          {value}
+        </div>
+        <div className="text-deep_green text-xs">{subtitle}</div>
+      </div>
       <div
         className={`flex items-center justify-center h-10 w-10 rounded-xl shadow 
         ${style.iconBg} ${style.iconColor} group-hover:scale-110 transition-all text-lg`}
       >
         {icon}
-      </div>
-      <div className="flex-1">
-        <div className="text-sm uppercase tracking-widest font-bold text-slatebluegray mb-1">
-          {title}
-        </div>
-        <div className="text-3xl font-extrabold text-main_dark mb-1">
-          {value}
-        </div>
-        <div className="text-xs text-slatebluegray font-medium">{subtitle}</div>
       </div>
     </div>
   );
