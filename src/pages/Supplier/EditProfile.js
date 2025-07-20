@@ -1,16 +1,19 @@
 // src/pages/Supplier/EditProfile.jsx
 
-import React, { useEffect, useState } from "react";
+import React, { useContext, useEffect, useState } from "react";
 import axios from "axios";
 import { FaSave, FaLock, FaPaperclip, FaDownload, FaTrash } from "react-icons/fa";
 import NavBar from "../../components/NavBar";
+import { AuthContext } from "../../Context/AuthContext";
+import { useNavigate } from "react-router-dom";
+import { toast } from "react-toastify";
 
 const navLinks = [
-  { name: "Dashboard", href: "/dashboard1" },
-  { name: "Requests", href: "/requests" },
-  { name: "Quotations", href: "/quotations" },
-  { name: "Orders", href: "/orders" },
-  { name: "Payments", href: "/payments" },
+  { name: "Dashboard", href: "/supplier/dashboard1" },
+  { name: "Requests", href: "/supplier/requests" },
+  { name: "Quotations", href: "/supplier/quotations" },
+  { name: "Orders", href: "/supplier/orders" },
+  { name: "Payments", href: "/supplier/payments" },
 
 ];
 
@@ -32,16 +35,32 @@ const EditProfile = () => {
   const [loading, setLoading] = useState(true);
   const [error, setError] = useState(null);
   const [successMsg, setSuccessMsg] = useState(null);
+  const {authState}=useContext(AuthContext);
+  const navigate = useNavigate();
+  console.log("Auth State:", authState?.user?.supplierId);
 
-  const supplierId = "S001"; // Replace with actual logic
+  const supplierId = authState?.user?.supplierId;
+  console.log("Supplier ID:", supplierId);
+
+
+  // const supplierId = "S001"; // Replace with actual logic
 
   useEffect(() => {
+    if (!supplierId) {
+    setError("Supplier ID not found");
+    setLoading(false);
+    return;
+  }
+
+  setError(null);
+  setLoading(true);
+
     const fetchSupplier = async () => {
       try {
         const res = await axios.get(`http://localhost:8080/api/supplier/find/${supplierId}`);
         setSupplierData(res.data.data);
       } catch (err) {
-        setError("Failed to load supplier details");
+        toast.error("Failed to load supplier details");
       } finally {
         setLoading(false);
       }
@@ -75,9 +94,10 @@ const EditProfile = () => {
 
     try {
       await axios.put(`http://localhost:8080/api/supplier/update/${supplierId}`, supplierData);
-      setSuccessMsg("Profile updated successfully.");
+      toast.success("Profile updated successfully.");
+      navigate("/supplier/profile");
     } catch (err) {
-      setError("Failed to update profile.");
+      toast.error("Failed to update profile.");
     }
   };
 
@@ -86,7 +106,7 @@ const EditProfile = () => {
 
   return (
     <div className="bg-purewhite min-h-screen font-poppins">
-      <NavBar links={navLinks} logoSrc="/logo1.png" />
+      <NavBar links={navLinks} profileURL="/supplier/profile" logoSrc="/logo1.png" />
 
       <form onSubmit={handleSubmit}>
         <div className="max-w-full mx-auto px-16 py-8">
@@ -104,7 +124,7 @@ const EditProfile = () => {
             </div>
             <div className="flex items-center gap-4">
               <div className="w-28 h-28 rounded-full bg-light_gray flex items-center justify-center overflow-hidden border-2 border-web_yellow mr-5">
-                <img src="/company-logo.png" alt="Company Logo" className="w-24 h-24 object-contain" />
+                <img src="/assets/profile/supplier.jpg" alt="Company Logo" className="w-24 h-24 object-contain" />
               </div>
             </div>
           </div>

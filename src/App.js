@@ -82,16 +82,14 @@ import QuotationDetail from "./pages/PurchasingManager/Quotations/QuotationDetai
 import QuotationDetails from "./pages/Supplier/QuotationDetails";
 import { FinanceManagerRoutes } from "./pages/FinancialOfficer/routes";
 import ManagerReg from "./pages/Admin/ManagerReg";
+import { SupplierRoutes } from "./pages/Supplier/routes";
 
 export const routes = createBrowserRouter([
   {
     path: "/",
     element: <Home />,
   },
-  {
-    path: "/dashboard1",
-    element: <SupplierDashboard />,
-  },
+  
   {
     path: "/dashboard",
     element: <PurchasingDashboard />
@@ -116,32 +114,7 @@ export const routes = createBrowserRouter([
   path: "/material-request",
   element: <MaterialRequest />,
 },
-   { path: "/requests",
-    element: <MaterialRequests />,
-  },
-  {
-    path: "/requests/:id",
-    element: <RequestDetails />,
-  },
-  { path: "/quotations/submit/:id", element: <SubmitQuotation /> },
-  { path: "/quotations", element: <QuotationStatus /> },
-  { path: "/quotations/:id", element: <QuotationDetails /> },
-  { path: "/payments/receive-advanced", element: <ReceiveAdvancedPayment /> },
-  { path: "/payments/receive-full", element: <ReceiveFullPayment /> },
-  { path: "/quotations/update/:id", element: <UpdateQuotation /> },
-
-  {
-    path: "/orders",
-    element: <PurchasingOrders />,
-  },
-  {
-    path: "/orders/:id",
-    element: <OrderDetails />,
-  },
-  { path: "/payments", element: <PaymentStatus /> },
-  { path: "/supplierprofile", element: <SupplierProfile /> },
-  { path: "/supplierprofile/edit", element: <SupplierProfileEdit /> },
-  { path:"/contact-support", element: <ContactSupport /> },
+  
 
   {
     path: "/login",
@@ -150,6 +123,9 @@ export const routes = createBrowserRouter([
 
   // PURCHASING MANAGER
   purchasingManagerRoutes,
+
+  // Supplier
+  SupplierRoutes,
 
   // Finance Officer
   FinanceManagerRoutes,

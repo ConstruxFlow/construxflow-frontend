@@ -20,6 +20,9 @@ const NavBar = ({
   const dropdownRef = useRef(null);
   const navigate = useNavigate();
 
+  console.log("Auth State:", authState);
+  
+
   // Function to get profile image based on user role
   const getProfileImageByRole = (userRole) => {
     const roleImageMap = {
