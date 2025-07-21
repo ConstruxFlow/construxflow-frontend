@@ -1,20 +1,30 @@
-import React, { useState, useEffect } from 'react';
+import React, { useState, useEffect, useContext } from 'react';
 import { Calendar, Upload, FolderPlus, Save, X, Plus, Trash2, ChevronDown, ChevronRight } from 'lucide-react';
 import { pdfjs } from 'react-pdf';
 import { useNavigate } from 'react-router-dom';
+import { AuthContext } from '../../Context/AuthContext';
 
 pdfjs.GlobalWorkerOptions.workerSrc = `${process.env.PUBLIC_URL}/pdf.worker.min.js`;
 
 const Create_ProjectForm = () => {
+  const {authState}=useContext(AuthContext);
+  // console.log("Auth State:", authState?.user?.managerId);
+  const managerId = authState?.user?.managerId || '';
+  
   const [formData, setFormData] = useState({
+    managerId: '',
     projectName: '',
-    managerId: '', // <-- add this line
     location: '',
     startDate: '',
     endDate: '',
     progressStatus: '',
     boqFile: null
   });
+  
+  if(managerId){
+    formData.managerId = managerId;
+  }
+  
   const navigate = useNavigate();
 
   useEffect(() => {
@@ -251,7 +261,7 @@ const Create_ProjectForm = () => {
     }));
     form.append('phases', JSON.stringify(phasesPayload));
 
-    console.log(phasesPayload);
+    // console.log(phasesPayload);
     
     try {
       const res = await fetch('http://localhost:8080/api/projects/create', {
@@ -321,7 +331,7 @@ const Create_ProjectForm = () => {
               <input
                 type="text"
                 name="managerId"
-                value={formData.managerId}
+                value={formData?.managerId}
                 readOnly
                 className="w-full px-4 py-3 border border-gray-300 rounded-lg bg-gray-100 cursor-not-allowed"
               />

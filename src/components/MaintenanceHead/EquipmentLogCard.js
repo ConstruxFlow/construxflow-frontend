@@ -19,10 +19,10 @@ export default function EquipmentLogCard({
       <div className={`flex items-center justify-between px-4 py-3 rounded-t-xl ${statusColor}`}>
         <div>
           <div className="flex items-center space-x-2">
-            <ClipboardCheck className="w-5 h-5 text-white" />
-            <span className="text-white font-semibold">{name}</span>
+            <ClipboardCheck className="w-5 h-5 text-gray-600" />
+            <span className="text-gray-600 font-semibold">{name}</span>
           </div>
-          <span className="text-xs text-gray-200 block">{type}</span>
+          <span className="text-xs text-gray-600 block">{type}</span>
         </div>
         <span className={`text-xs font-semibold px-3 py-1 rounded-full ${
           status === "Operational"
@@ -59,7 +59,7 @@ export default function EquipmentLogCard({
           </div>
         </div>
         <div className="flex space-x-2">
-          <button className="flex-1 bg-[#236571] hover:bg-[#1b4c4a] text-white px-4 py-2 rounded-md text-sm font-medium flex items-center justify-center gap-1">
+          <button className="flex-1 bg-deep_green/90 hover:bg-deep_green text-purewhite px-4 py-2 rounded-md text-sm font-medium flex items-center justify-center gap-1">
             <ClipboardCheck className="w-4 h-4" /> View Logs
           </button>
           {actions.includes("Schedule Service") && (

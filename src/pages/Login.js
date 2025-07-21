@@ -176,8 +176,8 @@ const Login = () => {
 
       if (roleRoutes[role]) {
         setLoading(false);
-        navigation(roleRoutes[role]);
         toast.success("Login successful!");
+        navigation(roleRoutes[role]);
       } else {
         console.error("Unknown user role. Please contact support.");
         toast.error("Unknown user role. Please contact support.");
