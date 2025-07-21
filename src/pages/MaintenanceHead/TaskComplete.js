@@ -7,7 +7,7 @@ import TeamSection from "../../components/MaintenanceHead/TeamSection";
 export default function TaskCompleteContainer() {
   const [showTeam, setShowTeam] = useState(false);
   const [equipment, setEquipment] = useState(null);
-  const [assignment, setAssignment] = useState(null);
+  const [assignments, setAssignments] = useState([]);
   const [nextSchedule, setNextSchedule] = useState(null);
   const [teamMember, setTeamMember] = useState(null);
   const [completionTime, setCompletionTime] = useState(null);
@@ -15,11 +15,9 @@ export default function TaskCompleteContainer() {
   const { search } = useLocation();
   const params = new URLSearchParams(search);
   const assignId = params.get("assignId");
+  const assignId2 = params.get("assignId2");
   const navigate = useNavigate();
-
-
-
-  
+  const [teamMembers, setTeamMembers] = useState([]);
 
   useEffect(() => {
     if (!id) return;
@@ -48,33 +46,30 @@ export default function TaskCompleteContainer() {
   console.log("Assignment ID:", assignId);
 
   useEffect(() => {
-    if (!assignId) return;
+    if (!assignId || !id) return;
 
     fetch(
-      `http://localhost:8080/api/equipmentassigntechnician/getbyassignId?id=${encodeURIComponent(
-        assignId
+      `http://localhost:8080/api/equipmentassigntechnician/getbyassignId?scheduleId=${encodeURIComponent(
+        id
       )}`
     )
       .then((res) => {
-        if (res.status === 404) {
-          throw new Error("Assignment not found");
-        }
-        if (!res.ok) {
-          throw new Error("Failed to fetch assignment");
-        }
+        if (!res.ok) throw new Error("Failed to fetch assignments");
         return res.json();
       })
       .then((data) => {
-        setAssignment(data);
+        const formatted = Array.isArray(data) ? data : [data];
+        setAssignments(formatted);
       })
       .catch((err) => {
         console.error("Error fetching assignment details:", err);
-        setAssignment(null);
+        setAssignments([]);
       });
-  }, [assignId]);
+  }, [assignId, id]);
 
-  console.log("Assignment data:", assignment);
+  console.log("Assignment data:", assignments);
 
+  // Add this new useEffect to fetch next schedule data for multiple assignments
   useEffect(() => {
     if (!assignId) return;
 
@@ -89,7 +84,25 @@ export default function TaskCompleteContainer() {
         return res.json();
       })
       .then((data) => {
-        setNextSchedule(data);
+        // Handle both single object and array responses
+        const scheduleArray = Array.isArray(data) ? data : [data];
+
+        // ✅ Get unique maintenance details (since they should be the same)
+        const uniqueSchedule =
+          scheduleArray.length > 0
+            ? {
+                nextDate: scheduleArray[0].nextDate, // "2025-07-23"
+                nextMaintenanceType: scheduleArray[0].nextMaintenanceType, // "Preventive Maintenance"
+                priority: scheduleArray[0].priority, // "Low"
+                estimateDuration: scheduleArray[0].estimateDuration, // "1 hour"
+                technicians: scheduleArray.map((item) => ({
+                  technicianId: item.technicianId,
+                  nextScheduleId: item.nextScheduleId,
+                })),
+              }
+            : null;
+
+        setNextSchedule(uniqueSchedule);
       })
       .catch((err) => {
         setNextSchedule(null);
@@ -100,26 +113,13 @@ export default function TaskCompleteContainer() {
   console.log("Next Schedule data:", nextSchedule);
 
   useEffect(() => {
-    if (!assignment?.technicianId) return;
-
-    fetch(
-      `http://localhost:8080/api/team?id=${encodeURIComponent(
-        assignment?.technicianId
-      )}`
-    )
-      .then((res) => {
-        if (res.status === 404) throw new Error("Team Member Not Found");
-        if (!res.ok) throw new Error("Failed to fetch team member");
-        return res.json();
-      })
-      .then((data) => {
-        setTeamMember(data);
-      })
+    fetch("http://localhost:8080/api/team/all")
+      .then((res) => res.json())
+      .then(setTeamMembers)
       .catch((err) => {
-        console.error("Error fetching team member:", err);
-        setTeamMember(null);
+        console.error("Error fetching team members:", err);
       });
-  }, [assignment?.technicianId]);
+  }, []);
 
   console.log("Team Member data:", teamMember);
 
@@ -137,7 +137,7 @@ export default function TaskCompleteContainer() {
     return diffHours.toFixed(1); // e.g., 24.0 or 27.5 etc.
   }
 
-   useEffect(() => {
+  useEffect(() => {
     if (!completionTime) {
       setCompletionTime(new Date().toISOString());
     }
@@ -146,39 +146,57 @@ export default function TaskCompleteContainer() {
   // Formatting as before
   if (!completionTime) return null;
 
-   const date = new Date(completionTime);
+  const date = new Date(completionTime);
   const formatted = `Completed on ${date.toLocaleDateString("en-US", {
     year: "numeric",
     month: "long",
-    day: "2-digit"
+    day: "2-digit",
   })} at ${date.toLocaleTimeString("en-US", {
     hour: "numeric",
     minute: "2-digit",
-    hour12: true
+    hour12: true,
   })}`;
 
   return (
     <>
       <NavBar
         links={[
-          { name: "Dashboard", href: "#", onClick: () => navigate("/maintenance/dashboard") },
-          { name: "Task", href: "#",onClick: () => navigate("/maintenance/scheduling") },
+          {
+            name: "Dashboard",
+            href: "#",
+            onClick: () => navigate("/maintenance/dashboard"),
+          },
+          {
+            name: "Task",
+            href: "#",
+            onClick: () => navigate("/maintenance/scheduling"),
+          },
           {
             name: "Schedule",
             href: "#",
             onClick: () =>
               navigate("/maintenance/update-equipment-maintenance"),
           },
-          { name: "Team", href: "#",
+          {
+            name: "Team",
+            href: "#",
             onClick: () => {
               // e.preventDefault();
               console.log("Team link clicked");
-              
+
               setShowTeam(true);
             },
-           },
-          { name: "Equipment", href: "#" ,onClick: () => navigate("/maintenance/equipment")},
-          { name: "Add Technician", href: "#",onClick: () => navigate("/maintenance/add-member") },
+          },
+          {
+            name: "Equipment",
+            href: "#",
+            onClick: () => navigate("/maintenance/equipment"),
+          },
+          {
+            name: "Add Technician",
+            href: "#",
+            onClick: () => navigate("/maintenance/add-member"),
+          },
         ]}
         showButton={true}
       />
@@ -191,9 +209,7 @@ export default function TaskCompleteContainer() {
             <h2 className="text-xl font-semibold text-[#236571] mb-1">
               Task Completed Successfully
             </h2>
-            <div className="text-gray-800 text-sm">
-              {formatted}
-            </div>
+            <div className="text-gray-800 text-sm">{formatted}</div>
           </div>
 
           <div className="grid grid-cols-1 lg:grid-cols-3 gap-6">
@@ -250,63 +266,80 @@ export default function TaskCompleteContainer() {
 
               {/* Completion Details */}
               <div className="bg-white rounded-lg shadow-sm p-6">
-                <div className="font-semibold text-[#236571] mb-3">
+                <h3 className="font-semibold text-[#236571] mb-4">
                   Completion Details
-                </div>
-                <div className="flex items-center gap-3 mb-2">
-                  <div className="w-8 h-8 rounded-full bg-[#236571] flex items-center justify-center text-white font-bold text-base">
-                    {teamMember?.name
-                      ? teamMember.name
-                          .split(" ")
-                          .map((word) => word[0])
-                          .join("")
-                          .toUpperCase()
-                      : ""}
+                </h3>
+                {/* ✅ Show shared values like Start Date, Notes only once */}
+                {assignments.length > 0 && (
+                  <div className="grid grid-cols-1 md:grid-cols-2 gap-4 mb-4 text-sm">
+                    <div>
+                      <div className="text-gray-500">Start Date:</div>
+                      <div className="font-medium text-gray-900">
+                        {assignments[0]?.startDate || "N/A"}
+                      </div>
+                    </div>
+                    <div>
+                      <div className="text-gray-500">Expected Duration:</div>
+                      <div className="font-medium text-gray-900">
+                        {assignments[0]?.duration || "N/A"}
+                      </div>
+                    </div>
+                    <div className="md:col-span-2">
+                      <div className="text-gray-500">Notes:</div>
+                      <div className="font-medium text-gray-900">
+                        {assignments[0]?.notes || "No notes provided"}
+                      </div>
+                    </div>
                   </div>
-                  <div className="font-medium text-gray-900 text-sm">
-                    {teamMember?.name}
+                )}
+                {/* ✅ Show technician list */}
+                <div className="mt-4">
+                  <div className="text-sm font-medium text-gray-700 mb-2">
+                    Technicians:
                   </div>
-                  <span className="text-xs text-gray-500">
-                    Assigned Technician
-                  </span>
-                </div>
+                  <div className="space-y-3">
+                    {assignments.map((assign, index) => {
+                      const tech = teamMembers.find(
+                        (t) => t.empId === assign.technicianId
+                      );
+                      const initials =
+                        tech?.name
+                          ?.split(" ")
+                          ?.map((n) => n[0])
+                          ?.join("")
+                          ?.toUpperCase() || "T";
 
-                <div className="grid grid-cols-1 md:grid-cols-2 gap-4 mb-2 text-sm">
-                  <div>
+                      return (
+                        <div
+                          key={assign.assignId}
+                          className="flex items-center gap-3"
+                        >
+                          <div className="w-8 h-8 bg-[#236571] text-white rounded-full flex items-center justify-center font-bold text-sm">
+                            {initials}
+                          </div>
+                          <div>
+                            <p className="text-sm font-semibold text-gray-800">
+                              {tech?.name ?? assign.technicianId}
+                            </p>
+                          </div>
+                        </div>
+                      );
+                    })}
+                  </div>
+                </div>
+                {/* Duration difference */}
+                {nextSchedule && assignments.length > 0 && (
+                  <div className="mt-6 text-sm">
                     <div className="text-gray-500">Actual Duration:</div>
                     <div className="font-medium text-gray-900">
                       {getHoursDifference(
-                        assignment?.startDate,
+                        assignments[0]?.startDate,
                         nextSchedule?.nextDate
-                      ) ?? "N/A"}{" "}
-                      hours{" "}
-                      <span className="text-gray-500 text-xs">
-                        (Expected: {assignment?.duration})
-                      </span>
+                      ) || "N/A"}{" "}
+                      hours ({assignments[0]?.duration || "Expected unknown"})
                     </div>
                   </div>
-                  <div>
-                    <div className="text-gray-500">Materials Used:</div>
-                    <ul className="list-disc ml-5 text-gray-900">
-                      {equipment?.maintenanceRequests?.length > 0 ? (
-                        equipment.maintenanceRequests.map((req) => (
-                          <li key={req.id}>
-                            {req.itemName} ({req.quantity}
-                            {req.measurement ? ` ${req.measurement}` : ""})
-                          </li>
-                        ))
-                      ) : (
-                        <li>No materials recorded.</li>
-                      )}
-                    </ul>
-                  </div>
-                </div>
-                <div className="flex items-center gap-2 mt-2">
-                  <div className="text-gray-500 text-sm">Quality Check:</div>
-                  <span className="inline-block px-3 py-1 rounded-full bg-green-100 text-green-700 text-xs font-semibold">
-                    Passed
-                  </span>
-                </div>
+                )}
               </div>
             </div>
 
@@ -326,13 +359,25 @@ export default function TaskCompleteContainer() {
                   <div className="flex justify-between">
                     <span>Next Maintenance:</span>
                     <span className="font-medium">
-                      {nextSchedule?.nextDate}
+                      {/* ✅ Shows: "2025-07-23" */}
+                      {nextSchedule?.nextDate || "Not scheduled"}
                     </span>
                   </div>
                   <div className="flex justify-between">
                     <span>Inspection Due:</span>
-                    <span className="font-medium">{assignment?.startDate}</span>
+                    <span className="font-medium">
+                      {assignments[0]?.startDate || "N/A"}
+                    </span>
                   </div>
+                  {nextSchedule?.technicians && (
+                    <div className="flex justify-between mt-1">
+                      <span>Assigned Technicians:</span>
+                      <span className="font-medium">
+                        {/* ✅ Shows: "2 technician(s)" */}
+                        {nextSchedule.technicians.length} technician(s)
+                      </span>
+                    </div>
+                  )}
                 </div>
               </div>
 
@@ -341,15 +386,19 @@ export default function TaskCompleteContainer() {
                 <button className="w-full bg-[#EFC11A] hover:bg-yellow-400 text-[#236571] font-semibold rounded-md py-2 transition">
                   Generate Work Report
                 </button>
-                <button className="w-full bg-[#236571] hover:bg-[#17484b] text-white font-semibold rounded-md py-2 transition"
-                onClick={() => {
-                  navigate("/maintenance/log");
-                }}
+                <button
+                  className="w-full bg-[#236571] hover:bg-[#17484b] text-white font-semibold rounded-md py-2 transition"
+                  onClick={() => {
+                    navigate("/maintenance/log");
+                  }}
                 >
                   Equipment Log
                 </button>
-                <button className="w-full border border-gray-400 text-gray-800 font-semibold rounded-md py-2 transition"
-                onClick={() => {navigate('/maintenance/dashboard');}}
+                <button
+                  className="w-full border border-gray-400 text-gray-800 font-semibold rounded-md py-2 transition"
+                  onClick={() => {
+                    navigate("/maintenance/dashboard");
+                  }}
                 >
                   Return to Dashboard
                 </button>
@@ -362,10 +411,53 @@ export default function TaskCompleteContainer() {
                 </div>
                 <div className="bg-white rounded mb-2 p-3 shadow-sm">
                   <div className="font-semibold text-gray-800 text-sm">
-                    {nextSchedule?.nextMaintenanceType}
+                    {/* ✅ Shows: "Preventive Maintenance" */}
+                    {nextSchedule?.nextMaintenanceType ||
+                      "No upcoming maintenance"}
                   </div>
+                  {nextSchedule?.nextDate && (
+                    <div className="text-xs text-gray-600 mt-1">
+                      {/* ✅ Shows: "Scheduled for: 2025-07-23" */}
+                      Scheduled for: {nextSchedule.nextDate}
+                    </div>
+                  )}
+                  {nextSchedule?.estimateDuration && (
+                    <div className="text-xs text-gray-600">
+                      {/* ✅ Shows: "Duration: 1 hour" */}
+                      Duration: {nextSchedule.estimateDuration}
+                    </div>
+                  )}
                 </div>
               </div>
+
+              {/* Next Maintenance Details (Optional - if you want to show more details) */}
+              {nextSchedule && nextSchedule.technicians && (
+                <div className="bg-white rounded-lg shadow-sm p-4">
+                  <div className="font-semibold text-gray-600 mb-2">
+                    Next Maintenance Team
+                  </div>
+                  <div className="space-y-2">
+                    {nextSchedule.technicians.map((tech, index) => {
+                      const teamMember = teamMembers.find(
+                        (t) => t.empId === tech.technicianId
+                      );
+                      return (
+                        <div
+                          key={tech.nextScheduleId}
+                          className="flex items-center gap-2 text-sm"
+                        >
+                          <div className="w-6 h-6 bg-[#236571] text-white rounded-full flex items-center justify-center text-xs font-bold">
+                            {teamMember?.name?.charAt(0) || "T"}
+                          </div>
+                          <span className="text-gray-700">
+                            {teamMember?.name || tech.technicianId}
+                          </span>
+                        </div>
+                      );
+                    })}
+                  </div>
+                </div>
+              )}
 
               {/* Notifications Sent */}
               <div className="bg-white rounded-lg shadow-sm p-4">
@@ -389,18 +481,18 @@ export default function TaskCompleteContainer() {
       </div>
 
       {/* Overlay and Team Sidebar */}
-            {showTeam && (
-              <>
-                {/* BLUR OVERLAY */}
-                <div
-                  className="fixed inset-0 z-40 bg-black bg-opacity-30 backdrop-blur-sm transition-all"
-                  onClick={() => setShowTeam(false)}
-                  aria-label="Close team sidebar"
-                />
-                {/* TEAM SIDEBAR */}
-                <TeamSection onClose={() => setShowTeam(false)} />
-              </>
-            )}
+      {showTeam && (
+        <>
+          {/* BLUR OVERLAY */}
+          <div
+            className="fixed inset-0 z-40 bg-black bg-opacity-30 backdrop-blur-sm transition-all"
+            onClick={() => setShowTeam(false)}
+            aria-label="Close team sidebar"
+          />
+          {/* TEAM SIDEBAR */}
+          <TeamSection onClose={() => setShowTeam(false)} />
+        </>
+      )}
     </>
   );
 }

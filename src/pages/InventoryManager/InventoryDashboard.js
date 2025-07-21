@@ -14,11 +14,9 @@ const InventoryDashboard = () => {
   const [activeView, setActiveView] = useState('overview');
 
   return (
-    <div className="min-h-screen bg-purewhite">
-      <NavBar 
-        links={navLinks} 
-        logoSrc="/logo1.png"
-      />
+    <div className="min-h-screen bg-[#FCFCFC]">
+      {/* Enhanced Navigation Bar */}
+      <NavBar links={navLinks} profileURL='/inventory/profile'/>
       
       <main className="py-6">
         <div className="max-w-full mx-auto px-2 sm:px-3 lg:px-10">
