@@ -1,4 +1,3 @@
-// src/pages/Supplier/MaterialRequests.jsx
 import React, { useState, useEffect } from "react";
 import {
   FaSearch,
@@ -31,7 +30,6 @@ const MaterialRequests = () => {
   const [dateRange, setDateRange] = useState("");
   const [currentPage, setCurrentPage] = useState(1);
   const [loading, setLoading] = useState(true);
-
 
   const navigate = useNavigate();
 
@@ -113,7 +111,7 @@ const MaterialRequests = () => {
 
   // Helper to format date
   const formatDate = (dateStr) => {
-    if (!dateStr) return "";
+    if (!dateStr) return 'N/A';
     const d = new Date(dateStr);
     return d.toLocaleDateString("en-US", {
       year: "numeric",
@@ -150,7 +148,7 @@ const MaterialRequests = () => {
     <div className="bg-[#f8f9fa] min-h-screen font-poppins">
       <NavBar links={navLinks} profileURL="/supplier/profile" logoSrc="/logo1.png" />
 
-      <div className="max-w-full mx-auto px-16 py-8">
+      <div className="max-w-full mx-auto px-4 sm:px-6 lg:px-16 py-8">
         {/* Header */}
         <div className="flex">
           <div className="mb-6">
@@ -164,7 +162,7 @@ const MaterialRequests = () => {
         </div>
 
         {/* Filters */}
-        <div className="bg-purewhite border border-gray-200 rounded-lg p-6 mb-6">
+        <div className="bg-purewhite border border-gray-200 rounded-lg p-4 sm:p-6 mb-6">
           <div className="grid grid-cols-1 md:grid-cols-4 gap-4">
             {/* Search */}
             <div className="relative">
@@ -244,7 +242,8 @@ const MaterialRequests = () => {
 
         {/* Table */}
         <div className="bg-purewhite rounded-lg border border-gray-200 overflow-hidden">
-          <div className="overflow-x-auto">
+          {/* Desktop Table */}
+          <div className="hidden lg:block overflow-x-auto">
             <table className="w-full">
               <thead>
                 <tr className="bg-light_brown/35">
@@ -342,6 +341,57 @@ const MaterialRequests = () => {
               </tbody>
             </table>
           </div>
+
+          {/* Mobile Cards */}
+          <div className="lg:hidden divide-y divide-gray-200">
+            {paginatedRequests.map((request, index) => (
+              <div key={request.id || index} className="p-4">
+                <div className="flex justify-between items-start mb-3">
+                  <div className="flex-1">
+                    <div className="flex items-center gap-2 mb-1">
+                      <h3 className="font-semibold text-main_dark text-sm">#{request.id || '-'}</h3>
+                      <span className="text-xs text-gray-500">•</span>
+                      <span className="font-semibold text-main_dark text-sm">{request.requesterName || '-'}</span>
+                    </div>
+                    <p className="text-xs text-gray-600 mb-1">{request.quotationType || '-'}</p>
+                    <div className="text-xs text-gray-500">
+                      Deadline: {formatDate(request.quotationDeadline)}
+                    </div>
+                  </div>
+                  <div className="flex flex-col gap-1">
+                    <span className={getStatusBadge(request.status)}>
+                      {request.status}
+                    </span>
+                    <span className={getPriorityBadge(request.priorityLevel)}>
+                      {request.priorityLevel}
+                    </span>
+                  </div>
+                </div>
+                
+                <div className="space-y-1 text-xs text-gray-600 mb-3">
+                  <p><span className="font-medium">Materials:</span> {getMaterialNames(request.quotationReqMaterials)}</p>
+                </div>
+                
+                <div className="flex justify-end gap-2">
+                  <button
+                    className="text-deep_green hover:text-deep_green/80 transition-colors"
+                    onClick={() => navigate(`/supplier/requests/${request.id}`)}
+                  >
+                    <FaEye className="w-4 h-4" />
+                  </button>
+                  <button className="text-web_yellow hover:text-web_yellow/80 transition-colors">
+                    <FaReply className="w-4 h-4" />
+                  </button>
+                </div>
+              </div>
+            ))}
+            {paginatedRequests.length === 0 && (
+              <div className="p-8 text-center text-gray-400">
+                No requests found.
+              </div>
+            )}
+          </div>
+
           {/* Pagination */}
           <div className="flex justify-between items-center px-6 py-4 border-t border-light_gray bg-purewhite">
             <div className="text-sm text-slatebluegray">

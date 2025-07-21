@@ -420,7 +420,7 @@ const QuotationRequestsOverview = () => {
                         )}
                       </td>
                       <td className="px-6 py-4 text-sm font-semibold text-main_dark">
-                        {request.estimatedCost ? `$${request.estimatedCost.toLocaleString()}` : 'N/A'}
+                        {request.estimatedCost ? `RS ${request.estimatedCost.toLocaleString()}` : 'N/A'}
                       </td>
                       <td className="px-6 py-4">
                         <div className="flex items-center gap-2">
@@ -470,7 +470,7 @@ const QuotationRequestsOverview = () => {
                     <div>
                       <span className="text-gray-500">Est. Cost:</span>
                       <div className="font-semibold">
-                        {request.estimatedCost ? `$${request.estimatedCost.toLocaleString()}` : 'N/A'}
+                        {request.estimatedCost ? `RS ${request.estimatedCost.toLocaleString()}` : 'N/A'}
                       </div>
                     </div>
                   </div>
@@ -497,7 +497,7 @@ const QuotationRequestsOverview = () => {
                       {getTotalMaterialsCount(request.quotationReqMaterials)} materials • {getTotalDeliveryLocations(request.quotationReqDelivery)} locations
                     </div>
                     <div className="flex items-center gap-2">
-                      <button className="text-deep_green hover:text-deep_green/80 transition-colors">
+                      <button onClick={()=>navigate(`/purchasing/quotationrequest/details/${request.id}`)} className="text-deep_green hover:text-deep_green/80 transition-colors">
                         <FaEye className="w-4 h-4" />
                       </button>
                     </div>

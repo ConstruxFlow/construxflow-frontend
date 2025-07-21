@@ -168,7 +168,7 @@ const Login = () => {
         ADMIN: "/admin",
         SITE_MANAGER: "/site-manager",
         INVENTORY_MANAGER: "/inventory-dashboard",
-        FINANCE_OFFICER: "/finance/dashboard",
+        FINANCE_OFFICER: "/financial/dashboard",
         MAINTENANCE_HEAD: "/maintenance/dashboard",
         SUPPLIER: "/supplier/dashboard",
         PURCHASING_MANAGER: "/purchasing/dashboard",
@@ -185,7 +185,7 @@ const Login = () => {
       }
     } catch (err) {
       setLoading(false);
-      console.error("Login error:", err);
+      console.error("Login error:", err.code);
       
       // Handle specific Firebase Auth errors
       let errorMessage = "Login failed. Please try again.";

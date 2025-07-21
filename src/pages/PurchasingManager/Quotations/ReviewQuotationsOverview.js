@@ -258,7 +258,7 @@ const ReviewQuotations = () => {
                               Total Price
                             </span>
                             <span className="font-bold text-main_dark text-lg">
-                              ${supplier.price?.toLocaleString() || '0'}
+                              RS {supplier.price?.toLocaleString() || '0'}
                             </span>
                           </div>
                           <div className="mb-3">
@@ -340,7 +340,7 @@ const ReviewQuotations = () => {
                     <div className="flex justify-between">
                       <span className="text-gray-600">Total Amount</span>
                       <span className="font-semibold text-main_dark">
-                        ${selectedSupplier.price?.toLocaleString() || '0'}
+                        RS {selectedSupplier.price?.toLocaleString() || '0'}
                       </span>
                     </div>
                     <div className="flex justify-between">

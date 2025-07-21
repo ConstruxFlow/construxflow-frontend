@@ -191,7 +191,7 @@ const AdminProjectsList = () => {
   };
 
   const handleViewProject = (projectId) => {
-    navigate(`/financial/financial-project-details/${projectId}`);
+    navigate(`/admin-projects-list/${projectId}`);
   };
 
   // Calculate summary statistics

@@ -333,7 +333,7 @@ const ManagerReg = () => {
           {/* Header */}
           <div className="flex items-center gap-4 mb-6">
             <button 
-              onClick={() => navigate('/admin/managers')}
+              onClick={() => navigate('/admin-users')}
               className="text-gray-600 hover:text-main_dark transition-colors"
             >
               <FaArrowLeft className="w-5 h-5" />

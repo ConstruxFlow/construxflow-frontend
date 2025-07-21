@@ -50,16 +50,16 @@ const QuotationDetails = () => {
   const attachments = quotation.attachments || [];
 
   return (
-    <div className="min-h-screen bg-[#f7fafa] font-poppins">
+    <div className="bg-[#f7fafa] min-h-screen font-poppins">
       <NavBar links={navLinks} profileURL="/supplier/profile" logoSrc="/logo1.png" />
       {/* Breadcrumb */}
-      <div className="max-w-full mx-auto pt-8 pb-0 px-12 md:px-16 text-sm text-slatebluegray">
+      <div className="max-w-full mx-auto pt-8 pb-0 px-4 sm:px-12 md:px-16 text-sm text-slatebluegray">
         <a href="/supplier/dashboard" className=" text-deep_green font-semibold">Dashboard</a> /{" "}
         <a href="/supplier/quotations" className=" text-deep_green font-semibold">Quotations</a> /
         <span className="font-bold text-main_dark"> Quotation Details</span>
       </div>
 
-      <div className="max-w-full mx-auto px-12 md:px-16 my-8 flex flex-col lg:flex-row gap-10">
+      <div className="max-w-full mx-auto px-4 sm:px-12 md:px-16 my-8 flex flex-col lg:flex-row gap-6 lg:gap-10">
         {/* Main (left) content */}
         <main className="flex-1 min-w-0 space-y-10">
           <header className="mb-4">
@@ -78,7 +78,7 @@ const QuotationDetails = () => {
                 </span>
               </div>
             </div>
-            <div className="flex flex-col sm:flex-row gap-5 mt-6 text-main_dark/90">
+            <div className="flex flex-col sm:flex-row gap-3 sm:gap-5 mt-6 text-main_dark/90">
               <MetaLine
                 icon={<FaUserTie className="text-deep_green" />}
                 label="Submitted By"
@@ -98,28 +98,30 @@ const QuotationDetails = () => {
             {items.length === 0 ? (
               <div className="text-slatebluegray py-2">No items quoted.</div>
             ) : (
-              <table className="w-full border-collapse text-sm mt-2">
-                <thead>
-                  <tr className="text-left border-b border-light_gray text-slatebluegray font-semibold">
-                    <th className="py-2">Material</th>
-                    <th className="py-2">Type</th>
-                    <th className="py-2">Quantity</th>
-                    {/* <th className="py-2">Unit</th> */}
-                    <th className="py-2 text-right">Unit Price</th>
-                  </tr>
-                </thead>
-                <tbody>
-                  {items.map((item, idx) => (
-                    <tr key={idx} className="hover:bg-light_gray/50 transition">
-                      <td className="py-2 font-medium">{item.material?.materialName || "-"}</td>
-                      <td className="py-2">{item.material?.materialType || "-"}</td>
-                      <td className="py-2">{item.quantity}</td>
-                      {/* <td className="py-2">{item.unit}</td> */}
-                      <td className="py-2 text-right text-main_dark">${item.unitPrice?.toFixed(2)}</td>
+              <div className="overflow-x-auto">
+                <table className="w-full border-collapse text-sm mt-2 min-w-max">
+                  <thead>
+                    <tr className="text-left border-b border-light_gray text-slatebluegray font-semibold">
+                      <th className="py-2">Material</th>
+                      <th className="py-2">Type</th>
+                      <th className="py-2">Quantity</th>
+                      {/* <th className="py-2">Unit</th> */}
+                      <th className="py-2 text-right">Unit Price</th>
                     </tr>
-                  ))}
-                </tbody>
-              </table>
+                  </thead>
+                  <tbody>
+                    {items.map((item, idx) => (
+                      <tr key={idx} className="hover:bg-light_gray/50 transition">
+                        <td className="py-2 font-medium">{item.material?.materialName || "-"}</td>
+                        <td className="py-2">{item.material?.materialType || "-"}</td>
+                        <td className="py-2">{item.quantity}</td>
+                        {/* <td className="py-2">{item.unit}</td> */}
+                        <td className="py-2 text-right text-main_dark">RS {item.unitPrice?.toFixed(2)}</td>
+                      </tr>
+                    ))}
+                  </tbody>
+                </table>
+              </div>
             )}
           </section>
 
@@ -127,7 +129,7 @@ const QuotationDetails = () => {
             <SectionTitle>Advanced Payment</SectionTitle>
             <div className="flex items-center gap-3 text-main_dark font-medium text-lg mt-3 mb-2">
               <FaMoneyCheckAlt className="text-deep_green" />
-              <span>${quotation.advancedPayment?.toFixed(2) || "0.00"}</span>
+              <span>RS {quotation.advancedPayment?.toFixed(2) || "0.00"}</span>
             </div>
           </section>
 
@@ -136,24 +138,26 @@ const QuotationDetails = () => {
             {deliveryInfos.length === 0 ? (
               <div className="text-slatebluegray py-2">No delivery info.</div>
             ) : (
-              <table className="w-full border-collapse text-sm mt-2">
-                <thead>
-                  <tr className="text-left border-b border-light_gray text-slatebluegray font-semibold">
-                    <th className="py-2">Location</th>
-                    <th className="py-2">Delivery Date</th>
-                    <th className="py-2">Shipping Cost</th>
-                  </tr>
-                </thead>
-                <tbody>
-                  {deliveryInfos.map((d, idx) => (
-                    <tr key={idx} className="hover:bg-light_gray/50">
-                      <td className="py-2">{d.location}</td>
-                      <td className="py-2">{d.deliveryDate}</td>
-                      <td className="py-2">${d.shippingCost?.toFixed(2)}</td>
+              <div className="overflow-x-auto">
+                <table className="w-full border-collapse text-sm mt-2 min-w-max">
+                  <thead>
+                    <tr className="text-left border-b border-light_gray text-slatebluegray font-semibold">
+                      <th className="py-2">Location</th>
+                      <th className="py-2">Delivery Date</th>
+                      <th className="py-2">Shipping Cost</th>
                     </tr>
-                  ))}
-                </tbody>
-              </table>
+                  </thead>
+                  <tbody>
+                    {deliveryInfos.map((d, idx) => (
+                      <tr key={idx} className="hover:bg-light_gray/50">
+                        <td className="py-2">{d.location}</td>
+                        <td className="py-2">{d.deliveryDate}</td>
+                        <td className="py-2">RS {d.shippingCost?.toFixed(2)}</td>
+                      </tr>
+                    ))}
+                  </tbody>
+                </table>
+              </div>
             )}
           </section>
 
@@ -177,7 +181,7 @@ const QuotationDetails = () => {
             ) : (
               <ul className="divide-y divide-light_gray mt-2">
                 {attachments.map((att, idx) => (
-                  <li key={idx} className="flex items-center gap-4 py-3">
+                  <li key={idx} className="flex flex-col sm:flex-row items-start sm:items-center gap-2 sm:gap-4 py-3">
                     <div className="w-8 h-8 flex items-center justify-center bg-gray-100 rounded text-xl">
                       {att.fileType?.includes("pdf") ? "📄" : "🖼️"}
                     </div>
@@ -195,17 +199,17 @@ const QuotationDetails = () => {
           </section>
         </main>
         {/* Right sidebar summary */}
-        <aside className="w-full lg:w-72 flex-shrink-0 mt-10 lg:mt-0 lg:pl-6">
+        <aside className="w-full lg:w-72 flex-shrink-0 mt-6 lg:mt-0 lg:pl-6">
           <div className="sticky top-8">
             <div className="mb-6">
               <h2 className="mb-2 text-lg font-bold text-main_dark border-b border-light_gray pb-1">Quotation Summary</h2>
               <div className="flex justify-between mt-4">
                 <span className="text-gray-700 font-medium">Total Amount:</span>
-                <span className="font-extrabold text-main_dark text-lg">${Number(quotation.totalAmount || 0).toFixed(2)}</span>
+                <span className="font-extrabold text-main_dark text-lg">Rs {Number(quotation.totalAmount || 0).toFixed(2)}</span>
               </div>
               <div className="flex justify-between mt-3 text-sm">
                 <span className="text-slatebluegray">Advanced Payment:</span>
-                <span className="font-bold text-web_yellow">${quotation.advancedPayment?.toFixed(2) || "0.00"}</span>
+                <span className="font-bold text-web_yellow">Rs {quotation.advancedPayment?.toFixed(2) || "0.00"}</span>
               </div>
             </div>
             <div className="mb-6">
