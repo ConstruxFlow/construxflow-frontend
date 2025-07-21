@@ -10,6 +10,9 @@ const ManagerProfileView = () => {
   const navigate = useNavigate();
   const [loading, setLoading] = useState(true);
   const { authState } = useContext(AuthContext);
+  const navigation = useNavigate();
+  const [showTeam, setShowTeam] = useState(false);
+  const [isLoggedIn, setIsLoggedIn] = useState(false);
   
   const [userProfile, setUserProfile] = useState({
     userName: '',
@@ -56,25 +59,64 @@ const ManagerProfileView = () => {
     return userName.substring(0, 2).toUpperCase();
   };
 
+  const handleLogout = () => {
+    localStorage.removeItem("user");
+    localStorage.removeItem("role");
+    setIsLoggedIn(false);
+    navigation("/login");
+  };
+
+  const handleLogin = () => {
+    navigation("/login");
+  };
+
   if (loading) {
     return (
       <div className="min-h-screen bg-purewhite font-poppins">
-        <NavBar 
-        profileURL="/financial/profile"
+        <NavBar
+        profileURL="/maintenance/profile"
         links={[
-          { name: "Dashboard", href: "#", onClick: () => navigation("/maintenance/dashboard") },
-          { name: "Task", href: "#",onClick: () => navigation("/maintenance/scheduling") },
-          { name: "Team", href: "#",
+          {
+            name: "Dashboard",
+            href: "#",
+            onClick: () => navigation("/maintenance/dashboard"),
+          },
+          {
+            name: "Task",
+            href: "#",
+            onClick: () => navigation("/maintenance/scheduling"),
+          },
+          {
+            name: "Schedule",
+            href: "#",
+            onClick: () =>
+              navigation("/maintenance/update-equipment-maintenance"),
+          },
+          {
+            name: "Team",
+            href: "#",
             onClick: () => {
               // e.preventDefault();
               console.log("Team link clicked");
-              
+
               setShowTeam(true);
             },
-           },
-          { name: "Equipment", href: "#" ,onClick: () => navigation("/maintenance/log")},
-          { name: "Add Technician", href: "#",onClick: () => navigation("/maintenance/add-member") },
-        ]} />
+          },
+          {
+            name: "Equipment",
+            href: "#",
+            onClick: () => navigation("/maintenance/equipment"),
+          },
+          {
+            name: "Add Technician",
+            href: "#",
+            onClick: () => navigation("/maintenance/add-member"),
+          },
+        ]}
+        showButton={true}
+        buttonLabel={isLoggedIn ? "Logout" : "Get Started"}
+        onButtonClick={isLoggedIn ? handleLogout : handleLogin}
+      />
         <div className="flex items-center justify-center h-64">
           <div className="animate-spin rounded-full h-12 w-12 border-b-2 border-web_yellow"></div>
         </div>
@@ -85,12 +127,50 @@ const ManagerProfileView = () => {
   return (
     <div className="min-h-screen bg-purewhite font-poppins">
       {/* Header Navigation */}
-      <NavBar profileURL="/financial/profile" links={[
-        { name: 'Dashboard', path: '/financial/dashboard' },
-          { name: 'Payment Approvals', path: '/financial/payment-list' },
-          { name: 'Purchase Orders', path: '/financial/purchase-order-list' },
-          { name: 'Projects', path: '/financial/financial-projects' },
-      ]} />
+      <NavBar
+        profileURL="/maintenance/profile"
+        links={[
+          {
+            name: "Dashboard",
+            href: "#",
+            onClick: () => navigation("/maintenance/dashboard"),
+          },
+          {
+            name: "Task",
+            href: "#",
+            onClick: () => navigation("/maintenance/scheduling"),
+          },
+          {
+            name: "Schedule",
+            href: "#",
+            onClick: () =>
+              navigation("/maintenance/update-equipment-maintenance"),
+          },
+          {
+            name: "Team",
+            href: "#",
+            onClick: () => {
+              // e.preventDefault();
+              console.log("Team link clicked");
+
+              setShowTeam(true);
+            },
+          },
+          {
+            name: "Equipment",
+            href: "#",
+            onClick: () => navigation("/maintenance/equipment"),
+          },
+          {
+            name: "Add Technician",
+            href: "#",
+            onClick: () => navigation("/maintenance/add-member"),
+          },
+        ]}
+        showButton={true}
+        buttonLabel={isLoggedIn ? "Logout" : "Get Started"}
+        onButtonClick={isLoggedIn ? handleLogout : handleLogin}
+      />
 
       {/* Main Content */}
       <main className="py-6">

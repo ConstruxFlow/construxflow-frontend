@@ -82,11 +82,13 @@ import { SupplierRoutes } from "./pages/Supplier/routes";
   import ScheduleForm from "./pages/InventoryManager/ScheduleForm";
 import ViewSchedulePage from "./pages/InventoryManager/ViewSchedulePage";
 import ReorderMaterialPage from "./pages/InventoryManager/ReorderMaterialPage";
+import Profile from "./pages/InventoryManager/InventoryManagerProfile";
 import Admin_Dashboard from "./pages/Admin/Admin-Dashboard";
 import ManagerProfileView from "./pages/Admin/ManagerProfile";
 import AdminProjectsList from "./pages/Admin/AdminProjectsList";
 import AdminProjectDetails from "./pages/Admin/AdminProjectDetails";
 import ManagerReg from "./pages/Admin/ManagerReg";
+import InventoryProfile from "./pages/InventoryManager/ManagerProfile";
 
 
   export const routes = createBrowserRouter([
@@ -363,6 +365,10 @@ import ManagerReg from "./pages/Admin/ManagerReg";
   element: <ReorderMaterialPage />,
 },
 
+{
+  path: "/Inventory/profile",
+  element: <InventoryProfile />,
+},
 
 
 ReorderMaterialPage
