@@ -16,6 +16,8 @@ export default function Material_Request_Form({ project: propProject, phase: pro
   const [materials, setMaterials] = useState(propMaterials || []);
   const [materialQuantities, setMaterialQuantities] = useState({});
   const [isSubmitting, setIsSubmitting] = useState(false);
+  // console.log(materials);
+  
 
   // Auto-fill project and phase if passed via router state or props
   useEffect(() => {
@@ -101,7 +103,8 @@ export default function Material_Request_Form({ project: propProject, phase: pro
         ),
         materialName: material.materialName,
         quantity: Number(materialQuantities[material.materialId]),
-        unitOfMeasurement: material.unitOfMeasurement
+        unitOfMeasurement: material.unitOfMeasurement,
+        unitPrice: material.unitPrice
       }));
 
     if (selectedMaterials.length === 0) {
