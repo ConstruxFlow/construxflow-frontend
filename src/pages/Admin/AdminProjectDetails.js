@@ -28,7 +28,7 @@ import { useNavigate, useParams } from 'react-router-dom';
 import NavBar from '../../components/NavBar';
 import LoadingOverlay from '../../components/LoadingOverlay';
 
-const FinancialProjectDetails = () => {
+const AdminProjectDetails = () => {
   const navigate = useNavigate();
   const { projectId } = useParams();
   const [isLoading, setIsLoading] = useState(false);
@@ -191,13 +191,13 @@ const FinancialProjectDetails = () => {
     return (
       <div className="min-h-screen bg-purewhite font-poppins">
         <NavBar
-        profileURL="/financial/profile"
-          links={[
-            { name: 'Dashboard', path: '/financial/dashboard' },
-          { name: 'Payment Approvals', path: '/financial/payment-list' },
-          { name: 'Purchase Orders', path: '/financial/purchase-order-list' },
-          { name: 'Projects', path: '/financial/financial-projects' },
-          ]}
+         profileURL='/admin/profile'
+        links={[
+          { name: "Dashboard", href: "/admin", active: true },
+          { name: "Projects", href: "/admin/projects-list" },
+          { name: "Inventory", href: "/admin-inventory" },
+          { name: "Users", href: "/admin-users" },
+        ]}
         />
         <div className="py-6">
           <div className="max-w-full mx-auto px-4 sm:px-6 lg:px-8">
@@ -206,7 +206,7 @@ const FinancialProjectDetails = () => {
               <h2 className="text-2xl font-bold text-main_dark mb-2">Project Not Found</h2>
               <p className="text-gray-600 mb-4">The project you're looking for doesn't exist or has been removed.</p>
               <button 
-                onClick={() => navigate('/financial/projects')}
+                onClick={() => navigate('/admin/projects-list')}
                 className="px-4 py-2 bg-web_yellow text-main_dark rounded-md hover:bg-web_yellow/90 transition-colors"
               >
                 Back to Projects
@@ -231,11 +231,12 @@ const FinancialProjectDetails = () => {
       {isLoading && <LoadingOverlay />}
       
       <NavBar
+        profileURL='/admin/profile'
         links={[
-          { name: "Dashboard", path: "/financial/dashboard" },
-          { name: "Payment Approvals", path: "/financial/payment-approvals" },
-          { name: "Projects", path: "/financial/projects" },
-          { name: "Reports", path: "/financial/reports" },
+          { name: "Dashboard", href: "/admin", active: true },
+          { name: "Projects", href: "/admin/projects-list" },
+          { name: "Inventory", href: "/admin-inventory" },
+          { name: "Users", href: "/admin-users" },
         ]}
       />
 
@@ -244,7 +245,7 @@ const FinancialProjectDetails = () => {
           {/* Header */}
           <div className="flex items-center gap-4 mb-6">
             <button 
-              onClick={() => navigate('/financial/projects')}
+              onClick={() => navigate('/admin/projects-list')}
               className="text-gray-600 hover:text-main_dark transition-colors"
             >
               <FaArrowLeft className="w-5 h-5" />
@@ -672,4 +673,4 @@ const FinancialProjectDetails = () => {
   );
 };
 
-export default FinancialProjectDetails;
+export default AdminProjectDetails;

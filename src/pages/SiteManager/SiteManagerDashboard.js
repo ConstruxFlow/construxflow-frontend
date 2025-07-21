@@ -15,56 +15,63 @@ import {
 } from "react-icons/fa";
 import { BsCreditCard2Back } from "react-icons/bs";
 import NavBar from '../../components/NavBar'
+import { useNavigate } from "react-router-dom";
 
 const navLinks = [
-  { name: "Dashboard", href: "/" },
-  { name: "Requests", href: "/requests" },
-  { name: "Quotations", href: "/quotations" },
-  { name: "Orders", href: "/orders" },
-  { name: "Payments", href: "/payments" },
+  { name: "Dashboard", href: "/site-manager" },
+          { name: "Projects", href: "/site-manager/projects-list" },
+          { name: "Materials", href: "/site-manager/material-request-list" },
+          { name: "Inventory", href: "/site-manager/site-material-info" },
+          // { name: "Purchase Orders", href: "/site-manager" },
 ];
 
+function ActionTile({ onClick, icon, label, iconColorClass, hoverClass }) {
+  return (
+    <button
+      onClick={onClick}
+      className={`flex items-center gap-3 px-4 py-3 bg-white border border-light_gray rounded-lg shadow-sm
+        hover:shadow-md transition-all focus:outline-none w-full text-left ${hoverClass}`}
+    >
+      <span className={`rounded-full p-2 bg-light_gray/40 flex items-center justify-center ${iconColorClass}`}>
+        {icon}
+      </span>
+      <span className="font-medium text-base text-main_dark">{label}</span>
+    </button>
+  );
+}
+
 const SiteManagerDashboard = () => {
+  const navigate = useNavigate();
+
   const stats = [
     {
-      icon: <MdOutlineStorage className="text-2xl text-deep_green" />,
+      icon: <MdOutlineStorage className="text-purewhite text-lg"/>,
       value: "24",
       label: "Pending Requests",
-      action: "View Details →",
-      badge: { text: "12 New", color: "bg-web_yellow text-gray-800" },
-      link: "/requests",
+      badge: { text: "12 New", color: "text-deep_green" },
+      iconBg: "bg-gradient-to-br from-web_yellow via-web_yellow to-web_yellow/80",
     },
     {
-      icon: <FaRegFileAlt className="text-2xl text-web_yellow" />,
+      icon: <FaRegFileAlt className="text-purewhite text-lg"/>,
       value: "18",
       label: "Active Quotations",
-      action: "Manage →",
-      badge: { text: "8 Pending", color: "bg-deep_green text-white" },
-      link: "/quotations",
+      badge: { text: "8 Pending", color: "text-deep_green" },
+      iconBg: "bg-gradient-to-br from-deep_green via-deep_green to-deep_green/80",
     },
     {
-      icon: <FaTruck className="text-2xl text-deep_green" />,
+      icon: <FaTruck className="text-purewhite text-lg"/>,
       value: "32",
       label: "Purchase Orders",
-      action: "Track →",
-      badge: { text: "5 In Transit", color: "bg-light_brown text-gray-800" },
-      link: "/orders",
+      badge: { text: "5 In Transit", color: "text-deep_green" },
+      iconBg: "bg-gradient-to-br from-light_brown via-light_brown to-light_brown/80",
     },
     {
-      icon: <BsCreditCard2Back className="text-2xl text-web_yellow" />,
+      icon: <BsCreditCard2Back className="text-purewhite text-lg"/>,
       value: "$128.5K",
       label: "Total Payments",
-      action: "View All →",
-      badge: { text: "$45.2K", color: "bg-deep_green text-white" },
-      link: "/payments",
+      badge: { text: "$45.2K", color: "text-deep_green" },
+      iconBg: "bg-gradient-to-br from-web_yellow via-web_yellow to-web_yellow/80",
     },
-  ];
-
-  const quickActions = [
-    { icon: <FaEye className="text-2xl mb-2" />, text: "View Requests", bg: "bg-web_yellow", textColor: "text-main_dark" },
-    { icon: <FaPlus className="text-2xl mb-2" />, text: "New Quotation", bg: "bg-deep_green", textColor: "text-white" },
-    { icon: <FaUser className="text-2xl mb-2" />, text: "Update Profile", bg: "bg-light_brown", textColor: "text-main_dark" },
-    { icon: <FaHeadset className="text-2xl mb-2" />, text: "Contact Support", bg: "bg-purewhite", textColor: "text-main_dark" },
   ];
 
   const recentActivity = [
@@ -90,58 +97,85 @@ const SiteManagerDashboard = () => {
 
   return (
     <div className="bg-purewhite min-h-screen">
-      <NavBar links={navLinks} showButton={true} logoSrc="/logo1.png" />
-      <div className="max-w-full mx-auto px-10 py-6">
-        <h2 className="text-3xl font-bold mb-4 text-gray-800">Welcome back, John!</h2>
-        <p className="text-gray-500 mb-8">
-          Here’s what’s happening at your construction sites today.
+      <NavBar links={navLinks} showButton={true} logoSrc="/logo1.png" profileURL="profile" />
+      <div className="max-w-full mx-auto px-6 sm:px-8 lg:px-16 py-6">
+        <h2 className="text-2xl font-bold mb-2 text-gray-800">Welcome back, John!</h2>
+        <p className="text-gray-600 mb-8 text-base">
+          Here's what's happening at your construction sites today.
         </p>
 
         {/* Highlight Banner */}
-        <div className="bg-web_yellow text-black rounded-lg flex items-center px-4 py-3 mb-8">
-          <span className="font-medium mr-2 text-gray-800">📋 3 new requests awaiting your approval</span>
-          <button className="ml-auto bg-main_dark text-white px-4 py-2 rounded-lg hover:bg-slatebluegray text-sm">
-            View All
-          </button>
+        <div className="bg-gradient-to-r from-web_yellow/15 via-web_yellow/8 to-transparent border-l-4 border-web_yellow rounded-lg p-4 mb-8 flex items-start gap-4 shadow-md">
+          <div className="text-yellow-600 text-2xl mt-1">📋</div>
+          <div>
+            <h3 className="font-semibold text-base text-gray-800 mb-1 tracking-wide">
+              Urgent Actions Required
+            </h3>
+            <p className="text-gray-500 text-sm font-medium">
+              3 new requests awaiting your approval. Please review them as soon as possible to avoid delays in your construction sites.
+            </p>
+          </div>
         </div>
 
-        {/* Stats */}
-        <div className="grid grid-cols-1 md:grid-cols-4 gap-4 mb-12">
+        {/* Stats Cards */}
+        <div className="grid grid-cols-1 sm:grid-cols-2 lg:grid-cols-4 gap-3 sm:gap-4 mb-8">
           {stats.map((stat, index) => (
-            <div key={index} className="bg-purewhite rounded-lg p-5 shadow-md transition-transform duration-300 ease-in-out hover:shadow-lg hover:-translate-y-1">
-              <div className="flex items-center mb-2">
-                {stat.icon}
-                <span className={`${stat.badge.color} text-xs px-2 py-1 rounded-full font-medium ml-auto`}>{stat.badge.text}</span>
+            <div key={index} className="bg-purewhite border border-gray-200 rounded-xl p-4 sm:p-5 flex items-center gap-3 sm:gap-4 shadow-sm hover:shadow-md hover:-translate-y-0.5 transition-all duration-150">
+              <div className="flex-1 min-w-0">
+                <p className="text-slatebluegray font-medium text-sm mb-0.5 truncate">{stat.label}</p>
+                <h3 className="text-xl sm:text-2xl font-bold text-main_dark leading-tight mb-0.5">{stat.value}</h3>
+                <span className={`${stat.badge.color} text-xs`}>{stat.badge.text}</span>
               </div>
-              <div className="text-2xl font-bold">{stat.value}</div>
-              <div className="text-gray-500">{stat.label}</div>
-              <a href={stat.link} className="text-deep_green text-sm mt-3 inline-block">{stat.action}</a>
+              <div className={`w-12 h-12 ${stat.iconBg} rounded-xl flex items-center justify-center shadow-lg transition-all duration-300`}>
+                {stat.icon}
+              </div>
             </div>
           ))}
         </div>
 
-        {/* Action Boxes */}
-        <div className="bg-gray-900 rounded-lg p-5 mb-6">
-          <div className="font-semibold text-white mb-4">Quick Actions</div>
-          <div className="grid grid-cols-1 md:grid-cols-4 gap-4">
-            {quickActions.map((action, idx) => (
-              <button
-                key={idx}
-                className={`flex flex-col items-center justify-center ${action.bg} ${action.textColor} px-6 py-5 rounded font-semibold shadow hover:brightness-95 transition`}
-              >
-                {action.icon}
-                <span className="text-base font-medium">{action.text}</span>
-              </button>
-            ))}
+        {/* Quick Actions */}
+        <div className="bg-purewhite border border-gray-200 rounded-xl p-5 mb-6 shadow">
+          <div className="font-semibold text-main_dark text-lg mb-4 border-b border-light_gray/60 pb-1">
+            Quick Actions
+          </div>
+          <div className="grid grid-cols-1 sm:grid-cols-2 lg:grid-cols-4 gap-4 mt-2">
+            <ActionTile
+              onClick={() => navigate('/requests')}
+              icon={<FaEye className="text-xl" />}
+              iconColorClass="text-deep_green"
+              label="View Requests"
+              hoverClass="hover:bg-deep_green/10"
+            />
+            <ActionTile
+              onClick={() => navigate('/quotations')}
+              icon={<FaPlus className="text-xl" />}
+              iconColorClass="text-web_yellow"
+              label="New Quotation"
+              hoverClass="hover:bg-web_yellow/15"
+            />
+            <ActionTile
+              onClick={() => navigate('/profile/edit')}
+              icon={<FaUser className="text-xl" />}
+              iconColorClass="text-main_dark"
+              label="Update Profile"
+              hoverClass="hover:bg-light_gray/70"
+            />
+            <ActionTile
+              onClick={() => navigate('/contact-support')}
+              icon={<FaHeadset className="text-xl" />}
+              iconColorClass="text-deep_green"
+              label="Contact Support"
+              hoverClass="hover:bg-deep_green/5"
+            />
           </div>
         </div>
 
         {/* Recent Activity */}
-        <div className="bg-purewhite rounded-lg p-5 shadow-md mt-8">
+        <div className="bg-purewhite border border-gray-200 rounded-xl p-5 mt-8">
           <div className="font-semibold mb-4">Recent Activity</div>
           <div className="space-y-3">
             {recentActivity.map((item, i) => (
-              <div key={i} className={`flex items-start bg-gray-100 rounded-lg p-4 border-l-4 ${item.border} shadow`}>
+              <div key={i} className={`flex items-start bg-purewhite rounded-lg p-4 border-l-4 ${item.border} shadow hover:-translate-y-0.5 transition-all duration-150`}>
                 <span className="flex items-center justify-center w-8 h-8 mr-4">
                   {item.icon}
                 </span>

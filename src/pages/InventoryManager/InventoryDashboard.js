@@ -1,50 +1,45 @@
-// src/pages/InventoryManager/InventoryDashboard.js
 import React, { useState } from 'react';
 import NavBar from '../../components/NavBar'; 
 import DashboardOverview from '../../components/InventoryManager/DashboardOverview';
 
+const navLinks = [
+  { name: 'Dashboard', href: '/inventory-dashboard' },
+  { name: 'Inventory Control', href: '/inventory-control' },
+  { name: 'Inventory Monitoring', href: '/inventory-monitoring' },
+  { name: 'Maintenance Requests', href: '/maintenance-requests-overview' },
+  { name: 'Equipment Scheduling', href: '/equipment-scheduling' },
+];
+
 const InventoryDashboard = () => {
   const [activeView, setActiveView] = useState('overview');
 
-  const navigationLinks = [
-    { name: 'Dashboard', path: '/inventory-dashboard', active: true },
-    { name: 'Inventory Control', path: '/inventory-control' },
-    { name: 'Inventory Monitoring', path: '/inventory-monitoring' },
-    { name: 'Maintenance Requests', path: '/maintenance-requests-overview' },
-    { name: 'Equipment Scheduling', path: '/equipment-scheduling' },
-  ];
-
-  
   return (
     <div className="min-h-screen bg-[#FCFCFC]">
       {/* Enhanced Navigation Bar */}
-      <NavBar links={navigationLinks} profileURL='/inventory/profile'/>
+      <NavBar links={navLinks} profileURL='/inventory/profile'/>
       
-      {/* Quick Actions Bar */}
-      
-
-      {/* Main Dashboard Content */}
-      <main className="max-w-7xl mx-auto">
-        <DashboardOverview />
+      <main className="py-6">
+        <div className="max-w-full mx-auto px-2 sm:px-3 lg:px-10">
+          <DashboardOverview />
+        </div>
       </main>
 
-      {/* Footer Actions */}
-      <div className="bg-white border-t border-gray-100 mt-8">
-        <div className="max-w-7xl mx-auto px-6 py-4">
-          <div className="flex justify-between items-center">
-            <div className="flex items-center gap-4 text-sm text-gray-600">
-              <span>© 2025 Construction Inventory Management</span>
-              <span>•</span>
+      <div className="bg-purewhite border-t border-gray-200 mt-8">
+        <div className="max-w-full mx-auto px-6 sm:px-8 lg:px-16 py-6">
+          <div className="flex flex-col sm:flex-row justify-between items-start sm:items-center gap-4">
+            <div className="flex flex-col sm:flex-row items-start sm:items-center gap-2 sm:gap-4 text-sm text-slatebluegray">
+              <span className="font-medium">© 2025 Construction Inventory Management</span>
+              <span className="hidden sm:inline">•</span>
               <span>Version 2.1.0</span>
             </div>
-            <div className="flex items-center gap-4">
-              <button className="text-sm text-[#236571] hover:underline">
+            <div className="flex flex-wrap items-center gap-3">
+              <button className="text-sm text-deep_green hover:text-deep_green/80 font-medium transition-colors duration-150">
                 Help & Support
               </button>
-              <button className="text-sm text-[#236571] hover:underline">
+              <button className="text-sm text-deep_green hover:text-deep_green/80 font-medium transition-colors duration-150">
                 Export Data
               </button>
-              <button className="bg-[#efc11a] text-white px-4 py-2 rounded-lg text-sm font-medium hover:opacity-90 transition-opacity">
+              <button className="bg-web_yellow hover:bg-web_yellow/80 text-main_dark px-4 py-2 rounded-lg text-sm font-semibold transition-all duration-150 shadow-sm hover:shadow-md">
                 Settings
               </button>
             </div>

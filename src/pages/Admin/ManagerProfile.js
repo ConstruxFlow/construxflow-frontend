@@ -60,14 +60,13 @@ const ManagerProfileView = () => {
     return (
       <div className="min-h-screen bg-purewhite font-poppins">
         <NavBar 
-        profileURL="/purchasing/profile"
+         profileURL='/admin/profile'
         links={[
-          { name: 'Dashboard', path: '/purchasing/dashboard' },
-          { name: 'Material Requests', path: '/purchasing/materialrequests/overview' },
-          { name: 'Suppliers', path: '/purchasing/supplier/dashboard' },
-          { name: 'Quotation Requests', path: '/purchasing/quotationrequest/overview' },
-          { name: 'Purchasing Orders', path: '/purchasing/orders/overview' },
-        ]} />
+          { name: "Dashboard", href: "/admin" },
+          { name: "Projects", href: "/admin/projects-list" },
+          { name: "Inventory", href: "/admin-inventory" },
+          { name: "Users", href: "/admin-users" },
+        ]}/>
         <div className="flex items-center justify-center h-64">
           <div className="animate-spin rounded-full h-12 w-12 border-b-2 border-web_yellow"></div>
         </div>
@@ -78,13 +77,13 @@ const ManagerProfileView = () => {
   return (
     <div className="min-h-screen bg-purewhite font-poppins">
       {/* Header Navigation */}
-      <NavBar links={[
-        { name: 'Dashboard', path: '/purchasing/dashboard' },
-        { name: 'Material Requests', path: '/purchasing/materialrequests/overview' },
-        { name: 'Suppliers', path: '/purchasing/supplier/dashboard' },
-        { name: 'Quotation Requests', path: '/purchasing/quotationrequest/overview' },
-        { name: 'Purchasing Orders', path: '/purchasing/orders/overview' },
-      ]} />
+      <NavBar profileURL='/admin/profile'
+        links={[
+          { name: "Dashboard", href: "/admin" },
+          { name: "Projects", href: "/admin/projects-list" },
+          { name: "Inventory", href: "/admin-inventory" },
+          { name: "Users", href: "/admin-users" },
+        ]}/>
 
       {/* Main Content */}
       <main className="py-6">

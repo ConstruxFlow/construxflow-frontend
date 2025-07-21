@@ -332,6 +332,7 @@ const EditPurchaseOrder = () => {
       {isLoading && <LoadingOverlay progress={loadingProgress} />}
 
       <NavBar
+      profileURL="/purchasing/profile"
         links={[
           { name: 'Dashboard', path: '/purchasing/dashboard' },
           { name: 'Material Requests', path: '/purchasing/materialrequests/overview' },

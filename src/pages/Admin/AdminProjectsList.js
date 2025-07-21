@@ -21,7 +21,7 @@ import { useNavigate } from 'react-router-dom';
 import NavBar from '../../components/NavBar';
 import LoadingOverlay from '../../components/LoadingOverlay';
 
-const FinancialProjectsList = () => {
+const AdminProjectsList = () => {
   const navigate = useNavigate();
   const [isLoading, setIsLoading] = useState(false);
   const [projects, setProjects] = useState([]);
@@ -227,12 +227,12 @@ const FinancialProjectsList = () => {
       {isLoading && <LoadingOverlay />}
       
       <NavBar
-      profileURL="/financial/profile"
+       profileURL='/admin/profile'
         links={[
-          { name: 'Dashboard', path: '/financial/dashboard' },
-          { name: 'Payment Approvals', path: '/financial/payment-list' },
-          { name: 'Purchase Orders', path: '/financial/purchase-order-list' },
-          { name: 'Projects', path: '/financial/financial-projects' },
+          { name: "Dashboard", href: "/admin", active: true },
+          { name: "Projects", href: "/admin/projects-list" },
+          { name: "Inventory", href: "/admin-inventory" },
+          { name: "Users", href: "/admin-users" },
         ]}
       />
 
@@ -602,4 +602,4 @@ const FinancialProjectsList = () => {
   );
 };
 
-export default FinancialProjectsList;
+export default AdminProjectsList;

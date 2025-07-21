@@ -157,7 +157,7 @@ const QuotationRequestsOverview = () => {
       <div className="min-h-screen bg-purewhite font-poppins flex items-center justify-center">
         <div className="text-center">
           <div className="animate-spin rounded-full h-12 w-12 border-b-2 border-web_yellow mx-auto mb-4"></div>
-          <p className="text-gray-600">Loading supplier details...</p>
+          <p className="text-gray-600">Loading Quotation request details...</p>
         </div>
       </div>
     );
@@ -166,6 +166,7 @@ const QuotationRequestsOverview = () => {
   return (
     <div className="min-h-screen bg-purewhite font-poppins">
       <NavBar
+      profileURL="/purchasing/profile"
         links={[
           { name: 'Dashboard', path: '/purchasing/dashboard' },
           { name: 'Material Requests', path: '/purchasing/materialrequests/overview' },

@@ -139,6 +139,7 @@ const PurchaseOrderDetails = () => {
     return (
       <div className="min-h-screen bg-purewhite font-poppins flex items-center justify-center">
         <NavBar
+        profileURL="/purchasing/profile"
           links={[
             { name: 'Dashboard', path: '/purchasing/dashboard' },
             { name: 'Material Requests', path: '/purchasing/materialrequests/overview' },
@@ -160,6 +161,7 @@ const PurchaseOrderDetails = () => {
   return (
     <div className="min-h-screen bg-purewhite font-poppins">
       <NavBar
+      profileURL="/purchasing/profile"
         links={[
           { name: 'Dashboard', path: '/purchasing/dashboard' },
           { name: 'Material Requests', path: '/purchasing/materialrequests/overview' },
@@ -379,7 +381,7 @@ const PurchaseOrderDetails = () => {
                     <button className="flex-1 px-4 py-2 bg-deep_green text-purewhite rounded-md hover:bg-deep_green/90 transition-colors">
                       Download Invoice
                     </button>
-                    <button className="flex-1 px-4 py-2 bg-web_yellow text-main_dark rounded-md hover:bg-web_yellow/90 transition-colors">
+                    <button onClick={() => navigate('/purchasing/orders/payment')} className="flex-1 px-4 py-2 bg-web_yellow text-main_dark rounded-md hover:bg-web_yellow/90 transition-colors">
                       Payment
                     </button>
                   </div>

@@ -20,6 +20,7 @@ import PurchaseOrderDetails from "./PurchasingOrder/PurchaseOrderDetails";
 import EditQuotationRequest from "./Material_Requests/EditQuotationRequest";
 import EditPurchaseOrder from "./PurchasingOrder/EditPurchaseOrder";
 import ManagerProfileView from "./ManagerProfile";
+import PayRemainingBalance from "./PurchasingOrder/PayRemainingBalance";
 
 export const purchasingManagerRoutes = {
   path: '/purchasing',
@@ -104,6 +105,10 @@ export const purchasingManagerRoutes = {
     {
       path: 'orders/edit/:id',
       element: <EditPurchaseOrder />,
+    },
+    {
+      path: 'orders/payment',
+      element: <PayRemainingBalance />,
     },
     {
       path: 'profile',

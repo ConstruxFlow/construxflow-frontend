@@ -15,7 +15,7 @@ import { toast } from "react-toastify";
 import { AuthContext } from "../Context/AuthContext";
 
 const Login = () => {
-  const {login}=useContext(AuthContext);
+  const { login } = useContext(AuthContext);
   const [showPassword, setShowPassword] = useState(false);
   const [rememberMe, setRememberMe] = useState(false);
   const navigation = useNavigate();
@@ -23,6 +23,11 @@ const Login = () => {
     email: "",
     password: "",
   });
+  const [loading, setLoading] = useState(false);
+
+  // Validation states
+  const [errors, setErrors] = useState({});
+  const [touched, setTouched] = useState({});
 
   const location = useLocation();
   const emailVerified = location.state && location.state.emailVerified;
@@ -42,12 +47,77 @@ const Login = () => {
     }
   }, [emailVerified]);
 
+  // Validation functions
+  const validateEmail = (email) => {
+    if (!email) return "Email is required";
+    if (email.length < 3) return "Email must be at least 3 characters";
+    const emailRegex = /^[^\s@]+@[^\s@]+\.[^\s@]+$/;
+    if (!emailRegex.test(email)) return "Please enter a valid email address";
+    return "";
+  };
+
+  const validatePassword = (password) => {
+    if (!password) return "Password is required";
+    if (password.length < 6) return "Password must be at least 6 characters";
+    return "";
+  };
+
+  // Real-time validation
+  const validateField = (name, value) => {
+    let error = "";
+    switch (name) {
+      case "email":
+        error = validateEmail(value);
+        break;
+      case "password":
+        error = validatePassword(value);
+        break;
+      default:
+        break;
+    }
+    return error;
+  };
+
   const handleChange = (e) => {
-    setForm({ ...form, [e.target.name]: e.target.value });
+    const { name, value } = e.target;
+    setForm({ ...form, [name]: value });
+
+    // Real-time validation only if field has been touched
+    if (touched[name]) {
+      const error = validateField(name, value);
+      setErrors(prev => ({ ...prev, [name]: error }));
+    }
+  };
+
+  const handleBlur = (e) => {
+    const { name, value } = e.target;
+    setTouched(prev => ({ ...prev, [name]: true }));
+    const error = validateField(name, value);
+    setErrors(prev => ({ ...prev, [name]: error }));
+  };
+
+  // Validate all fields
+  const validateForm = () => {
+    const newErrors = {};
+    newErrors.email = validateEmail(form.email);
+    newErrors.password = validatePassword(form.password);
+
+    setErrors(newErrors);
+    setTouched({ email: true, password: true });
+
+    return Object.values(newErrors).every(error => error === "");
   };
 
   const handleSubmit = async (e) => {
     e.preventDefault();
+
+    // Validate form before submission
+    if (!validateForm()) {
+      toast.error("Please fix the validation errors before submitting.");
+      return;
+    }
+
+    setLoading(true);
     try {
       // 1. Sign in with Firebase Auth
       const userCred = await signInWithEmailAndPassword(
@@ -68,6 +138,7 @@ const Login = () => {
       console.log(res);
 
       if (!res.ok) {
+        setLoading(false);
         const error = await res.text();
         console.error("Login failed: " + error);
         toast.error("Login failed: " + error);
@@ -82,6 +153,7 @@ const Login = () => {
       const user = data.user;
       console.log("User data:", user);
       if (!user || !user.userRole) {
+        setLoading(false);
         console.error("User data or userRole is missing from the response.");
         toast.error("Invalid user data received from the server.");
         return;
@@ -89,13 +161,11 @@ const Login = () => {
 
       // Store user data in localStorage
       login(idToken, user);
-      // localStorage.setItem("user", JSON.stringify(user));
-      // localStorage.setItem("role", user.userRole);
 
       // Role-based navigation
       const role = user.userRole.toUpperCase();
       const roleRoutes = {
-        ADMIN: "/admin/dashboard",
+        ADMIN: "/admin",
         SITE_MANAGER: "/site-manager",
         INVENTORY_MANAGER: "/inventory-dashboard",
         FINANCE_OFFICER: "/finance/dashboard",
@@ -105,20 +175,53 @@ const Login = () => {
       };
 
       if (roleRoutes[role]) {
+        setLoading(false);
         navigation(roleRoutes[role]);
+        toast.success("Login successful!");
       } else {
         console.error("Unknown user role. Please contact support.");
         toast.error("Unknown user role. Please contact support.");
         navigation("/"); // fallback
       }
     } catch (err) {
+      setLoading(false);
       console.error("Login error:", err);
-      toast.error("Login failed: " + err.message);
+      
+      // Handle specific Firebase Auth errors
+      let errorMessage = "Login failed. Please try again.";
+      if (err.code === "auth/user-not-found") {
+        errorMessage = "No user found with this email address.";
+      } else if (err.code === "auth/wrong-password") {
+        errorMessage = "Incorrect password. Please try again.";
+      } else if (err.code === "auth/invalid-email") {
+        errorMessage = "Invalid email address format.";
+      } else if (err.code === "auth/user-disabled") {
+        errorMessage = "This account has been disabled. Please contact support.";
+      } else if (err.code === "auth/too-many-requests") {
+        errorMessage = "Too many failed attempts. Please try again later.";
+      } else if (err.code === "auth/network-request-failed") {
+        errorMessage = "Network error. Please check your connection.";
+      }
+      
+      toast.error(errorMessage);
     }
   };
 
   const handleclose = () => {
     navigation("/");
+  };
+
+  // Helper function to get input styling based on validation state
+  const getInputStyling = (fieldName) => {
+    const baseStyle = "w-full px-4 py-3 bg-light_gray/20 text-main_dark rounded-full placeholder-slatebluegray border transition-all text-sm sm:text-base";
+    
+    if (errors[fieldName] && touched[fieldName]) {
+      return `${baseStyle} border-red-400 focus:ring-2 focus:ring-red-300 focus:border-red-400`;
+    } else if (!errors[fieldName] && touched[fieldName] && form[fieldName]) {
+      return `${baseStyle} border-green-400 focus:ring-2 focus:ring-green-300 focus:border-green-400`;
+    } else {
+      return `${baseStyle} border-light_gray/40 focus:outline-none focus:ring-2 focus:ring-web_yellow focus:border-web_yellow`;
+    }
   };
 
   const profiles = [
@@ -127,6 +230,17 @@ const Login = () => {
     { id: 3, src: "/assets/login_page/pro3.jpg", alt: "Profile 3" },
   ];
   const additionalCount = 2;
+
+  if (loading) {
+    return (
+      <div className="min-h-screen bg-purewhite font-poppins flex items-center justify-center">
+        <div className="text-center">
+          <div className="animate-spin rounded-full h-12 w-12 border-b-2 border-web_yellow mx-auto mb-4"></div>
+          <p className="text-gray-600">Signing you in...</p>
+        </div>
+      </div>
+    );
+  }
 
   return (
     <>
@@ -156,21 +270,24 @@ const Login = () => {
             </div>
 
             {/* Login Form */}
-            <form className="space-y-4 sm:space-y-6" onSubmit={handleSubmit}>
+            <form className="space-y-4 sm:space-y-6" onSubmit={handleSubmit} noValidate>
               {/* Email Field */}
-              {/* Username Field */}
               <div>
                 <label className="text-main_dark text-sm mb-2 block font-medium">
-                  Username
+                  Email Address
                 </label>
                 <input
-                  type="text"
+                  type="email"
                   name="email"
                   value={form.email}
-                  placeholder="Enter your username"
+                  placeholder="Enter your email address"
                   onChange={handleChange}
-                  className="w-full px-4 py-3 bg-light_gray/20 text-main_dark rounded-full placeholder-slatebluegray border border-light_gray/40 focus:outline-none focus:ring-2 focus:ring-web_yellow focus:border-web_yellow transition-all text-sm sm:text-base"
+                  onBlur={handleBlur}
+                  className={getInputStyling('email')}
                 />
+                {errors.email && touched.email && (
+                  <p className="text-red-500 text-xs mt-1 ml-4">{errors.email}</p>
+                )}
               </div>
 
               {/* Password Field */}
@@ -184,8 +301,9 @@ const Login = () => {
                     name="password"
                     value={form.password}
                     onChange={handleChange}
+                    onBlur={handleBlur}
                     placeholder="Enter your password"
-                    className="w-full px-4 py-3 bg-light_gray/20 text-main_dark rounded-full placeholder-slatebluegray border border-light_gray/40 focus:outline-none focus:ring-2 focus:ring-web_yellow focus:border-web_yellow transition-all pr-12 text-sm sm:text-base"
+                    className={`${getInputStyling('password')} pr-12`}
                   />
                   <button
                     type="button"
@@ -199,6 +317,9 @@ const Login = () => {
                     )}
                   </button>
                 </div>
+                {errors.password && touched.password && (
+                  <p className="text-red-500 text-xs mt-1 ml-4">{errors.password}</p>
+                )}
               </div>
 
               {/* Remember Me & Forgot Password */}
@@ -225,12 +346,22 @@ const Login = () => {
               {/* Sign In Button */}
               <button
                 type="submit"
-                className="w-full bg-web_yellow text-main_dark py-3 rounded-full font-semibold hover:bg-web_yellow/90 hover:shadow-lg transition-all flex items-center justify-center text-sm sm:text-base"
+                disabled={loading}
+                className="w-full bg-web_yellow text-main_dark py-3 rounded-full font-semibold hover:bg-web_yellow/90 hover:shadow-lg transition-all flex items-center justify-center text-sm sm:text-base disabled:opacity-50 disabled:cursor-not-allowed"
               >
-                <span className="mr-2">
-                  <PiSignIn className="w-4 h-4 sm:w-5 sm:h-5" />
-                </span>
-                Sign In
+                {loading ? (
+                  <>
+                    <div className="animate-spin rounded-full h-4 w-4 border-b-2 border-main_dark mr-2"></div>
+                    Signing In...
+                  </>
+                ) : (
+                  <>
+                    <span className="mr-2">
+                      <PiSignIn className="w-4 h-4 sm:w-5 sm:h-5" />
+                    </span>
+                    Sign In
+                  </>
+                )}
               </button>
             </form>
 
