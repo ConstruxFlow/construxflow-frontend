@@ -88,6 +88,7 @@ import ManagerProfileView from "./pages/Admin/ManagerProfile";
 import AdminProjectsList from "./pages/Admin/AdminProjectsList";
 import AdminProjectDetails from "./pages/Admin/AdminProjectDetails";
 import ManagerReg from "./pages/Admin/ManagerReg";
+import InventoryProfile from "./pages/InventoryManager/ManagerProfile";
 
 
   export const routes = createBrowserRouter([
@@ -366,7 +367,7 @@ import ManagerReg from "./pages/Admin/ManagerReg";
 
 {
   path: "/Inventory/profile",
-  element: <Profile />,
+  element: <InventoryProfile />,
 },
 
 

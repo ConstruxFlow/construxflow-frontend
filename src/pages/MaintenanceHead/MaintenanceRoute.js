@@ -14,6 +14,7 @@ import EquipmentMaintenanceContainer from "./UpdateEquipmentMaintenance";
 import UpdateEquipmentMaintenance from "./UpdateEquipmentMaintenance";
 import ScheduleMaintenanceAndRequestMaterials from "./MaintenanceScheduling";
 import TeamMemberDetailsForm from "./TeamMemberDetailsForm";
+import ManagerProfileView from "./ManagerProfile";
 
 export const MaintenanceRoute = {
   path: "/maintenance",
@@ -57,7 +58,7 @@ export const MaintenanceRoute = {
     },
     {
         path: 'profile',
-        element: <ProfileManagement/>,
+        element: <ManagerProfileView/>,
     },
     {
         path: 'scheduling',
