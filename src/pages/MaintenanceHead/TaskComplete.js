@@ -160,6 +160,7 @@ export default function TaskCompleteContainer() {
   return (
     <>
       <NavBar
+      profileURL="/maintenance/profile"
         links={[
           {
             name: "Dashboard",
@@ -198,7 +199,7 @@ export default function TaskCompleteContainer() {
             onClick: () => navigate("/maintenance/add-member"),
           },
         ]}
-        showButton={true}
+        
       />
 
       <div className="min-h-screen bg-gray-50 px-4 py-8 flex flex-col items-center">

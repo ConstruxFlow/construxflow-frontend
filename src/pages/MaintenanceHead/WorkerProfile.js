@@ -85,6 +85,7 @@ export default function WorkerProfile() {
   return (
     <>
       <NavBar
+        profileURL="/maintenance/profile"
         links={[
           { name: "Dashboard", href: "#", onClick: () => navigation("/maintenance/dashboard") },
           { name: "Task", href: "#", onClick: () => navigation("/maintenance/scheduling") },
@@ -102,9 +103,6 @@ export default function WorkerProfile() {
           { name: "Equipment", href: "#", onClick: () => navigation("/maintenance/equipment")},
           { name: "Add Technician", href: "#", onClick: () => navigation("/maintenance/add-member") },
         ]}
-        showButton={true}
-        buttonLabel={isLoggedIn ? "Logout" : "Get Started"}
-        onButtonClick={isLoggedIn ? handleLogout : handleLogin}
       />
 
       <div className="bg-purewhite min-h-screen">

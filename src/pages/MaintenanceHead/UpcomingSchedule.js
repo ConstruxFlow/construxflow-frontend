@@ -408,6 +408,7 @@ export default function NextScheduleContainer() {
   return (
     <>
       <NavBar
+        profileURL="/maintenance/profile"
         links={[
           {
             name: "Dashboard",
@@ -446,9 +447,7 @@ export default function NextScheduleContainer() {
             onClick: () => navigation("/maintenance/add-member"),
           },
         ]}
-        showButton={true}
-        buttonLabel={isLoggedIn ? "Logout" : "Get Started"}
-        onButtonClick={isLoggedIn ? handleLogout : handleLogin}
+
       />
       {isLoading && (
         <LoadingOverlay progress={loadingProgress} message="Processing..." />
