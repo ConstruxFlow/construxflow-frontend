@@ -3,6 +3,7 @@ import { Calendar, Upload, FolderPlus, Save, X, Plus, Trash2, ChevronDown, Chevr
 import { pdfjs } from 'react-pdf';
 import { useNavigate } from 'react-router-dom';
 import { AuthContext } from '../../Context/AuthContext';
+import toast from 'react-hot-toast';
 
 pdfjs.GlobalWorkerOptions.workerSrc = `${process.env.PUBLIC_URL}/pdf.worker.min.js`;
 
@@ -104,6 +105,8 @@ const Create_ProjectForm = () => {
   };
 
   const addNewPhase = () => {
+    // Prevent adding new phase if BOQ file is uploaded and phases are parsed
+    if (formData.boqFile && phases.length > 0) return;
     const newPhase = {
       id: Date.now(),
       name: `Phase ${phases.length + 1}`,
@@ -116,6 +119,9 @@ const Create_ProjectForm = () => {
   };
 
   const [dragActive, setDragActive] = useState(false);
+  const [dateError, setDateError] = useState('');
+  const [phaseTimelineError, setPhaseTimelineError] = useState('');
+  const [phaseErrors, setPhaseErrors] = useState({});
 
   const handleInputChange = (e) => {
     const { name, value } = e.target;
@@ -123,6 +129,16 @@ const Create_ProjectForm = () => {
       ...prev,
       [name]: value
     }));
+    // Date validation for startDate and endDate
+    if ((name === 'startDate' || name === 'endDate')) {
+      const start = name === 'startDate' ? value : formData.startDate;
+      const end = name === 'endDate' ? value : formData.endDate;
+      if (start && end && new Date(end) <= new Date(start)) {
+        setDateError('End date must be greater than start date.');
+      } else {
+        setDateError('');
+      }
+    }
   };
 
   const handleDrag = (e) => {
@@ -234,7 +250,51 @@ const Create_ProjectForm = () => {
     }
   };
 
+  const validatePhaseTimelines = () => {
+    if (phases.length === 0) {
+      setPhaseErrors({});
+      return '';
+    }
+    let errors = {};
+    let globalError = '';
+    for (let i = 0; i < phases.length; i++) {
+      const phase = phases[i];
+      if (phase.startDate && formData.startDate && new Date(phase.startDate) < new Date(formData.startDate)) {
+        errors[phase.id] = `The start date of phase ${phase.name ? '"' + phase.name + '"' : i + 1} should be on or after the project start date.`;
+        if (!globalError) globalError = errors[phase.id];
+      }
+      if (phase.endDate && formData.endDate && new Date(phase.endDate) > new Date(formData.endDate)) {
+        errors[phase.id] = `The end date of phase ${phase.name ? '"' + phase.name + '"' : i + 1} should be on or before the project end date.`;
+        if (!globalError) globalError = errors[phase.id];
+      }
+    }
+    // Sort phases by start date for last phase end date check
+    const sortedPhases = [...phases].sort((a, b) => new Date(a.startDate) - new Date(b.startDate));
+    const lastPhase = sortedPhases[sortedPhases.length - 1];
+    if (lastPhase.endDate && formData.endDate && new Date(lastPhase.endDate) > new Date(formData.endDate)) {
+      globalError = 'The end date of the last phase should be on or before the project end date.';
+    }
+    setPhaseErrors(errors);
+    return globalError;
+  };
+
+  useEffect(() => {
+    // Validate phase timelines whenever phases or project dates change
+    const error = validatePhaseTimelines();
+    setPhaseTimelineError(error);
+  }, [phases, formData.startDate, formData.endDate]);
+
   const handleCreateProject = async () => {
+    // Prevent submission if date error exists
+    if (dateError) {
+      toast.error(dateError);
+      return;
+    }
+    // Prevent submission if phase timeline error exists
+    if (phaseTimelineError) {
+      toast.error(phaseTimelineError);
+      return;
+    }
     const form = new FormData();
     form.append('projectName', formData.projectName);
     form.append('managerId', formData.managerId);
@@ -269,7 +329,7 @@ const Create_ProjectForm = () => {
         body: form
       });
       if (res.ok) {
-        alert('Project created successfully!');
+        toast.success('Project created successfully!');
         navigate('/projects-list');
       } else {
         alert('Failed to create project. Please try again.');
@@ -392,6 +452,9 @@ const Create_ProjectForm = () => {
               </div>
             </div>
           </div>
+          {dateError && (
+            <div className="text-red-500 text-sm mt-2">{dateError}</div>
+          )}
         </div>
 
         {/* Project Documents */}
@@ -559,6 +622,9 @@ const Create_ProjectForm = () => {
                         />
                       </div>
                     </div>
+                    {phaseErrors[phase.id] && (
+                      <div className="text-red-500 text-sm mt-2">{phaseErrors[phase.id]}</div>
+                    )}
                     
                     {/* Materials Section */}
                     <div>
@@ -641,15 +707,17 @@ const Create_ProjectForm = () => {
             ))}
             
             {/* Add New Phase Button */}
-            <div className="bg-white border-2 border-dashed border-gray-300 rounded-xl p-6 text-center hover:border-gray-400 hover:bg-gray-50/50 transition-all duration-150">
-              <button
-                onClick={addNewPhase}
-                className="text-slatebluegray hover:text-main_dark flex items-center gap-2 mx-auto font-medium"
-              >
-                <Plus className="w-5 h-5" />
-                Add New Phase
-              </button>
-            </div>
+            {!(formData.boqFile && phases.length > 0) && (
+              <div className="bg-white border-2 border-dashed border-gray-300 rounded-xl p-6 text-center hover:border-gray-400 hover:bg-gray-50/50 transition-all duration-150">
+                <button
+                  onClick={addNewPhase}
+                  className="text-slatebluegray hover:text-main_dark flex items-center gap-2 mx-auto font-medium"
+                >
+                  <Plus className="w-5 h-5" />
+                  Add New Phase
+                </button>
+              </div>
+            )}
           </div>
         </div>
 

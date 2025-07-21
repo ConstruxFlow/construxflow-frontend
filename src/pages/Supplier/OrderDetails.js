@@ -2,6 +2,7 @@
 import React from "react";
 import { FaMapMarkerAlt, FaUser, FaPhoneAlt, FaEnvelope, FaCheckCircle, FaTruck, FaRegCircle } from "react-icons/fa";
 import NavBar from "../../components/NavBar";
+import { useNavigate } from "react-router-dom";
 
 const navLinks = [
   { name: "Dashboard", href: "/supplier/dashboard" },
@@ -67,8 +68,11 @@ const statusColors = {
   pending: "bg-web_yellow text-main_dark",
   upcoming: "bg-light_gray text-slatebluegray",
 };
+  
 
-const OrderDetails = () => (
+const OrderDetails = () => {
+  const navigate = useNavigate();
+  return (
   <div className="bg-purewhite min-h-screen font-poppins">
     <NavBar links={navLinks} profileURL="/supplier/profile" logoSrc="/logo1.png" />
     <div className="max-w-full mx-auto px-16 py-10">
@@ -217,7 +221,7 @@ const OrderDetails = () => (
           <button className="bg-web_yellow text-main_dark font-medium py-3 rounded-lg hover:opacity-90 transition">
             Download Invoice
           </button>
-          <button className="bg-deep_green text-purewhite font-medium py-3 rounded-lg hover:opacity-90 transition">
+          <button onClick={() => navigate(`/supplier/contact-support`)} className="bg-deep_green text-purewhite font-medium py-3 rounded-lg hover:opacity-90 transition">
             Contact Support
           </button>
         </div>
@@ -225,5 +229,6 @@ const OrderDetails = () => (
     </div>
   </div>
 );
+};
 
 export default OrderDetails;
