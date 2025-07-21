@@ -71,6 +71,7 @@ export default function EquipmentLogContainer() {
   return (
     <>
       <NavBar
+      profileURL="/maintenance/profile"
         links={[
           {
             name: "Dashboard",
@@ -107,7 +108,7 @@ export default function EquipmentLogContainer() {
             onClick: () => navigation("/maintenance/add-member"),
           },
         ]}
-        showButton={true}
+        
       />
 
       <div className="bg-purewhite min-h-screen">

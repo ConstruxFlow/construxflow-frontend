@@ -155,10 +155,7 @@ const MaintenanceDashboard = () => {
             onClick: () => navigation("/maintenance/add-member"),
           },
         ]}
-        showButton={true}
-        buttonLabel={isLoggedIn ? "Logout" : "Get Started"}
-        onButtonClick={isLoggedIn ? handleLogout : handleLogin}
-        logoSrc="/logo1.png"
+
       />
       
       <div className="bg-purewhite min-h-screen">

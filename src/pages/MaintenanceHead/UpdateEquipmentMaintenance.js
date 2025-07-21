@@ -285,14 +285,12 @@ export default function UpcomingEquipmentMaintenance() {
   return (
     <>
       <NavBar
+      profileURL="/maintenance/profile"
         links={navLinks.map(link => ({
           ...link,
           onClick: link.name === "Team" ? () => setShowTeam(true) : () => navigate(link.href)
         }))}
-        showButton={true}
-        buttonLabel={isLoggedIn ? "Logout" : "Get Started"}
-        onButtonClick={isLoggedIn ? handleLogout : handleLogin}
-        logoSrc="/logo1.png"
+
       />
 
       <div className="bg-purewhite min-h-screen">
