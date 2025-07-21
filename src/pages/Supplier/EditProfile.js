@@ -14,7 +14,6 @@ const navLinks = [
   { name: "Quotations", href: "/supplier/quotations" },
   { name: "Orders", href: "/supplier/orders" },
   { name: "Payments", href: "/supplier/payments" },
-
 ];
 
 const EditProfile = () => {
@@ -41,7 +40,6 @@ const EditProfile = () => {
 
   const supplierId = authState?.user?.supplierId;
   console.log("Supplier ID:", supplierId);
-
 
   // const supplierId = "S001"; // Replace with actual logic
 
@@ -109,12 +107,12 @@ const EditProfile = () => {
       <NavBar links={navLinks} profileURL="/supplier/profile" logoSrc="/logo1.png" />
 
       <form onSubmit={handleSubmit}>
-        <div className="max-w-full mx-auto px-16 py-8">
+        <div className="max-w-full mx-auto px-4 sm:px-8 lg:px-16 py-8">
           {/* Header */}
-          <div className="bg-purewhite rounded-lg p-6 mb-6 flex items-center justify-between border border-light_gray">
-            <div>
+          <div className="bg-purewhite rounded-lg p-4 sm:p-6 mb-6 flex flex-col sm:flex-row items-center sm:items-start sm:justify-between gap-4 sm:gap-0 border border-light_gray">
+            <div className="text-center sm:text-left">
               <input
-                className="text-3xl font-bold text-deep_green mb-2 bg-transparent border-b-2 border-light_gray focus:border-deep_green outline-none"
+                className="text-2xl sm:text-3xl font-bold text-deep_green mb-2 bg-transparent border-b-2 border-light_gray focus:border-deep_green outline-none w-full"
                 name="company_name"
                 value={supplierData.company_name}
                 onChange={handleChange}
@@ -123,7 +121,7 @@ const EditProfile = () => {
               <p className="text-gray-500 mb-5">Premium construction materials and equipment supplier</p>
             </div>
             <div className="flex items-center gap-4">
-              <div className="w-28 h-28 rounded-full bg-light_gray flex items-center justify-center overflow-hidden border-2 border-web_yellow mr-5">
+              <div className="w-28 h-28 rounded-full bg-light_gray flex items-center justify-center overflow-hidden border-2 border-web_yellow mr-0 sm:mr-5">
                 <img src="/assets/profile/supplier.jpg" alt="Company Logo" className="w-24 h-24 object-contain" />
               </div>
             </div>
@@ -323,16 +321,16 @@ const EditProfile = () => {
           </div>
 
           {/* Save Button */}
-          <div className="flex gap-4 justify-center mt-6">
+          <div className="flex flex-col sm:flex-row gap-4 justify-center mt-6">
             <button
               type="submit"
-              className="bg-web_yellow text-main_dark px-8 py-3 rounded-lg font-semibold text-lg shadow hover:opacity-90 transition flex items-center gap-2"
+              className="bg-web_yellow text-main_dark px-6 sm:px-8 py-3 rounded-lg font-semibold text-base sm:text-lg shadow hover:opacity-90 transition flex items-center gap-2 justify-center"
             >
               <FaSave /> Save All Changes
             </button>
             <button
               type="button"
-              className="flex items-center gap-2 bg-deep_green text-purewhite px-4 py-2 rounded-lg font-medium hover:bg-gray-800 transition"
+              className="flex items-center gap-2 bg-deep_green text-purewhite px-4 py-2 rounded-lg font-medium hover:bg-gray-800 transition justify-center"
             >
               <FaLock /> Change Password
             </button>
@@ -346,4 +344,3 @@ const EditProfile = () => {
 };
 
 export default EditProfile;
-

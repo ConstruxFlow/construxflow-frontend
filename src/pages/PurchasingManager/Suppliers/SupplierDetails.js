@@ -33,6 +33,7 @@ const SupplierDetail = () => {
   },[])
 console.log(supplierData);
 
+
 //   // Sample data structure based on your API response
 //   const sampleData = {
 //     status: "success",
@@ -103,6 +104,7 @@ console.log(supplierData);
 //       }
 //     }
 //   };
+
 
 
   if (loading) {
@@ -180,7 +182,7 @@ console.log(supplierData);
           </div>
 
           {/* Performance Metrics Cards */}
-          <div className="grid grid-cols-2 lg:grid-cols-5 gap-4 mb-6">
+          <div className="grid grid-cols-1 sm:grid-cols-2 lg:grid-cols-5 gap-4 mb-6">
             <div className="bg-purewhite border border-gray-200 rounded-lg p-4">
               <div className="flex items-center gap-2 mb-2">
                 <FaStar className="w-4 h-4 text-web_yellow" />
@@ -231,7 +233,7 @@ console.log(supplierData);
           {/* Tab Navigation */}
           <div className="bg-purewhite border border-gray-200 rounded-lg mb-6">
             <div className="border-b border-gray-200">
-              <nav className="flex space-x-8 px-6">
+              <nav className="flex flex-wrap space-x-4 sm:space-x-8 px-4 sm:px-6">
                 {[
                   { id: 'overview', label: 'Overview' },
                   { id: 'materials', label: 'Materials' },
@@ -254,7 +256,7 @@ console.log(supplierData);
             </div>
 
             {/* Tab Content */}
-            <div className="p-6">
+            <div className="p-4 sm:p-6">
               {/* Overview Tab */}
               {activeTab === 'overview' && (
                 <div className="grid grid-cols-1 lg:grid-cols-2 gap-6">
@@ -363,7 +365,7 @@ console.log(supplierData);
                   
                   {supplierData?.materials && supplierData.materials.length > 0 ? (
                     <div className="overflow-x-auto">
-                      <table className="w-full">
+                      <table className="w-full min-w-max">
                         <thead className="bg-light_gray/30">
                           <tr>
                             <th className="px-4 py-3 text-left text-sm font-semibold text-main_dark">Material Name</th>
@@ -405,14 +407,14 @@ console.log(supplierData);
                   {supplierData?.documents && supplierData.documents.length > 0 ? (
                     <div className="space-y-4">
                       {supplierData.documents.map((document, index) => (
-                        <div key={document.id || index} className="flex items-center justify-between p-4 border border-gray-200 rounded-lg">
+                        <div key={document.id || index} className="flex flex-col sm:flex-row items-start sm:items-center justify-between p-4 border border-gray-200 rounded-lg gap-4 sm:gap-0">
                           <div className="flex items-center gap-4">
                             <div className="w-10 h-10 bg-red-100 rounded-lg flex items-center justify-center">
                               <FaFileAlt className="w-5 h-5 text-red-600" />
                             </div>
                             <div>
                               <h4 className="font-medium text-main_dark">{document.document_name}</h4>
-                              <div className="flex items-center gap-4 text-sm text-gray-600">
+                              <div className="flex flex-col sm:flex-row items-start sm:items-center gap-2 sm:gap-4 text-sm text-gray-600">
                                 <span>{document.file_type}</span>
                                 <span>{document.file_size}</span>
                                 <span>Uploaded: {new Date(document.upload_date).toLocaleDateString()}</span>

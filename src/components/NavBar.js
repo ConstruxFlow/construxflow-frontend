@@ -26,7 +26,7 @@ const NavBar = ({
     const roleImageMap = {
       Admin: "/assets/profile/admin.jpg",
       Site_Manager: "/assets/profile/site-manager.jpg",
-      Inventory_Manager: "/assets/profile/inventory-manager.jpg",
+      Inventory_Manager: "/assets/profile/invemtory-manager.jpg",
       Finance_Officer: "/assets/profile/finance-officer.jpg",
       Maintenance_Head: "/assets/profile/maintenance-head.jpg",
       Supplier: "/assets/profile/supplier.jpg",
@@ -209,7 +209,7 @@ const NavBar = ({
             {links.map((link, idx) => (
               <a
                 key={idx}
-                href={link.href}
+                href={link.href || link.path}
                 className="hover:text-web_yellow text-lg transition-colors cursor-pointer"
                 onClick={(e) => {
                   if (link.onClick) {

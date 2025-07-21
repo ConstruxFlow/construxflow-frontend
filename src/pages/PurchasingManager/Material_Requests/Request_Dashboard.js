@@ -489,18 +489,6 @@ const MaterialRequestsOverview = () => {
                       </th>
                       <th className="px-6 py-4 text-left text-sm font-semibold text-main_dark">Priority</th>
                       <th className="px-6 py-4 text-left text-sm font-semibold text-main_dark">Status</th>
-                      <th 
-                        className="px-6 py-4 text-left text-sm font-semibold text-main_dark cursor-pointer hover:bg-light_brown/50"
-                        onClick={() => handleSort('requestor')}
-                      >
-                        <div className="flex items-center gap-2">
-                          <FaUser className="w-4 h-4" />
-                          Requestor
-                          {sortBy === 'requestor' && (
-                            <span className="text-xs">{sortOrder === 'asc' ? '↑' : '↓'}</span>
-                          )}
-                        </div>
-                      </th>
                       <th className="px-6 py-4 text-left text-sm font-semibold text-main_dark">Actions</th>
                     </tr>
                   </thead>
@@ -533,7 +521,6 @@ const MaterialRequestsOverview = () => {
                             {request.status}
                           </span>
                         </td>
-                        <td className="px-6 py-4 text-sm text-gray-600">{request.requestor}</td>
                         <td className="px-6 py-4">
                           <button
                             onClick={() => navigate(`/purchasing/materialrequests/details/pwise/${request.id}`)}
@@ -578,12 +565,11 @@ const MaterialRequestsOverview = () => {
                     <div className="space-y-1 text-xs text-gray-600 mb-3">
                       <p><span className="font-medium">Materials:</span> {request.materials}</p>
                       <p><span className="font-medium">Quantity:</span> {request.quantity}</p>
-                      <p><span className="font-medium">Requestor:</span> {request.requestor}</p>
                     </div>
                     
                     <div className="flex justify-end">
                       <button
-                        onClick={() => navigate(`/purchasing/materialrequests/details/${request.id}`)}
+                        onClick={() => navigate(`/purchasing/materialrequests/details/pwise/${request.id}`)}
                         className="text-deep_green hover:text-deep_green/80 transition-colors"
                       >
                         <FaEye className="w-4 h-4" />

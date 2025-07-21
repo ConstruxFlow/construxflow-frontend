@@ -48,6 +48,9 @@ const MaterialReqDetails = () => {
     }
   };
 
+  console.log(requestData);
+  
+
   const getStatusColor = (status) => {
     switch (status?.toLowerCase()) {
       case "pending":
@@ -434,7 +437,7 @@ const MaterialReqDetails = () => {
                           {material.quantity} {material.unitOfMeasurement}
                         </p>
                         <p className="text-sm text-gray-600">
-                          ID: {material.requestedMaterialId}
+                          Unit Price: LKR {material.unitPrice}
                         </p>
                       </div>
                     </div>
