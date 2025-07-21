@@ -34,7 +34,7 @@ export default function TechnicianAssignmentMain() {
   // Fetch equipment details
   useEffect(() => {
     setLoading(true);
-    fetch(http://localhost:8080/api/equipment-scheduling/${id})
+    fetch(`http://localhost:8080/api/equipment-scheduling/${id}`)
       .then((res) => {
         if (!res.ok) throw new Error("Failed to fetch equipment data");
         return res.json();
@@ -109,10 +109,10 @@ export default function TechnicianAssignmentMain() {
         navigation("/maintenance/update-equipment-maintenance");
       } else {
         const errText = await res.text();
-        toast.error(Failed to assign technician: ${errText});
+        toast.error(`Failed to assign technician: ${errText}`);
       }
     } catch (err) {
-      toast.error(Error assigning technician: ${err.message});
+      toast.error(`Error assigning technician: ${err.message}`);
     } finally {
       setSubmitting(false);
       setIsLoading(false);
@@ -140,7 +140,7 @@ export default function TechnicianAssignmentMain() {
   const updateSchedulingStatus = async (id, newStatus) => {
     try {
       const res = await fetch(
-        http://localhost:8080/api/equipment-scheduling/status?id=${id},
+        `http://localhost:8080/api/equipment-scheduling/status?id=${id}`,
         {
           method: "PUT",
           headers: {
