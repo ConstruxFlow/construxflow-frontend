@@ -1,6 +1,6 @@
 // src/pages/Supplier/SubmitQuotation.jsx
 import React, { useState, useEffect, useContext } from "react";
-import { useNavigate,useParams } from "react-router-dom";
+import { useNavigate, useParams } from "react-router-dom";
 import NavBar from "../../components/NavBar";
 import { FaPaperclip, FaTrash } from "react-icons/fa";
 import { toast } from "react-toastify";
@@ -20,17 +20,21 @@ const SubmitQuotation = () => {
   const navigate = useNavigate();
   const [requestSummary, setRequestSummary] = useState(null);
   const [itemsRequested, setItemsRequested] = useState([]);
-  const{authState}=useContext(AuthContext);
+  const { authState } = useContext(AuthContext);
   const [isLoading, setIsLoading] = useState(false);
   const [loadingProgress, setLoadingProgress] = useState(0);
-
 
   const [pricing, setPricing] = useState([
     { item: "", quantity: "", unitPrice: "" },
   ]);
   const [advancedPayment, setAdvancedPayment] = useState("");
   const [deliveries, setDeliveries] = useState([
-    { requiredDate: "", deliveryLocation: "", shippingCost: "", deliveryDate: ""},
+    {
+      requiredDate: "",
+      deliveryLocation: "",
+      shippingCost: "",
+      deliveryDate: "",
+    },
   ]);
   const [paymentTerms, setPaymentTerms] = useState("");
   const [notes, setNotes] = useState("");
@@ -60,20 +64,23 @@ const SubmitQuotation = () => {
               item: item.id,
               quantity: "",
               unitPrice: "",
-              estimatedUnitPrice: data.data.quotationReqMaterials?.find(m => m.material.materialId === item.id)?.unitPrice || "",
+              estimatedUnitPrice:
+                data.data.quotationReqMaterials?.find(
+                  (m) => m.material.materialId === item.id
+                )?.unitPrice || "",
             }))
           );
           const reqDate = data.data.deliveryDate || ""; // Use actual field from your data
           console.log(data.data.quotationReqDelivery);
           setDeliveries(
-            data.data.quotationReqDelivery.map((delivery)=>({
+            data.data.quotationReqDelivery.map((delivery) => ({
               requiredDate: "",
               deliveryLocation: delivery.location,
               shippingCost: "",
               deliveryDate: delivery.deliveryDate,
             }))
-          )
-          
+          );
+
           // setDeliveries([
           //   {
           //     requiredDate: "",
@@ -112,7 +119,12 @@ const SubmitQuotation = () => {
   const handleAddLocation = () =>
     setDeliveries([
       ...deliveries,
-      { requiredDate: "", deliveryLocation: "", shippingCost: "",deliveryDate: deliveries[0]?.deliveryDate || "" },
+      {
+        requiredDate: "",
+        deliveryLocation: "",
+        shippingCost: "",
+        deliveryDate: deliveries[0]?.deliveryDate || "",
+      },
     ]);
   const handleDeleteLocation = (idx) =>
     setDeliveries(deliveries.filter((_, i) => i !== idx));
@@ -153,6 +165,8 @@ const SubmitQuotation = () => {
       )
     ) {
       toast.error("Please fill all pricing fields correctly.");
+      setIsLoading(false);
+      setLoading(false);
       return;
     }
     setLoadingProgress(20);
@@ -167,6 +181,20 @@ const SubmitQuotation = () => {
       )
     ) {
       toast.error("Please fill all delivery fields correctly.");
+      setIsLoading(false);
+      setLoading(false);
+      return;
+    }
+    const invalidDeliveryDates = deliveries.some((d) => {
+      const deliveryDate = new Date(d.requiredDate);
+      const requiredDate = new Date(d.deliveryDate);
+      return deliveryDate > requiredDate;
+    });
+
+    if (invalidDeliveryDates) {
+      toast.error("Delivery Date cannot be after Required Date.");
+      setIsLoading(false);
+      setLoading(false);
       return;
     }
 
@@ -185,7 +213,7 @@ const SubmitQuotation = () => {
       notes,
       totalAmount: total,
       status: "Pending",
-      supplierId: authState?.user.supplierId || "S001", 
+      supplierId: authState?.user.supplierId || "S001",
       items: pricing.map((p) => ({
         material: { materialId: p.item },
         quantity: parseInt(p.quantity, 10),
@@ -228,7 +256,12 @@ const SubmitQuotation = () => {
       setPricing([{ item: "", quantity: "", unitPrice: "" }]);
       setAdvancedPayment("");
       setDeliveries([
-        { requiredDate: "", deliveryLocation: "", shippingCost: "",deliveryDate: deliveries[0]?.deliveryDate || "" },
+        {
+          requiredDate: "",
+          deliveryLocation: "",
+          shippingCost: "",
+          deliveryDate: deliveries[0]?.deliveryDate || "",
+        },
       ]);
       setPaymentTerms("");
       setNotes("");
@@ -243,10 +276,14 @@ const SubmitQuotation = () => {
   };
 
   // console.log(deliveries);
-  
+
   return (
     <div className="bg-[#f6f7f9] min-h-screen font-poppins">
-      <NavBar links={navLinks} profileURL="/supplier/profile" logoSrc="/logo1.png" />
+      <NavBar
+        links={navLinks}
+        profileURL="/supplier/profile"
+        logoSrc="/logo1.png"
+      />
 
       {isLoading && (
         <LoadingOverlay
@@ -258,11 +295,17 @@ const SubmitQuotation = () => {
       <div className="max-w-full mx-auto px-20 py-8">
         {/* Breadcrumb */}
         <div className="text-sm text-slatebluegray mb-2">
-          <a href="/supplier/dashboard" className="hover:underline text-deep_green">
+          <a
+            href="/supplier/dashboard"
+            className="hover:underline text-deep_green"
+          >
             Dashboard
           </a>{" "}
           &nbsp;/&nbsp;
-          <a href="/supplier/requests" className="hover:underline text-deep_green">
+          <a
+            href="/supplier/requests"
+            className="hover:underline text-deep_green"
+          >
             Request
           </a>{" "}
           &nbsp;/&nbsp;
@@ -307,7 +350,9 @@ const SubmitQuotation = () => {
                   </span>
                 </div>
                 <div>
-                  <span className="text-slatebluegray">Quotation Deadline:</span>
+                  <span className="text-slatebluegray">
+                    Quotation Deadline:
+                  </span>
                   <span className="ml-2 text-web_yellow font-semibold">
                     {new Date(
                       requestSummary.quotationDeadline
@@ -327,7 +372,6 @@ const SubmitQuotation = () => {
                     ))}
                   </tbody>
                 </table>
-                
               </div>
             </div>
           </div>
@@ -392,7 +436,6 @@ const SubmitQuotation = () => {
                       readOnly
                       disabled
                       className="w-full border border-light_gray rounded-lg pl-7 pr-3 py-2 text-main_dark focus:outline-none"
-                      
                     />
                   </div>
                   <div className="relative">
