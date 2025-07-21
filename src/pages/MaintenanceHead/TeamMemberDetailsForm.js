@@ -2,6 +2,7 @@ import React, { useEffect, useState } from "react";
 import { useNavigate } from "react-router-dom";
 import NavBar from "../../components/NavBar";
 import TeamSection from "../../components/MaintenanceHead/TeamSection";
+import { User, Phone, Mail, Calendar, Briefcase, Settings, UserPlus, Users } from 'lucide-react';
 
 const specializations = [
   { label: "Plumbing", icon: "🛠️" },
@@ -27,6 +28,28 @@ export default function TeamMemberDetailsForm() {
   const [loading, setLoading] = useState(false);
   const [responseMsg, setResponseMsg] = useState(null);
 
+  const [showTeam, setShowTeam] = useState(false);
+  const navigation = useNavigate();
+  const [isLoggedIn, setIsLoggedIn] = useState(false);
+  
+  // Check login state on mount
+  useEffect(() => {
+    const user = localStorage.getItem("user");
+    setIsLoggedIn(!!user);
+  }, []);
+
+  // Logout handler
+  const handleLogout = () => {
+    localStorage.removeItem("user");
+    localStorage.removeItem("role");
+    setIsLoggedIn(false);
+    navigation("/login");
+  };
+
+  const handleLogin = () => {
+    navigation("/login");
+  };
+
   const handleSpecClick = (label) => {
     setSelectedSpecs((prev) =>
       prev.includes(label)
@@ -51,7 +74,7 @@ export default function TeamMemberDetailsForm() {
     const data = {
       ...form,
       specializations: selectedSpecs,
-      availabilityStatus: status.toUpperCase(), // API expects "AVAILABLE" or "UNAVAILABLE"
+      availabilityStatus: status.toUpperCase(),
     };
 
     try {
@@ -66,7 +89,6 @@ export default function TeamMemberDetailsForm() {
       if (res.ok) {
         const result = await res.json();
         setResponseMsg("Team member added successfully!");
-        // Optionally reset form here
         setForm({
           name: "",
           nic: "",
@@ -89,262 +111,371 @@ export default function TeamMemberDetailsForm() {
     setLoading(false);
   };
 
-    const [showTeam, setShowTeam] = useState(false);
-    const navigation = useNavigate();
-    const [isLoggedIn, setIsLoggedIn] = useState(false);
-    
-      // Check login state on mount
-      useEffect(() => {
-        const user = localStorage.getItem("user");
-        setIsLoggedIn(!!user);
-      }, []);
-    
-      // Logout handler
-      const handleLogout = () => {
-        localStorage.removeItem("user");
-        localStorage.removeItem("role");
-        setIsLoggedIn(false);
-        navigation("/login");
-      };
-
-      const handleLogin = () => {
-    navigation("/login");
-    };
+  const handleReset = () => {
+    setForm({
+      name: "",
+      nic: "",
+      phone: "",
+      email: "",
+      department: "",
+      joinDate: "",
+      experience: "",
+      gender: "",
+    });
+    setSelectedSpecs([]);
+    setStatus("Available");
+    setResponseMsg(null);
+  };
 
   return (
     <>
-
-    <NavBar
-      links={[
+      <NavBar
+        links={[
           { name: "Dashboard", href: "#", onClick: () => navigation("/maintenance/dashboard") },
-          { name: "Task", href: "#",onClick: () => navigation("/maintenance/scheduling") },
+          { name: "Task", href: "#", onClick: () => navigation("/maintenance/scheduling") },
           {
             name: "Schedule",
             href: "#",
-            onClick: () =>
-              navigation("/maintenance/update-equipment-maintenance"),
+            onClick: () => navigation("/maintenance/update-equipment-maintenance"),
           },
           { name: "Team", href: "#",
             onClick: () => {
-              // e.preventDefault();
               console.log("Team link clicked");
-              
               setShowTeam(true);
             },
-           },
-          { name: "Equipment", href: "#" ,onClick: () => navigation("/maintenance/equipment")},
-          { name: "Add Technician", href: "#",onClick: () => navigation("/maintenance/add-member") },
+          },
+          { name: "Equipment", href: "#", onClick: () => navigation("/maintenance/equipment")},
+          { name: "Add Technician", href: "#", onClick: () => navigation("/maintenance/add-member") },
         ]}
         showButton={true}
         buttonLabel={isLoggedIn ? "Logout" : "Get Started"}
         onButtonClick={isLoggedIn ? handleLogout : handleLogin}
-    />
-    <form
-      onSubmit={handleSubmit}
-      className="bg-white rounded-xl shadow-lg p-8 max-w-2xl mx-auto mt-10"
-    >
-      {/* Header */}
-      <h2 className="text-2xl font-semibold text-[#236571] text-center mb-1">
-        Team Member Details Form
-      </h2>
-      <p className="text-gray-500 text-center mb-8 text-sm">
-        Please fill in all required information
-      </p>
+      />
 
-      {/* Personal Details */}
-      <div>
-        <h3 className="text-[#236571] font-semibold mb-4">Personal Details</h3>
-        <div className="grid grid-cols-2 gap-4 mb-4">
-          <input
-            className="border border-gray-200 rounded px-3 py-2 text-sm focus:outline-[#236571]"
-            placeholder="Enter full name"
-            name="name"
-            value={form.name}
-            onChange={handleChange}
-            required
-          />
-          <input
-            className="border border-gray-200 rounded px-3 py-2 text-sm focus:outline-[#236571]"
-            placeholder="Enter NIC number"
-            name="nic"
-            value={form.nic}
-            onChange={handleChange}
-            required
-          />
-          <input
-            className="border border-gray-200 rounded px-3 py-2 text-sm focus:outline-[#236571]"
-            placeholder="Enter phone number"
-            name="phone"
-            value={form.phone}
-            onChange={handleChange}
-            required
-          />
-          <input
-            className="border border-gray-200 rounded px-3 py-2 text-sm focus:outline-[#236571]"
-            placeholder="Enter email address"
-            name="email"
-            value={form.email}
-            onChange={handleChange}
-            required
-          />
-          <select
-            className="border border-gray-200 rounded px-3 py-2 text-sm focus:outline-[#236571]"
-            name="department"
-            value={form.department}
-            onChange={handleChange}
-            required
-          >
-            <option value="">Select department</option>
-            <option>Maintenance</option>
-            <option>Operations</option>
-            <option>HR</option>
-          </select>
-          <input
-            type="date"
-            className="border border-gray-200 rounded px-3 py-2 text-sm focus:outline-[#236571]"
-            name="joinDate"
-            value={form.joinDate}
-            onChange={handleChange}
-            required
-          />
-          <input
-            className="border border-gray-200 rounded px-3 py-2 text-sm focus:outline-[#236571]"
-            placeholder="Enter years of experience"
-            name="experience"
-            value={form.experience}
-            onChange={handleChange}
-            required
-          />
-          {/* Gender Field */}
-          <select
-            className="border border-gray-200 rounded px-3 py-2 text-sm focus:outline-[#236571]"
-            name="gender"
-            value={form.gender}
-            onChange={handleChange}
-            required
-          >
-            <option value="">Select gender</option>
-            <option>Male</option>
-            <option>Female</option>
-            <option>Other</option>
-          </select>
+      <div className="max-w-full mx-auto px-6 sm:px-8 lg:px-16 py-6">
+        {/* Header */}
+        <div className="mb-8">
+          <h1 className="text-2xl font-bold text-main_dark mb-2">Add Team Member</h1>
+          <p className="text-slatebluegray text-base">Register a new maintenance technician to your team</p>
         </div>
-      </div>
 
-      {/* Specializations */}
-      <div className="mt-6">
-        <h3 className="text-[#236571] font-semibold mb-3">Specializations</h3>
-        <div className="grid grid-cols-3 gap-3 mb-2">
-          {specializations.map((spec) => (
-            <button
-              key={spec.label}
-              type="button"
-              className={`flex items-center justify-center gap-2 border rounded-lg px-4 py-2 text-sm font-medium transition ${
-                selectedSpecs.includes(spec.label)
-                  ? "bg-[#236571] text-white border-[#236571]"
-                  : "bg-white text-[#236571] border-gray-200 hover:bg-[#EFC11A] hover:text-[#236571] hover:border-[#EFC11A]"
-              }`}
-              onClick={() => handleSpecClick(spec.label)}
-            >
-              <span>{spec.icon}</span>
-              {spec.label}
-            </button>
-          ))}
+        {/* Form */}
+        <div className="bg-purewhite border border-gray-200 rounded-xl shadow-sm overflow-hidden">
+          <form onSubmit={handleSubmit}>
+            {/* Personal Information */}
+            <div className="p-6 sm:p-8 border-b border-gray-200">
+              <div className="flex items-center gap-3 mb-6">
+                <User className="w-5 h-5 text-web_yellow" />
+                <h2 className="text-lg font-semibold text-main_dark">Personal Information</h2>
+              </div>
+              
+              <div className="grid grid-cols-1 md:grid-cols-2 gap-6">
+                <div>
+                  <label className="block text-sm font-medium text-slatebluegray mb-2">
+                    Full Name <span className="text-red-500">*</span>
+                  </label>
+                  <input
+                    type="text"
+                    name="name"
+                    value={form.name}
+                    onChange={handleChange}
+                    className="w-full px-4 py-3 border border-gray-300 rounded-lg focus:outline-none focus:ring-2 focus:ring-web_yellow focus:border-transparent transition-all duration-150"
+                    placeholder="Enter full name"
+                    required
+                  />
+                </div>
+
+                <div>
+                  <label className="block text-sm font-medium text-slatebluegray mb-2">
+                    NIC Number <span className="text-red-500">*</span>
+                  </label>
+                  <input
+                    type="text"
+                    name="nic"
+                    value={form.nic}
+                    onChange={handleChange}
+                    className="w-full px-4 py-3 border border-gray-300 rounded-lg focus:outline-none focus:ring-2 focus:ring-web_yellow focus:border-transparent transition-all duration-150"
+                    placeholder="Enter NIC number"
+                    required
+                  />
+                </div>
+
+                <div>
+                  <label className="block text-sm font-medium text-slatebluegray mb-2">
+                    Phone Number <span className="text-red-500">*</span>
+                  </label>
+                  <div className="relative">
+                    <input
+                      type="tel"
+                      name="phone"
+                      value={form.phone}
+                      onChange={handleChange}
+                      className="w-full px-4 py-3 pl-12 border border-gray-300 rounded-lg focus:outline-none focus:ring-2 focus:ring-web_yellow focus:border-transparent transition-all duration-150"
+                      placeholder="Enter phone number"
+                      required
+                    />
+                    <Phone className="absolute left-4 top-3.5 w-4 h-4 text-deep_green" />
+                  </div>
+                </div>
+
+                <div>
+                  <label className="block text-sm font-medium text-slatebluegray mb-2">
+                    Email Address <span className="text-red-500">*</span>
+                  </label>
+                  <div className="relative">
+                    <input
+                      type="email"
+                      name="email"
+                      value={form.email}
+                      onChange={handleChange}
+                      className="w-full px-4 py-3 pl-12 border border-gray-300 rounded-lg focus:outline-none focus:ring-2 focus:ring-web_yellow focus:border-transparent transition-all duration-150"
+                      placeholder="Enter email address"
+                      required
+                    />
+                    <Mail className="absolute left-4 top-3.5 w-4 h-4 text-deep_green" />
+                  </div>
+                </div>
+
+                <div>
+                  <label className="block text-sm font-medium text-slatebluegray mb-2">
+                    Gender <span className="text-red-500">*</span>
+                  </label>
+                  <select
+                    name="gender"
+                    value={form.gender}
+                    onChange={handleChange}
+                    className="w-full px-4 py-3 border border-gray-300 rounded-lg focus:outline-none focus:ring-2 focus:ring-web_yellow focus:border-transparent transition-all duration-150"
+                    required
+                  >
+                    <option value="">Select gender</option>
+                    <option value="Male">Male</option>
+                    <option value="Female">Female</option>
+                    <option value="Other">Other</option>
+                  </select>
+                </div>
+              </div>
+            </div>
+
+            {/* Professional Information */}
+            <div className="p-6 sm:p-8 border-b border-gray-200">
+              <div className="flex items-center gap-3 mb-6">
+                <Briefcase className="w-5 h-5 text-web_yellow" />
+                <h2 className="text-lg font-semibold text-main_dark">Professional Information</h2>
+              </div>
+              
+              <div className="grid grid-cols-1 md:grid-cols-2 gap-6">
+                <div>
+                  <label className="block text-sm font-medium text-slatebluegray mb-2">
+                    Department <span className="text-red-500">*</span>
+                  </label>
+                  <select
+                    name="department"
+                    value={form.department}
+                    onChange={handleChange}
+                    className="w-full px-4 py-3 border border-gray-300 rounded-lg focus:outline-none focus:ring-2 focus:ring-web_yellow focus:border-transparent transition-all duration-150"
+                    required
+                  >
+                    <option value="">Select department</option>
+                    <option value="Maintenance">Maintenance</option>
+                    <option value="Operations">Operations</option>
+                    <option value="HR">HR</option>
+                  </select>
+                </div>
+
+                <div>
+                  <label className="block text-sm font-medium text-slatebluegray mb-2">
+                    Join Date <span className="text-red-500">*</span>
+                  </label>
+                  <div className="relative">
+                    <input
+                      type="date"
+                      name="joinDate"
+                      value={form.joinDate}
+                      onChange={handleChange}
+                      className="w-full px-4 py-3 pl-12 border border-gray-300 rounded-lg focus:outline-none focus:ring-2 focus:ring-web_yellow focus:border-transparent transition-all duration-150"
+                      required
+                    />
+                    <Calendar className="absolute left-4 top-3.5 w-4 h-4 text-deep_green" />
+                  </div>
+                </div>
+
+                <div className="md:col-span-2">
+                  <label className="block text-sm font-medium text-slatebluegray mb-2">
+                    Years of Experience <span className="text-red-500">*</span>
+                  </label>
+                  <input
+                    type="number"
+                    name="experience"
+                    value={form.experience}
+                    onChange={handleChange}
+                    className="w-full px-4 py-3 border border-gray-300 rounded-lg focus:outline-none focus:ring-2 focus:ring-web_yellow focus:border-transparent transition-all duration-150"
+                    placeholder="Enter years of experience"
+                    min="0"
+                    step="1"
+                    required
+                  />
+                </div>
+              </div>
+            </div>
+
+            {/* Specializations */}
+            <div className="p-6 sm:p-8 border-b border-gray-200">
+              <div className="flex items-center gap-3 mb-6">
+                <Settings className="w-5 h-5 text-web_yellow" />
+                <h2 className="text-lg font-semibold text-main_dark">Specializations</h2>
+              </div>
+              
+              <div className="grid grid-cols-2 md:grid-cols-3 gap-3">
+                {specializations.map((spec) => (
+                  <button
+                    key={spec.label}
+                    type="button"
+                    className={`flex items-center justify-center gap-2 border rounded-lg px-4 py-3 text-sm font-medium transition-all duration-150 ${
+                      selectedSpecs.includes(spec.label)
+                        ? "bg-deep_green text-white border-deep_green shadow-md"
+                        : "bg-purewhite text-main_dark border-gray-300 hover:bg-web_yellow/10 hover:border-web_yellow"
+                    }`}
+                    onClick={() => handleSpecClick(spec.label)}
+                  >
+                    <span>{spec.icon}</span>
+                    {spec.label}
+                  </button>
+                ))}
+              </div>
+            </div>
+
+            {/* Availability Status */}
+            <div className="p-6 sm:p-8 border-b border-gray-200">
+              <div className="flex items-center gap-3 mb-6">
+                <Users className="w-5 h-5 text-web_yellow" />
+                <h2 className="text-lg font-semibold text-main_dark">Availability Status</h2>
+              </div>
+              
+              <div className="flex items-center gap-4">
+                <span className="text-slatebluegray text-sm font-medium">Current Status:</span>
+                <div className="flex gap-3">
+                  <button
+                    type="button"
+                    className={`flex items-center gap-2 px-4 py-3 rounded-lg text-sm font-medium border transition-all duration-150 ${
+                      status === "Available"
+                        ? "bg-green-100 text-green-700 border-green-300 ring-2 ring-green-500"
+                        : "bg-purewhite text-slatebluegray border-gray-300 hover:bg-green-50"
+                    }`}
+                    onClick={() => setStatus("Available")}
+                  >
+                    <span className="w-2.5 h-2.5 bg-green-500 rounded-full inline-block"></span>
+                    Available
+                  </button>
+                  <button
+                    type="button"
+                    className={`flex items-center gap-2 px-4 py-3 rounded-lg text-sm font-medium border transition-all duration-150 ${
+                      status === "Unavailable"
+                        ? "bg-red-100 text-red-700 border-red-300 ring-2 ring-red-500"
+                        : "bg-purewhite text-slatebluegray border-gray-300 hover:bg-red-50"
+                    }`}
+                    onClick={() => setStatus("Unavailable")}
+                  >
+                    <span className="w-2.5 h-2.5 bg-red-500 rounded-full inline-block"></span>
+                    Unavailable
+                  </button>
+                </div>
+              </div>
+            </div>
+
+            {/* Actions */}
+            <div className="p-6 sm:p-8">
+              {responseMsg && (
+                <div className={`mb-4 p-4 rounded-lg ${
+                  responseMsg.startsWith("Team member added")
+                    ? "bg-green-50 text-green-800 border border-green-200"
+                    : "bg-red-50 text-red-800 border border-red-200"
+                }`}>
+                  {responseMsg}
+                </div>
+              )}
+              
+              <div className="flex flex-col sm:flex-row justify-end gap-4">
+                <button 
+                  type="button"
+                  onClick={handleReset}
+                  className="px-6 py-3 border border-gray-300 rounded-lg text-slatebluegray hover:text-main_dark font-semibold hover:bg-gray-50 transition-all duration-150"
+                  disabled={loading}
+                >
+                  Cancel
+                </button>
+                <button
+                  type="submit"
+                  disabled={loading}
+                  className="px-8 py-3 bg-web_yellow hover:bg-web_yellow/80 text-main_dark font-semibold rounded-lg transition-all duration-150 shadow-sm hover:shadow-md flex items-center justify-center gap-2 disabled:opacity-50 disabled:cursor-not-allowed"
+                >
+                  {loading ? (
+                    <>
+                      <div className="animate-spin rounded-full h-4 w-4 border-b-2 border-main_dark"></div>
+                      Saving...
+                    </>
+                  ) : (
+                    <>
+                      <UserPlus className="w-4 h-4" />
+                      Save Details
+                    </>
+                  )}
+                </button>
+              </div>
+            </div>
+          </form>
         </div>
-      </div>
 
-      {/* Availability Status */}
-      <div className="mt-6">
-        <h3 className="text-[#236571] font-semibold mb-3">Availability Status</h3>
-        <div className="flex items-center gap-4">
-          <span className="text-gray-600 text-sm">Current Status:</span>
-          <button
-            type="button"
-            className={`flex items-center gap-2 px-4 py-2 rounded-md text-sm font-medium border ${
-              status === "Available"
-                ? "bg-green-100 text-green-700 border-green-200"
-                : "bg-white text-gray-500 border-gray-200"
-            }`}
-            onClick={() => setStatus("Available")}
-          >
-            <span className="w-2.5 h-2.5 bg-green-500 rounded-full inline-block"></span>
-            Available
-          </button>
-          <button
-            type="button"
-            className={`flex items-center gap-2 px-4 py-2 rounded-md text-sm font-medium border ${
-              status === "Unavailable"
-                ? "bg-red-100 text-red-700 border-red-200"
-                : "bg-white text-gray-500 border-gray-200"
-            }`}
-            onClick={() => setStatus("Unavailable")}
-          >
-            <span className="w-2.5 h-2.5 bg-red-500 rounded-full inline-block"></span>
-            Unavailable
-          </button>
-        </div>
-      </div>
-
-      {/* Actions */}
-      <div className="flex flex-col items-end gap-2 mt-8">
-        {responseMsg && (
-          <div
-            className={`mb-2 text-sm ${
-              responseMsg.startsWith("Team member added")
-                ? "text-green-600"
-                : "text-red-600"
-            }`}
-          >
-            {responseMsg}
+        {/* Info Cards */}
+        <div className="grid grid-cols-1 md:grid-cols-3 gap-6 mt-8">
+          <div className="bg-purewhite border border-gray-200 rounded-xl p-6 shadow-sm">
+            <div className="flex items-center mb-4">
+              <div className="w-12 h-12 bg-gradient-to-br from-deep_green via-deep_green to-deep_green/80 rounded-xl flex items-center justify-center shadow-lg mr-4">
+                <Users className="w-5 h-5 text-white" />
+              </div>
+              <h3 className="font-semibold text-main_dark">Team Integration</h3>
+            </div>
+            <p className="text-sm text-slatebluegray">
+              New team members are automatically integrated into the scheduling and task management system.
+            </p>
           </div>
-        )}
-        <div className="flex gap-3">
-          <button
-            type="button"
-            className="px-5 py-2 rounded-md border border-gray-200 text-gray-500 hover:bg-gray-100 transition"
-            onClick={() => {
-              setForm({
-                name: "",
-                nic: "",
-                phone: "",
-                email: "",
-                department: "",
-                joinDate: "",
-                experience: "",
-                gender: "",
-              });
-              setSelectedSpecs([]);
-              setStatus("Available");
-              setResponseMsg(null);
-            }}
-            disabled={loading}
-          >
-            Cancel
-          </button>
-          <button
-            type="submit"
-            className="px-6 py-2 rounded-md bg-[#236571] text-white font-semibold hover:bg-[#17414a] transition"
-            disabled={loading}
-          >
-            {loading ? "Saving..." : "Save Details"}
-          </button>
+
+          <div className="bg-purewhite border border-gray-200 rounded-xl p-6 shadow-sm">
+            <div className="flex items-center mb-4">
+              <div className="w-12 h-12 bg-gradient-to-br from-web_yellow via-web_yellow to-web_yellow/80 rounded-xl flex items-center justify-center shadow-lg mr-4">
+                <Settings className="w-5 h-5 text-main_dark" />
+              </div>
+              <h3 className="font-semibold text-main_dark">Skills Tracking</h3>
+            </div>
+            <p className="text-sm text-slatebluegray">
+              Specializations are tracked for optimal task assignment and workload distribution.
+            </p>
+          </div>
+
+          <div className="bg-purewhite border border-gray-200 rounded-xl p-6 shadow-sm">
+            <div className="flex items-center mb-4">
+              <div className="w-12 h-12 bg-gradient-to-br from-light_brown via-light_brown to-light_brown/80 rounded-xl flex items-center justify-center shadow-lg mr-4">
+                <Calendar className="w-5 h-5 text-white" />
+              </div>
+              <h3 className="font-semibold text-main_dark">Availability Management</h3>
+            </div>
+            <p className="text-sm text-slatebluegray">
+              Real-time availability status helps in efficient resource planning and task scheduling.
+            </p>
+          </div>
         </div>
       </div>
-    </form>
 
-    {/* Overlay and Team Sidebar */}
-          {showTeam && (
-            <>
-              {/* BLUR OVERLAY */}
-              <div
-                className="fixed inset-0 z-40 bg-black bg-opacity-30 backdrop-blur-sm transition-all"
-                onClick={() => setShowTeam(false)}
-                aria-label="Close team sidebar"
-              />
-              {/* TEAM SIDEBAR */}
-              <TeamSection onClose={() => setShowTeam(false)} />
-            </>
-          )}
+      {/* Overlay and Team Sidebar */}
+      {showTeam && (
+        <>
+          <div
+            className="fixed inset-0 z-40 bg-black bg-opacity-30 backdrop-blur-sm transition-all"
+            onClick={() => setShowTeam(false)}
+            aria-label="Close team sidebar"
+          />
+          <TeamSection onClose={() => setShowTeam(false)} />
+        </>
+      )}
     </>
   );
 }

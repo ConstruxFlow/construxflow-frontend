@@ -9,7 +9,7 @@ import { useNavigate } from "react-router-dom";
 import { toast } from "react-toastify";
 
 const navLinks = [
-  { name: "Dashboard", href: "/supplier/dashboard1" },
+  { name: "Dashboard", href: "/supplier/dashboard" },
   { name: "Requests", href: "/supplier/requests" },
   { name: "Quotations", href: "/supplier/quotations" },
   { name: "Orders", href: "/supplier/orders" },
