@@ -82,6 +82,7 @@ import { SupplierRoutes } from "./pages/Supplier/routes";
   import ScheduleForm from "./pages/InventoryManager/ScheduleForm";
 import ViewSchedulePage from "./pages/InventoryManager/ViewSchedulePage";
 import ReorderMaterialPage from "./pages/InventoryManager/ReorderMaterialPage";
+import Profile from "./pages/InventoryManager/InventoryManagerProfile";
 
 
   export const routes = createBrowserRouter([
@@ -344,6 +345,10 @@ import ReorderMaterialPage from "./pages/InventoryManager/ReorderMaterialPage";
   element: <ReorderMaterialPage />,
 },
 
+{
+  path: "/Inventory/profile",
+  element: <Profile />,
+},
 
 
 ReorderMaterialPage

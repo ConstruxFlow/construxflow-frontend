@@ -113,6 +113,7 @@ const MaintenanceDashboard = () => {
   return (
     <>
       <NavBar
+        profileURL="/maintenance/profile"
         links={[
           {
             name: "Dashboard",

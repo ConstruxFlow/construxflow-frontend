@@ -18,7 +18,7 @@ const InventoryDashboard = () => {
   return (
     <div className="min-h-screen bg-[#FCFCFC]">
       {/* Enhanced Navigation Bar */}
-      <NavBar links={navigationLinks} />
+      <NavBar links={navigationLinks} profileURL='/inventory/profile'/>
       
       {/* Quick Actions Bar */}
       

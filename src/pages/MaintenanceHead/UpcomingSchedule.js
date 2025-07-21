@@ -66,7 +66,6 @@ export default function NextScheduleContainer() {
 
   const tabs = ["Due This Week", "Due This Month", "Overdue"];
   const [showTeam, setShowTeam] = useState(false);
-  const [assignments, setAssignments] = useState({});
   const [technicianId, setTechnicianId] = useState(null);
   const [technicianDetails, setTechnicianDetails] = useState(null);
   const [teamMembers, setTeamMembers] = useState([]);
@@ -82,6 +81,10 @@ export default function NextScheduleContainer() {
   const [loadingProgress, setLoadingProgress] = useState(0);
   const [isLoading, setIsLoading] = useState(false);
   const [showNextSchedule, setShowNextSchedule] = useState(false);
+  const [assignments, setAssignments] = useState([]);
+
+  // Add this missing state for multiple technician selection
+  const [selectedNextTechs, setSelectedNextTechs] = useState([]);
 
   const navigation = useNavigate();
 
@@ -120,37 +123,46 @@ export default function NextScheduleContainer() {
   //   }
   // }, [upcomingMaintenance]);
 
+  // console.log("Selected Maintenance:", selectedMaintenance?.id);
+
   useEffect(() => {
     if (!selectedMaintenance?.id) return;
 
     fetch(
-      `http://localhost:8080/api/equipmentassigntechnician?id=${encodeURIComponent(
+      `http://localhost:8080/api/equipmentassigntechnician/getbyassignId?scheduleId=${encodeURIComponent(
         selectedMaintenance.id
       )}`
     )
       .then((res) => {
-        if (!res.ok) throw new Error("Failed to fetch assignment");
+        if (!res.ok) throw new Error("Failed to fetch assignments");
         return res.json();
       })
       .then((data) => {
-        setAssignments(data);
-        if (Array.isArray(data) && data.length > 0) {
-          setTechnicianId(assignments.technicianId);
+        // ✅ Ensure data is always an array
+        const formattedData = Array.isArray(data) ? data : data ? [data] : [];
+        setAssignments(formattedData);
+
+        // ✅ Set technicianId only if one of them exists
+        if (formattedData.length > 0) {
+          setTechnicianId(formattedData[0].technicianId);
         }
       })
-      .catch(console.error);
-  }, [selectedMaintenance]); // ✅ Run this only when selectedMaintenance is updated
+      .catch((err) => console.error("Fetch Error:", err));
+  }, [selectedMaintenance]);
+
+  // ✅ Run this only when selectedMaintenance is updated
 
   console.log("fxcgvjvb", assignments.technicianId);
 
   useEffect(() => {
-    if (!assignments.technicianId) return;
+    if (!Array.isArray(assignments) || assignments.length === 0) return;
 
-    // Assuming /api/team/{id} is supported
+    const firstTechId = assignments[0].technicianId;
+
+    if (!firstTechId) return;
+
     fetch(
-      `http://localhost:8080/api/team?id=${encodeURIComponent(
-        assignments.technicianId
-      )}`
+      `http://localhost:8080/api/team?id=${encodeURIComponent(firstTechId)}`
     )
       .then((res) => {
         if (!res.ok) throw new Error("Failed to fetch technician");
@@ -158,7 +170,8 @@ export default function NextScheduleContainer() {
       })
       .then((data) => setTechnicianDetails(data))
       .catch(console.error);
-  }, [assignments.technicianId]); // ✅ Run this only when technicianId or assignments.technicianId is updated
+  }, [assignments]);
+  // ✅ Run this only when technicianId or assignments.technicianId is updated
 
   console.log("Upcoming Maintenance Data:", upcomingMaintenance);
   console.log("Assignments Data:", assignments);
@@ -170,8 +183,13 @@ export default function NextScheduleContainer() {
       return;
     }
 
-    if (!assignments.assignId || !selectedMaintenance?.id) {
-      alert("Missing assignment or equipment ID");
+    if (!assignments || assignments.length === 0) {
+      alert("No assignments found");
+      return;
+    }
+
+    if (!selectedMaintenance?.id) {
+      alert("Missing equipment ID");
       return;
     }
 
@@ -185,25 +203,32 @@ export default function NextScheduleContainer() {
     try {
       setLoadingProgress(10);
 
-      const assignRes = await fetch(
-        `http://localhost:8080/api/equipmentassigntechnician/status?id=${encodeURIComponent(
-          assignments.assignId
-        )}`,
-        {
-          method: "PUT",
-          headers: {
-            "Content-Type": "application/json",
-          },
-          body: JSON.stringify(newStatus),
-        }
+      // Update status for ALL assignments
+      const assignmentPromises = assignments.map((assignment) =>
+        fetch(
+          `http://localhost:8080/api/equipmentassigntechnician/status?id=${encodeURIComponent(
+            assignment.assignId
+          )}`,
+          {
+            method: "PUT",
+            headers: {
+              "Content-Type": "application/json",
+            },
+            body: JSON.stringify(newStatus),
+          }
+        )
       );
 
-      if (!assignRes.ok) throw new Error("Failed to update assignment status");
+      const assignResults = await Promise.all(assignmentPromises);
+
+      // Check if all assignment updates were successful
+      for (const result of assignResults) {
+        if (!result.ok) throw new Error("Failed to update assignment status");
+      }
+
       setLoadingProgress(50);
 
-      const assignData = await assignRes.json();
-      console.log("Assignment updated:", assignData);
-
+      // Update equipment status
       const equipRes = await fetch(
         `http://localhost:8080/api/equipment-scheduling/status?id=${encodeURIComponent(
           selectedMaintenance.id
@@ -218,26 +243,29 @@ export default function NextScheduleContainer() {
       );
 
       if (!equipRes.ok) throw new Error("Failed to update equipment status");
-      setLoadingProgress(80);
 
       const equipData = await equipRes.json();
       setLoadingProgress(100);
-
-      toast.success("Status updated successfully!");
-      console.log("Equipment updated:", equipData);
+      toast.success("Status updated successfully for all assignments!");
       setUpdateStatus(equipData.newStatus);
-      navigation("/maintenance/task-complete/" + selectedMaintenance.id);
+
+      // Navigate with all assignment IDs
+      const assignIds = assignments.map((a) => a.assignId).join("&assignId=");
+      navigation(
+        `/maintenance/task-complete/${selectedMaintenance.id}?assignId=${assignIds}`
+      );
     } catch (err) {
       console.error("Status update error:", err);
       toast.error("Status update failed: " + err.message);
     } finally {
       clearInterval(progressInterval);
       setTimeout(() => {
-        setIsLoading(false); // hide overlay
-        setLoadingProgress(0); // reset progress
-      }, 500); // smooth out exit
+        setIsLoading(false);
+        setLoadingProgress(0);
+      }, 500);
     }
   };
+
   useEffect(() => {
     fetch("http://localhost:8080/api/team/all")
       .then((res) => {
@@ -259,15 +287,18 @@ export default function NextScheduleContainer() {
 
   const handleScheduleSubmit = async () => {
     if (
-      !assignments.assignId ||
+      !assignments ||
+      assignments.length === 0 ||
       !selectedMaintenance?.id ||
       !scheduledDate ||
       !maintenanceType ||
       !estimatedDuration ||
       !priorityLevel ||
-      !assignedTech
+      selectedNextTechs.length === 0 // ✅ Check for multiple techs
     ) {
-      alert("Please fill in all required fields.");
+      alert(
+        "Please fill in all required fields and select at least one technician."
+      );
       return;
     }
 
@@ -275,46 +306,53 @@ export default function NextScheduleContainer() {
     setIsLoading(true);
     setLoadingProgress(0);
 
-    // Incremental simulated progress bar
     const progressInterval = setInterval(() => {
       setLoadingProgress((p) => (p >= 90 ? p : p + Math.random() * 5));
     }, 150);
 
-    const requestBody = {
-      assignId: assignments.assignId,
-      equipmentScheduleId: selectedMaintenance?.id,
-      nextMaintenanceType: maintenanceType,
-      nextDate: scheduledDate,
-      estimateDuration: estimatedDuration,
-      priority: priorityLevel,
-      technicianId: assignedTech,
-    };
-
     try {
       setLoadingProgress(10);
-      handleChangeStatus();
-      const res = await fetch(
-        "http://localhost:8080/api/nextschedule/setnextschedule",
-        {
+
+      // First update all assignment statuses
+      await handleChangeStatus();
+
+      setLoadingProgress(40);
+
+      // ✅ Create next schedule requests for each assignment with multiple technicians
+      const schedulePromises = assignments.map((assignment) => {
+        const requestBody = {
+          assignId: assignment.assignId,
+          equipmentScheduleId: selectedMaintenance?.id,
+          nextMaintenanceType: maintenanceType,
+          nextDate: scheduledDate,
+          estimateDuration: estimatedDuration,
+          priority: priorityLevel,
+          technicianIds: selectedNextTechs, // ✅ Send array of technician IDs
+        };
+
+        return fetch("http://localhost:8080/api/nextschedule/setnextschedule", {
           method: "POST",
           headers: {
             "Content-Type": "application/json",
           },
           body: JSON.stringify(requestBody),
-        }
-      );
+        });
+      });
 
-      setLoadingProgress(70);
+      const scheduleResults = await Promise.all(schedulePromises);
 
-      if (!res.ok) throw new Error("Failed to schedule maintenance");
-
-      const data = await res.json();
+      // Check if all schedule submissions were successful
+      for (const result of scheduleResults) {
+        if (!result.ok) throw new Error("Failed to schedule maintenance");
+      }
 
       setLoadingProgress(100);
-      toast.success("Maintenance scheduled successfully!");
-      console.log("Scheduled:", data);
+      toast.success("Maintenance scheduled successfully for all assignments!");
+
+      // Navigate with all assignment IDs
+      const assignIds = assignments.map((a) => a.assignId).join("&assignId=");
       navigation(
-        `/maintenance/task-complete/${selectedMaintenance.id}?assignId=${assignments.assignId}`
+        `/maintenance/task-complete/${selectedMaintenance.id}?assignId=${assignIds}`
       );
     } catch (err) {
       console.error("Schedule Error:", err);
@@ -336,7 +374,7 @@ export default function NextScheduleContainer() {
     setNotes("");
     setNewStatus("");
     setTechnicianDetails(null);
-    setAssignments({});
+    setAssignments([]);
   };
 
   useEffect(() => {
@@ -607,86 +645,110 @@ export default function NextScheduleContainer() {
                   Assignment Details
                 </h2>
 
-                <div className="mb-4">
-                  <label className="block text-sm font-medium text-gray-700 mb-1">
-                    Assigned Technician
-                  </label>
-                  <div className="flex items-center gap-3">
-                    <div className="w-8 h-8 bg-[#236571] rounded-full flex items-center justify-center">
-                      <User className="w-4 h-4 text-white" />
-                    </div>
-                    <span className="text-sm font-medium text-gray-900">
-                      {technicianDetails ? technicianDetails.name : ""}
-                    </span>
-                    <span className="text-xs text-gray-500">
-                      Senior Technician
-                    </span>
-                  </div>
-                </div>
-
-                <div className="grid grid-cols-1 md:grid-cols-2 gap-4 mb-4">
-                  <div>
-                    <label className="block text-sm font-medium text-gray-700 mb-1">
-                      Start Date
-                    </label>
-                    <div className="relative">
-                      <input
-                        type="text"
-                        value={assignments ? assignments.startDate : ""}
-                        onChange={(e) => setStartDate(e.target.value)}
-                        placeholder="mm/dd/yyyy --:-- --"
-                        className="w-full border border-gray-300 rounded-md px-3 py-2 text-sm"
-                      />
-                      <Calendar className="absolute right-3 top-2.5 h-4 w-4 text-gray-400 pointer-events-none" />
-                    </div>
-                  </div>
-                  <div>
-                    <label className="block text-sm font-medium text-gray-700 mb-1">
-                      Estimated Duration
-                    </label>
-                    <div className="relative">
-                      <select
-                        value={assignments ? assignments.duration : ""}
-                        onChange={(e) => setDuration(e.target.value)}
-                        className="w-full border border-gray-300 rounded-md px-3 py-2 text-sm appearance-none"
-                      >
-                        <option>1-2 hours</option>
-                        <option>2-4 hour</option>
-                        <option>3-6 hours</option>
-                        <option>1 day</option>
-                      </select>
-                      <ChevronDown className="absolute right-3 top-2.5 h-4 w-4 text-gray-400 pointer-events-none" />
-                    </div>
-                  </div>
-                </div>
-
+                {/* Technicians */}
                 <div className="mb-6">
-                  <label className="block text-sm font-medium text-gray-700 mb-1">
-                    Notes
+                  <label className="block text-sm font-medium text-gray-700 mb-2">
+                    Assigned Technicians
                   </label>
-                  <textarea
-                    value={assignments ? assignments.notes : ""}
-                    onChange={(e) => setNotes(e.target.value)}
-                    placeholder="Additional notes..."
-                    className="w-full border border-gray-300 rounded-md px-3 py-2 text-sm"
-                    rows={2}
-                  />
+
+                  {!Array.isArray(assignments) || assignments.length === 0 ? (
+                    <p className="text-sm text-gray-500 italic">
+                      No technicians assigned.
+                    </p>
+                  ) : (
+                    <div className="flex flex-col gap-3">
+                      {assignments.map((assign, index) => {
+                        const tech = teamMembers.find(
+                          (t) => t.empId === assign.technicianId
+                        );
+
+                        const initials =
+                          tech?.name
+                            ?.split(" ")
+                            .map((word) => word[0])
+                            .join("")
+                            .toUpperCase() || "T";
+
+                        const displayName =
+                          tech?.name || assign.technicianId || "Technician";
+
+                        return (
+                          <div
+                            key={assign.assignId || index}
+                            className="flex items-center gap-4 bg-gray-50 border border-gray-200 rounded-md p-3 shadow-sm"
+                          >
+                            {/* Avatar */}
+                            <div className="w-10 h-10 bg-[#236571] rounded-full flex items-center justify-center text-white font-semibold text-sm uppercase">
+                              {initials}
+                            </div>
+
+                            {/* Name */}
+                            <div className="text-sm font-medium text-gray-800">
+                              {displayName}
+                            </div>
+                          </div>
+                        );
+                      })}
+                    </div>
+                  )}
                 </div>
 
-                {/* <div className="flex justify-end gap-3">
-                  <button className="px-6 py-2 border border-gray-300 text-gray-700 rounded-md text-sm font-medium hover:bg-gray-50 transition">
-                    Cancel
-                  </button>
-                  {selectedMaintenance?.newStatus?.toUpperCase() !==
-                    "COMPLETED" && (
-                    <button
-                      className="px-6 py-2 bg-[#236571] text-white rounded-md text-sm font-medium hover:bg-[#1e5a63] transition"
-                      onClick={handleChangeStatus}
-                    >
-                      Confirm
-                    </button>
-                  )}
-                </div> */}
+                {/* Shared Fields */}
+                {assignments.length > 0 && (
+                  <>
+                    <div className="grid grid-cols-1 md:grid-cols-2 gap-4 mb-4">
+                      {/* Start Date */}
+                      <div>
+                        <label className="block text-sm font-medium text-gray-700 mb-1">
+                          Start Date
+                        </label>
+                        <div className="relative">
+                          <input
+                            type="date"
+                            value={assignments[0]?.startDate || ""}
+                            onChange={(e) => setStartDate(e.target.value)}
+                            className="w-full border border-gray-300 rounded-md px-3 py-2 text-sm"
+                          />
+                          <Calendar className="absolute right-3 top-2.5 h-4 w-4 text-gray-400 pointer-events-none" />
+                        </div>
+                      </div>
+
+                      {/* Duration */}
+                      <div>
+                        <label className="block text-sm font-medium text-gray-700 mb-1">
+                          Estimated Duration
+                        </label>
+                        <div className="relative">
+                          <select
+                            value={assignments[0]?.duration || "1-2 hours"}
+                            onChange={(e) => setDuration(e.target.value)}
+                            className="w-full border border-gray-300 rounded-md px-3 py-2 text-sm appearance-none"
+                          >
+                            <option>1-2 hours</option>
+                            <option>2-4 hours</option>
+                            <option>3-6 hours</option>
+                            <option>1 day</option>
+                          </select>
+                          <ChevronDown className="absolute right-3 top-2.5 h-4 w-4 text-gray-400 pointer-events-none" />
+                        </div>
+                      </div>
+                    </div>
+
+                    {/* Notes */}
+                    <div className="mb-4">
+                      <label className="block text-sm font-medium text-gray-700 mb-1">
+                        Notes
+                      </label>
+                      <textarea
+                        value={assignments[0]?.notes || ""}
+                        onChange={(e) => setNotes(e.target.value)}
+                        placeholder="Additional notes..."
+                        className="w-full border border-gray-300 rounded-md px-3 py-2 text-sm"
+                        rows={2}
+                      />
+                    </div>
+                  </>
+                )}
               </div>
             </div>
 
@@ -826,6 +888,77 @@ export default function NextScheduleContainer() {
                       </div>
                     </div>
 
+                    {/* ✅ Multiple Technician Selection */}
+                    <div>
+                      <label className="block text-sm font-medium text-gray-700 mb-1">
+                        Assigned Technicians{" "}
+                        <span className="text-red-500">*</span>
+                      </label>
+                      <div className="relative">
+                        <select
+                          value=""
+                          onChange={(e) => {
+                            const selectedId = e.target.value;
+                            if (!selectedNextTechs.includes(selectedId)) {
+                              setSelectedNextTechs([
+                                ...selectedNextTechs,
+                                selectedId,
+                              ]);
+                            }
+                          }}
+                          className="w-full border border-gray-300 rounded-md px-3 py-2 text-sm appearance-none"
+                        >
+                          <option value="" disabled>
+                            Select technicians...
+                          </option>
+                          {teamMembers
+                            .filter(
+                              (tech) =>
+                                tech.availabilityStatus === "AVAILABLE" &&
+                                !selectedNextTechs.includes(tech.empId)
+                            )
+                            .map((member) => (
+                              <option key={member.empId} value={member.empId}>
+                                {member.name} (
+                                {member.specializations?.join(", ")})
+                              </option>
+                            ))}
+                        </select>
+                        <ChevronDown className="absolute right-3 top-2.5 h-4 w-4 text-gray-400 pointer-events-none" />
+                      </div>
+
+                      {/* ✅ Selected Technicians Display */}
+                      <div className="mt-2 flex flex-wrap gap-2">
+                        {selectedNextTechs.map((techId) => {
+                          const tech = teamMembers.find(
+                            (t) => t.empId === techId
+                          );
+                          if (!tech) return null;
+                          return (
+                            <span
+                              key={techId}
+                              className="inline-flex items-center gap-2 bg-[#236571] text-white text-xs px-3 py-1 rounded-full"
+                            >
+                              {tech.name}
+                              <button
+                                type="button"
+                                onClick={() =>
+                                  setSelectedNextTechs(
+                                    selectedNextTechs.filter(
+                                      (id) => id !== techId
+                                    )
+                                  )
+                                }
+                                className="text-white hover:text-red-300"
+                              >
+                                ×
+                              </button>
+                            </span>
+                          );
+                        })}
+                      </div>
+                    </div>
+
                     {/* Schedule Preview (Optional) */}
                     {isExpanded && (
                       <div className="border-t pt-4">
@@ -843,8 +976,18 @@ export default function NextScheduleContainer() {
                               {scheduledDate}
                             </p>
                             <p>
-                              <span className="font-medium">Technician:</span>{" "}
-                              {assignedTech || "Not assigned"}
+                              <span className="font-medium">Technicians:</span>{" "}
+                              {selectedNextTechs.length > 0
+                                ? selectedNextTechs
+                                    .map(
+                                      (techId) =>
+                                        teamMembers.find(
+                                          (t) => t.empId === techId
+                                        )?.name
+                                    )
+                                    .filter(Boolean)
+                                    .join(", ")
+                                : "Not assigned"}
                             </p>
                             <p>
                               <span className="font-medium">Duration:</span>{" "}

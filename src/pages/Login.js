@@ -97,7 +97,7 @@ const Login = () => {
       const roleRoutes = {
         ADMIN: "/admin/dashboard",
         SITE_MANAGER: "/site-manager",
-        INVENTORY_MANAGER: "/inventory/dashboard",
+        INVENTORY_MANAGER: "/inventory-dashboard",
         FINANCE_OFFICER: "/finance/dashboard",
         MAINTENANCE_HEAD: "/maintenance/dashboard",
         SUPPLIER: "/supplier/dashboard",
