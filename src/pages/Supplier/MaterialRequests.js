@@ -1,69 +1,84 @@
-// src/pages/Supplier/MaterialRequests.jsx
-import React, { useState } from "react";
-import { FaSearch, FaEye, FaReply, FaDownload, FaCalendarAlt, FaChevronDown } from "react-icons/fa";
-import { MdFilterList } from "react-icons/md";
+import React, { useState, useEffect } from "react";
+import {
+  FaSearch,
+  FaEye,
+  FaReply,
+  FaChevronDown,
+  FaUser,
+  FaFileAlt,
+  FaBoxOpen,
+  FaClock,
+  FaRegCheckCircle,
+  FaFlag,
+} from "react-icons/fa";
 import { useNavigate } from "react-router-dom";
 import NavBar from "../../components/NavBar";
 
 const navLinks = [
-  { name: "Dashboard", href: "/dashboard1" },
-  { name: "Requests", href: "/requests", active: true },
-  { name: "Quotations", href: "/quotations" },
-  { name: "Orders", href: "/orders" },
-  { name: "Payments", href: "/payments" },
+  { name: "Dashboard", href: "/supplier/dashboard" },
+  { name: "Requests", href: "/supplier/requests", active: true },
+  { name: "Quotations", href: "/supplier/quotations" },
+  { name: "Orders", href: "/supplier/orders" },
+  { name: "Payments", href: "/supplier/payments" },
 ];
 
 const MaterialRequests = () => {
+  const [requests, setRequests] = useState([]);
   const [searchTerm, setSearchTerm] = useState("");
   const [statusFilter, setStatusFilter] = useState("All Status");
   const [priorityFilter, setPriorityFilter] = useState("All Priorities");
+  const [dateRange, setDateRange] = useState("");
   const [currentPage, setCurrentPage] = useState(1);
+  const [loading, setLoading] = useState(true);
 
   const navigate = useNavigate();
 
-  // Sample data - replace with actual API data
-  const requests = [
-    {
-      id: "#REQ-001",
-      item: "Industrial Sensors",
-      model: "IS-2024",
-      quantity: "150 units",
-      deadline: "Dec 25, 2024",
-      status: "Pending",
-      priority: "High",
-      icon: "🔧"
-    },
-    {
-      id: "#REQ-002",
-      item: "Power Cables",
-      model: "Heavy Duty",
-      quantity: "200 meters",
-      deadline: "Dec 30, 2024",
-      status: "In Progress",
-      priority: "Medium",
-      icon: "⚡"
-    },
-    {
-      id: "#REQ-003",
-      item: "Hydraulic Pumps",
-      model: "HP-500",
-      quantity: "5 units",
-      deadline: "Jan 15, 2025",
-      status: "Completed",
-      priority: "Low",
-      icon: "⚙️"
-    },
-    {
-      id: "#REQ-004",
-      item: "Steel Brackets",
-      model: "Grade: A36",
-      quantity: "300 pieces",
-      deadline: "Dec 28, 2024",
-      status: "Rejected",
-      priority: "Medium",
-      icon: "🔩"
-    }
-  ];
+  // Fetch quotation requests from backend API
+  useEffect(() => {
+    fetch("http://localhost:8080/api/quotationrequest/all")
+      .then((res) => res.json())
+      .then((data) => {
+        // If your API wraps data in { data: [...] }, adjust accordingly
+        setRequests(data.data || []);
+        setLoading(false);
+      })
+      .catch((err) => {
+        console.error("Failed to fetch requests:", err);
+      });
+  }, []);
+
+  // Filtering logic
+  const filteredRequests = requests.filter((request) => {
+    const matchesSearch =
+      searchTerm === "" ||
+      request.requesterName?.toLowerCase().includes(searchTerm.toLowerCase()) ||
+      request.quotationType?.toLowerCase().includes(searchTerm.toLowerCase()) ||
+      (request.quotationReqMaterials &&
+        request.quotationReqMaterials
+          .map((m) => m.material.materialName)
+          .join(", ")
+          .toLowerCase()
+          .includes(searchTerm.toLowerCase()));
+
+    const matchesStatus =
+      statusFilter === "All Status" || request.status === statusFilter;
+
+    const matchesPriority =
+      priorityFilter === "All Priorities" ||
+      request.priorityLevel === priorityFilter;
+
+    // Optionally add date range filter here
+
+    return matchesSearch && matchesStatus && matchesPriority;
+  });
+
+  // Pagination logic (adjust itemsPerPage as needed)
+  const itemsPerPage = 10;
+  const startIndex = (currentPage - 1) * itemsPerPage;
+  const paginatedRequests = filteredRequests.slice(
+    startIndex,
+    startIndex + itemsPerPage
+  );
 
   const getStatusBadge = (status) => {
     const baseClasses = "px-3 py-1 rounded-full text-xs font-medium";
@@ -84,35 +99,76 @@ const MaterialRequests = () => {
   const getPriorityBadge = (priority) => {
     switch (priority) {
       case "High":
-        return "text-red-600 font-medium";
+        return "bg-red-100 text-red-600 font-medium px-3 py-1 rounded-full text-xs";
       case "Medium":
-        return "text-blue-600 font-medium";
+        return "bg-yellow-100 text-yellow-800 font-medium px-3 py-1 rounded-full text-xs";
       case "Low":
-        return "text-green-600 font-medium";
+        return "bg-green-100 text-green-600 font-medium px-3 py-1 rounded-full text-xs";
       default:
-        return "text-gray-600 font-medium";
+        return "bg-gray-100 text-gray-600 font-medium px-3 py-1 rounded-full text-xs";
     }
   };
 
+  // Helper to format date
+  const formatDate = (dateStr) => {
+    if (!dateStr) return 'N/A';
+    const d = new Date(dateStr);
+    return d.toLocaleDateString("en-US", {
+      year: "numeric",
+      month: "short",
+      day: "numeric",
+    });
+  };
+
+  // Helper to get material names as comma-separated string
+  const getMaterialNames = (materials) => {
+    if (!materials || !materials.length) return "No materials";
+    return materials
+      .map(
+        (m) =>
+          `${m.material?.materialName || ""} (${m.quantity} ${
+            m.material?.unitOfMeasurement || ""
+          })`
+      )
+      .join(", ");
+  };
+
+  if (loading) {
+    return (
+      <div className="min-h-screen bg-purewhite font-poppins flex items-center justify-center">
+        <div className="text-center">
+          <div className="animate-spin rounded-full h-12 w-12 border-b-2 border-web_yellow mx-auto mb-4"></div>
+          <p className="text-gray-600">Loading Material requests...</p>
+        </div>
+      </div>
+    );
+  }
+
   return (
-    <div className="bg-purewhite min-h-screen">
-      <NavBar links={navLinks} logoSrc="/logo1.png" />
-      
-      <div className="max-w-full mx-auto px-14 py-8">
+    <div className="bg-[#f8f9fa] min-h-screen font-poppins">
+      <NavBar links={navLinks} profileURL="/supplier/profile" logoSrc="/logo1.png" />
+
+      <div className="max-w-full mx-auto px-4 sm:px-6 lg:px-16 py-8">
         {/* Header */}
-        <div className="flex justify-between items-start mb-8">
-          <div>
-            <h1 className="text-3xl font-bold text-main_dark mb-2">Material Requests</h1>
-            <p className="text-gray-500">Manage and respond to material requests from managers</p>
+        <div className="flex">
+          <div className="mb-6">
+            <h1 className="text-2xl font-bold text-main_dark mb-1">
+              Material Requests
+            </h1>
+            <p className="text-gray-600 text-base">
+              Manage and respond to material requests from managers
+            </p>
           </div>
         </div>
 
         {/* Filters */}
-        <div className="bg-purewhite border border-gray-200 rounded-lg p-6 mb-6 shadow-sm">
+        <div className="bg-purewhite border border-gray-200 rounded-lg p-4 sm:p-6 mb-6">
           <div className="grid grid-cols-1 md:grid-cols-4 gap-4">
             {/* Search */}
             <div className="relative">
-              <label className="block text-sm font-medium text-main_dark mb-2">Search</label>
+              <label className="block text-sm font-medium text-main_dark mb-2">
+                Search
+              </label>
               <div className="relative">
                 <FaSearch className="absolute left-3 top-1/2 transform -translate-y-1/2 text-gray-400" />
                 <input
@@ -120,19 +176,21 @@ const MaterialRequests = () => {
                   placeholder="Search requests..."
                   value={searchTerm}
                   onChange={(e) => setSearchTerm(e.target.value)}
-                  className="w-full pl-10 pr-4 py-2 border border-light_gray rounded-lg focus:outline-none focus:ring-2 focus:ring-web_yellow"
+                  className="w-full text-sm pl-10 pr-4 py-2 border border-light_gray rounded-lg focus:outline-none focus:ring-2 focus:ring-web_yellow"
                 />
               </div>
             </div>
 
             {/* Status Filter */}
             <div>
-              <label className="block text-sm font-medium text-main_dark mb-2">Status</label>
+              <label className="block text-sm font-medium text-main_dark mb-2">
+                Status
+              </label>
               <div className="relative">
                 <select
                   value={statusFilter}
                   onChange={(e) => setStatusFilter(e.target.value)}
-                  className="w-full px-4 py-2 border border-light_gray rounded-lg focus:outline-none focus:ring-2 focus:ring-web_yellow appearance-none bg-white"
+                  className="w-full text-sm px-4 py-2 border border-light_gray rounded-lg focus:outline-none focus:ring-2 focus:ring-web_yellow appearance-none bg-white"
                 >
                   <option>All Status</option>
                   <option>Pending</option>
@@ -146,12 +204,14 @@ const MaterialRequests = () => {
 
             {/* Priority Filter */}
             <div>
-              <label className="block text-sm font-medium text-main_dark mb-2">Priority</label>
+              <label className="block text-sm font-medium text-main_dark mb-2">
+                Priority
+              </label>
               <div className="relative">
                 <select
                   value={priorityFilter}
                   onChange={(e) => setPriorityFilter(e.target.value)}
-                  className="w-full px-4 py-2 border border-light_gray rounded-lg focus:outline-none focus:ring-2 focus:ring-web_yellow appearance-none bg-white"
+                  className="w-full text-sm px-4 py-2 border border-light_gray rounded-lg focus:outline-none focus:ring-2 focus:ring-web_yellow appearance-none bg-white"
                 >
                   <option>All Priorities</option>
                   <option>High</option>
@@ -164,68 +224,84 @@ const MaterialRequests = () => {
 
             {/* Date Range */}
             <div>
-              <label className="block text-sm font-medium text-main_dark mb-2">Date Range</label>
+              <label className="block text-sm font-medium text-main_dark mb-2">
+                Date Range
+              </label>
               <div className="relative">
                 <input
                   type="date"
                   placeholder="mm/dd/yyyy"
-                  className="w-full px-4 py-2 border border-light_gray rounded-lg focus:outline-none focus:ring-2 focus:ring-web_yellow"
+                  className="w-full text-sm px-4 py-2 border border-light_gray rounded-lg focus:outline-none focus:ring-2 focus:ring-web_yellow"
+                  value={dateRange}
+                  onChange={(e) => setDateRange(e.target.value)}
                 />
-                {/* <FaCalendarAlt className="absolute right-3 top-1/2 transform -translate-y-1/2 text-gray-400" /> */}
               </div>
             </div>
           </div>
         </div>
 
         {/* Table */}
-        <div className="bg-purewhite rounded-lg shadow-sm overflow-hidden">
-          {/* Table Header */}
-          <div className="flex justify-between items-center p-6 border border-gray-200 rounded-t-lg">
-            <h2 className="text-lg font-semibold text-main_dark">
-              Material Requests (24)
-            </h2>
-            <div className="flex items-center gap-2">
-              <MdFilterList className="text-gray-400" />
-              <FaChevronDown className="text-gray-400" />
-            </div>
-          </div>
-
-          {/* Table Content */}
-          <div className="overflow-x-auto">
+        <div className="bg-purewhite rounded-lg border border-gray-200 overflow-hidden">
+          {/* Desktop Table */}
+          <div className="hidden lg:block overflow-x-auto">
             <table className="w-full">
-              <thead className="bg-web_yellow">
-                <tr>
-                  <th className="px-6 py-4 text-left text-sm font-semibold text-main_dark">Request ID</th>
-                  <th className="px-6 py-4 text-left text-sm font-semibold text-main_dark">Item</th>
-                  <th className="px-6 py-4 text-left text-sm font-semibold text-main_dark">Quantity</th>
-                  <th className="px-6 py-4 text-left text-sm font-semibold text-main_dark">Quotation Deadline</th>
-                  <th className="px-6 py-4 text-left text-sm font-semibold text-main_dark">Status</th>
-                  <th className="px-6 py-4 text-left text-sm font-semibold text-main_dark">Priority</th>
-                  <th className="px-6 py-4 text-left text-sm font-semibold text-main_dark">Actions</th>
+              <thead>
+                <tr className="bg-light_brown/35">
+                  <th className="px-6 py-4 text-left text-sm font-semibold text-main_dark">
+                    Request ID
+                  </th>
+                  <th className="px-6 py-4 text-left text-sm font-semibold text-main_dark">
+                    <span className="flex items-center gap-2">
+                      <FaUser className="inline mb-0.5" /> Requester
+                    </span>
+                  </th>
+                  <th className="px-6 py-4 text-left text-sm font-semibold text-main_dark">
+                    <span className="flex items-center gap-2">
+                      <FaFileAlt className="inline mb-0.5" /> Type
+                    </span>
+                  </th>
+                  <th className="px-6 py-4 text-left text-sm font-semibold text-main_dark">
+                    <span className="flex items-center gap-2">
+                      <FaBoxOpen className="inline mb-0.5" /> Materials
+                    </span>
+                  </th>
+                  <th className="px-6 py-4 text-left text-sm font-semibold text-main_dark">
+                    <span className="flex items-center gap-2">
+                      <FaClock className="inline mb-0.5" /> Quotation Deadline
+                    </span>
+                  </th>
+                  <th className="px-6 py-4 text-left text-sm font-semibold text-main_dark">
+                    <span className="flex items-center gap-2">
+                      <FaRegCheckCircle className="inline mb-0.5" /> Status
+                    </span>
+                  </th>
+                  <th className="px-6 py-4 text-left text-sm font-semibold text-main_dark">
+                    <span className="flex items-center gap-2">
+                      <FaFlag className="inline mb-0.5" /> Priority
+                    </span>
+                  </th>
+                  <th className="px-6 py-4 text-left text-sm font-semibold text-main_dark">
+                    Actions
+                  </th>
                 </tr>
               </thead>
               <tbody className="divide-y divide-light_gray">
-                {requests.map((request, index) => (
-                  <tr key={index} className="hover:bg-gray-50">
+                {paginatedRequests.map((request, index) => (
+                  <tr key={request.id || index} className="hover:bg-gray-50">
                     <td className="px-6 py-4 text-sm font-medium text-main_dark">
-                      {request.id}
-                    </td>
-                    <td className="px-6 py-4">
-                      <div className="flex items-center gap-3">
-                        <div className="w-10 h-10 bg-web_yellow rounded-lg flex items-center justify-center text-lg">
-                          {request.icon}
-                        </div>
-                        <div>
-                          <div className="font-medium text-main_dark">{request.item}</div>
-                          <div className="text-sm text-slatebluegray">Model: {request.model}</div>
-                        </div>
-                      </div>
-                    </td>
-                    <td className="px-6 py-4 text-sm text-main_dark font-medium">
-                      {request.quantity}
+                      {request.id ? `#${request.id}` : "-"}
                     </td>
                     <td className="px-6 py-4 text-sm text-main_dark">
-                      {request.deadline}
+                      {request.requesterName || "-"}
+                    </td>
+                    <td className="px-6 py-4 text-sm text-main_dark">
+                      {request.quotationType || "-"}
+                    </td>
+                    <td className="px-6 py-4 text-sm text-main_dark">
+                      {getMaterialNames(request.quotationReqMaterials)}
+                    </td>
+                    <td className="px-6 py-4 text-sm text-main_dark font-semibold">
+                      {formatDate(request.quotationDeadline)}
                     </td>
                     <td className="px-6 py-4">
                       <span className={getStatusBadge(request.status)}>
@@ -233,15 +309,15 @@ const MaterialRequests = () => {
                       </span>
                     </td>
                     <td className="px-6 py-4">
-                      <span className={getPriorityBadge(request.priority)}>
-                        {request.priority}
+                      <span className={getPriorityBadge(request.priorityLevel)}>
+                        {request.priorityLevel}
                       </span>
                     </td>
                     <td className="px-6 py-4">
                       <div className="flex items-center gap-2">
                         <button
                           className="p-2 text-deep_green hover:bg-gray-100 rounded"
-                          onClick={() => navigate(`/requests/${request.id.replace('#', '')}`)}
+                          onClick={() => navigate(`/supplier/requests/${request.id}`)}
                         >
                           <FaEye />
                         </button>
@@ -252,29 +328,117 @@ const MaterialRequests = () => {
                     </td>
                   </tr>
                 ))}
+                {paginatedRequests.length === 0 && (
+                  <tr>
+                    <td
+                      colSpan={8}
+                      className="px-6 py-4 text-center text-gray-400"
+                    >
+                      No requests found.
+                    </td>
+                  </tr>
+                )}
               </tbody>
             </table>
           </div>
 
+          {/* Mobile Cards */}
+          <div className="lg:hidden divide-y divide-gray-200">
+            {paginatedRequests.map((request, index) => (
+              <div key={request.id || index} className="p-4">
+                <div className="flex justify-between items-start mb-3">
+                  <div className="flex-1">
+                    <div className="flex items-center gap-2 mb-1">
+                      <h3 className="font-semibold text-main_dark text-sm">#{request.id || '-'}</h3>
+                      <span className="text-xs text-gray-500">•</span>
+                      <span className="font-semibold text-main_dark text-sm">{request.requesterName || '-'}</span>
+                    </div>
+                    <p className="text-xs text-gray-600 mb-1">{request.quotationType || '-'}</p>
+                    <div className="text-xs text-gray-500">
+                      Deadline: {formatDate(request.quotationDeadline)}
+                    </div>
+                  </div>
+                  <div className="flex flex-col gap-1">
+                    <span className={getStatusBadge(request.status)}>
+                      {request.status}
+                    </span>
+                    <span className={getPriorityBadge(request.priorityLevel)}>
+                      {request.priorityLevel}
+                    </span>
+                  </div>
+                </div>
+                
+                <div className="space-y-1 text-xs text-gray-600 mb-3">
+                  <p><span className="font-medium">Materials:</span> {getMaterialNames(request.quotationReqMaterials)}</p>
+                </div>
+                
+                <div className="flex justify-end gap-2">
+                  <button
+                    className="text-deep_green hover:text-deep_green/80 transition-colors"
+                    onClick={() => navigate(`/supplier/requests/${request.id}`)}
+                  >
+                    <FaEye className="w-4 h-4" />
+                  </button>
+                  <button className="text-web_yellow hover:text-web_yellow/80 transition-colors">
+                    <FaReply className="w-4 h-4" />
+                  </button>
+                </div>
+              </div>
+            ))}
+            {paginatedRequests.length === 0 && (
+              <div className="p-8 text-center text-gray-400">
+                No requests found.
+              </div>
+            )}
+          </div>
+
           {/* Pagination */}
-          <div className="flex justify-between items-center px-6 py-4 border-t border-light_gray">
+          <div className="flex justify-between items-center px-6 py-4 border-t border-light_gray bg-purewhite">
             <div className="text-sm text-slatebluegray">
-              Showing 1 to 4 of 24 results
+              Showing {startIndex + 1} to{" "}
+              {Math.min(startIndex + itemsPerPage, filteredRequests.length)} of{" "}
+              {filteredRequests.length} results
             </div>
             <div className="flex items-center gap-2">
-              <button className="px-3 py-1 text-sm text-slatebluegray hover:bg-gray-100 rounded">
+              <button
+                className="px-3 py-1 text-sm text-slatebluegray hover:bg-gray-100 rounded"
+                disabled={currentPage === 1}
+                onClick={() => setCurrentPage((p) => Math.max(1, p - 1))}
+              >
                 Previous
               </button>
-              <button className="px-3 py-1 text-sm bg-web_yellow text-main_dark rounded font-medium">
-                1
-              </button>
-              <button className="px-3 py-1 text-sm text-slatebluegray hover:bg-gray-100 rounded">
-                2
-              </button>
-              <button className="px-3 py-1 text-sm text-slatebluegray hover:bg-gray-100 rounded">
-                3
-              </button>
-              <button className="px-3 py-1 text-sm text-slatebluegray hover:bg-gray-100 rounded">
+              {[
+                ...Array(
+                  Math.ceil(filteredRequests.length / itemsPerPage)
+                ).keys(),
+              ].map((page) => (
+                <button
+                  key={page}
+                  className={`px-3 py-1 text-sm ${
+                    currentPage === page + 1
+                      ? "bg-web_yellow text-main_dark font-medium"
+                      : "text-slatebluegray hover:bg-gray-100 rounded"
+                  }`}
+                  onClick={() => setCurrentPage(page + 1)}
+                >
+                  {page + 1}
+                </button>
+              ))}
+              <button
+                className="px-3 py-1 text-sm text-slatebluegray hover:bg-gray-100 rounded"
+                disabled={
+                  currentPage ===
+                  Math.ceil(filteredRequests.length / itemsPerPage)
+                }
+                onClick={() =>
+                  setCurrentPage((p) =>
+                    Math.min(
+                      Math.ceil(filteredRequests.length / itemsPerPage),
+                      p + 1
+                    )
+                  )
+                }
+              >
                 Next
               </button>
             </div>
@@ -286,4 +450,3 @@ const MaterialRequests = () => {
 };
 
 export default MaterialRequests;
-
