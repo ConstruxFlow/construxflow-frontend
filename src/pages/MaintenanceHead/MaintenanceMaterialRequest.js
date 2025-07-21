@@ -41,6 +41,7 @@ const MaintenanceMaterialRequest = () => {
   return (
     <>
       <NavBar
+        profileURL="/maintenance/profile"
         links={[
           { name: "Dashboard", href: "#", onClick: () => navigation("/maintenance/dashboard") },
           { name: "Task", href: "#", onClick: () => navigation("/maintenance/scheduling") },
@@ -58,7 +59,7 @@ const MaintenanceMaterialRequest = () => {
           { name: "Equipment", href: "#", onClick: () => navigation("/maintenance/equipment")},
           { name: "Add Technician", href: "#", onClick: () => navigation("/maintenance/add-member") },
         ]}
-        showButton={true}
+        
       />
       
       <div className="bg-purewhite min-h-screen">

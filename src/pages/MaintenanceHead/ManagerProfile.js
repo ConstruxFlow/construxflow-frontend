@@ -167,9 +167,7 @@ const ManagerProfileView = () => {
             onClick: () => navigation("/maintenance/add-member"),
           },
         ]}
-        showButton={true}
-        buttonLabel={isLoggedIn ? "Logout" : "Get Started"}
-        onButtonClick={isLoggedIn ? handleLogout : handleLogin}
+
       />
 
       {/* Main Content */}

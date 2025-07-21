@@ -139,6 +139,7 @@ const MaintenanceRequestTracker = () => {
   return (
     <div className="min-h-screen bg-purewhite font-poppins">
       <NavBar
+      profileURL="/maintenance/profile"
         links={[
           { name: "Dashboard", href: "#", onClick: () => navigation("/maintenance/dashboard") },
           { name: "Task", href: "#", onClick: () => navigation("/maintenance/scheduling") },
@@ -156,7 +157,7 @@ const MaintenanceRequestTracker = () => {
           { name: "Equipment", href: "#", onClick: () => navigation("/maintenance/equipment")},
           { name: "Add Technician", href: "#", onClick: () => navigation("/maintenance/add-member") },
         ]}
-        showButton={true}
+        
       />
 
       <main className="py-4 sm:py-6">

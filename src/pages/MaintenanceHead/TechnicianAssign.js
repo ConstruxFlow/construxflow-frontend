@@ -164,6 +164,7 @@ export default function TechnicianAssignmentMain() {
   return (
     <>
       <NavBar
+        profileURL="/maintenance/profile"
         links={[
           {
             name: "Dashboard",
@@ -202,9 +203,7 @@ export default function TechnicianAssignmentMain() {
             onClick: () => navigation("/maintenance/add-member"),
           },
         ]}
-        showButton={true}
-        buttonLabel={isLoggedIn ? "Logout" : "Get Started"}
-        onButtonClick={isLoggedIn ? handleLogout : handleLogin}
+
       />
       {isLoading && (
         <LoadingOverlay progress={loadingProgress} message="Processing..." />
