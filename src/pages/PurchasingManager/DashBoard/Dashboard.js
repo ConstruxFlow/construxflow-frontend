@@ -573,11 +573,15 @@ const PurchasingDashboard = () => {
                           <th className="px-6 py-4 text-left text-sm font-semibold text-main_dark">Materials</th>
                           <th className="px-6 py-4 text-left text-sm font-semibold text-main_dark">
                             <div className="flex items-center gap-2">
-                              <FaDollarSign className="w-4 h-4" />
                               Amount
                             </div>
+                            
                           </th>
-                          <th className="px-6 py-4 text-left text-sm font-semibold text-main_dark">Payment</th>
+                          <th className="px-6 py-4 text-left text-sm font-semibold text-main_dark">
+                            <div className="flex items-center gap-2">
+                              Payment
+                            </div>
+                          </th>
                           <th className="px-6 py-4 text-left text-sm font-semibold text-main_dark">Delivery</th>
                           <th className="px-6 py-4 text-left text-sm font-semibold text-main_dark">Actions</th>
                         </tr>
@@ -621,7 +625,7 @@ const PurchasingDashboard = () => {
                               )}
                             </td>
                             <td className="px-6 py-4 text-sm font-semibold text-main_dark">
-                              ${order.subTotal ? order.subTotal.toLocaleString() : 'N/A'}
+                              <span>RS {" "}</span>{order.subTotal ? order.subTotal.toLocaleString() : 'N/A'}
                             </td>
                             <td className="px-6 py-4">
                               {order.orderPayment ? (
@@ -630,7 +634,7 @@ const PurchasingDashboard = () => {
                                     {order.orderPayment.status || 'Pending'}
                                   </span>
                                   <div className="text-xs text-gray-500">
-                                    ${order.orderPayment.paidAmount || 0} / ${order.orderPayment.amount || 0}
+                                    RS {" "} {order.orderPayment.paidAmount || 0} / RS {" "}{order.orderPayment.amount || 0}
                                   </div>
                                   <div className="w-full bg-gray-200 rounded-full h-1">
                                     <div 

@@ -1,4 +1,3 @@
-// src/pages/Supplier/SubmitQuotation.jsx
 import React, { useState, useEffect, useContext } from "react";
 import { useNavigate, useParams } from "react-router-dom";
 import NavBar from "../../components/NavBar";
@@ -292,7 +291,7 @@ const SubmitQuotation = () => {
         />
       )}
 
-      <div className="max-w-full mx-auto px-20 py-8">
+      <div className="max-w-full mx-auto px-4 sm:px-8 lg:px-20 py-8">
         {/* Breadcrumb */}
         <div className="text-sm text-slatebluegray mb-2">
           <a
@@ -332,8 +331,8 @@ const SubmitQuotation = () => {
 
         {/* Request Summary Block */}
         {requestSummary && (
-          <div className="bg-light_gray rounded-lg p-6 mb-7">
-            <div className="flex flex-col md:flex-row md:justify-between items-start md:items-center">
+          <div className="bg-light_gray rounded-lg p-4 sm:p-6 mb-7">
+            <div className="flex flex-col md:flex-row md:justify-between items-start md:items-center gap-4 md:gap-0">
               <div>
                 <div className="flex items-center mb-3">
                   <span className="text-main_dark font-medium text-lg mr-3">
@@ -360,7 +359,7 @@ const SubmitQuotation = () => {
                   </span>
                 </div>
               </div>
-              <div className="mt-4 md:mt-0 w-full md:w-auto">
+              <div className="w-full md:w-auto mt-4 md:mt-0">
                 <div className="text-slatebluegray mb-2">Items Requested:</div>
                 <table className="w-full text-main_dark">
                   <tbody>
@@ -377,20 +376,16 @@ const SubmitQuotation = () => {
           </div>
         )}
 
-        {/* ✅ FORM START (keep all your existing section components from previous code) */}
-
-        {/* CUT: Pricing / Advanced Payment / Delivery / Terms / Notes / Attachments / Quotation Summary */}
-        {/* ✅ Already included in your previous code. You can paste that code after this summary block and it will work. */}
-
+        {/* ✅ FORM START */}
         <form onSubmit={handleSubmit}>
           {/* Pricing Information */}
-          <section className="bg-purewhite border border-light_gray rounded-lg p-6 mb-6">
+          <section className="bg-purewhite border border-light_gray rounded-lg p-4 sm:p-6 mb-6">
             <div className="font-semibold text-main_dark mb-4 flex items-center gap-2">
               Pricing Information
             </div>
             <div className="space-y-4">
               {pricing.map((row, idx) => (
-                <div key={idx} className="grid grid-cols-4 gap-4 items-end">
+                <div key={idx} className="grid grid-cols-1 sm:grid-cols-4 gap-4 items-end">
                   <div>
                     <label className="block text-sm text-slatebluegray mb-1">
                       Item Requested
@@ -426,8 +421,8 @@ const SubmitQuotation = () => {
                     <label className="block text-sm text-slatebluegray mb-1">
                       Standard Unit Price
                     </label>
-                    <span className="absolute left-3 top-9 text-slatebluegray">
-                      $
+                    <span className="absolute left-1 top-8 text-slatebluegray">
+                      RS
                     </span>
                     <input
                       type="number"
@@ -442,8 +437,8 @@ const SubmitQuotation = () => {
                     <label className="block text-sm text-slatebluegray mb-1">
                       Unit Price
                     </label>
-                    <span className="absolute left-3 top-9 text-slatebluegray">
-                      $
+                    <span className="absolute left-1 top-8 text-slatebluegray">
+                      RS
                     </span>
                     <input
                       type="number"
@@ -459,7 +454,7 @@ const SubmitQuotation = () => {
                     <button
                       type="button"
                       onClick={() => handleDeletePricing(idx)}
-                      className="ml-2 text-red-500 hover:text-red-700"
+                      className="ml-2 text-red-500 hover:text-red-700 sm:col-span-4 sm:text-right"
                       aria-label="Delete item"
                     >
                       <FaTrash />
@@ -478,7 +473,7 @@ const SubmitQuotation = () => {
           </section>
 
           {/* Advanced Payment Information */}
-          <section className="bg-purewhite border border-light_gray rounded-lg p-6 mb-6">
+          <section className="bg-purewhite border border-light_gray rounded-lg p-4 sm:p-6 mb-6">
             <div className="font-semibold text-main_dark mb-4">
               Advanced Payment Information
             </div>
@@ -487,8 +482,8 @@ const SubmitQuotation = () => {
                 Advanced Payment Amount
               </label>
               <div className="relative">
-                <span className="absolute left-3 top-1/2 -translate-y-1/2 text-slatebluegray">
-                  $
+                <span className="absolute left-1 top-2 text-slatebluegray">
+                  RS
                 </span>
                 <input
                   type="number"
@@ -505,8 +500,8 @@ const SubmitQuotation = () => {
           </section>
 
           {/* Delivery Information */}
-          <section className="bg-purewhite border border-light_gray rounded-lg p-6 mb-6">
-            <div className="flex items-center justify-between mb-4">
+          <section className="bg-purewhite border border-light_gray rounded-lg p-4 sm:p-6 mb-6">
+            <div className="flex flex-col sm:flex-row items-start sm:items-center justify-between mb-4 gap-4 sm:gap-0">
               <div className="font-semibold text-main_dark">
                 Delivery Information
               </div>
@@ -518,30 +513,13 @@ const SubmitQuotation = () => {
                 + Add Location
               </button>
             </div>
-            <div className="grid grid-cols-4 gap-x-6 gap-y-4">
-              <div>
-                <label className="block text-sm text-slatebluegray mb-1">
-                  Required Date
-                </label>
-              </div>
-              <div>
-                <label className="block text-sm text-slatebluegray mb-1">
-                  Delivery Date
-                </label>
-              </div>
-              <div>
-                <label className="block text-sm text-slatebluegray mb-1">
-                  Delivery Location
-                </label>
-              </div>
-              <div>
-                <label className="block text-sm text-slatebluegray mb-1">
-                  Shipping Cost
-                </label>
-              </div>
+            <div className="space-y-4">
               {deliveries.map((row, idx) => (
-                <React.Fragment key={idx}>
-                  <div className="flex items-center">
+                <div key={idx} className="grid grid-cols-1 sm:grid-cols-4 gap-4 items-end">
+                  <div>
+                    <label className="block text-sm text-slatebluegray mb-1">
+                      Required Date
+                    </label>
                     <input
                       type="date"
                       name="deliveryDate"
@@ -552,7 +530,10 @@ const SubmitQuotation = () => {
                       className="w-full border border-light_gray rounded-md px-3 py-2 text-main_dark text-sm focus:outline-none"
                     />
                   </div>
-                  <div className="flex items-center">
+                  <div>
+                    <label className="block text-sm text-slatebluegray mb-1">
+                      Delivery Date
+                    </label>
                     <input
                       type="date"
                       name="requiredDate"
@@ -561,7 +542,10 @@ const SubmitQuotation = () => {
                       className="w-full border border-light_gray rounded-md px-3 py-2 text-main_dark text-sm focus:outline-none"
                     />
                   </div>
-                  <div className="flex items-center">
+                  <div>
+                    <label className="block text-sm text-slatebluegray mb-1">
+                      Delivery Location
+                    </label>
                     <input
                       type="text"
                       name="deliveryLocation"
@@ -571,9 +555,12 @@ const SubmitQuotation = () => {
                       placeholder="Enter location"
                     />
                   </div>
-                  <div className="relative flex items-center">
-                    <span className="absolute left-3 top-1/2 -translate-y-1/2 text-slatebluegray">
-                      $
+                  <div className="relative">
+                    <label className="block text-sm text-slatebluegray mb-1">
+                      Shipping Cost
+                    </label>
+                    <span className="absolute left-1 top-2 text-slatebluegray">
+                      RS
                     </span>
                     <input
                       type="number"
@@ -585,24 +572,24 @@ const SubmitQuotation = () => {
                       min="0"
                       step="0.01"
                     />
-                    {deliveries.length > 1 && (
-                      <button
-                        type="button"
-                        onClick={() => handleDeleteLocation(idx)}
-                        className="ml-2 text-red-500 hover:text-red-700"
-                        aria-label="Delete location"
-                      >
-                        <FaTrash />
-                      </button>
-                    )}
                   </div>
-                </React.Fragment>
+                  {deliveries.length > 1 && (
+                    <button
+                      type="button"
+                      onClick={() => handleDeleteLocation(idx)}
+                      className="text-red-500 hover:text-red-700 sm:col-span-4 sm:text-right"
+                      aria-label="Delete location"
+                    >
+                      <FaTrash />
+                    </button>
+                  )}
+                </div>
               ))}
             </div>
           </section>
 
           {/* Terms & Conditions */}
-          <section className="bg-purewhite border border-light_gray rounded-lg p-6 mb-6">
+          <section className="bg-purewhite border border-light_gray rounded-lg p-4 sm:p-6 mb-6">
             <div className="font-semibold text-main_dark mb-4">
               Terms & Conditions
             </div>
@@ -625,10 +612,8 @@ const SubmitQuotation = () => {
           </section>
 
           {/* Additional Notes */}
-          <section className="bg-purewhite border border-light_gray rounded-lg p-6 mb-6">
-            <div className="font-semibold text-main_dark mb-4">
-              Additional Notes
-            </div>
+          <section className="bg-purewhite border border-light_gray rounded-lg p-4 sm:p-6 mb-6">
+            <div className="font-semibold text-main_dark mb-4">Additional Notes</div>
             <label className="block text-sm text-slatebluegray mb-1">
               Special Instructions or Comments
             </label>
@@ -643,7 +628,7 @@ const SubmitQuotation = () => {
           </section>
 
           {/* Attachments */}
-          <section className="bg-purewhite border border-light_gray rounded-lg p-6 mb-6">
+          <section className="bg-purewhite border border-light_gray rounded-lg p-4 sm:p-6 mb-6">
             <div className="font-semibold text-main_dark mb-4">Attachments</div>
             <div className="flex flex-col items-center justify-center border-2 border-dashed border-light_gray rounded-lg py-8 bg-gray-50">
               <FaPaperclip className="text-2xl text-slatebluegray mb-2" />
@@ -680,18 +665,18 @@ const SubmitQuotation = () => {
           </section>
 
           {/* Quotation Summary */}
-          <section className="bg-light_gray rounded-lg p-6 mb-6">
+          <section className="bg-light_gray rounded-lg p-4 sm:p-6 mb-6">
             <div className="font-semibold text-main_dark mb-4">
               Quotation Summary
             </div>
             <div className="space-y-2 text-main_dark">
               <div className="flex justify-between">
                 <span>Subtotal:</span>
-                <span>${subtotal.toFixed(2)}</span>
+                <span>RS {subtotal.toFixed(2)}</span>
               </div>
               <div className="flex justify-between">
                 <span>Shipping:</span>
-                <span>${totalShipping.toFixed(2)}</span>
+                <span>RS {totalShipping.toFixed(2)}</span>
               </div>
               {/* <div className="flex justify-between">
                 <span>Tax:</span>
@@ -700,13 +685,13 @@ const SubmitQuotation = () => {
               <hr className="border-gray-300 my-2" />
               <div className="flex justify-between font-bold text-lg">
                 <span>Total:</span>
-                <span className="text-web_yellow">${total.toFixed(2)}</span>
+                <span className="text-web_yellow">RS {total.toFixed(2)}</span>
               </div>
             </div>
           </section>
 
           {/* Action Buttons */}
-          <div className="flex justify-end gap-4">
+          <div className="flex flex-col sm:flex-row justify-end gap-4">
             <button
               type="submit"
               className="bg-web_yellow text-main_dark px-6 py-3 rounded-lg font-medium hover:opacity-90 transition"

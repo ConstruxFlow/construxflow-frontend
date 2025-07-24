@@ -1,4 +1,3 @@
-// src/pages/Supplier/ReceiveFullPayment.jsx
 import React from "react";
 import NavBar from "../../components/NavBar";
 
@@ -34,7 +33,7 @@ const ReceiveFullPayment = () => (
   <div className="bg-purewhite min-h-screen font-poppins">
     <NavBar links={navLinks} profileURL="/supplier/profile" logoSrc="/logo1.png" />
 
-    <div className="max-w-full mx-auto px-16 py-10">
+    <div className="max-w-full mx-auto px-4 sm:px-8 lg:px-16 py-10">
       <h1 className="text-xl md:text-2xl font-bold text-main_dark mb-2">
         Receive Full Payment
       </h1>
@@ -43,7 +42,7 @@ const ReceiveFullPayment = () => (
       </p>
 
       {/* Payment Summary Card */}
-      <div className="bg-gray-200 rounded-xl p-7 mb-7 flex flex-col md:flex-row md:items-center md:justify-between gap-8">
+      <div className="bg-gray-200 rounded-xl p-4 sm:p-7 mb-7 flex flex-col md:flex-row md:items-center md:justify-between gap-4 sm:gap-8">
         <div className="flex-1">
           <div className="mb-2">
             <span className="text-sm text-slatebluegray">Payment Reference</span>
@@ -62,10 +61,10 @@ const ReceiveFullPayment = () => (
             <div className="font-medium text-main_dark">{payment.date}</div>
           </div>
         </div>
-        <div className="flex flex-col items-end min-w-[220px]">
+        <div className="flex flex-col items-start sm:items-end min-w-[220px]">
           <div className="text-sm text-slatebluegray mb-1">Amount Received</div>
           <div className="text-3xl font-extrabold text-yellow-500 mb-2">
-            ${payment.amount.toLocaleString(undefined, { minimumFractionDigits: 2 })}
+            RS {payment.amount.toLocaleString(undefined, { minimumFractionDigits: 2 })}
           </div>
           <span className={`px-3 py-1 rounded-full text-xs font-semibold ${statusBadge[payment.status]}`}>
             {payment.status}
@@ -74,9 +73,9 @@ const ReceiveFullPayment = () => (
       </div>
 
       {/* Payment Method */}
-      <div className="bg-purewhite border border-light_gray rounded-xl p-6 mb-6">
+      <div className="bg-purewhite border border-light_gray rounded-xl p-4 sm:p-6 mb-6">
         <div className="font-semibold text-main_dark mb-3">Payment Method</div>
-        <div className="grid grid-cols-2 gap-4 text-main_dark text-sm">
+        <div className="grid grid-cols-1 sm:grid-cols-2 gap-4 text-main_dark text-sm">
           <div>
             <div className="text-slatebluegray">Bank Name</div>
             <div className="font-medium">{payment.bank}</div>
@@ -97,14 +96,14 @@ const ReceiveFullPayment = () => (
       </div>
 
       {/* Payment Instructions */}
-      <div className="bg-light_gray rounded-xl p-6 mb-8">
+      <div className="bg-light_gray rounded-xl p-4 sm:p-6 mb-8">
         <div className="font-semibold text-main_dark mb-2">Payment Instructions</div>
         <div className="text-main_dark text-sm">{payment.instructions}</div>
       </div>
 
       {/* Confirm Button & Help */}
       <div className="flex flex-col items-center gap-3 mb-16">
-        <button className="bg-web_yellow text-main_dark font-semibold px-8 py-3 rounded-lg shadow hover:opacity-90 transition text-lg">
+        <button className="bg-web_yellow text-main_dark font-semibold px-6 sm:px-8 py-2 sm:py-3 rounded-lg shadow hover:opacity-90 transition text-base sm:text-lg">
           &#10003; Confirm Receipt
         </button>
         <a href="#" className="flex items-center gap-2 text-slatebluegray text-sm hover:underline mt-1">
@@ -115,7 +114,7 @@ const ReceiveFullPayment = () => (
     </div>
 
     {/* Footer */}
-    <footer className="bg-main_dark text-purewhite px-8 py-8 mt-10">
+    <footer className="bg-main_dark text-purewhite px-4 sm:px-8 py-8 mt-10">
       <div className="max-w-6xl mx-auto grid grid-cols-1 md:grid-cols-4 gap-8 text-sm">
         <div>
           <div className="font-bold mb-2 flex items-center gap-2">

@@ -67,7 +67,7 @@ const lineOptions = {
 
 export default function ConstructionDashboard() {
   return (
-    <div className="max-w-full mx-auto py-10 px-16">
+    <div className="max-w-full mx-auto py-10 px-4 sm:px-8 lg:px-16">
       {/* Dashboard Header */}
       <section className="mb-8 flex flex-col md:flex-row md:items-center md:justify-between gap-4">
         <div>
@@ -128,9 +128,9 @@ export default function ConstructionDashboard() {
             Inventory Status
           </h3>
           <p className="text-sm text-gray-500 mb-4">
-                Indicates how efficiently inventory is managed by showing how
-                many times stock is sold and replaced within a year.
-              </p>
+              Indicates how efficiently inventory is managed by showing how
+              many times stock is sold and replaced within a year.
+            </p>
           <div className="grid grid-cols-1 md:grid-cols-2 gap-4">
             <div>
               <p className="text-sm text-gray-600 mb-5">
@@ -185,7 +185,7 @@ export default function ConstructionDashboard() {
           </div>
         </div>
         <div className="overflow-x-auto">
-          <table className="w-full text-main_dark">
+          <table className="w-full text-main_dark min-w-max">
             <thead className="bg-light_brown/35 rounded-t-lg">
               <tr>
                 <th className="px-6 py-3 text-left text-xs font-semibold tracking-wider">
