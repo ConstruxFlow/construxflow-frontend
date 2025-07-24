@@ -7,19 +7,19 @@ const SiteInventory = () => {
 
   const controlOptions = [
     {
-      title: 'Add Equipment to Inventory',
-      description: 'Register new machinery, tools, or vehicles to the equipment inventory.',
-      icon: Settings,
+      title: 'Manage Site Raw Material',
+      //description: 'Register new machinery, tools, or vehicles to the equipment inventory.',
+      icon: Package,
       iconBg: 'bg-gradient-to-br from-deep_green to-deep_green/80',
-      route: '/add-equipment',
+      route: '/site-material-info',
       hoverClass: 'hover:border-deep_green/30'
     },
     {
-      title: 'Add Material to Inventory',
-      description: 'Log oils, lubricants, spare parts, or other materials to your inventory.',
-      icon: Package,
+      title: 'Manage Site Equipments',
+      //description: 'Log oils, lubricants, spare parts, or other materials to your inventory.',
+      icon: Settings,
       iconBg: 'bg-gradient-to-br from-web_yellow to-web_yellow/80',
-      route: '/add-material',
+      route: '/site-equipment-info',
       hoverClass: 'hover:border-web_yellow/30'
     }
   ];
