@@ -1,8 +1,8 @@
 import React from 'react'
 import NavBar from '../../components/NavBar'
-import ExistingProjects from '../../components/SiteManager/ExistingProjects'
+import SiteInventory from '../../components/SiteManager/site_inventory'
 
-function Existing_Projects_List() {
+function Site_inventory() {
   return (
     <>
       <NavBar
@@ -16,9 +16,9 @@ function Existing_Projects_List() {
         ]}
         // showButton={true}
     />
-    <ExistingProjects />
+    <SiteInventory />
     </>
   )
 }
 
-export default Existing_Projects_List
+export default Site_inventory
