@@ -923,7 +923,7 @@ export default function NextScheduleContainer() {
                     </div>
 
                     {/* Assigned Technician */}
-                    <div>
+                    {/* <div>
                       <label className="block text-sm font-medium text-gray-700 mb-1">
                         Assigned Technician
                       </label>
@@ -943,7 +943,7 @@ export default function NextScheduleContainer() {
                         </select>
                         <ChevronDown className="absolute right-3 top-2.5 h-4 w-4 text-gray-400 pointer-events-none" />
                       </div>
-                    </div>
+                    </div> */}
 
                     {/* ✅ Multiple Technician Selection */}
                     <div>
