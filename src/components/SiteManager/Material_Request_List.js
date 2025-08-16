@@ -32,6 +32,7 @@ export default function Material_Request_List() {
         }
         const res = await axios.get(url);
         setMaterials(res.data);
+        console.log("Fetched materials:", res.data);
       } catch (err) {
         setMaterials([]);
         console.error(err);
@@ -39,6 +40,9 @@ export default function Material_Request_List() {
     };
     fetchMaterials();
   }, [projectFilter]);
+
+  // console.log("dfsfdsf"+materials);
+  
 
   // Group materials by project and phase, applying search globally
   useEffect(() => {

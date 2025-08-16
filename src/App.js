@@ -69,7 +69,7 @@ import ContactSupport from "./pages/Supplier/ContactSupport";
 import QuotationDetail from "./pages/PurchasingManager/Quotations/QuotationDetails";
 import QuotationDetails from "./pages/Supplier/QuotationDetails";
 import { FinanceManagerRoutes } from "./pages/FinancialOfficer/routes";
-import ManagerReg from "./pages/Admin/ManagerReg";
+// import ManagerReg from "./pages/Admin/ManagerReg";
 import { SupplierRoutes } from "./pages/Supplier/routes";
 
   import Admin_Dashbaord from "./pages/Admin/Admin-Dashboard";
@@ -82,7 +82,13 @@ import { SupplierRoutes } from "./pages/Supplier/routes";
   import ScheduleForm from "./pages/InventoryManager/ScheduleForm";
 import ViewSchedulePage from "./pages/InventoryManager/ViewSchedulePage";
 import ReorderMaterialPage from "./pages/InventoryManager/ReorderMaterialPage";
+import Profile from "./pages/InventoryManager/InventoryManagerProfile";
 import Admin_Dashboard from "./pages/Admin/Admin-Dashboard";
+import ManagerProfileView from "./pages/Admin/ManagerProfile";
+import AdminProjectsList from "./pages/Admin/AdminProjectsList";
+import AdminProjectDetails from "./pages/Admin/AdminProjectDetails";
+import ManagerReg from "./pages/Admin/ManagerReg";
+import InventoryProfile from "./pages/InventoryManager/ManagerProfile";
 
 
   export const routes = createBrowserRouter([
@@ -274,6 +280,18 @@ import Admin_Dashboard from "./pages/Admin/Admin-Dashboard";
       element:<Admin_Dashboard/>
     },
     {
+      path: "/admin/profile",
+      element: <ManagerProfileView />
+    },
+    {
+      path: "/admin/projects-list",
+      element: <AdminProjectsList />
+    },
+    {
+      path: "/admin-projects-list/:projectId",
+      element: <AdminProjectDetails />
+    },
+    {
       path: "/admin-inventory",
       element:<Admin_Inventory/>
     },
@@ -301,6 +319,10 @@ import Admin_Dashboard from "./pages/Admin/Admin-Dashboard";
 
   },
   {
+    path: "/admin-managers",
+    element: <ManagerReg />,
+  },
+  {
     path: "/inventory-control",
     element: <InventoryControl />,
   },
@@ -313,10 +335,6 @@ import Admin_Dashboard from "./pages/Admin/Admin-Dashboard";
 
     path: "/maintenance-request-page",
     element: <MaintenanceRequestPage />,
-  },
-  {
-    path: "/admin-managers",
-    element:<ManagerReg/>
   },
   {
     path: "/admin-analysis",
@@ -347,6 +365,10 @@ import Admin_Dashboard from "./pages/Admin/Admin-Dashboard";
   element: <ReorderMaterialPage />,
 },
 
+{
+  path: "/Inventory/profile",
+  element: <InventoryProfile />,
+},
 
 
 ReorderMaterialPage

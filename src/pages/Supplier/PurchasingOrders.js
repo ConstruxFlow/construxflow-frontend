@@ -1,4 +1,3 @@
-// src/pages/Supplier/PurchasingOrders.jsx
 import React, { useState } from "react";
 import {
   FaSearch,
@@ -34,7 +33,7 @@ const orders = [
     materials: "Steel Bars, Cement",
     quantity: 1200,
     status: "Delivered",
-    amount: "$45,000",
+    amount: "RS 45,000",
   },
   {
     id: "PO-2024-002",
@@ -44,7 +43,7 @@ const orders = [
     materials: "Concrete, Rebar",
     quantity: 800,
     status: "Dispatched",
-    amount: "$28,500",
+    amount: "RS 28,500",
   },
   {
     id: "PO-2024-003",
@@ -54,7 +53,7 @@ const orders = [
     materials: "Glass Panels",
     quantity: 300,
     status: "Pending",
-    amount: "$125,000",
+    amount: "RS 125,000",
   },
   {
     id: "PO-2024-004",
@@ -64,7 +63,7 @@ const orders = [
     materials: "Electrical Cables",
     quantity: 2000,
     status: "Cancelled",
-    amount: "$12,000",
+    amount: "RS 12,000",
   },
   {
     id: "PO-2024-005",
@@ -74,7 +73,7 @@ const orders = [
     materials: "Bricks, Mortar",
     quantity: 5000,
     status: "Pending",
-    amount: "$35,750",
+    amount: "RS 35,750",
   },
 ];
 
@@ -98,6 +97,7 @@ const PurchasingOrders = () => {
   const [searchTerm, setSearchTerm] = useState("");
   const [statusFilter, setStatusFilter] = useState("All Status");
   const [currentPage, setCurrentPage] = useState(1);
+  const itemsPerPage = 10;
 
   const navigate = useNavigate();
 
@@ -111,11 +111,16 @@ const PurchasingOrders = () => {
         order.materials.toLowerCase().includes(searchTerm.toLowerCase()))
   );
 
+  // Pagination
+  const totalPages = Math.ceil(filteredOrders.length / itemsPerPage);
+  const startIndex = (currentPage - 1) * itemsPerPage;
+  const paginatedOrders = filteredOrders.slice(startIndex, startIndex + itemsPerPage);
+
   return (
     <div className="bg-purewhite min-h-screen">
       <NavBar links={navLinks} profileURL="/supplier/profile" logoSrc="/logo1.png" />
 
-      <div className="max-w-full mx-auto px-16 py-8">
+      <div className="max-w-full mx-auto px-4 sm:px-8 lg:px-16 py-8">
         {/* Header */}
         <div className="flex justify-between items-start mb-8">
           <div>
@@ -129,7 +134,7 @@ const PurchasingOrders = () => {
         </div>
 
         {/* Filters */}
-        <div className="bg-purewhite border border-light_gray rounded-lg p-6 mb-6 shadow-sm">
+        <div className="bg-purewhite border border-light_gray rounded-lg p-4 sm:p-6 mb-6 shadow-sm">
           <div className="grid grid-cols-1 md:grid-cols-4 gap-4">
             {/* Search */}
             <div className="relative">
@@ -196,17 +201,8 @@ const PurchasingOrders = () => {
 
         {/* Table */}
         <div className="bg-purewhite rounded-lg shadow-sm overflow-hidden">
-          {/* Table Header */}
-          {/* <div className="flex justify-between items-center p-6 border border-light_gray rounded-t-lg">
-            <h2 className="text-lg font-semibold text-main_dark">
-              Purchasing Orders ({filteredOrders.length})
-            </h2>
-            <div className="flex items-center gap-2">
-              <MdFilterList className="text-gray-400" />
-              <FaChevronDown className="text-gray-400" />
-            </div>
-          </div> */}
-          <div className="overflow-x-auto">
+          {/* Desktop Table */}
+          <div className="hidden lg:block overflow-x-auto">
             <table className="w-full">
               <thead className="bg-light_brown/35">
                 <tr>
@@ -255,7 +251,7 @@ const PurchasingOrders = () => {
                 </tr>
               </thead>
               <tbody className="divide-y divide-light_gray">
-                {filteredOrders.map((order, index) => (
+                {paginatedOrders.map((order, index) => (
                   <tr key={index} className="bg-purewhite hover:bg-gray-50">
                     <td className="px-6 py-4 text-sm font-medium text-main_dark">
                       {order.id}
@@ -290,25 +286,83 @@ const PurchasingOrders = () => {
             </table>
           </div>
 
+          {/* Mobile Cards */}
+          <div className="lg:hidden divide-y divide-light_gray">
+            {paginatedOrders.map((order, index) => (
+              <div key={index} className="p-4">
+                <div className="flex justify-between items-start mb-3">
+                  <div className="flex-1">
+                    <div className="flex items-center gap-2 mb-1">
+                      <h3 className="font-semibold text-main_dark text-sm">{order.id}</h3>
+                      <span className="text-xs text-gray-500">•</span>
+                      <span className="font-semibold text-main_dark text-sm">{order.project}</span>
+                    </div>
+                    <p className="text-xs text-gray-600 mb-1">{order.materials}</p>
+                    <div className="flex items-center gap-2 text-xs text-gray-500">
+                      <FaCalendarAlt className="w-3 h-3" />
+                      {order.orderDate}
+                    </div>
+                  </div>
+                  <div className="flex flex-col gap-1">
+                    <span className={getStatusBadge(order.status)}>
+                      {order.status}
+                    </span>
+                  </div>
+                </div>
+                
+                <div className="space-y-1 text-xs text-gray-600 mb-3">
+                  <p><span className="font-medium">Quantity:</span> {order.quantity}</p>
+                  <p><span className="font-medium">Amount:</span> {order.amount}</p>
+                  <p><span className="font-medium">Delivery:</span> {order.deliveryDate}</p>
+                </div>
+                
+                <div className="flex justify-end gap-2">
+                  <button
+                    className="text-deep_green hover:text-deep_green/80 transition-colors"
+                    onClick={() => navigate(`/supplier/orders/${order.id}`)}
+                  >
+                    <FaEye className="w-4 h-4" />
+                  </button>
+                  <button className="text-web_yellow hover:text-web_yellow/80 transition-colors">
+                    <FaReply className="w-4 h-4" />
+                  </button>
+                </div>
+              </div>
+            ))}
+          </div>
+
           {/* Pagination */}
-          <div className="flex justify-between items-center px-6 py-4 border-t border-light_gray">
-            <div className="text-sm text-slatebluegray">
-              Showing 1 to {filteredOrders.length} of {orders.length} results
+          <div className="flex flex-col sm:flex-row justify-between items-center px-6 py-4 border-t border-light_gray">
+            <div className="text-sm text-slatebluegray mb-2 sm:mb-0">
+              Showing {startIndex + 1} to{" "}
+              {Math.min(startIndex + itemsPerPage, filteredOrders.length)} of {filteredOrders.length} results
             </div>
             <div className="flex items-center gap-2">
-              <button className="px-3 py-1 text-sm text-slatebluegray hover:bg-gray-100 rounded">
+              <button 
+                className="px-3 py-1 text-sm text-slatebluegray hover:bg-gray-100 rounded"
+                disabled={currentPage === 1}
+                onClick={() => setCurrentPage((p) => Math.max(1, p - 1))}
+              >
                 Previous
               </button>
-              <button className="px-3 py-1 text-sm bg-web_yellow text-main_dark rounded font-medium">
-                1
-              </button>
-              <button className="px-3 py-1 text-sm text-slatebluegray hover:bg-gray-100 rounded">
-                2
-              </button>
-              <button className="px-3 py-1 text-sm text-slatebluegray hover:bg-gray-100 rounded">
-                3
-              </button>
-              <button className="px-3 py-1 text-sm text-slatebluegray hover:bg-gray-100 rounded">
+              {[...Array(totalPages)].map((_, page) => (
+                <button
+                  key={page}
+                  className={`px-3 py-1 text-sm ${
+                    currentPage === page + 1
+                      ? "bg-web_yellow text-main_dark rounded font-medium"
+                      : "text-slatebluegray hover:bg-gray-100 rounded"
+                  }`}
+                  onClick={() => setCurrentPage(page + 1)}
+                >
+                  {page + 1}
+                </button>
+              ))}
+              <button 
+                className="px-3 py-1 text-sm text-slatebluegray hover:bg-gray-100 rounded"
+                disabled={currentPage === totalPages}
+                onClick={() => setCurrentPage((p) => Math.min(totalPages, p + 1))}
+              >
                 Next
               </button>
             </div>

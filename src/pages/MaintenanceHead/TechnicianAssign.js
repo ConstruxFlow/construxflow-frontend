@@ -16,7 +16,7 @@ export default function TechnicianAssignmentMain() {
   const [teamMembers, setTeamMembers] = useState([]);
   const [loadingTeam, setLoadingTeam] = useState(true);
 
-  const [selectedTech, setSelectedTech] = useState("");
+  const [selectedTechs, setSelectedTechs] = useState([]);
   const [duration, setDuration] = useState("1-2 hours");
   const [instructions, setInstructions] = useState("");
   const [showTeam, setShowTeam] = useState(false);
@@ -65,64 +65,61 @@ export default function TechnicianAssignmentMain() {
 
   // Assignment submit handler
   const handleAssign = async (e) => {
-  e.preventDefault();
-  setSubmitting(true);
-  setSubmitMsg("");
-  setIsLoading(true);
-  setLoadingProgress(0);
-
-  const progressInterval = setInterval(() => {
-    setLoadingProgress((p) => (p >= 90 ? p : p + Math.random() * 5));
-  }, 200);
-
-  const reqBody = {
-    equipmentSchedulingId: id,
-    technicianId: selectedTech,
-    duration,
-    notes: instructions,
-    startDate: startDate || null,
-    endDate: null,
-    startTime: startTime || null,
-    endTime: null,
-    status: "ASSIGNED",
-  };
-
-  try {
-    setLoadingProgress(10);
-
-    const res = await fetch(
-      "http://localhost:8080/api/equipmentassigntechnician/addassign",
-      {
-        method: "POST",
-        headers: { "Content-Type": "application/json" },
-        body: JSON.stringify(reqBody),
-      }
-    );
-
-    setLoadingProgress(50);
-
-    if (res.ok) {
-
-      // Update scheduling status
-      await updateSchedulingStatus(id, "ASSIGNED");
-      setLoadingProgress(100); // Final progress
-      toast.success("Technician assigned successfully!");
-      navigation("/maintenance/update-equipment-maintenance");
-    } else {
-      const errText = await res.text();
-      toast.error(`Failed to assign technician: ${errText}`);
-    }
-  } catch (err) {
-    toast.error(`Error assigning technician: ${err.message}`);
-  } finally {
-    setSubmitting(false);
-    setIsLoading(false);
-    clearInterval(progressInterval);
+    e.preventDefault();
+    setSubmitting(true);
+    setSubmitMsg("");
+    setIsLoading(true);
     setLoadingProgress(0);
-  }
-};
-;
 
+    const progressInterval = setInterval(() => {
+      setLoadingProgress((p) => (p >= 90 ? p : p + Math.random() * 5));
+    }, 200);
+
+    const reqBody = {
+      equipmentSchedulingId: id,
+      technicianIds: selectedTechs, // an array
+      duration,
+      notes: instructions,
+      startDate: startDate || null,
+      endDate: null,
+      startTime: startTime || null,
+      endTime: null,
+      status: "ASSIGNED",
+    };
+
+    try {
+      setLoadingProgress(10);
+
+      const res = await fetch(
+        "http://localhost:8080/api/equipmentassigntechnician/addassign",
+        {
+          method: "POST",
+          headers: { "Content-Type": "application/json" },
+          body: JSON.stringify(reqBody),
+        }
+      );
+
+      setLoadingProgress(50);
+
+      if (res.ok) {
+        // Update scheduling status
+        await updateSchedulingStatus(id, "ASSIGNED");
+        setLoadingProgress(100); // Final progress
+        toast.success("Technician assigned successfully!");
+        navigation("/maintenance/update-equipment-maintenance");
+      } else {
+        const errText = await res.text();
+        toast.error(`Failed to assign technician: ${errText}`);
+      }
+    } catch (err) {
+      toast.error(`Error assigning technician: ${err.message}`);
+    } finally {
+      setSubmitting(false);
+      setIsLoading(false);
+      clearInterval(progressInterval);
+      setLoadingProgress(0);
+    }
+  };
   useEffect(() => {
     const user = localStorage.getItem("user");
     setIsLoggedIn(!!user);
@@ -167,6 +164,7 @@ export default function TechnicianAssignmentMain() {
   return (
     <>
       <NavBar
+        profileURL="/maintenance/profile"
         links={[
           {
             name: "Dashboard",
@@ -205,16 +203,10 @@ export default function TechnicianAssignmentMain() {
             onClick: () => navigation("/maintenance/add-member"),
           },
         ]}
-        showButton={true}
-        buttonLabel={isLoggedIn ? "Logout" : "Get Started"}
-        onButtonClick={isLoggedIn ? handleLogout : handleLogin}
       />
-            {isLoading && (
-              <LoadingOverlay
-                progress={loadingProgress}
-                message="Processing..."
-              />
-            )}
+      {isLoading && (
+        <LoadingOverlay progress={loadingProgress} message="Processing..." />
+      )}
       <div className="min-h-screen bg-[#F8FAFC] flex flex-col md:flex-row items-start justify-center py-8 px-4 gap-8">
         {/* Main Content */}
         <div className="flex-1 max-w-3xl">
@@ -329,30 +321,66 @@ export default function TechnicianAssignmentMain() {
             <div className="grid grid-cols-1 md:grid-cols-2 gap-4 mb-4">
               <div>
                 <label className="block text-sm font-medium text-gray-600 mb-1">
-                  Select Technician
+                  Select Technicians <span className="text-red-500">*</span>
                 </label>
                 <select
                   className="w-full border border-gray-200 rounded-md px-3 py-2 text-gray-800 bg-gray-50"
-                  value={selectedTech}
-                  onChange={(e) => setSelectedTech(e.target.value)}
-                  required
+                  value=""
+                  onChange={(e) => {
+                    const selectedId = e.target.value;
+
+                    // ✅ Only add if value exists and is not already selected
+                    if (selectedId && !selectedTechs.includes(selectedId)) {
+                      setSelectedTechs([...selectedTechs, selectedId]);
+                    }
+
+                    // ✅ Reset dropdown immediately after selection
+                    e.target.value = "";
+                  }}
                 >
-                  <option value="">Choose a technician...</option>
-                  {loadingTeam ? (
-                    <option>Loading...</option>
-                  ) : (
-                    teamMembers
-                      .filter(
-                        (member) => member.availabilityStatus === "AVAILABLE"
-                      )
-                      .map((member) => (
-                        <option key={member.empId} value={member.empId}>
-                          {member.name} ({member.specializations?.join(", ")})
-                        </option>
-                      ))
-                  )}
+                  <option value="" disabled>
+                    Select a technician...
+                  </option>
+                  {teamMembers
+                    .filter(
+                      (tech) =>
+                        tech.availabilityStatus === "AVAILABLE" &&
+                        !selectedTechs.includes(tech.empId)
+                    )
+                    .map((tech) => (
+                      <option key={tech.empId} value={tech.empId}>
+                        {tech.name} ({tech.specializations?.join(", ")})
+                      </option>
+                    ))}
                 </select>
               </div>
+
+              <div className="mt-2 flex flex-wrap gap-2">
+                {selectedTechs.map((techId) => {
+                  const tech = teamMembers.find((t) => t.empId === techId);
+                  if (!tech) return null;
+                  return (
+                    <span
+                      key={techId}
+                      className="inline-flex items-center gap-2 bg-[#236571] text-white text-sm px-3 py-1 rounded-full"
+                    >
+                      {tech.name}
+                      <button
+                        type="button"
+                        onClick={() =>
+                          setSelectedTechs(
+                            selectedTechs.filter((id) => id !== techId)
+                          )
+                        }
+                        className="text-white hover:text-red-300 font-bold"
+                      >
+                        ×
+                      </button>
+                    </span>
+                  );
+                })}
+              </div>
+
               <div>
                 <label className="block text-sm font-medium text-gray-600 mb-1">
                   Expected Duration
@@ -421,7 +449,7 @@ export default function TechnicianAssignmentMain() {
                 type="button"
                 className="px-6 py-2 rounded-md border border-[#236571] text-[#236571] font-semibold bg-white hover:bg-gray-50 transition"
                 onClick={() => {
-                  setSelectedTech("");
+                  setSelectedTechs([]); // ✅ Fixed: Use empty array instead of empty string
                   setDuration("1-2 hours");
                   setInstructions("");
                   setStartDate("");
@@ -432,10 +460,15 @@ export default function TechnicianAssignmentMain() {
               >
                 Cancel
               </button>
+
               <button
                 type="submit"
-                className="px-6 py-2 rounded-md bg-[#EFC11A] hover:bg-yellow-400 text-yellow-900 font-semibold flex items-center gap-2 shadow transition"
-                disabled={submitting}
+                className={`px-6 py-2 rounded-md font-semibold flex items-center gap-2 shadow transition ${
+                  selectedTechs.length === 0
+                    ? "bg-gray-300 text-gray-500 cursor-not-allowed"
+                    : "bg-[#EFC11A] hover:bg-yellow-400 text-yellow-900"
+                }`}
+                disabled={submitting || selectedTechs.length === 0}
               >
                 <UserPlus className="w-5 h-5" />
                 {submitting ? "Assigning..." : "Assign Technician"}

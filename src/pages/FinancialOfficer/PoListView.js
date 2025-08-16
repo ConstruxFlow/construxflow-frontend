@@ -222,7 +222,7 @@ const PoListView = () => {
             </div>
             <div className="bg-purewhite border border-gray-200 rounded-lg p-4">
               <div className="text-2xl font-bold text-blue-600">
-                ${purchaseOrders.reduce((sum, order) => sum + (order.subTotal || 0), 0).toLocaleString()}
+                RS {purchaseOrders.reduce((sum, order) => sum + (order.subTotal || 0), 0).toLocaleString()}
               </div>
               <div className="text-sm text-gray-600">Total Value</div>
             </div>
@@ -389,7 +389,7 @@ const PoListView = () => {
                         )}
                       </td>
                       <td className="px-6 py-4 text-sm font-semibold text-main_dark">
-                        ${order.subTotal ? order.subTotal.toLocaleString() : 'N/A'}
+                        RS {order.subTotal ? order.subTotal.toLocaleString() : 'N/A'}
                       </td>
                       <td className="px-6 py-4">
                         {order.orderPayment ? (
@@ -398,7 +398,7 @@ const PoListView = () => {
                               {order.orderPayment.status || 'Pending'}
                             </span>
                             <div className="text-xs text-gray-500">
-                              ${order.orderPayment.paidAmount || 0} / ${order.orderPayment.amount || 0}
+                              RS {order.orderPayment.paidAmount || 0} / RS {order.orderPayment.amount || 0}
                             </div>
                             <div className="w-full bg-gray-200 rounded-full h-1">
                               <div 
@@ -476,7 +476,7 @@ const PoListView = () => {
                     <div>
                       <span className="text-gray-500">Amount:</span>
                       <div className="font-semibold">
-                        ${order.subTotal ? order.subTotal.toLocaleString() : 'N/A'}
+                        RS {order.subTotal ? order.subTotal.toLocaleString() : 'N/A'}
                       </div>
                     </div>
                     <div>
@@ -507,7 +507,7 @@ const PoListView = () => {
                     <div className="mb-3">
                       <div className="flex justify-between text-xs text-gray-500 mb-1">
                         <span>Payment Progress</span>
-                        <span>${order.orderPayment.paidAmount || 0} / ${order.orderPayment.amount || 0}</span>
+                        <span>RS {order.orderPayment.paidAmount || 0} / RS {order.orderPayment.amount || 0}</span>
                       </div>
                       <div className="w-full bg-gray-200 rounded-full h-2">
                         <div 
@@ -523,7 +523,7 @@ const PoListView = () => {
                       {getTotalMaterialsCount(order.materials)} materials • {getTotalDeliveryLocations(order.deliveries)} locations
                     </div>
                     <div className="flex items-center gap-2">
-                      <button onClick={() => navigate(`/purchasing/orders/details/${order.ponumber}`)} className="text-deep_green hover:text-deep_green/80 transition-colors">
+                      <button onClick={() => navigate(`/financial/purchase-order-details/${order.ponumber}`)} className="text-deep_green hover:text-deep_green/80 transition-colors">
                         <FaEye className="w-4 h-4" />
                       </button>
                     </div>

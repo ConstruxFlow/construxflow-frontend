@@ -166,7 +166,7 @@ const QuotationRequestDetail = () => {
   return (
     <div className="min-h-screen bg-purewhite font-poppins">
       <NavBar
-      profileURL="/purchasing/profile"
+        profileURL="/purchasing/profile"
         links={[
           { name: "Dashboard", path: "/purchasing/dashboard" },
           {
@@ -178,7 +178,7 @@ const QuotationRequestDetail = () => {
             name: "Quotation Requests",
             path: "/purchasing/quotationrequest/overview",
           },
-          { name: "Orders", path: "/orders" },
+          { name: "Purchasing Orders", path: "/purchasing/orders/overview" },
         ]}
       />
 
@@ -281,7 +281,7 @@ const QuotationRequestDetail = () => {
           </div>
 
           {/* Quick Info Cards */}
-          <div className="grid grid-cols-2 lg:grid-cols-4 gap-4 mb-6">
+          <div className="grid grid-cols-1 sm:grid-cols-2 lg:grid-cols-4 gap-4 mb-6">
             <div className="bg-purewhite border border-gray-200 rounded-lg p-4">
               <div className="flex items-center gap-2 mb-2">
                 <FaCalendarAlt className="w-4 h-4 text-web_yellow" />
@@ -317,14 +317,17 @@ const QuotationRequestDetail = () => {
             </div>
             <div className="bg-purewhite border border-gray-200 rounded-lg p-4">
               <div className="flex items-center gap-2 mb-2">
-                <FaDollarSign className="w-4 h-4 text-web_yellow" />
+                <span className="text-sm font-medium text-web_yellow">
+                  RS
+                </span>
                 <span className="text-sm font-medium text-gray-600">
                   Est. Cost
                 </span>
+                
               </div>
               <div className="text-lg font-bold text-main_dark">
                 {requestData.estimatedCost
-                  ? `$${requestData.estimatedCost.toLocaleString()}`
+                  ? `RS ${requestData.estimatedCost.toLocaleString()}`
                   : "N/A"}
               </div>
             </div>
@@ -333,7 +336,7 @@ const QuotationRequestDetail = () => {
           {/* Tab Navigation */}
           <div className="bg-purewhite border border-gray-200 rounded-lg mb-6">
             <div className="border-b border-gray-200">
-              <nav className="flex space-x-8 px-6">
+              <nav className="flex flex-wrap space-x-4 sm:space-x-8 px-4 sm:px-6">
                 {[
                   { id: "overview", label: "Overview" },
                   { id: "materials", label: "Materials" },
@@ -356,7 +359,7 @@ const QuotationRequestDetail = () => {
             </div>
 
             {/* Tab Content */}
-            <div className="p-6">
+            <div className="p-4 sm:p-6">
               {/* Overview Tab */}
               {activeTab === "overview" && (
                 <div className="grid grid-cols-1 lg:grid-cols-2 gap-6">
@@ -459,7 +462,7 @@ const QuotationRequestDetail = () => {
                         </label>
                         <p className="font-semibold text-main_dark text-lg">
                           {requestData.estimatedCost
-                            ? `$${requestData.estimatedCost.toLocaleString()}`
+                            ? `RS ${requestData.estimatedCost.toLocaleString()}`
                             : "Not specified"}
                         </p>
                       </div>
@@ -492,30 +495,16 @@ const QuotationRequestDetail = () => {
                   {requestData.quotationReqMaterials &&
                   requestData.quotationReqMaterials.length > 0 ? (
                     <div className="overflow-x-auto">
-                      <table className="w-full">
+                      <table className="w-full min-w-max">
                         <thead className="bg-light_brown/30">
                           <tr>
-                            <th className="px-4 py-3 text-left text-sm font-semibold text-main_dark">
-                              Material ID
-                            </th>
-                            <th className="px-4 py-3 text-left text-sm font-semibold text-main_dark">
-                              Material Name
-                            </th>
-                            <th className="px-4 py-3 text-left text-sm font-semibold text-main_dark">
-                              Type
-                            </th>
-                            <th className="px-4 py-3 text-left text-sm font-semibold text-main_dark">
-                              Unit
-                            </th>
-                            <th className="px-4 py-3 text-left text-sm font-semibold text-main_dark">
-                              Quantity
-                            </th>
-                            <th className="px-4 py-3 text-left text-sm font-semibold text-main_dark">
-                              unit Price
-                            </th>
-                            <th className="px-4 py-3 text-left text-sm font-semibold text-main_dark">
-                              Estimated Cost
-                            </th>
+                            <th className="px-4 py-3 text-left text-sm font-semibold text-main_dark">Material ID</th>
+                            <th className="px-4 py-3 text-left text-sm font-semibold text-main_dark">Material Name</th>
+                            <th className="px-4 py-3 text-left text-sm font-semibold text-main_dark">Type</th>
+                            <th className="px-4 py-3 text-left text-sm font-semibold text-main_dark">Unit</th>
+                            <th className="px-4 py-3 text-left text-sm font-semibold text-main_dark">Quantity</th>
+                            <th className="px-4 py-3 text-left text-sm font-semibold text-main_dark">unit Price(RS)</th>
+                            <th className="px-4 py-3 text-left text-sm font-semibold text-main_dark">Estimated Cost(RS)</th>
                           </tr>
                         </thead>
                         <tbody className="divide-y divide-gray-200">
@@ -578,7 +567,7 @@ const QuotationRequestDetail = () => {
                         (delivery, index) => (
                           <div
                             key={delivery.quotationReqDeliveryId || index}
-                            className="bg-light_gray/30 rounded-lg p-6"
+                            className="bg-light_gray/30 rounded-lg p-4 sm:p-6"
                           >
                             <div className="grid grid-cols-1 md:grid-cols-3 gap-4">
                               <div>
@@ -640,7 +629,7 @@ const QuotationRequestDetail = () => {
                       {requestData.quotationReqDocs.map((document, index) => (
                         <div
                           key={index}
-                          className="flex items-center justify-between p-4 border border-gray-200 rounded-lg"
+                          className="flex flex-col sm:flex-row items-start sm:items-center justify-between p-4 border border-gray-200 rounded-lg gap-4 sm:gap-0"
                         >
                           <div className="flex items-center gap-4">
                             <div className="w-10 h-10 bg-blue-100 rounded-lg flex items-center justify-center">
@@ -650,7 +639,7 @@ const QuotationRequestDetail = () => {
                               <h4 className="font-medium text-main_dark">
                                 {document.documentName}
                               </h4>
-                              <div className="flex items-center gap-4 text-sm text-gray-600">
+                              <div className="flex flex-col sm:flex-row items-start sm:items-center gap-2 sm:gap-4 text-sm text-gray-600">
                                 <span>{document.documentType}</span>
                                 <span>
                                   Request ID: {document.quotationReqId}

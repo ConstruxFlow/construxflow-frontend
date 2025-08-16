@@ -14,6 +14,7 @@ import Site_MaterialUpdate from "./Site_MaterialUpdate";
 import Purchase_Order from "./Purchase_Order";
 import SiteManager_Profile from "./SiteManager_Profile";
 import ManagerProfileView from "./ManagerProfile";
+import SiteInventory from "./Site_inventory";
 
 export const siteManagerRoutes = {
   path: '/site-manager',
@@ -50,6 +51,10 @@ export const siteManagerRoutes = {
     {
       path: 'material-request-list',
       element: <Material_Request />,
+    },
+    {
+      path: 'site-inventory',
+      element: <SiteInventory />,
     },
     {
       path: 'site-equipment-info',

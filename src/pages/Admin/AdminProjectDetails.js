@@ -28,7 +28,7 @@ import { useNavigate, useParams } from 'react-router-dom';
 import NavBar from '../../components/NavBar';
 import LoadingOverlay from '../../components/LoadingOverlay';
 
-const FinancialProjectDetails = () => {
+const AdminProjectDetails = () => {
   const navigate = useNavigate();
   const { projectId } = useParams();
   const [isLoading, setIsLoading] = useState(false);
@@ -152,7 +152,7 @@ const FinancialProjectDetails = () => {
   const formatCurrency = (amount) => {
     return new Intl.NumberFormat("en-US", {
       style: "currency",
-      currency: "LKR",
+      currency: "USD",
     }).format(amount);
   };
 
@@ -191,13 +191,13 @@ const FinancialProjectDetails = () => {
     return (
       <div className="min-h-screen bg-purewhite font-poppins">
         <NavBar
-        profileURL="/financial/profile"
-          links={[
-            { name: 'Dashboard', path: '/financial/dashboard' },
-          { name: 'Payment Approvals', path: '/financial/payment-list' },
-          { name: 'Purchase Orders', path: '/financial/purchase-order-list' },
-          { name: 'Projects', path: '/financial/financial-projects' },
-          ]}
+         profileURL='/admin/profile'
+        links={[
+          { name: "Dashboard", href: "/admin", active: true },
+          { name: "Projects", href: "/admin/projects-list" },
+          { name: "Inventory", href: "/admin-inventory" },
+          { name: "Users", href: "/admin-users" },
+        ]}
         />
         <div className="py-6">
           <div className="max-w-full mx-auto px-4 sm:px-6 lg:px-8">
@@ -206,7 +206,7 @@ const FinancialProjectDetails = () => {
               <h2 className="text-2xl font-bold text-main_dark mb-2">Project Not Found</h2>
               <p className="text-gray-600 mb-4">The project you're looking for doesn't exist or has been removed.</p>
               <button 
-                onClick={() => navigate('/financial/projects')}
+                onClick={() => navigate('/admin/projects-list')}
                 className="px-4 py-2 bg-web_yellow text-main_dark rounded-md hover:bg-web_yellow/90 transition-colors"
               >
                 Back to Projects
@@ -231,44 +231,47 @@ const FinancialProjectDetails = () => {
       {isLoading && <LoadingOverlay />}
       
       <NavBar
+        profileURL='/admin/profile'
         links={[
-          { name: 'Dashboard', path: '/financial/dashboard' },
-          { name: 'Payment Approvals', path: '/financial/payment-list' },
-          { name: 'Purchase Orders', path: '/financial/purchase-order-list' },
-          { name: 'Projects', path: '/financial/financial-projects' },
+          { name: "Dashboard", href: "/admin", active: true },
+          { name: "Projects", href: "/admin/projects-list" },
+          { name: "Inventory", href: "/admin-inventory" },
+          { name: "Users", href: "/admin-users" },
         ]}
       />
 
       <main className="py-4 sm:py-6">
         <div className="max-w-full mx-auto px-2 sm:px-3 lg:px-10">
           {/* Header */}
-          <div className="flex items-center gap-4 mb-6">
-            <button 
-              onClick={() => navigate('/financial/projects')}
-              className="text-gray-600 hover:text-main_dark transition-colors"
-            >
-              <FaArrowLeft className="w-5 h-5" />
-            </button>
-            <div className="flex-1">
-              <h1 className="text-xl sm:text-2xl font-bold text-main_dark mb-2">
-                {project.projectName}
-              </h1>
-              <div className="flex flex-wrap items-center gap-4 text-sm text-gray-600">
-                <span className="flex items-center gap-1">
-                  <FaBuilding className="w-4 h-4" />
-                  {project.projectId}
-                </span>
-                <span className="flex items-center gap-1">
-                  <FaMapMarkerAlt className="w-4 h-4" />
-                  {project.location}
-                </span>
-                <span className={`px-2 py-1 rounded-full text-xs font-medium border ${getStatusColor(project.progressStatus)}`}>
-                  {project.progressStatus.replace('-', ' ').replace(/\b\w/g, l => l.toUpperCase())}
-                </span>
+          <div className="flex flex-col sm:flex-row items-start sm:items-center gap-4 mb-6">
+            <div className="flex items-center gap-4 mb-2 sm:mb-0">
+              <button 
+                onClick={() => navigate('/admin/projects-list')}
+                className="text-gray-600 hover:text-main_dark transition-colors"
+              >
+                <FaArrowLeft className="w-5 h-5" />
+              </button>
+              <div className="flex-1">
+                <h1 className="text-xl sm:text-2xl font-bold text-main_dark mb-2">
+                  {project.projectName}
+                </h1>
+                <div className="flex flex-wrap items-center gap-4 text-sm text-gray-600">
+                  <span className="flex items-center gap-1">
+                    <FaBuilding className="w-4 h-4" />
+                    {project.projectId}
+                  </span>
+                  <span className="flex items-center gap-1">
+                    <FaMapMarkerAlt className="w-4 h-4" />
+                    {project.location}
+                  </span>
+                  <span className={`px-2 py-1 rounded-full text-xs font-medium border ${getStatusColor(project.progressStatus)}`}>
+                    {project.progressStatus.replace('-', ' ').replace(/\b\w/g, l => l.toUpperCase())}
+                  </span>
+                </div>
               </div>
             </div>
-            <div className="flex gap-2">
-              <button className="px-4 py-2 bg-web_yellow text-main_dark rounded-md hover:bg-web_yellow/90 transition-colors text-sm font-medium flex items-center gap-2">
+            <div className="flex gap-2 w-full sm:w-auto">
+              <button className="w-full sm:w-auto px-4 py-2 bg-web_yellow text-main_dark rounded-md hover:bg-web_yellow/90 transition-colors text-sm font-medium flex items-center gap-2 justify-center">
                 <FaDownload className="w-4 h-4" />
                 Export
               </button>
@@ -276,7 +279,7 @@ const FinancialProjectDetails = () => {
           </div>
 
           {/* Key Metrics Cards */}
-          <div className="grid grid-cols-1 md:grid-cols-2 lg:grid-cols-4 gap-4 mb-6">
+          <div className="grid grid-cols-1 sm:grid-cols-2 lg:grid-cols-4 gap-4 mb-6">
             <div className="bg-white border border-gray-200 rounded-lg p-4">
               <div className="flex items-center justify-between">
                 <div>
@@ -326,7 +329,7 @@ const FinancialProjectDetails = () => {
           </div>
 
           {/* Progress Bar */}
-          <div className="bg-white border border-gray-200 rounded-lg p-6 mb-6">
+          <div className="bg-white border border-gray-200 rounded-lg p-4 sm:p-6 mb-6">
             <div className="flex items-center justify-between mb-4">
               <h3 className="text-lg font-semibold text-main_dark">Overall Progress</h3>
               <span className="text-sm text-gray-600">{overallProgress}% Complete</span>
@@ -337,7 +340,7 @@ const FinancialProjectDetails = () => {
                 style={{ width: `${overallProgress}%` }}
               ></div>
             </div>
-            <div className="flex justify-between mt-2 text-sm text-gray-600">
+            <div className="flex flex-col sm:flex-row justify-between mt-2 text-sm text-gray-600 gap-2 sm:gap-0">
               <span>Started: {formatDate(project.startDate)}</span>
               <span>Due: {formatDate(project.endDate)}</span>
             </div>
@@ -346,7 +349,7 @@ const FinancialProjectDetails = () => {
           {/* Tab Navigation */}
           <div className="bg-white border border-gray-200 rounded-lg overflow-hidden mb-6">
             <div className="border-b border-gray-200">
-              <nav className="flex space-x-8 px-6">
+              <nav className="flex flex-wrap space-x-4 sm:space-x-8 px-4 sm:px-6">
                 {[
                   { id: 'overview', name: 'Financial Overview', icon: FaChartPie },
                   { id: 'phases', name: 'Phase Breakdown', icon: FaLayerGroup },
@@ -370,7 +373,7 @@ const FinancialProjectDetails = () => {
             </div>
 
             {/* Tab Content */}
-            <div className="p-6">
+            <div className="p-4 sm:p-6">
               {activeTab === 'overview' && (
                 <div className="space-y-6">
                   {/* Financial Summary */}
@@ -380,7 +383,7 @@ const FinancialProjectDetails = () => {
                       <h4 className="text-lg font-semibold text-main_dark mb-4">Cost Breakdown by Material Type</h4>
                       <div className="space-y-3">
                         {materialBreakdown.map(item => (
-                          <div key={item.type} className="flex items-center justify-between p-3 bg-gray-50 rounded-lg">
+                          <div key={item.type} className="flex flex-col sm:flex-row items-start sm:items-center justify-between p-3 bg-gray-50 rounded-lg gap-2 sm:gap-0">
                             <div className="flex-1">
                               <div className="flex items-center justify-between mb-1">
                                 <span className="text-sm font-medium text-main_dark">{item.type}</span>
@@ -393,7 +396,7 @@ const FinancialProjectDetails = () => {
                                 ></div>
                               </div>
                             </div>
-                            <div className="ml-4 text-right">
+                            <div className="text-left sm:text-right">
                               <div className="text-sm font-semibold text-main_dark">{formatCurrency(item.total)}</div>
                               <div className="text-xs text-gray-500">{item.count} items</div>
                             </div>
@@ -447,7 +450,7 @@ const FinancialProjectDetails = () => {
                   <div>
                     <h4 className="text-lg font-semibold text-main_dark mb-4">Top 10 Most Expensive Materials</h4>
                     <div className="overflow-x-auto">
-                      <table className="w-full">
+                      <table className="w-full min-w-max">
                         <thead className="bg-gray-50">
                           <tr>
                             <th className="px-4 py-3 text-left text-xs font-medium text-gray-500 uppercase tracking-wider">Material</th>
@@ -460,9 +463,8 @@ const FinancialProjectDetails = () => {
                         <tbody className="bg-white divide-y divide-gray-200">
                           {topExpensiveMaterials.map((material, index) => (
                             <tr key={`${material.phaseMaterialId}-${index}`}>
-                              <td className="px-4 py-4 whitespace-nowrap">
-                                <div className="text-sm font-medium text-main_dark">{material.materialName}</div>
-                                <div className="text-sm text-gray-500">{material.materialType}</div>
+                              <td className="px-4 py-4 whitespace-nowrap text-sm font-medium text-main_dark">
+                                {material.materialName}
                               </td>
                               <td className="px-4 py-4 whitespace-nowrap text-sm text-gray-900">
                                 {material.phaseName}
@@ -490,15 +492,15 @@ const FinancialProjectDetails = () => {
                   <h4 className="text-lg font-semibold text-main_dark">Phase-wise Financial Breakdown</h4>
                   <div className="grid grid-cols-1 gap-6">
                     {phaseFinancialSummary.map(phase => (
-                      <div key={phase.phaseId} className="bg-gray-50 rounded-lg p-6">
-                        <div className="flex items-center justify-between mb-4">
+                      <div key={phase.phaseId} className="bg-gray-50 rounded-lg p-4 sm:p-6">
+                        <div className="flex flex-col sm:flex-row items-start sm:items-center justify-between mb-4 gap-4 sm:gap-0">
                           <div>
                             <h5 className="text-lg font-semibold text-main_dark">{phase.phaseName}</h5>
                             <div className="text-sm text-gray-600">
                               {formatDate(phase.startDate)} - {formatDate(phase.endDate)}
                             </div>
                           </div>
-                          <div className="text-right">
+                          <div className="text-left sm:text-right">
                             <div className="text-2xl font-bold text-main_dark">{formatCurrency(phase.subtotal)}</div>
                             <div className="text-sm text-gray-600">{phase.costPercentage.toFixed(1)}% of total</div>
                           </div>
@@ -537,10 +539,10 @@ const FinancialProjectDetails = () => {
                 <div className="space-y-6">
                   <h4 className="text-lg font-semibold text-main_dark">Detailed Material Costs</h4>
                   {project.phases.map(phase => (
-                    <div key={phase.phaseId} className="bg-gray-50 rounded-lg p-6">
+                    <div key={phase.phaseId} className="bg-gray-50 rounded-lg p-4 sm:p-6">
                       <h5 className="text-lg font-semibold text-main_dark mb-4">{phase.phaseName}</h5>
                       <div className="overflow-x-auto">
-                        <table className="w-full">
+                        <table className="w-full min-w-max">
                           <thead className="bg-white">
                             <tr>
                               <th className="px-4 py-3 text-left text-xs font-medium text-gray-500 uppercase tracking-wider">Material</th>
@@ -596,20 +598,20 @@ const FinancialProjectDetails = () => {
                 <div className="space-y-6">
                   <h4 className="text-lg font-semibold text-main_dark">Project Timeline & Milestones</h4>
                   <div className="relative">
-                    <div className="absolute left-4 top-0 bottom-0 w-0.5 bg-gray-300"></div>
+                    <div className="absolute left-4 top-0 bottom-0 w-0.5 bg-gray-300 md:hidden"></div>
                     <div className="space-y-6">
                       {project.phases.map((phase, index) => (
-                        <div key={phase.phaseId} className="relative flex items-start">
-                          <div className={`absolute left-2 w-4 h-4 rounded-full border-2 ${
+                        <div key={phase.phaseId} className="relative flex flex-col md:flex-row items-start md:items-center">
+                          <div className={`md:absolute md:left-2 w-4 h-4 rounded-full border-2 ${
                             getPhaseProgress(phase) === 100 
                               ? 'bg-green-500 border-green-500' 
                               : getPhaseProgress(phase) > 0 
                               ? 'bg-blue-500 border-blue-500' 
                               : 'bg-gray-300 border-gray-300'
                           }`}></div>
-                          <div className="ml-10 flex-1">
+                          <div className="ml-0 md:ml-10 flex-1">
                             <div className="bg-white border border-gray-200 rounded-lg p-4">
-                              <div className="flex items-center justify-between mb-2">
+                              <div className="flex flex-col sm:flex-row items-start sm:items-center justify-between mb-2 gap-2 sm:gap-0">
                                 <h5 className="text-lg font-semibold text-main_dark">{phase.phaseName}</h5>
                                 <span className="text-sm text-gray-600">{getPhaseProgress(phase)}% Complete</span>
                               </div>
@@ -646,19 +648,19 @@ const FinancialProjectDetails = () => {
 
           {/* Documents Section */}
           {project.documentPaths && project.documentPaths.length > 0 && (
-            <div className="bg-white border border-gray-200 rounded-lg p-6">
+            <div className="bg-white border border-gray-200 rounded-lg p-4 sm:p-6">
               <h3 className="text-lg font-semibold text-main_dark mb-4">Project Documents</h3>
               <div className="grid grid-cols-1 md:grid-cols-2 lg:grid-cols-3 gap-4">
                 {project.documentPaths.map((docPath, index) => (
-                  <div key={index} className="flex items-center p-3 bg-gray-50 rounded-lg">
-                    <FaFileContract className="w-5 h-5 text-blue-600 mr-3" />
+                  <div key={index} className="flex flex-col sm:flex-row items-start sm:items-center p-3 bg-gray-50 rounded-lg gap-2 sm:gap-0">
+                    <FaFileContract className="w-5 h-5 text-blue-600 mr-0 sm:mr-3 mb-2 sm:mb-0" />
                     <div className="flex-1">
                       <div className="text-sm font-medium text-main_dark">
                         {docPath.split('\\').pop()}
                       </div>
                       <div className="text-xs text-gray-500">BOQ Document</div>
                     </div>
-                    <button className="text-deep_green hover:text-deep_green/80 transition-colors">
+                    <button className="text-deep_green hover:text-deep_green/80 transition-colors mt-2 sm:mt-0">
                       <FaDownload className="w-4 h-4" />
                     </button>
                   </div>
@@ -672,4 +674,4 @@ const FinancialProjectDetails = () => {
   );
 };
 
-export default FinancialProjectDetails;
+export default AdminProjectDetails;

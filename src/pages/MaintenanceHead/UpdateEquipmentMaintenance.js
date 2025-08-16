@@ -4,12 +4,13 @@ import {
   ChevronDown,
   Bell,
   Calendar,
-  List,
-  Grid,
-  Download,
   AlertTriangle,
   CheckCircle,
   X,
+  Plus,
+  Eye,
+  Play,
+  CheckSquare
 } from "lucide-react";
 import { useNavigate } from "react-router-dom";
 import NavBar from "../../components/NavBar";
@@ -25,72 +26,98 @@ import {
   addMonths,
 } from "date-fns";
 
+const navLinks = [
+  { name: "Dashboard", href: "/maintenance/dashboard" },
+  { name: "Task", href: "/maintenance/scheduling" },
+  { name: "Schedule", href: "/maintenance/update-equipment-maintenance" },
+  { name: "Team", href: "#" },
+  { name: "Equipment", href: "/maintenance/equipment" },
+  { name: "Add Technician", href: "/maintenance/add-member" },
+];
+
 // Modal component for equipment details
 function EquipmentDetailsModal({ open, onClose, equipment }) {
   if (!open || !equipment) return null;
 
   return (
-    <div className="fixed inset-0 z-40 bg-black/40 flex items-center justify-center">
-      <div className="bg-white rounded-xl shadow-lg max-w-lg w-full p-6 relative">
-        <button
-          className="absolute top-3 right-3 text-gray-400 hover:text-gray-700"
-          onClick={onClose}
-        >
-          <X className="w-6 h-6" />
-        </button>
-        <h3 className="text-xl font-bold mb-2 text-[#236571]">
-          Equipment Details
-        </h3>
-        <div className="mb-2">
-          <span className="font-medium">ID:</span> {equipment.id}
-        </div>
-        <div className="mb-2">
-          <span className="font-medium">Type:</span> {equipment.equipmentType}
-        </div>
-        <div className="mb-2">
-          <span className="font-medium">Name:</span> {equipment.equipmentName}
-        </div>
-        <div className="mb-2">
-          <span className="font-medium">Date:</span>{" "}
-          {equipment.date?.slice(0, 10)}
-        </div>
-        <div className="mb-2">
-          <span className="font-medium">Time:</span> {equipment.time}
-        </div>
-        <div className="mb-2">
-          <span className="font-medium">Status:</span>{" "}
-          <span
-            className={`inline-block px-3 py-1 rounded-full text-xs font-medium ${
-              equipment.status === "Pending"
-                ? "bg-[#EFC11A] text-yellow-900"
-                : "bg-[#236571] text-white"
-            }`}
-          >
-            {equipment.status}
-          </span>
-        </div>
-        <div className="mb-2">
-          <span className="font-medium">Description:</span>{" "}
-          {equipment.description}
-        </div>
-        <div className="mb-2">
-          <span className="font-medium">Maintenance Requests:</span>
-          <ul className="list-disc ml-6 mt-1">
-            {equipment.maintenanceRequests &&
-            equipment.maintenanceRequests.length > 0 ? (
-              equipment.maintenanceRequests.map((req) => (
-                <li key={req.id} className="mb-1">
-                  <span className="font-semibold">{req.itemName}</span> (
-                  {req.quantity} {req.measurement})<br />
-                  <span className="text-xs text-gray-500">
-                    Justification: {req.justification} | Urgency: {req.urgency}
-                  </span>
-                </li>
-              ))
-            ) : (
-              <li className="text-gray-500 text-sm">No requests</li>
-            )}
-          </ul>
+    <div className="fixed inset-0 z-50 bg-black/40 flex items-center justify-center p-4">
+      <div className="bg-white rounded-xl shadow-lg max-w-2xl w-full max-h-[80vh] overflow-y-auto">
+        <div className="p-6">
+          <div className="flex items-center justify-between mb-6">
+            <h3 className="text-xl font-bold text-main_dark">Equipment Details</h3>
+            <button
+              className="p-2 hover:bg-gray-100 rounded-lg transition-colors"
+              onClick={onClose}
+            >
+              <X className="w-5 h-5 text-slatebluegray" />
+            </button>
+          </div>
+          
+          <div className="space-y-4">
+            <div className="grid grid-cols-2 gap-4">
+              <div>
+                <span className="text-sm font-medium text-slatebluegray">Equipment ID:</span>
+                <p className="text-main_dark font-medium">{equipment.id}</p>
+              </div>
+              <div>
+                <span className="text-sm font-medium text-slatebluegray">Type:</span>
+                <p className="text-main_dark font-medium">{equipment.equipmentType}</p>
+              </div>
+              <div>
+                <span className="text-sm font-medium text-slatebluegray">Name:</span>
+                <p className="text-main_dark font-medium">{equipment.equipmentName}</p>
+              </div>
+              <div>
+                <span className="text-sm font-medium text-slatebluegray">Date:</span>
+                <p className="text-main_dark font-medium">{equipment.date?.slice(0, 10)}</p>
+              </div>
+              <div>
+                <span className="text-sm font-medium text-slatebluegray">Time:</span>
+                <p className="text-main_dark font-medium">{equipment.time}</p>
+              </div>
+              <div>
+                <span className="text-sm font-medium text-slatebluegray">Status:</span>
+                <span
+                  className={`inline-block px-3 py-1 rounded-full text-xs font-medium ${
+                    equipment.status === "Pending"
+                      ? "bg-web_yellow/10 text-web_yellow"
+                      : "bg-deep_green/10 text-deep_green"
+                  }`}
+                >
+                  {equipment.status}
+                </span>
+              </div>
+            </div>
+            
+            <div>
+              <span className="text-sm font-medium text-slatebluegray">Description:</span>
+              <p className="text-main_dark font-medium mt-1">{equipment.description}</p>
+            </div>
+            
+            <div>
+              <span className="text-sm font-medium text-slatebluegray">Maintenance Requests:</span>
+              <div className="mt-2 space-y-2">
+                {equipment.maintenanceRequests && equipment.maintenanceRequests.length > 0 ? (
+                  equipment.maintenanceRequests.map((req) => (
+                    <div key={req.id} className="bg-gray-50 p-3 rounded-lg border">
+                      <div className="font-semibold text-main_dark">{req.itemName}</div>
+                      <div className="text-sm text-slatebluegray">
+                        Quantity: {req.quantity} {req.measurement}
+                      </div>
+                      <div className="text-sm text-slatebluegray">
+                        Justification: {req.justification}
+                      </div>
+                      <div className="text-sm text-slatebluegray">
+                        Urgency: {req.urgency}
+                      </div>
+                    </div>
+                  ))
+                ) : (
+                  <p className="text-slatebluegray text-sm">No maintenance requests</p>
+                )}
+              </div>
+            </div>
+          </div>
         </div>
       </div>
     </div>
@@ -106,8 +133,10 @@ export default function UpcomingEquipmentMaintenance() {
   const navigate = useNavigate();
   const [isLoggedIn, setIsLoggedIn] = useState(false);
   const [showTeam, setShowTeam] = useState(false);
+  const [currentPage, setCurrentPage] = useState(1);
+  const itemsPerPage = 10;
 
-  // Fetch data
+  // Stats state
   const [dueThisWeekCount, setDueThisWeekCount] = useState(0);
   const [overdueCount, setOverdueCount] = useState(0);
   const [nextMonthCount, setNextMonthCount] = useState(0);
@@ -125,7 +154,7 @@ export default function UpcomingEquipmentMaintenance() {
       .then((data) => {
         setEquipmentData(data);
         setLoading(false);
-        calculateScheduleStats(data); // ✅ calculate schedule data
+        calculateScheduleStats(data);
       })
       .catch((err) => {
         setError(err.message);
@@ -133,14 +162,12 @@ export default function UpcomingEquipmentMaintenance() {
       });
   }, []);
 
-  console.log("Equipment Data:", equipmentData);
-  
   const calculateScheduleStats = (data) => {
     const now = new Date();
 
     const currentWeekCount = data.filter((item) => {
       if (!item.date) return false;
-      return isThisWeek(parseISO(item.date), { weekStartsOn: 1 }); // start on Monday
+      return isThisWeek(parseISO(item.date), { weekStartsOn: 1 });
     }).length;
 
     const overdue = data.filter((item) => {
@@ -162,19 +189,28 @@ export default function UpcomingEquipmentMaintenance() {
     setNextMonthCount(nextMonth);
   };
 
-  // Helper to get status color
-  const getStatusClass = (status) =>
-    status === "Pending"
-      ? "bg-[#EFC11A] text-yellow-900"
-      : "bg-[#236571] text-white";
+  // Check login state on mount
+  useEffect(() => {
+    const user = localStorage.getItem("user");
+    setIsLoggedIn(!!user);
+  }, []);
 
-  // Modal open handler
+  const handleLogout = () => {
+    localStorage.removeItem("user");
+    localStorage.removeItem("role");
+    setIsLoggedIn(false);
+    navigate("/login");
+  };
+
+  const handleLogin = () => {
+    navigate("/login");
+  };
+
   const handleViewDetails = (equipment) => {
     setSelectedEquipment(equipment);
     setModalOpen(true);
   };
 
-  // Modal close handler
   const closeModal = () => {
     setModalOpen(false);
     setSelectedEquipment(null);
@@ -188,112 +224,97 @@ export default function UpcomingEquipmentMaintenance() {
     navigate("/maintenance/upcoming-maintenance");
   };
 
-  // Check login state on mount
-  useEffect(() => {
-    const user = localStorage.getItem("user");
-    setIsLoggedIn(!!user);
-  }, []);
-
-  // Logout handler
-  const handleLogout = () => {
-    localStorage.removeItem("user");
-    localStorage.removeItem("role");
-    setIsLoggedIn(false);
-    navigate("/login");
-  };
-
-  const handleLogin = () => {
-    navigate("/login");
-  };
-
+  // Filter data
   const filteredData = equipmentData.filter((equipment) => {
     const term = searchTerm.toLowerCase();
-
     const matchesSearch =
       equipment.id?.toString().toLowerCase().includes(term) ||
       equipment.equipmentName?.toLowerCase().includes(term) ||
       equipment.equipmentType?.toLowerCase().includes(term);
 
-    const matchesStatus =
-      selectedStatus === "All" || equipment.status === selectedStatus;
-
-    const matchesType =
-      selectedEquipmentType === "All" ||
-      equipment.equipmentType === selectedEquipmentType;
+    const matchesStatus = selectedStatus === "All" || equipment.status === selectedStatus;
+    const matchesType = selectedEquipmentType === "All" || equipment.equipmentType === selectedEquipmentType;
 
     return matchesSearch && matchesStatus && matchesType;
   });
 
-  const equipmentTypes = Array.from(
-    new Set(equipmentData.map((item) => item.equipmentType))
-  );
+  // Pagination
+  const totalPages = Math.ceil(filteredData.length / itemsPerPage);
+  const startIndex = (currentPage - 1) * itemsPerPage;
+  const paginatedData = filteredData.slice(startIndex, startIndex + itemsPerPage);
+
+  const equipmentTypes = Array.from(new Set(equipmentData.map((item) => item.equipmentType)));
+
+  const getActionButton = (equipment) => {
+    if (equipment.status === "Pending") {
+      return (
+        <button
+          className="text-deep_green hover:text-deep_green/80 transition-colors"
+          onClick={() => handleViewDetails(equipment)}
+        >
+          <Eye className="w-4 h-4" />
+        </button>
+      );
+    } else if (equipment.status === "Accept") {
+      return (
+        <button
+          className="text-deep_green hover:text-deep_green/80 transition-colors"
+          onClick={() => handleStartMaintenance(equipment.id)}
+        >
+          <Play className="w-4 h-4" />
+        </button>
+      );
+    } else if (equipment.status === "Completed") {
+      return (
+        <button className="text-gray-400 cursor-not-allowed" disabled>
+          <CheckSquare className="w-4 h-4" />
+        </button>
+      );
+    } else {
+      return (
+        <button
+          className="text-deep_green hover:text-deep_green/80 transition-colors"
+          onClick={() => handleGotoComplete(equipment.id)}
+        >
+          <CheckSquare className="w-4 h-4" />
+        </button>
+      );
+    }
+  };
 
   return (
     <>
       <NavBar
-        links={[
-          {
-            name: "Dashboard",
-            href: "#",
-            onClick: () => navigate("/maintenance/dashboard"),
-          },
-          {
-            name: "Task",
-            href: "#",
-            onClick: () => navigate("/maintenance/scheduling"),
-          },
-          {
-            name: "Schedule",
-            href: "#",
-            onClick: () =>
-              navigate("/maintenance/update-equipment-maintenance"),
-          },
-          {
-            name: "Team",
-            href: "#",
-            onClick: () => {
-              // e.preventDefault();
-              console.log("Team link clicked");
+      profileURL="/maintenance/profile"
+        links={navLinks.map(link => ({
+          ...link,
+          onClick: link.name === "Team" ? () => setShowTeam(true) : () => navigate(link.href)
+        }))}
 
-              setShowTeam(true);
-            },
-          },
-          {
-            name: "Equipment",
-            href: "#",
-            onClick: () => navigate("/maintenance/equipment"),
-          },
-          {
-            name: "Add Technician",
-            href: "#",
-            onClick: () => navigate("/maintenance/add-member"),
-          },
-        ]}
-        showButton={true}
-        buttonLabel={isLoggedIn ? "Logout" : "Get Started"}
-        onButtonClick={isLoggedIn ? handleLogout : handleLogin}
       />
-      <div className="min-h-screen bg-[#F8FAFC] p-6">
-        <div className="max-w-7xl mx-auto">
+
+      <div className="bg-purewhite min-h-screen">
+        <div className="max-w-full mx-auto px-6 sm:px-8 lg:px-16 py-6">
           {/* Header */}
-          <div className="flex flex-col md:flex-row md:justify-between md:items-center mb-4">
+          <div className="flex flex-col lg:flex-row lg:items-center lg:justify-between mb-6 gap-4">
             <div>
-              <h1 className="text-2xl font-bold text-gray-900">
+              <h1 className="text-xl sm:text-2xl font-bold text-main_dark mb-2">
                 Upcoming Equipment Maintenance
               </h1>
-              <p className="text-gray-600 mt-1">
+              <p className="text-gray-600 text-sm sm:text-base">
                 Manage and schedule maintenance tasks for construction equipment
               </p>
             </div>
-            <div className="flex items-center space-x-4 mt-4 md:mt-0">
+            <div className="flex items-center gap-4">
               <button
-                className="bg-[#EFC11A] hover:bg-yellow-400 text-[#236571] px-4 py-2 rounded-md font-medium transition-colors"
+                className="bg-web_yellow hover:bg-web_yellow/80 text-main_dark px-4 py-2 rounded-lg font-medium transition-all shadow-sm hover:shadow-md flex items-center gap-2"
                 onClick={() => navigate("/maintenance/scheduling")}
               >
-                + Schedule Maintenance
+                <Plus className="w-4 h-4" />
+                Schedule Maintenance
               </button>
-              <button className="relative">
-                <Bell className="w-5 h-5 text-gray-500" />
+              <button className="relative p-2 hover:bg-gray-100 rounded-lg transition-colors">
+                <Bell className="w-5 h-5 text-slatebluegray" />
                 <span className="absolute -top-1 -right-1 bg-red-500 text-white text-xs rounded-full px-1">
                   3
                 </span>
@@ -301,271 +322,279 @@ export default function UpcomingEquipmentMaintenance() {
             </div>
           </div>
 
-          {/* Search and Filters */}
-          <div className="bg-white rounded-xl shadow-sm border border-gray-200 p-4 mb-6 flex flex-col md:flex-row md:items-center md:space-x-4 space-y-3 md:space-y-0">
-            <div className="flex-1 flex items-center bg-gray-100 rounded-md px-3 py-2">
-              <Search className="w-5 h-5 text-gray-400 mr-2" />
-              <input
-                type="text"
-                placeholder="Search equipment by ID, name, or type..."
-                className="bg-transparent outline-none w-full text-gray-700"
-                value={searchTerm}
-                onChange={(e) => setSearchTerm(e.target.value)}
-              />
+          {/* Stats Cards */}
+          <div className="grid grid-cols-1 sm:grid-cols-2 lg:grid-cols-4 gap-3 sm:gap-4 mb-8">
+            <div className="bg-purewhite border border-gray-200 rounded-xl p-4 sm:p-5 flex items-center gap-3 sm:gap-4 shadow-sm hover:shadow-md hover:-translate-y-0.5 transition-all duration-150">
+              <div className="flex-1 min-w-0">
+                <p className="text-slatebluegray font-medium text-sm mb-0.5 truncate">Due This Week</p>
+                <h3 className="text-xl sm:text-2xl font-bold text-main_dark leading-tight mb-0.5">{dueThisWeekCount}</h3>
+                <span className="text-web_yellow text-xs">{dueThisWeekCount === 1 ? "1 Task" : `${dueThisWeekCount} Tasks`}</span>
+              </div>
+              <div className="w-12 h-12 bg-gradient-to-br from-web_yellow via-web_yellow to-web_yellow/80 rounded-xl flex items-center justify-center shadow-lg transition-all duration-300">
+                <AlertTriangle className="text-purewhite text-lg"/>
+              </div>
             </div>
-            <div className="flex items-center space-x-2">
-              <div className="relative">
+
+            <div className="bg-purewhite border border-gray-200 rounded-xl p-4 sm:p-5 flex items-center gap-3 sm:gap-4 shadow-sm hover:shadow-md hover:-translate-y-0.5 transition-all duration-150">
+              <div className="flex-1 min-w-0">
+                <p className="text-slatebluegray font-medium text-sm mb-0.5 truncate">Overdue</p>
+                <h3 className="text-xl sm:text-2xl font-bold text-main_dark leading-tight mb-0.5">{overdueCount}</h3>
+                <span className="text-red-600 text-xs">{overdueCount === 1 ? "1 Task" : `${overdueCount} Tasks`}</span>
+              </div>
+              <div className="w-12 h-12 bg-gradient-to-br from-red-500 via-red-500 to-red-500/80 rounded-xl flex items-center justify-center shadow-lg transition-all duration-300">
+                <AlertTriangle className="text-purewhite text-lg"/>
+              </div>
+            </div>
+
+            <div className="bg-purewhite border border-gray-200 rounded-xl p-4 sm:p-5 flex items-center gap-3 sm:gap-4 shadow-sm hover:shadow-md hover:-translate-y-0.5 transition-all duration-150">
+              <div className="flex-1 min-w-0">
+                <p className="text-slatebluegray font-medium text-sm mb-0.5 truncate">Next Month</p>
+                <h3 className="text-xl sm:text-2xl font-bold text-main_dark leading-tight mb-0.5">{nextMonthCount}</h3>
+                <span className="text-deep_green text-xs">{nextMonthCount === 1 ? "1 Task" : `${nextMonthCount} Tasks`}</span>
+              </div>
+              <div className="w-12 h-12 bg-gradient-to-br from-deep_green via-deep_green to-deep_green/80 rounded-xl flex items-center justify-center shadow-lg transition-all duration-300">
+                <Calendar className="text-purewhite text-lg"/>
+              </div>
+            </div>
+
+            <div className="bg-purewhite border border-gray-200 rounded-xl p-4 sm:p-5 flex items-center gap-3 sm:gap-4 shadow-sm hover:shadow-md hover:-translate-y-0.5 transition-all duration-150">
+              <div className="flex-1 min-w-0">
+                <p className="text-slatebluegray font-medium text-sm mb-0.5 truncate">Total Equipment</p>
+                <h3 className="text-xl sm:text-2xl font-bold text-main_dark leading-tight mb-0.5">{equipmentData.length}</h3>
+                <span className="text-deep_green text-xs">{equipmentData.length === 1 ? "1 Item" : `${equipmentData.length} Items`}</span>
+              </div>
+              <div className="w-12 h-12 bg-gradient-to-br from-deep_green via-deep_green to-deep_green/80 rounded-xl flex items-center justify-center shadow-lg transition-all duration-300">
+                <CheckCircle className="text-purewhite text-lg"/>
+              </div>
+            </div>
+          </div>
+
+          {/* Search and Filters */}
+          <div className="bg-purewhite border border-gray-200 rounded-lg p-4 sm:p-6 mb-6">
+            <div className="flex flex-col lg:flex-row gap-4 items-start lg:items-end">
+              <div className="flex-1 w-full lg:max-w-md">
+                <label className="block text-sm font-medium text-gray-700 mb-2">
+                  Search Equipment
+                </label>
+                <div className="relative">
+                  <Search className="absolute left-3 top-3 h-4 w-4 text-gray-400" />
+                  <input
+                    type="text"
+                    placeholder="Search by ID, name, or type..."
+                    value={searchTerm}
+                    onChange={(e) => setSearchTerm(e.target.value)}
+                    className="w-full pl-10 pr-4 py-2 border border-gray-300 rounded-md focus:outline-none focus:ring-2 focus:ring-web_yellow focus:border-transparent text-sm"
+                  />
+                </div>
+              </div>
+
+              <div className="w-full lg:w-auto">
+                <label className="block text-sm font-medium text-gray-700 mb-2">Equipment Type</label>
                 <select
                   value={selectedEquipmentType}
                   onChange={(e) => setSelectedEquipmentType(e.target.value)}
-                  className="appearance-none bg-gray-100 border border-gray-300 rounded-md px-3 py-2 text-gray-700 focus:outline-none focus:ring-2 focus:ring-[#236571]"
+                  className="w-full lg:w-40 px-3 py-2 border border-gray-300 rounded-md focus:outline-none focus:ring-2 focus:ring-web_yellow focus:border-transparent text-sm"
                 >
-                  <option value="All">All Equipment Types</option>{" "}
+                  <option value="All">All Types</option>
                   {equipmentTypes.map((type, index) => (
                     <option key={index} value={type}>
                       {type}
-                      {""}
                     </option>
                   ))}
                 </select>
-
-                <ChevronDown className="absolute right-3 top-3 h-4 w-4 text-gray-400 pointer-events-none" />
               </div>
-              <div className="relative">
+
+              <div className="w-full lg:w-auto">
+                <label className="block text-sm font-medium text-gray-700 mb-2">Status</label>
                 <select
                   value={selectedStatus}
                   onChange={(e) => setSelectedStatus(e.target.value)}
-                  className="appearance-none bg-gray-100 border border-gray-300 rounded-md px-3 py-2 text-gray-700 focus:outline-none focus:ring-2 focus:ring-[#236571]"
+                  className="w-full lg:w-40 px-3 py-2 border border-gray-300 rounded-md focus:outline-none focus:ring-2 focus:ring-web_yellow focus:border-transparent text-sm"
                 >
                   <option value="All">All Statuses</option>
                   <option value="Pending">Pending</option>
                   <option value="Accept">Accepted</option>
                   <option value="Completed">Completed</option>
                   <option value="Scheduled">Scheduled</option>
-                  <option value="Due Soon">Due Soon</option>
-                  <option value="Overdue">Overdue</option>
                 </select>
-
-                <ChevronDown className="absolute right-3 top-3 h-4 w-4 text-gray-400 pointer-events-none" />
               </div>
             </div>
           </div>
 
-          {/* Stat Cards */}
-          <div className="grid grid-cols-1 sm:grid-cols-2 lg:grid-cols-4 gap-4 mb-8">
-            {/* Due This Week */}
-            <div className="bg-white rounded-xl shadow p-4 flex flex-col border border-gray-100">
-              <div className="flex items-center space-x-2">
-                <div className="bg-[#EFC11A]/10 p-2 rounded">
-                  <AlertTriangle className="w-5 h-5 text-[#EFC11A]" />
-                </div>
-                <span className="text-gray-600 text-sm font-medium">
-                  Due This Week
-                </span>
-              </div>
-              <div className="mt-2 text-3xl font-bold text-gray-900">
-                {dueThisWeekCount}
-              </div>
-              <div className="mt-1 text-xs text-[#EFC11A] flex items-center">
-                {dueThisWeekCount === 1
-                  ? "1 Task"
-                  : `${dueThisWeekCount} Tasks`}
-              </div>
-            </div>
-
-            {/* Overdue */}
-            <div className="bg-white rounded-xl shadow p-4 flex flex-col border border-gray-100">
-              <div className="flex items-center space-x-2">
-                <div className="bg-red-100 p-2 rounded">
-                  <AlertTriangle className="w-5 h-5 text-red-500" />
-                </div>
-                <span className="text-gray-600 text-sm font-medium">
-                  Overdue
-                </span>
-              </div>
-              <div className="mt-2 text-3xl font-bold text-gray-900">
-                {overdueCount}
-              </div>
-              <div className="mt-1 text-xs text-red-500 flex items-center">
-                {overdueCount === 1 ? "1 Task" : `${overdueCount} Tasks`}
-              </div>
-            </div>
-
-            {/* Next Month */}
-            <div className="bg-white rounded-xl shadow p-4 flex flex-col border border-gray-100">
-              <div className="flex items-center space-x-2">
-                <div className="bg-[#236571]/10 p-2 rounded">
-                  <Calendar className="w-5 h-5 text-[#236571]" />
-                </div>
-                <span className="text-gray-600 text-sm font-medium">
-                  Next Month
-                </span>
-              </div>
-              <div className="mt-2 text-3xl font-bold text-gray-900">
-                {nextMonthCount}
-              </div>
-              <div className="mt-1 text-xs text-[#236571] flex items-center">
-                {nextMonthCount === 1 ? "1 Task" : `${nextMonthCount} Tasks`}
-              </div>
-            </div>
-
-            {/* Total Equipment */}
-            <div className="bg-white rounded-xl shadow p-4 flex flex-col border border-gray-100">
-              <div className="flex items-center space-x-2">
-                <div className="bg-green-100 p-2 rounded">
-                  <CheckCircle className="w-5 h-5 text-green-600" />
-                </div>
-                <span className="text-gray-600 text-sm font-medium">
-                  Total Equipment
-                </span>
-              </div>
-              <div className="mt-2 text-3xl font-bold text-gray-900">
-                {equipmentData.length}
-              </div>
-              <div className="mt-1 text-xs text-green-600 flex items-center">
-                {equipmentData.length === 1
-                  ? "1 Task"
-                  : `${equipmentData.length} Tasks`}
-              </div>
-            </div>
+          {/* Results Summary */}
+          <div className="flex flex-col sm:flex-row sm:items-center sm:justify-between mb-4 gap-2">
+            <p className="text-sm text-gray-600">
+              Showing {startIndex + 1} to {Math.min(startIndex + itemsPerPage, filteredData.length)} of {filteredData.length} equipment
+            </p>
           </div>
 
-          {/* Equipment Maintenance Section */}
-          <div>
-            <div className="flex items-center justify-between mb-4">
-              <h2 className="text-lg font-semibold text-gray-900">
-                Maintenance Schedule
-              </h2>
-            </div>
-
-            {/* Equipment Table */}
-            <div className="bg-white rounded-lg shadow-sm border border-gray-200 overflow-hidden">
-              {/* Table Header */}
-              <div className="bg-light_brown/30 px-6 py-4">
-                <div className="grid grid-cols-12 gap-4 text-sm font-semibold text-yellow-900">
-                  <div className="col-span-3 flex items-center space-x-1">
-                    <span>Equipment Name</span>
-                    <ChevronDown className="h-4 w-4" />
-                  </div>
-                  <div className="col-span-2 flex items-center space-x-1">
-                    <span>Description</span>
-                    <ChevronDown className="h-4 w-4" />
-                  </div>
-                  <div className="col-span-2 flex items-center space-x-1">
-                    <span>Next Scheduled</span>
-                    <ChevronDown className="h-4 w-4" />
-                  </div>
-                  <div className="col-span-2 flex items-center space-x-1">
-                    <span>Status</span>
-                    <ChevronDown className="h-4 w-4" />
-                  </div>
-                  <div className="col-span-3">Action</div>
-                </div>
-              </div>
-
-              {/* Table Body */}
-              <div className="divide-y divide-gray-200">
-                {loading ? (
-                  <div className="px-6 py-8 text-center text-gray-500">
-                    Loading...
-                  </div>
-                ) : error ? (
-                  <div className="px-6 py-8 text-center text-red-500">
-                    {error}
-                  </div>
-                ) : filteredData.length === 0 ? (
-                  <div className="px-6 py-8 text-center text-gray-500">
-                    No matching equipment found.
-                  </div>
-                ) : (
-                  filteredData.map((equipment) => (
-                    <div
-                      key={equipment.id}
-                      className="px-6 py-4 hover:bg-gray-50 transition-colors"
-                    >
-                      <div className="grid grid-cols-12 gap-4 items-center text-sm">
-                        <div className="col-span-3 font-medium text-gray-900">
+          {/* Equipment Table */}
+          <div className="bg-purewhite border border-gray-200 rounded-lg overflow-hidden mb-6">
+            {/* Desktop Table */}
+            <div className="hidden lg:block overflow-x-auto">
+              <table className="w-full">
+                <thead className="bg-light_brown/30">
+                  <tr>
+                    <th className="px-6 py-4 text-left text-sm font-semibold text-main_dark">Equipment Name</th>
+                    <th className="px-6 py-4 text-left text-sm font-semibold text-main_dark">Description</th>
+                    <th className="px-6 py-4 text-left text-sm font-semibold text-main_dark">Next Scheduled</th>
+                    <th className="px-6 py-4 text-left text-sm font-semibold text-main_dark">Status</th>
+                    <th className="px-6 py-4 text-left text-sm font-semibold text-main_dark">Action</th>
+                  </tr>
+                </thead>
+                <tbody className="divide-y divide-gray-200">
+                  {loading ? (
+                    <tr>
+                      <td colSpan="5" className="px-6 py-8 text-center text-gray-500">
+                        <div className="animate-spin rounded-full h-8 w-8 border-b-2 border-web_yellow mx-auto mb-4"></div>
+                        Loading equipment...
+                      </td>
+                    </tr>
+                  ) : error ? (
+                    <tr>
+                      <td colSpan="5" className="px-6 py-8 text-center text-red-500">
+                        {error}
+                      </td>
+                    </tr>
+                  ) : paginatedData.length === 0 ? (
+                    <tr>
+                      <td colSpan="5" className="px-6 py-8 text-center text-gray-500">
+                        No equipment found matching your criteria.
+                      </td>
+                    </tr>
+                  ) : (
+                    paginatedData.map((equipment) => (
+                      <tr key={equipment.id} className="hover:bg-gray-50 transition-colors">
+                        <td className="px-6 py-4 text-sm font-medium text-main_dark">
                           {equipment.equipmentName}
-                        </div>
-                        <div className="col-span-2 text-gray-700">
-                          {/* Show last maintenance from first maintenance request if available */}
-                          {equipment.maintenanceRequests &&
-                          equipment.maintenanceRequests.length > 0
+                        </td>
+                        <td className="px-6 py-4 text-sm text-gray-600">
+                          {equipment.maintenanceRequests && equipment.maintenanceRequests.length > 0
                             ? equipment.maintenanceRequests[0].justification
-                            : "-"}
-                        </div>
-                        <div className="col-span-2 text-gray-700">
+                            : equipment.description || "-"}
+                        </td>
+                        <td className="px-6 py-4 text-sm text-gray-600">
                           {equipment.date ? equipment.date.slice(0, 10) : "-"}
-                        </div>
-                        <div className="col-span-2">
-                          <span
-                            className={`inline-block px-3 py-1 rounded-full text-xs font-medium ${getStatusClass(
-                              equipment.status
-                            )}`}
-                          >
+                        </td>
+                        <td className="px-6 py-4">
+                          <span className={`px-3 py-1 rounded-full text-xs font-medium ${
+                            equipment.status === "Pending" ? "bg-web_yellow/10 text-web_yellow" :
+                            equipment.status === "Accept" ? "bg-deep_green/10 text-deep_green" :
+                            equipment.status === "Completed" ? "bg-gray-100 text-gray-800" :
+                            "bg-deep_green/10 text-deep_green"
+                          }`}>
                             {equipment.status}
                           </span>
-                        </div>
-                        <div className="col-span-3 flex space-x-2">
-                          {equipment.status === "Pending" ? (
-                            <button
-                              className="bg-[#236571] hover:bg-[#17484b] text-white px-3 py-1 rounded text-xs font-medium"
-                              onClick={() => handleViewDetails(equipment)}
-                            >
-                              View Details
-                            </button>
-                          ) : equipment.status === "Accept" ? (
-                            <button
-                              className="bg-[#236571] hover:bg-[#17484b] text-white px-3 py-1 rounded text-xs font-medium"
-                              onClick={() =>
-                                handleStartMaintenance(equipment.id)
-                              }
-                            >
-                              Start
-                            </button>
-                          ) : equipment.status === "Completed" ? (
-                            <button
-                              className="bg-gray-300 text-gray-600 px-3 py-1 rounded text-xs font-medium cursor-not-allowed"
-                              disabled
-                            >
-                              Completed
-                            </button>
-                          ) : (
-                            <button
-                              className="bg-[#236571] hover:bg-[#17484b] text-white px-3 py-1 rounded text-xs font-medium"
-                              onClick={() => handleGotoComplete(equipment.id)}
-                            >
-                              Go to Complete
-                            </button>
-                          )}
-                        </div>
+                        </td>
+                        <td className="px-6 py-4">
+                          {getActionButton(equipment)}
+                        </td>
+                      </tr>
+                    ))
+                  )}
+                </tbody>
+              </table>
+            </div>
+
+            {/* Mobile Cards */}
+            <div className="lg:hidden divide-y divide-gray-200">
+              {loading ? (
+                <div className="p-8 text-center">
+                  <div className="animate-spin rounded-full h-8 w-8 border-b-2 border-web_yellow mx-auto mb-4"></div>
+                  <p className="text-gray-600">Loading equipment...</p>
+                </div>
+              ) : paginatedData.length === 0 ? (
+                <div className="p-8 text-center text-gray-500">
+                  No equipment found matching your criteria.
+                </div>
+              ) : (
+                paginatedData.map((equipment) => (
+                  <div key={equipment.id} className="p-4">
+                    <div className="flex justify-between items-start mb-3">
+                      <div className="flex-1">
+                        <h3 className="font-semibold text-main_dark text-sm mb-1">
+                          {equipment.equipmentName}
+                        </h3>
+                        <p className="text-xs text-gray-600 mb-2">
+                          {equipment.maintenanceRequests && equipment.maintenanceRequests.length > 0
+                            ? equipment.maintenanceRequests[0].justification
+                            : equipment.description || "-"}
+                        </p>
+                        <p className="text-xs text-gray-500">
+                          Next: {equipment.date ? equipment.date.slice(0, 10) : "-"}
+                        </p>
+                      </div>
+                      <div className="flex flex-col gap-2">
+                        <span className={`px-2 py-1 rounded-full text-xs font-medium ${
+                          equipment.status === "Pending" ? "bg-web_yellow/10 text-web_yellow" :
+                          equipment.status === "Accept" ? "bg-deep_green/10 text-deep_green" :
+                          equipment.status === "Completed" ? "bg-gray-100 text-gray-800" :
+                          "bg-deep_green/10 text-deep_green"
+                        }`}>
+                          {equipment.status}
+                        </span>
+                        {getActionButton(equipment)}
                       </div>
                     </div>
-                  ))
-                )}
-              </div>
+                  </div>
+                ))
+              )}
+            </div>
+          </div>
+
+          {/* Pagination */}
+          <div className="flex flex-col sm:flex-row sm:items-center sm:justify-between gap-4">
+            <div className="text-sm text-gray-600">
+              Showing {startIndex + 1} to {Math.min(startIndex + itemsPerPage, filteredData.length)} of {filteredData.length} results
+            </div>
+            <div className="flex items-center gap-2">
+              <button 
+                onClick={() => setCurrentPage(Math.max(1, currentPage - 1))}
+                disabled={currentPage === 1}
+                className="px-3 py-1 text-sm text-gray-600 hover:text-gray-900 transition-colors disabled:opacity-50 disabled:cursor-not-allowed"
+              >
+                Previous
+              </button>
+              {[...Array(totalPages)].map((_, index) => (
+                <button
+                  key={index + 1}
+                  onClick={() => setCurrentPage(index + 1)}
+                  className={`px-3 py-1 text-sm rounded font-medium transition-colors ${
+                    currentPage === index + 1
+                      ? 'bg-web_yellow text-main_dark'
+                      : 'text-gray-600 hover:text-gray-900'
+                  }`}
+                >
+                  {index + 1}
+                </button>
+              ))}
+              <button 
+                onClick={() => setCurrentPage(Math.min(totalPages, currentPage + 1))}
+                disabled={currentPage === totalPages}
+                className="px-3 py-1 text-sm text-gray-600 hover:text-gray-900 transition-colors disabled:opacity-50 disabled:cursor-not-allowed"
+              >
+                Next
+              </button>
             </div>
           </div>
         </div>
-
-        {/* Equipment Details Modal */}
-        <EquipmentDetailsModal
-          open={modalOpen}
-          onClose={closeModal}
-          equipment={selectedEquipment}
-        />
       </div>
+
+      {/* Equipment Details Modal */}
+      <EquipmentDetailsModal
+        open={modalOpen}
+        onClose={closeModal}
+        equipment={selectedEquipment}
+      />
 
       {/* Overlay and Team Sidebar */}
       {showTeam && (
         <>
-          {/* BLUR OVERLAY */}
           <div
             className="fixed inset-0 z-40 bg-black bg-opacity-30 backdrop-blur-sm transition-all"
             onClick={() => setShowTeam(false)}
             aria-label="Close team sidebar"
           />
-          {/* TEAM SIDEBAR */}
           <TeamSection onClose={() => setShowTeam(false)} />
         </>
       )}

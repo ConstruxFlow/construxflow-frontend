@@ -1,6 +1,6 @@
 import React, { useState } from 'react';
-import { FaSearch, FaFilter, FaPlus, FaEdit, FaBox } from 'react-icons/fa';
-import { Building, Wrench, Palette, TreePine, Package } from 'lucide-react';
+import { FaSearch, FaPlus } from 'react-icons/fa';
+import { useNavigate } from 'react-router-dom';
 
 export default function Site_RawMaterial_Info() {
   const [searchTerm, setSearchTerm] = useState('');
@@ -19,8 +19,6 @@ export default function Site_RawMaterial_Info() {
       currentStock: '850 bags',
       reorderLevel: '200 bags',
       stockStatus: 'normal',
-      icon: Building,
-      iconBg: 'bg-gradient-to-br from-deep_green to-deep_green/80'
     },
     {
       id: 2,
@@ -29,8 +27,6 @@ export default function Site_RawMaterial_Info() {
       currentStock: '45 tons',
       reorderLevel: '100 tons',
       stockStatus: 'low',
-      icon: Wrench,
-      iconBg: 'bg-gradient-to-br from-light_brown to-light_brown/80'
     },
     {
       id: 3,
@@ -39,8 +35,6 @@ export default function Site_RawMaterial_Info() {
       currentStock: '2,540 sqft',
       reorderLevel: '500 sqft',
       stockStatus: 'normal',
-      icon: Package,
-      iconBg: 'bg-gradient-to-br from-deep_green to-deep_green/80'
     },
     {
       id: 4,
@@ -49,8 +43,6 @@ export default function Site_RawMaterial_Info() {
       currentStock: '125 gallons',
       reorderLevel: '50 gallons',
       stockStatus: 'normal',
-      icon: Palette,
-      iconBg: 'bg-gradient-to-br from-web_yellow to-web_yellow/80'
     },
     {
       id: 5,
@@ -59,8 +51,6 @@ export default function Site_RawMaterial_Info() {
       currentStock: '15 pieces',
       reorderLevel: '100 pieces',
       stockStatus: 'critical',
-      icon: TreePine,
-      iconBg: 'bg-gradient-to-br from-light_brown to-light_brown/80'
     }
   ];
 
@@ -139,6 +129,8 @@ export default function Site_RawMaterial_Info() {
   const startIndex = (currentPage - 1) * itemsPerPage;
   const paginatedMaterials = sortedMaterials.slice(startIndex, startIndex + itemsPerPage);
 
+  const navigate = useNavigate();
+
   return (
     <div className="min-h-screen bg-purewhite font-poppins">
       <main className="py-4 sm:py-6">
@@ -153,7 +145,9 @@ export default function Site_RawMaterial_Info() {
                 Track and manage all raw materials inventory for your construction site
               </p>
             </div>
-            <button className="bg-web_yellow hover:bg-web_yellow/80 text-white font-semibold px-6 py-3 rounded-lg shadow-sm hover:shadow-md transition-all duration-150 flex items-center gap-2">
+            <button className="bg-web_yellow hover:bg-web_yellow/80 text-white font-semibold px-6 py-3 rounded-lg shadow-sm hover:shadow-md transition-all duration-150 flex items-center gap-2"
+              onClick={() => navigate('/site-manager/site-material-add')}
+            >
               <FaPlus className="w-4 h-4" />
               Add Material
             </button>
@@ -275,7 +269,6 @@ export default function Site_RawMaterial_Info() {
                     <th className="px-6 py-4 text-left text-sm font-semibold text-main_dark">Current Stock</th>
                     <th className="px-6 py-4 text-left text-sm font-semibold text-main_dark">Reorder Level</th>
                     <th className="px-6 py-4 text-left text-sm font-semibold text-main_dark">Status</th>
-                    <th className="px-6 py-4 text-left text-sm font-semibold text-main_dark">Actions</th>
                   </tr>
                 </thead>
                 <tbody className="divide-y divide-gray-200">
@@ -305,11 +298,6 @@ export default function Site_RawMaterial_Info() {
                           {material.stockStatus === 'critical' ? 'Critical' : 
                            material.stockStatus === 'low' ? 'Low Stock' : 'Normal'}
                         </span>
-                      </td>
-                      <td className="px-6 py-4">
-                        <button className="text-deep_green hover:text-deep_green/80 transition-colors">
-                          <FaEdit className="w-4 h-4" />
-                        </button>
                       </td>
                     </tr>
                   ))}
@@ -347,12 +335,6 @@ export default function Site_RawMaterial_Info() {
                       <span className={getStockColor(material.stockStatus)}> {material.currentStock}</span>
                     </p>
                     <p><span className="font-medium">Reorder Level:</span> {material.reorderLevel}</p>
-                  </div>
-                  
-                  <div className="flex justify-end">
-                    <button className="text-deep_green hover:text-deep_green/80 transition-colors">
-                      <FaEdit className="w-4 h-4" />
-                    </button>
                   </div>
                 </div>
               ))}

@@ -26,6 +26,7 @@ const ManagerReg = () => {
   const navigate = useNavigate();
   const [isLoading, setIsLoading] = useState(false);
   const [showPassword, setShowPassword] = useState(false);
+  const [loadingProgress, setLoadingProgress] = useState(0);
   const [formData, setFormData] = useState({
     user_name: '',
     email: '',
@@ -227,12 +228,14 @@ const ManagerReg = () => {
     }
 
     setIsLoading(true);
+    setLoadingProgress(0);
     try {
       const submitData = {
         ...formData,
         phone_number1: parseInt(formData.phone_number1),
         phone_number2: formData.phone_number2 ? parseInt(formData.phone_number2) : null
       };
+      setLoadingProgress(30); // Simulate progress
 
       const response = await fetch('http://localhost:8080/api/user/register', {
         method: 'POST',
@@ -241,11 +244,14 @@ const ManagerReg = () => {
         },
         body: JSON.stringify(submitData),
       });
+      setLoadingProgress(50); // Simulate progress
+      setLoadingProgress(80); // Simulate progress
 
       if (response.ok) {
         const result = await response.json();
+        setLoadingProgress(100); // Simulate progress
         toast.success(`Manager ${formData.user_name} has been successfully registered!`);
-        
+        navigate('/admin-users');
         // Reset form
         setFormData({
           user_name: '',
@@ -260,7 +266,6 @@ const ManagerReg = () => {
         setPasswordStrength(0);
         
         // Optionally navigate to managers list
-        // navigate('/admin/managers');
       } else {
         const errorData = await response.json();
         toast.error(errorData.message || 'Failed to register manager');
@@ -268,6 +273,7 @@ const ManagerReg = () => {
     } catch (error) {
       toast.error('Network error: Failed to register manager');
       console.error('Registration error:', error);
+      setIsLoading(false);
     } finally {
       setIsLoading(false);
     }
@@ -305,7 +311,12 @@ const ManagerReg = () => {
 
   return (
     <div className="min-h-screen bg-purewhite font-poppins">
-      {isLoading && <LoadingOverlay />}
+      {isLoading && (
+        <LoadingOverlay
+          progress={loadingProgress}
+          message="Processing..."
+        />
+      )}
       
       <NavBar
         links={[
@@ -322,7 +333,7 @@ const ManagerReg = () => {
           {/* Header */}
           <div className="flex items-center gap-4 mb-6">
             <button 
-              onClick={() => navigate('/admin/managers')}
+              onClick={() => navigate('/admin-users')}
               className="text-gray-600 hover:text-main_dark transition-colors"
             >
               <FaArrowLeft className="w-5 h-5" />

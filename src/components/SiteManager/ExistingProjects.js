@@ -22,6 +22,9 @@ const ExistingProjects = () => {
     'Completed'
   ];
 
+  const user = JSON.parse(localStorage.getItem('user'));
+  const managerId = user?.id;
+
   const navigate = useNavigate();
 
   useEffect(() => {
@@ -85,8 +88,11 @@ const ExistingProjects = () => {
     );
   }
 
-  // Filter projects by status
+  // Filter projects by status and managerId
   const filteredProjects = projects.filter(project => {
+    // Only show projects for this manager
+    if (managerId && project.managerId !== managerId) return false;
+
     if (statusFilter !== 'All Status') {
       const status = (project.progressStatus || project.status || '')
         .toLowerCase()

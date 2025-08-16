@@ -105,7 +105,7 @@ const Edit_ProjectForm = () => {
   useEffect(() => {
     if (!projectId) return;
     setLoading(true);
-    axios.get(`http://localhost:5454/api/projects/${projectId}`)
+    axios.get(`http://localhost:8080/api/projects/${projectId}`)
       .then(res => {
         const project = res.data;
         setFormData({

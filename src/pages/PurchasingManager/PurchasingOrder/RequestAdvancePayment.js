@@ -76,6 +76,7 @@ const RequestAdvancePayment = () => {
 
 
 
+
   useEffect(() => {
     if (orderDetails) {
       setPaymentRequest((prev) => ({
@@ -108,8 +109,49 @@ const RequestAdvancePayment = () => {
     return (paid / total) * 100;
   };
 
+  const validateForm = () => {
+    let isValid = true;
+
+    if (!paymentRequest.orderReference) {
+      toast.error("Order reference is required");
+      isValid = false;
+    }
+
+    if (!paymentRequest.orderDate) {
+      toast.error("Order date is required");
+      isValid = false;
+    }
+
+    const totalValue = parseFloat(paymentRequest.totalOrderValue);
+    if (isNaN(totalValue) || totalValue <= 0) {
+      toast.error("Total order value must be a positive number");
+      isValid = false;
+    }
+
+    const requestedAmt = parseFloat(paymentRequest.requestedAmount);
+    if (isNaN(requestedAmt) || requestedAmt <= 0) {
+      toast.error("Requested advance amount must be a positive number");
+      isValid = false;
+    } else if (requestedAmt > totalValue) {
+      toast.error("Requested amount cannot exceed total order value");
+      isValid = false;
+    }
+
+    if (!paymentRequest.reason) {
+      toast.error("Reason for advance payment is required");
+      isValid = false;
+    }
+
+    return isValid;
+  };
+
   const handleSubmit = async (e) => {
     e.preventDefault();
+
+    if (!validateForm()) {
+      return;
+    }
+
     setIsLoading(true);
     setLoadingProgress(0);
 
@@ -152,7 +194,7 @@ const RequestAdvancePayment = () => {
       if (response.ok) {
         setLoadingProgress(100);
         setTimeout(() => {
-          toast.success("Advance payment request submitted successfully!");
+          toast.success("Purchasing Order submitted successfully!");
           setIsLoading(false);
           setLoadingProgress(0);
           navigate("/purchasing/orders/overview");
@@ -287,7 +329,7 @@ const RequestAdvancePayment = () => {
                     Requested Advance Amount *
                   </label>
                   <div className="relative">
-                    <span className="absolute left-3 top-2 text-gray-500">$</span>
+                    <span className="absolute left-3 top-2 text-gray-500">RS </span>
                     <input
                       type="number"
                       step="0.01"
@@ -369,19 +411,19 @@ const RequestAdvancePayment = () => {
                   <div className="flex justify-between">
                     <span className="text-gray-600">Total Order Value</span>
                     <span className="font-medium text-main_dark">
-                      ${parseFloat(paymentRequest.totalOrderValue || 0).toFixed(2)}
+                      RS {parseFloat(paymentRequest.totalOrderValue || 0).toFixed(2)}
                     </span>
                   </div>
                   <div className="flex justify-between">
                     <span className="text-gray-600">Advance Amount</span>
                     <span className="font-medium text-main_dark">
-                      ${parseFloat(paymentRequest.requestedAmount || 0).toFixed(2)}
+                      RS {parseFloat(paymentRequest.requestedAmount || 0).toFixed(2)}
                     </span>
                   </div>
                   <div className="flex justify-between">
                     <span className="text-gray-600">Pending Balance</span>
                     <span className="font-bold text-web_yellow">
-                      ${calculatePendingBalance().toFixed(2)}
+                      RS {calculatePendingBalance().toFixed(2)}
                     </span>
                   </div>
                   

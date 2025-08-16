@@ -1,10 +1,19 @@
 import { useEffect, useState } from "react";
-import { Calendar, ChevronDown, Upload, Plus } from "lucide-react";
+import { Calendar, ChevronDown, Upload, Plus, Settings, Wrench } from "lucide-react";
 import { useNavigate } from "react-router-dom";
 import NavBar from "../../components/NavBar";
 import TeamSection from "../../components/MaintenanceHead/TeamSection";
 import LoadingOverlay from "../../components/LoadingOverlay";
 import { toast } from "react-toastify";
+
+const navLinks = [
+  { name: "Dashboard", href: "/maintenance/dashboard" },
+  { name: "Task", href: "/maintenance/scheduling" },
+  { name: "Schedule", href: "/maintenance/update-equipment-maintenance" },
+  { name: "Team", href: "#" },
+  { name: "Equipment", href: "/maintenance/equipment" },
+  { name: "Add Technician", href: "/maintenance/add-member" },
+];
 
 export default function ScheduleMaintenanceAndRequestMaterials() {
   // Schedule Maintenance Form State
@@ -77,7 +86,6 @@ export default function ScheduleMaintenanceAndRequestMaterials() {
     }
   };
 
-
   // Form validation
   const validateForm = () => {
     if (!equipmentType || !equipment || !scheduleDate || !scheduleTime) {
@@ -129,69 +137,67 @@ export default function ScheduleMaintenanceAndRequestMaterials() {
 
   // Handle form submission
   const handleSubmit = async () => {
-  if (!validateForm()) return;
+    if (!validateForm()) return;
 
-  setIsLoading(true);
-  setError("");
-  setLoadingProgress(0);
-
-  const progressInterval = setInterval(() => {
-    setLoadingProgress((p) => (p >= 90 ? p : p + Math.random() * 5));
-  }, 200);
-
-  try {
-    setLoadingProgress(10);
-
-    const selectedEquipmentObj = equipdata.find(
-      (eq) => eq.id === parseInt(equipment)
-    );
-
-    setLoadingProgress(25);
-
-    const requestBody = {
-      equipmentType: equipmentType,
-      equipmentId: parseInt(equipment),
-      equipmentName: selectedEquipmentObj?.name || "",
-      maintenanceType: maintenanceType,
-      priority: priority,
-      scheduleDate: scheduleDate,
-      scheduleTime: scheduleTime + ":00",
-      scheduleNotes: scheduleNotes,
-      materialItems: materialItems.map((item) => ({
-        itemName: item.name,
-        quantity: parseFloat(item.qty),
-        measurement: item.measurement,
-      })),
-      justification: justification,
-      urgencyLevel: urgencyLevel.toUpperCase(),
-    };
-
-    console.log("Sending Request Body:", JSON.stringify(requestBody, null, 2));
-
-    setLoadingProgress(50);
-
-    const result = await submitToBackend(requestBody);
-
-    setLoadingProgress(90);
-
-    console.log("Success Response:", result);
-    resetForm();
-    setLoadingProgress(100); // Only after navigation
-    toast.success("Request submitted successfully!");
-    navigation("/maintenance/update-equipment-maintenance");
-  } catch (error) {
-    toast.error("Failed to submit request. Please try again.");
-    console.error("Submission Error:", error);
-  } finally {
-    setIsLoading(false);
-    clearInterval(progressInterval);
+    setIsLoading(true);
+    setError("");
     setLoadingProgress(0);
-  }
-};
 
+    const progressInterval = setInterval(() => {
+      setLoadingProgress((p) => (p >= 90 ? p : p + Math.random() * 5));
+    }, 200);
+
+    try {
+      setLoadingProgress(10);
+
+      const selectedEquipmentObj = equipdata.find(
+        (eq) => eq.id === parseInt(equipment)
+      );
+
+      setLoadingProgress(25);
+
+      const requestBody = {
+        equipmentType: equipmentType,
+        equipmentId: parseInt(equipment),
+        equipmentName: selectedEquipmentObj?.name || "",
+        maintenanceType: maintenanceType,
+        priority: priority,
+        scheduleDate: scheduleDate,
+        scheduleTime: scheduleTime + ":00",
+        scheduleNotes: scheduleNotes,
+        materialItems: materialItems.map((item) => ({
+          itemName: item.name,
+          quantity: parseFloat(item.qty),
+          measurement: item.measurement,
+        })),
+        justification: justification,
+        urgencyLevel: urgencyLevel.toUpperCase(),
+      };
+
+      console.log("Sending Request Body:", JSON.stringify(requestBody, null, 2));
+
+      setLoadingProgress(50);
+
+      const result = await submitToBackend(requestBody);
+
+      setLoadingProgress(90);
+
+      console.log("Success Response:", result);
+      resetForm();
+      setLoadingProgress(100);
+      toast.success("Request submitted successfully!");
+      navigation("/maintenance/update-equipment-maintenance");
+    } catch (error) {
+      toast.error("Failed to submit request. Please try again.");
+      console.error("Submission Error:", error);
+    } finally {
+      setIsLoading(false);
+      clearInterval(progressInterval);
+      setLoadingProgress(0);
+    }
+  };
 
   useEffect(() => {
-    // Define an async function to fetch data
     const fetchData = async () => {
       try {
         const response = await fetch("http://localhost:8080/api/equipment/all");
@@ -206,8 +212,6 @@ export default function ScheduleMaintenanceAndRequestMaterials() {
     };
     fetchData();
   }, []);
-
-  console.log("Equipment Data:", equipdata);
 
   // Reset form function
   const resetForm = () => {
@@ -252,92 +256,55 @@ export default function ScheduleMaintenanceAndRequestMaterials() {
   return (
     <>
       <NavBar
-        links={[
-          {
-            name: "Dashboard",
-            href: "",
-            onClick: () => navigation("/maintenance/dashboard"),
-          },
-          {
-            name: "Task",
-            href: "#",
-            onClick: () => navigation("/maintenance/scheduling"),
-          },
-          {
-            name: "Schedule",
-            href: "#",
-            onClick: () =>
-              navigation("/maintenance/update-equipment-maintenance"),
-          },
-          {
-            name: "Team",
-            href: "#",
-            onClick: () => {
-              // e.preventDefault();
-              console.log("Team link clicked");
+        profileURL="/maintenance/profile"
+        links={navLinks.map(link => ({
+          ...link,
+          onClick: link.name === "Team" ? () => setShowTeam(true) : () => navigation(link.href)
+        }))}
 
-              setShowTeam(true);
-            },
-          },
-          {
-            name: "Equipment",
-            href: "#",
-            onClick: () => navigation("/maintenance/equipment"),
-          },
-          {
-            name: "Add Technician",
-            href: "#",
-            onClick: () => navigation("/maintenance/add-member"),
-          },
-        ]}
-        showButton={true}
-        buttonLabel={isLoggedIn ? "Logout" : "Get Started"}
-        onButtonClick={isLoggedIn ? handleLogout : handleLogin}
       />
+      
       {isLoading && (
-              <LoadingOverlay
-                progress={loadingProgress}
-                message="Processing..."
-              />
-            )}
-      <div className="min-h-screen bg-gray-50 p-6">
-        <div className="max-w-6xl mx-auto">
+        <LoadingOverlay
+          progress={loadingProgress}
+          message="Processing..."
+        />
+      )}
+
+      <div className="bg-purewhite min-h-screen">
+        <div className="max-w-full mx-auto px-6 sm:px-8 lg:px-16 py-6">
           {/* Header */}
-          <div className="mb-6">
-            <h1 className="text-2xl font-bold text-gray-900 mb-2">
+          <div className="mb-8">
+            <h1 className="text-2xl font-bold text-main_dark mb-2">
               Schedule Maintenance and Request Materials
             </h1>
-            <p className="text-gray-600">
-              Manage equipment maintenance schedules and request inventory
-              materials
+            <p className="text-slatebluegray text-base">
+              Manage equipment maintenance schedules and request inventory materials
             </p>
           </div>
 
           {/* Error Message */}
           {error && (
-            <div className="mb-6 p-4 bg-red-50 border border-red-200 rounded-md">
-              <p className="text-red-600 text-sm">{error}</p>
+            <div className="mb-8 p-4 bg-red-50 border border-red-200 rounded-lg">
+              <p className="text-red-600 text-sm font-medium">{error}</p>
             </div>
           )}
 
-          <div className="grid grid-cols-1 lg:grid-cols-2 gap-8">
+          <div className="grid grid-cols-1 lg:grid-cols-2 gap-6">
             {/* Left Column - Schedule Maintenance */}
-            <div className="bg-white rounded-lg shadow-sm border border-gray-200 p-6">
-              <div className="flex items-center mb-4">
-                <div className="bg-[#236571] rounded-full p-2 mr-3">
+            <div className="bg-purewhite border border-gray-200 rounded-xl shadow-sm p-6">
+              <div className="flex items-center gap-3 mb-6">
+                <div className="w-10 h-10 bg-gradient-to-br from-deep_green to-deep_green/80 rounded-xl flex items-center justify-center shadow-lg">
                   <Calendar className="w-5 h-5 text-white" />
                 </div>
-                <h2 className="text-lg font-semibold text-gray-900">
-                  Schedule Maintenance
-                </h2>
+                <h2 className="text-lg font-semibold text-main_dark">Schedule Maintenance</h2>
               </div>
 
-              <form className="space-y-4">
+              <form className="space-y-6">
                 {/* Equipment Type */}
                 <div>
-                  <label className="block text-sm font-medium text-gray-700 mb-1">
-                    Select Equipment Type{" "}
-                    <span className="text-red-500">*</span>
+                  <label className="block text-sm font-medium text-slatebluegray mb-2">
+                    Select Equipment Type <span className="text-red-500">*</span>
                   </label>
                   <div className="relative">
                     <select
@@ -346,7 +313,7 @@ export default function ScheduleMaintenanceAndRequestMaterials() {
                         setEquipmentType(e.target.value);
                         setEquipment(""); // reset selected equipment on type change
                       }}
-                      className="w-full px-3 py-2 border border-gray-300 rounded-md bg-white text-gray-700 appearance-none focus:outline-none focus:ring-2 focus:ring-[#236571] focus:border-transparent"
+                      className="w-full px-4 py-3 border border-gray-300 rounded-lg bg-white text-main_dark appearance-none focus:outline-none focus:ring-2 focus:ring-web_yellow focus:border-transparent transition-all duration-150"
                       required
                       disabled={isLoading}
                     >
@@ -357,20 +324,20 @@ export default function ScheduleMaintenanceAndRequestMaterials() {
                         </option>
                       ))}
                     </select>
-                    <ChevronDown className="absolute right-3 top-2.5 h-4 w-4 text-gray-400 pointer-events-none" />
+                    <ChevronDown className="absolute right-3 top-3.5 h-4 w-4 text-slatebluegray pointer-events-none" />
                   </div>
                 </div>
 
                 {/* Select Equipment */}
                 <div>
-                  <label className="block text-sm font-medium text-gray-700 mb-1">
+                  <label className="block text-sm font-medium text-slatebluegray mb-2">
                     Select Equipment <span className="text-red-500">*</span>
                   </label>
                   <div className="relative">
                     <select
                       value={equipment}
                       onChange={(e) => setEquipment(e.target.value)}
-                      className="w-full px-3 py-2 border border-gray-300 rounded-md bg-white text-gray-700 appearance-none focus:outline-none focus:ring-2 focus:ring-[#236571] focus:border-transparent"
+                      className="w-full px-4 py-3 border border-gray-300 rounded-lg bg-white text-main_dark appearance-none focus:outline-none focus:ring-2 focus:ring-web_yellow focus:border-transparent transition-all duration-150"
                       required
                       disabled={isLoading || !equipmentType}
                     >
@@ -381,41 +348,42 @@ export default function ScheduleMaintenanceAndRequestMaterials() {
                         </option>
                       ))}
                     </select>
-                    <ChevronDown className="absolute right-3 top-2.5 h-4 w-4 text-gray-400 pointer-events-none" />
+                    <ChevronDown className="absolute right-3 top-3.5 h-4 w-4 text-slatebluegray pointer-events-none" />
                   </div>
                 </div>
 
                 {/* Maintenance Type */}
                 <div>
-                  <label className="block text-sm font-medium text-gray-700 mb-1">
+                  <label className="block text-sm font-medium text-slatebluegray mb-2">
                     Maintenance Type <span className="text-red-500">*</span>
                   </label>
                   <div className="relative">
                     <select
                       value={maintenanceType}
                       onChange={(e) => setMaintenanceType(e.target.value)}
-                      className="w-full px-3 py-2 border border-gray-300 rounded-md bg-white text-gray-700 appearance-none focus:outline-none focus:ring-2 focus:ring-[#236571] focus:border-transparent"
+                      className="w-full px-4 py-3 border border-gray-300 rounded-lg bg-white text-main_dark appearance-none focus:outline-none focus:ring-2 focus:ring-web_yellow focus:border-transparent transition-all duration-150"
                       required
                       disabled={isLoading}
                     >
                       <option value="">Choose Maintenance Type</option>
                       <option value="Preventive">Preventive</option>
                       <option value="Corrective">Corrective</option>
-                      <option value="Emergancy">Emergancy</option>
+                      <option value="Emergency">Emergency</option>
                     </select>
-                    <ChevronDown className="absolute right-3 top-2.5 h-4 w-4 text-gray-400 pointer-events-none" />
+                    <ChevronDown className="absolute right-3 top-3.5 h-4 w-4 text-slatebluegray pointer-events-none" />
                   </div>
                 </div>
+
                 {/* Priority Level */}
                 <div>
-                  <label className="block text-sm font-medium text-gray-700 mb-1">
+                  <label className="block text-sm font-medium text-slatebluegray mb-2">
                     Priority Level <span className="text-red-500">*</span>
                   </label>
                   <div className="relative">
                     <select
                       value={priority}
                       onChange={(e) => setPriority(e.target.value)}
-                      className="w-full px-3 py-2 border border-gray-300 rounded-md bg-white text-gray-700 appearance-none focus:outline-none focus:ring-2 focus:ring-[#236571] focus:border-transparent"
+                      className="w-full px-4 py-3 border border-gray-300 rounded-lg bg-white text-main_dark appearance-none focus:outline-none focus:ring-2 focus:ring-web_yellow focus:border-transparent transition-all duration-150"
                       required
                       disabled={isLoading}
                     >
@@ -424,12 +392,13 @@ export default function ScheduleMaintenanceAndRequestMaterials() {
                       <option value="medium">Medium</option>
                       <option value="high">High</option>
                     </select>
-                    <ChevronDown className="absolute right-3 top-2.5 h-4 w-4 text-gray-400 pointer-events-none" />
+                    <ChevronDown className="absolute right-3 top-3.5 h-4 w-4 text-slatebluegray pointer-events-none" />
                   </div>
                 </div>
+
                 {/* Select Date */}
                 <div>
-                  <label className="block text-sm font-medium text-gray-700 mb-1">
+                  <label className="block text-sm font-medium text-slatebluegray mb-2">
                     Select Date <span className="text-red-500">*</span>
                   </label>
                   <div className="relative">
@@ -437,16 +406,17 @@ export default function ScheduleMaintenanceAndRequestMaterials() {
                       type="date"
                       value={scheduleDate}
                       onChange={(e) => setScheduleDate(e.target.value)}
-                      className="w-full px-3 py-2 border border-gray-300 rounded-md bg-white text-gray-700 focus:outline-none focus:ring-2 focus:ring-[#236571] focus:border-transparent"
+                      className="w-full px-4 py-3 pl-12 border border-gray-300 rounded-lg bg-white text-main_dark focus:outline-none focus:ring-2 focus:ring-web_yellow focus:border-transparent transition-all duration-150"
                       required
                       disabled={isLoading}
                     />
+                    <Calendar className="absolute left-4 top-3.5 w-4 h-4 text-deep_green" />
                   </div>
                 </div>
 
                 {/* Select Time */}
                 <div>
-                  <label className="block text-sm font-medium text-gray-700 mb-1">
+                  <label className="block text-sm font-medium text-slatebluegray mb-2">
                     Select Time <span className="text-red-500">*</span>
                   </label>
                   <div className="relative">
@@ -454,24 +424,25 @@ export default function ScheduleMaintenanceAndRequestMaterials() {
                       type="time"
                       value={scheduleTime}
                       onChange={(e) => setScheduleTime(e.target.value)}
-                      className="w-full px-3 py-2 border border-gray-300 rounded-md bg-white text-gray-700 focus:outline-none focus:ring-2 focus:ring-[#236571] focus:border-transparent"
+                      className="w-full px-4 py-3 pl-12 border border-gray-300 rounded-lg bg-white text-main_dark focus:outline-none focus:ring-2 focus:ring-web_yellow focus:border-transparent transition-all duration-150"
                       required
                       disabled={isLoading}
                     />
+                    <Settings className="absolute left-4 top-3.5 w-4 h-4 text-deep_green" />
                   </div>
                 </div>
 
                 {/* Add Notes */}
                 <div>
-                  <label className="block text-sm font-medium text-gray-700 mb-1">
+                  <label className="block text-sm font-medium text-slatebluegray mb-2">
                     Add Notes
                   </label>
                   <textarea
                     value={scheduleNotes}
                     onChange={(e) => setScheduleNotes(e.target.value)}
                     placeholder="Describe the maintenance requirements..."
-                    rows={3}
-                    className="w-full px-3 py-2 border border-gray-300 rounded-md bg-white text-gray-700 focus:outline-none focus:ring-2 focus:ring-[#236571] focus:border-transparent resize-none"
+                    rows={4}
+                    className="w-full px-4 py-3 border border-gray-300 rounded-lg bg-white text-main_dark focus:outline-none focus:ring-2 focus:ring-web_yellow focus:border-transparent resize-none transition-all duration-150"
                     disabled={isLoading}
                   />
                 </div>
@@ -479,32 +450,28 @@ export default function ScheduleMaintenanceAndRequestMaterials() {
             </div>
 
             {/* Right Column - Request Inventory Materials */}
-            <div className="bg-white rounded-lg shadow-sm border border-gray-200 p-6">
-              <div className="flex items-center mb-4">
-                <div className="bg-[#236571] rounded-full p-2 mr-3">
-                  <Upload className="w-5 h-5 text-white" />
+            <div className="bg-purewhite border border-gray-200 rounded-xl shadow-sm p-6">
+              <div className="flex items-center gap-3 mb-6">
+                <div className="w-10 h-10 bg-gradient-to-br from-web_yellow to-web_yellow/80 rounded-xl flex items-center justify-center shadow-lg">
+                  <Upload className="w-5 h-5 text-main_dark" />
                 </div>
-                <h2 className="text-lg font-semibold text-gray-900">
-                  Request Inventory Materials
-                </h2>
+                <h2 className="text-lg font-semibold text-main_dark">Request Inventory Materials</h2>
               </div>
 
-              <form className="space-y-4">
+              <form className="space-y-6">
                 {/* Items Needed */}
                 <div>
-                  <label className="block text-sm font-medium text-gray-700 mb-2">
+                  <label className="block text-sm font-medium text-slatebluegray mb-3">
                     Items Needed <span className="text-red-500">*</span>
                   </label>
-                  <div className="space-y-3">
+                  <div className="space-y-4">
                     {materialItems.map((item, index) => (
-                      <div key={item.id} className="space-y-2">
-                        {/* Item Number Display (for user reference only) */}
-                        <div className="text-xs text-gray-500 font-mono">
+                      <div key={item.id} className="p-4 bg-gray-50 rounded-lg border border-gray-200">
+                        <div className="text-xs text-slatebluegray font-medium mb-2">
                           Item #{item.id}
                         </div>
 
-                        {/* Item Input Row */}
-                        <div className="flex gap-2">
+                        <div className="space-y-3">
                           <input
                             type="text"
                             value={item.name}
@@ -512,59 +479,61 @@ export default function ScheduleMaintenanceAndRequestMaterials() {
                               updateMaterialItem(index, "name", e.target.value)
                             }
                             placeholder="Item name (e.g., Oil)"
-                            className="flex-1 px-3 py-2 border border-gray-300 rounded-md bg-white text-gray-700 focus:outline-none focus:ring-2 focus:ring-[#236571] focus:border-transparent"
+                            className="w-full px-4 py-3 border border-gray-300 rounded-lg bg-white text-main_dark focus:outline-none focus:ring-2 focus:ring-web_yellow focus:border-transparent transition-all duration-150"
                             required
                             disabled={isLoading}
                           />
 
-                          <input
-                            type="number"
-                            value={item.qty}
-                            onChange={(e) =>
-                              updateMaterialItem(index, "qty", e.target.value)
-                            }
-                            placeholder="Amount"
-                            min="0"
-                            step="0.1"
-                            className="w-24 px-3 py-2 border border-gray-300 rounded-md bg-white text-gray-700 focus:outline-none focus:ring-2 focus:ring-[#236571] focus:border-transparent"
-                            required
-                            disabled={isLoading}
-                          />
-
-                          <div className="relative">
-                            <select
-                              value={item.measurement}
+                          <div className="flex gap-3">
+                            <input
+                              type="number"
+                              value={item.qty}
                               onChange={(e) =>
-                                updateMaterialItem(
-                                  index,
-                                  "measurement",
-                                  e.target.value
-                                )
+                                updateMaterialItem(index, "qty", e.target.value)
                               }
-                              className="w-20 px-2 py-2 border border-gray-300 rounded-md bg-white text-gray-700 appearance-none focus:outline-none focus:ring-2 focus:ring-[#236571] focus:border-transparent text-sm"
+                              placeholder="Amount"
+                              min="0"
+                              step="0.1"
+                              className="flex-1 px-4 py-3 border border-gray-300 rounded-lg bg-white text-main_dark focus:outline-none focus:ring-2 focus:ring-web_yellow focus:border-transparent transition-all duration-150"
                               required
                               disabled={isLoading}
-                            >
-                              <option value="">Unit</option>
-                              {unitOptions.map((unit) => (
-                                <option key={unit.value} value={unit.value}>
-                                  {unit.label}
-                                </option>
-                              ))}
-                            </select>
-                            <ChevronDown className="absolute right-1 top-2.5 h-3 w-3 text-gray-400 pointer-events-none" />
-                          </div>
+                            />
 
-                          {materialItems.length > 1 && (
-                            <button
-                              type="button"
-                              onClick={() => removeMaterialItem(index)}
-                              className="px-3 py-2 text-red-500 hover:text-red-700 border border-red-300 rounded-md hover:bg-red-50 transition-colors"
-                              disabled={isLoading}
-                            >
-                              ×
-                            </button>
-                          )}
+                            <div className="relative flex-1">
+                              <select
+                                value={item.measurement}
+                                onChange={(e) =>
+                                  updateMaterialItem(
+                                    index,
+                                    "measurement",
+                                    e.target.value
+                                  )
+                                }
+                                className="w-full px-4 py-3 border border-gray-300 rounded-lg bg-white text-main_dark appearance-none focus:outline-none focus:ring-2 focus:ring-web_yellow focus:border-transparent transition-all duration-150"
+                                required
+                                disabled={isLoading}
+                              >
+                                <option value="">Select unit</option>
+                                {unitOptions.map((unit) => (
+                                  <option key={unit.value} value={unit.value}>
+                                    {unit.label}
+                                  </option>
+                                ))}
+                              </select>
+                              <ChevronDown className="absolute right-3 top-3.5 h-4 w-4 text-slatebluegray pointer-events-none" />
+                            </div>
+
+                            {materialItems.length > 1 && (
+                              <button
+                                type="button"
+                                onClick={() => removeMaterialItem(index)}
+                                className="px-3 py-3 text-red-500 hover:text-red-700 border border-red-300 rounded-lg hover:bg-red-50 transition-colors"
+                                disabled={isLoading}
+                              >
+                                ×
+                              </button>
+                            )}
+                          </div>
                         </div>
                       </div>
                     ))}
@@ -573,7 +542,7 @@ export default function ScheduleMaintenanceAndRequestMaterials() {
                   <button
                     type="button"
                     onClick={addMaterialItem}
-                    className="mt-3 flex items-center text-[#236571] hover:text-[#17484b] font-medium text-sm disabled:opacity-50 transition-colors"
+                    className="mt-4 flex items-center text-deep_green hover:text-deep_green/80 font-medium text-sm disabled:opacity-50 transition-colors"
                     disabled={isLoading}
                   >
                     <Plus className="w-4 h-4 mr-1" />
@@ -583,15 +552,15 @@ export default function ScheduleMaintenanceAndRequestMaterials() {
 
                 {/* Justification */}
                 <div>
-                  <label className="block text-sm font-medium text-gray-700 mb-1">
+                  <label className="block text-sm font-medium text-slatebluegray mb-2">
                     Justification <span className="text-red-500">*</span>
                   </label>
                   <textarea
                     value={justification}
                     onChange={(e) => setJustification(e.target.value)}
                     placeholder="Explain why these materials are needed..."
-                    rows={3}
-                    className="w-full px-3 py-2 border border-gray-300 rounded-md bg-white text-gray-700 focus:outline-none focus:ring-2 focus:ring-[#236571] focus:border-transparent resize-none"
+                    rows={4}
+                    className="w-full px-4 py-3 border border-gray-300 rounded-lg bg-white text-main_dark focus:outline-none focus:ring-2 focus:ring-web_yellow focus:border-transparent resize-none transition-all duration-150"
                     required
                     disabled={isLoading}
                   />
@@ -599,14 +568,14 @@ export default function ScheduleMaintenanceAndRequestMaterials() {
 
                 {/* Urgency Level */}
                 <div>
-                  <label className="block text-sm font-medium text-gray-700 mb-1">
+                  <label className="block text-sm font-medium text-slatebluegray mb-2">
                     Urgency Level <span className="text-red-500">*</span>
                   </label>
                   <div className="relative">
                     <select
                       value={urgencyLevel}
                       onChange={(e) => setUrgencyLevel(e.target.value)}
-                      className="w-full px-3 py-2 border border-gray-300 rounded-md bg-white text-gray-700 appearance-none focus:outline-none focus:ring-2 focus:ring-[#236571] focus:border-transparent"
+                      className="w-full px-4 py-3 border border-gray-300 rounded-lg bg-white text-main_dark appearance-none focus:outline-none focus:ring-2 focus:ring-web_yellow focus:border-transparent transition-all duration-150"
                       required
                       disabled={isLoading}
                     >
@@ -616,7 +585,7 @@ export default function ScheduleMaintenanceAndRequestMaterials() {
                       <option value="high">High</option>
                       <option value="critical">Critical</option>
                     </select>
-                    <ChevronDown className="absolute right-3 top-2.5 h-4 w-4 text-gray-400 pointer-events-none" />
+                    <ChevronDown className="absolute right-3 top-3.5 h-4 w-4 text-slatebluegray pointer-events-none" />
                   </div>
                 </div>
               </form>
@@ -624,26 +593,29 @@ export default function ScheduleMaintenanceAndRequestMaterials() {
           </div>
 
           {/* Bottom Action Buttons */}
-          <div className="flex justify-center gap-4 mt-8">
+          <div className="flex flex-col sm:flex-row justify-center gap-4 mt-8">
             <button
               onClick={resetForm}
-              className="px-8 py-3 border border-gray-300 text-gray-700 rounded-md font-medium hover:bg-gray-50 transition-colors disabled:opacity-50"
+              className="px-8 py-3 border border-gray-300 text-slatebluegray rounded-lg font-medium hover:bg-gray-50 transition-colors disabled:opacity-50"
               disabled={isLoading}
             >
               Cancel
             </button>
             <button
               onClick={handleSubmit}
-              className="px-8 py-3 bg-[#EFC11A] hover:bg-yellow-400 text-yellow-900 rounded-md font-semibold transition-colors disabled:opacity-50 flex items-center gap-2"
+              className="px-8 py-3 bg-web_yellow hover:bg-web_yellow/80 text-main_dark rounded-lg font-semibold transition-colors disabled:opacity-50 flex items-center justify-center gap-2"
               disabled={isLoading}
             >
               {isLoading ? (
                 <>
-                  <div className="animate-spin rounded-full h-4 w-4 border-b-2 border-yellow-900"></div>
+                  <div className="animate-spin rounded-full h-4 w-4 border-b-2 border-main_dark"></div>
                   Submitting...
                 </>
               ) : (
-                "Submit"
+                <>
+                  <Wrench className="w-4 h-4" />
+                  Submit Request
+                </>
               )}
             </button>
           </div>
@@ -653,13 +625,11 @@ export default function ScheduleMaintenanceAndRequestMaterials() {
       {/* Overlay and Team Sidebar */}
       {showTeam && (
         <>
-          {/* BLUR OVERLAY */}
           <div
             className="fixed inset-0 z-40 bg-black bg-opacity-30 backdrop-blur-sm transition-all"
             onClick={() => setShowTeam(false)}
             aria-label="Close team sidebar"
           />
-          {/* TEAM SIDEBAR */}
           <TeamSection onClose={() => setShowTeam(false)} />
         </>
       )}
