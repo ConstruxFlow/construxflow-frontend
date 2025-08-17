@@ -1,4 +1,4 @@
-import React from "react";
+import React, { useState, useEffect } from "react";
 import {
   MdOutlineStorage,
   MdOutlineNotificationsNone,
@@ -16,6 +16,8 @@ import {
 import { BsCreditCard2Back } from "react-icons/bs";
 import NavBar from '../../components/NavBar'
 import { useNavigate } from "react-router-dom";
+import ProjectProgressAnalytics from '../../components/SiteManager/ProjectProgressAnalytics';
+import axios from 'axios';
 
 const navLinks = [
   { name: "Dashboard", href: "/site-manager" },
@@ -42,6 +44,24 @@ function ActionTile({ onClick, icon, label, iconColorClass, hoverClass }) {
 
 const SiteManagerDashboard = () => {
   const navigate = useNavigate();
+  const [projects, setProjects] = useState([]);
+  const [loading, setLoading] = useState(true);
+
+  useEffect(() => {
+    // Fetch projects for analytics
+    const fetchProjects = async () => {
+      try {
+        const response = await axios.get('http://localhost:8080/api/projects/all');
+        setProjects(response.data);
+      } catch (error) {
+        console.error('Error fetching projects:', error);
+      } finally {
+        setLoading(false);
+      }
+    };
+
+    fetchProjects();
+  }, []);
 
   const stats = [
     {
@@ -187,6 +207,11 @@ const SiteManagerDashboard = () => {
               hoverClass="hover:bg-deep_green/5"
             />
           </div>
+        </div>
+
+        {/* Project Progress Analytics */}
+        <div className="mb-6">
+          <ProjectProgressAnalytics projects={projects} />
         </div>
 
         {/* Recent Activity */}
