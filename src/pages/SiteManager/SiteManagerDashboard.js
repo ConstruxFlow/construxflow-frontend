@@ -22,7 +22,7 @@ import axios from 'axios';
 const navLinks = [
   { name: "Dashboard", href: "/site-manager" },
           { name: "Projects", href: "/site-manager/projects-list" },
-          { name: "Materials", href: "/site-manager/material-request-list" },
+                     { name: "Materials", href: "/site-manager/materials" },
           { name: "Inventory", href: "/site-manager/site-inventory" },
           // { name: "Purchase Orders", href: "/site-manager" },
 ];
@@ -179,10 +179,10 @@ const SiteManagerDashboard = () => {
           </div>
           <div className="grid grid-cols-1 sm:grid-cols-2 lg:grid-cols-4 gap-4 mt-2">
             <ActionTile
-              onClick={() => navigate('/projects-list')}
+              onClick={() => navigate('/site-manager/materials')}
               icon={<FaEye className="text-xl" />}
               iconColorClass="text-deep_green"
-              label="View Material Requests"
+              label="View Materials"
               hoverClass="hover:bg-deep_green/10"
             />
             <ActionTile

@@ -10,7 +10,8 @@ import {
   CheckCircle,
   AlertCircle,
   PauseCircle,
-  PlayCircle
+  PlayCircle,
+  Package
 } from 'lucide-react';
 import { useNavigate } from 'react-router-dom';
 
@@ -128,7 +129,7 @@ const ProjectProgressCard = ({ project, onStatusUpdate, onDelete, onEdit }) => {
         {/* Action Menu */}
         <div className="flex items-center gap-2">
           <button
-            onClick={() => navigate(`/site-manager/projects-list/edit-project/${project.projectId || project.id}`)}
+            onClick={() => onEdit(project.projectId || project.id)}
             className="p-2 text-gray-600 hover:text-blue-600 hover:bg-blue-50 rounded-lg transition-colors"
             title="Edit Project"
           >
@@ -140,6 +141,13 @@ const ProjectProgressCard = ({ project, onStatusUpdate, onDelete, onEdit }) => {
             title="View Project"
           >
             <Eye className="w-4 h-4" />
+          </button>
+          <button
+            onClick={() => navigate(`/site-manager/materials/project/${project.projectId || project.id}/material-requests`)}
+            className="p-2 text-gray-600 hover:text-orange-600 hover:bg-orange-50 rounded-lg transition-colors"
+            title="View Materials"
+          >
+            <Package className="w-4 h-4" />
           </button>
           <button
             onClick={() => onDelete(project.projectId || project.id)}
