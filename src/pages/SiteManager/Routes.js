@@ -6,6 +6,7 @@ import Edit_Project from "./Edit_Project";
 import Project_Phase from "./Project_Phase";
 import Create_Material_Request from "./Create_Material_Request";
 import Material_Request from "./Material_Request";
+import MaterialRequestList from "./MaterialRequestList";
 import Site_EquipmentInfo from "./Site_EquipmentInfo";
 import Site_EquipmentRequest from "./Site_EquipmentRequest";
 import Site_MaterialInfo from "./Site_MaterialInfo";
@@ -43,6 +44,22 @@ export const siteManagerRoutes = {
     {
       path: 'projects-list/create-project/project-phase',
       element: <Project_Phase />,
+    },
+    {
+      path: 'materials',
+      element: <Existing_Projects_List />,
+    },
+    {
+      path: 'materials/project/:projectId/material-requests',
+      element: <MaterialRequestList />,
+    },
+    {
+      path: 'materials/create-request',
+      element: <Create_Material_Request />,
+    },
+    {
+      path: 'materials/edit-request/:requestId',
+      element: <Create_Material_Request />,
     },
     {
       path: 'material-request-list/material-request',
