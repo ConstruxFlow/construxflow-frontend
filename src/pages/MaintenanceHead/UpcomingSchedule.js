@@ -116,6 +116,8 @@ export default function NextScheduleContainer() {
       .catch(console.error);
   }, []);
 
+  console.log("Upcoming Maintenance Data:", upcomingMaintenance);
+
   // useEffect(() => {
   //   if (upcomingMaintenance.length > 0 && !selectedMaintenance) {
   //     setSelectedMaintenance(upcomingMaintenance[0]);
@@ -343,12 +345,14 @@ export default function NextScheduleContainer() {
       const schedulePromises = assignments.map((assignment) => {
         const requestBody = {
           assignId: assignment.assignId,
+          equipmentId: assignment.equipmentId,
           equipmentScheduleId: selectedMaintenance?.id,
           nextMaintenanceType: maintenanceType,
           nextDate: scheduledDate,
           estimateDuration: estimatedDuration,
           priority: priorityLevel,
           technicianIds: selectedNextTechs,
+          lastMaintenanceDate: new Date().toISOString().split("T")[0],
         };
 
         return fetch("http://localhost:8080/api/nextschedule/setnextschedule", {

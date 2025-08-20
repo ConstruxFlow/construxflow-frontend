@@ -76,6 +76,7 @@ export default function TechnicianAssignmentMain() {
     }, 200);
 
     const reqBody = {
+      equipmentId: equipment.equipmentId,
       equipmentSchedulingId: id,
       technicianIds: selectedTechs, // an array
       duration,
