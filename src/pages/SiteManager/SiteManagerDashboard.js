@@ -1,4 +1,4 @@
-import React from "react";
+import React, { useState, useEffect } from "react";
 import {
   MdOutlineStorage,
   MdOutlineNotificationsNone,
@@ -16,12 +16,14 @@ import {
 import { BsCreditCard2Back } from "react-icons/bs";
 import NavBar from '../../components/NavBar'
 import { useNavigate } from "react-router-dom";
+import ProjectProgressAnalytics from '../../components/SiteManager/ProjectProgressAnalytics';
+import axios from 'axios';
 
 const navLinks = [
   { name: "Dashboard", href: "/site-manager" },
           { name: "Projects", href: "/site-manager/projects-list" },
-          { name: "Materials", href: "/site-manager/material-request-list" },
-          { name: "Inventory", href: "/site-manager/site-material-info" },
+                     { name: "Materials", href: "/site-manager/materials" },
+          { name: "Inventory", href: "/site-manager/site-inventory" },
           // { name: "Purchase Orders", href: "/site-manager" },
 ];
 
@@ -42,6 +44,24 @@ function ActionTile({ onClick, icon, label, iconColorClass, hoverClass }) {
 
 const SiteManagerDashboard = () => {
   const navigate = useNavigate();
+  const [projects, setProjects] = useState([]);
+  const [loading, setLoading] = useState(true);
+
+  useEffect(() => {
+    // Fetch projects for analytics
+    const fetchProjects = async () => {
+      try {
+        const response = await axios.get('http://localhost:8080/api/projects/all');
+        setProjects(response.data);
+      } catch (error) {
+        console.error('Error fetching projects:', error);
+      } finally {
+        setLoading(false);
+      }
+    };
+
+    fetchProjects();
+  }, []);
 
   const stats = [
     {
@@ -159,10 +179,10 @@ const SiteManagerDashboard = () => {
           </div>
           <div className="grid grid-cols-1 sm:grid-cols-2 lg:grid-cols-4 gap-4 mt-2">
             <ActionTile
-              onClick={() => navigate('/projects-list')}
+              onClick={() => navigate('/site-manager/materials')}
               icon={<FaEye className="text-xl" />}
               iconColorClass="text-deep_green"
-              label="View Material Requests"
+              label="View Materials"
               hoverClass="hover:bg-deep_green/10"
             />
             <ActionTile
@@ -187,6 +207,11 @@ const SiteManagerDashboard = () => {
               hoverClass="hover:bg-deep_green/5"
             />
           </div>
+        </div>
+
+        {/* Project Progress Analytics */}
+        <div className="mb-6">
+          <ProjectProgressAnalytics projects={projects} />
         </div>
 
         {/* Recent Activity */}

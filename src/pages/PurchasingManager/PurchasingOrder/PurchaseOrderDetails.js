@@ -174,24 +174,24 @@ const PurchaseOrderDetails = () => {
       <main className="py-4 sm:py-6">
         <div className="max-w-7xl mx-auto px-4 sm:px-6 lg:px-8">
           {/* Header */}
-          <div className="flex items-center justify-between mb-6">
+          <div className="flex flex-col sm:flex-row items-start sm:items-center justify-between mb-6 gap-4">
             <div className="flex items-center gap-4">
               <button
-                onClick={() => navigate('/purchasing/purchaseorders/overview')}
+                onClick={() => navigate('/purchasing/orders/overview')}
                 className="flex items-center gap-2 text-gray-600 hover:text-gray-900 transition-colors"
               >
                 <FaArrowLeft className="w-4 h-4" />
                 Orders
               </button>
-              <div className="h-6 w-px bg-gray-300"></div>
+              <div className="h-6 w-px bg-gray-300 hidden sm:block"></div>
               <h1 className="text-xl sm:text-2xl font-bold text-main_dark">Order Details</h1>
             </div>
-            <div className="flex items-center gap-3">
-              <button className="px-4 py-2 bg-deep_green text-purewhite rounded-md hover:bg-deep_green/90 transition-colors flex items-center gap-2">
+            <div className="flex flex-col sm:flex-row items-start sm:items-center gap-3 w-full sm:w-auto mt-4 sm:mt-0">
+              <button className="w-full sm:w-auto px-4 py-2 bg-deep_green text-purewhite rounded-md hover:bg-deep_green/90 transition-colors flex items-center justify-center gap-2">
                 <FaDownload className="w-4 h-4" />
                 Download Invoice
               </button>
-              <button onClick={() => navigate(`/purchasing/orders/edit/${orderData.ponumber}`)} className="px-4 py-2 bg-web_yellow text-main_dark rounded-md hover:bg-web_yellow/90 transition-colors flex items-center gap-2">
+              <button onClick={() => navigate(`/purchasing/orders/edit/${orderData.ponumber}`)} className="w-full sm:w-auto px-4 py-2 bg-web_yellow text-main_dark rounded-md hover:bg-web_yellow/90 transition-colors flex items-center justify-center gap-2">
                 <FaEdit className="w-4 h-4" />
                 Edit Order
               </button>
@@ -206,7 +206,7 @@ const PurchaseOrderDetails = () => {
             {/* Left Column - Order Summary & Status */}
             <div className="lg:col-span-2 space-y-6">
               {/* Order Summary */}
-              <div className="bg-purewhite border border-gray-200 rounded-lg p-6">
+              <div className="bg-purewhite border border-gray-200 rounded-lg p-4 sm:p-6">
                 <h2 className="text-lg font-semibold text-main_dark mb-4">Order Summary</h2>
                 <div className="grid grid-cols-1 md:grid-cols-2 gap-6">
                   <div className="space-y-4">
@@ -216,7 +216,7 @@ const PurchaseOrderDetails = () => {
                         {orderData.additionalInfo || 'Construction Project'}
                       </p>
                     </div>
-                    <div>+
+                    <div>
                       <label className="text-sm text-gray-600">Supplier</label>
                       <p className="font-semibold text-main_dark">{orderData.supplier.name}</p>
                       <p className="text-sm text-gray-600">{orderData.supplier.company_name}</p>
@@ -242,7 +242,7 @@ const PurchaseOrderDetails = () => {
                     <div className="bg-light_brown/20 p-4 rounded-lg">
                       <label className="text-sm text-gray-600">Total Amount</label>
                       <p className="text-2xl font-bold text-main_dark">
-                        ${orderData.subTotal?.toLocaleString() || '0'}
+                        RS {orderData.subTotal?.toLocaleString() || '0'}
                       </p>
                     </div>
                   </div>
@@ -250,9 +250,9 @@ const PurchaseOrderDetails = () => {
               </div>
 
               {/* Order Status Flow */}
-              <div className="bg-purewhite border border-gray-200 rounded-lg p-6">
+              <div className="bg-purewhite border border-gray-200 rounded-lg p-4 sm:p-6">
                 <h2 className="text-lg font-semibold text-main_dark mb-6">Order Status Flow</h2>
-                <div className="flex items-center justify-between">
+                <div className="flex flex-col sm:flex-row items-start sm:items-center justify-between gap-4 sm:gap-2">
                   {statusSteps.map((step, index) => {
                     const Icon = step.icon;
                     return (
@@ -272,7 +272,7 @@ const PurchaseOrderDetails = () => {
                         {index < statusSteps.length - 1 && (
                           <div className={`absolute h-0.5 w-16 mt-6 ${
                             step.isCompleted ? 'bg-web_yellow' : 'bg-gray-200'
-                          }`} style={{ left: `${(index * 100) / (statusSteps.length - 1)}%` }} />
+                          } hidden sm:block`} style={{ left: `${(index * 100) / (statusSteps.length - 1)}%` }} />
                         )}
                       </div>
                     );
@@ -281,26 +281,26 @@ const PurchaseOrderDetails = () => {
               </div>
 
               {/* Materials Ordered */}
-              <div className="bg-purewhite border border-gray-200 rounded-lg p-6">
+              <div className="bg-purewhite border border-gray-200 rounded-lg p-4 sm:p-6">
                 <h2 className="text-lg font-semibold text-main_dark mb-4">Materials Ordered</h2>
-                <div className="space-y-4">
+                <div className="space-y-4 overflow-x-auto">
                   {orderData.materials?.map((item, index) => (
-                    <div key={index} className="flex items-center justify-between p-4 bg-gray-50 rounded-lg">
+                    <div key={index} className="flex flex-col sm:flex-row items-start sm:items-center justify-between p-4 bg-gray-50 rounded-lg gap-4 sm:gap-0">
                       <div className="flex-1">
                         <h3 className="font-semibold text-main_dark">{item.material.materialName}</h3>
                         <p className="text-sm text-gray-600">
-                          {item.material.materialType} • {item.material.unitOfMeasurement}
+                          {item.material.materialType}
                         </p>
                         <p className="text-sm text-gray-600">
-                          Quantity: {item.quantity} • Unit Price: ${item.unitPrice?.toLocaleString()}
+                          Quantity: {item.quantity} {item.material.unitOfMeasurement} • Unit Price: RS {item.unitPrice?.toLocaleString()}
                         </p>
                       </div>
-                      <div className="text-right">
+                      <div className="text-left sm:text-right">
                         <span className="px-3 py-1 bg-deep_green text-purewhite rounded-full text-xs">
                           Direct Purchase
                         </span>
                         <p className="font-semibold text-main_dark mt-2">
-                          ${(item.quantity * item.unitPrice)?.toLocaleString()}
+                          RS {(item.quantity * item.unitPrice)?.toLocaleString()}
                         </p>
                       </div>
                     </div>
@@ -312,7 +312,7 @@ const PurchaseOrderDetails = () => {
             {/* Right Column - Payment & Shipping */}
             <div className="space-y-6">
               {/* Payment Details */}
-              <div className="bg-purewhite border border-gray-200 rounded-lg p-6">
+              <div className="bg-purewhite border border-gray-200 rounded-lg p-4 sm:p-6">
                 <h2 className="text-lg font-semibold text-main_dark mb-4">Payment Details</h2>
                 <div className="space-y-4">
                   <div className="flex justify-between items-center p-3 bg-light_brown/20 rounded-lg">
@@ -335,7 +335,7 @@ const PurchaseOrderDetails = () => {
                       <span className="text-sm text-gray-600">Deposit (30%)</span>
                       <div className="text-right">
                         <p className="font-semibold text-main_dark">
-                          ${(orderData.orderPayment?.paidAmount || 0).toLocaleString()}
+                          RS {(orderData.orderPayment?.paidAmount || 0).toLocaleString()}
                         </p>
                         <p className="text-xs text-green-600">Paid - May 15</p>
                       </div>
@@ -345,7 +345,7 @@ const PurchaseOrderDetails = () => {
                       <span className="text-sm text-gray-600">Progress Payment (50%)</span>
                       <div className="text-right">
                         <p className="font-semibold text-main_dark">
-                          ${((orderData.orderPayment?.amount || 0) * 0.5).toLocaleString()}
+                          RS {((orderData.orderPayment?.amount || 0) * 0.5).toLocaleString()}
                         </p>
                         <p className="text-xs text-orange-600">Due</p>
                       </div>
@@ -355,7 +355,7 @@ const PurchaseOrderDetails = () => {
                       <span className="text-sm text-gray-600">Final Payment (20%)</span>
                       <div className="text-right">
                         <p className="font-semibold text-main_dark">
-                          ${(orderData.orderPayment?.remainingAmount || 0).toLocaleString()}
+                          RS {(orderData.orderPayment?.remainingAmount || 0).toLocaleString()}
                         </p>
                         <p className="text-xs text-gray-500">Pending</p>
                       </div>
@@ -377,7 +377,7 @@ const PurchaseOrderDetails = () => {
                     </div>
                   </div>
 
-                  <div className="flex gap-2 pt-4">
+                  <div className="flex flex-col sm:flex-row gap-2 pt-4">
                     <button className="flex-1 px-4 py-2 bg-deep_green text-purewhite rounded-md hover:bg-deep_green/90 transition-colors">
                       Download Invoice
                     </button>
@@ -389,7 +389,7 @@ const PurchaseOrderDetails = () => {
               </div>
 
               {/* Shipping & Delivery */}
-              <div className="bg-purewhite border border-gray-200 rounded-lg p-6">
+              <div className="bg-purewhite border border-gray-200 rounded-lg p-4 sm:p-6">
                 <h2 className="text-lg font-semibold text-main_dark mb-4">Shipping & Delivery</h2>
                 <div className="space-y-4">
                   <div>
@@ -398,7 +398,7 @@ const PurchaseOrderDetails = () => {
                       {orderData.deliveries?.[0]?.location || 'N/A'}
                     </p>
                   </div>
-                  <div className="grid grid-cols-2 gap-4">
+                  <div className="grid grid-cols-1 sm:grid-cols-2 gap-4">
                     <div>
                       <label className="text-sm text-gray-600">Shipping Method</label>
                       <p className="font-semibold text-main_dark">Standard Freight</p>
@@ -426,7 +426,7 @@ const PurchaseOrderDetails = () => {
               </div>
 
               {/* Order Timeline */}
-              <div className="bg-purewhite border border-gray-200 rounded-lg p-6">
+              <div className="bg-purewhite border border-gray-200 rounded-lg p-4 sm:p-6">
                 <h2 className="text-lg font-semibold text-main_dark mb-4">Order Timeline</h2>
                 <div className="space-y-4">
                   <div className="flex items-start gap-3">

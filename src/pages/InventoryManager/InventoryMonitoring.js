@@ -2,6 +2,8 @@ import React, { useState } from 'react';
 import { useNavigate } from 'react-router-dom';
 import NavBar from '../../components/NavBar';
 import { FaSearch, FaFilter, FaEye, FaShoppingCart } from 'react-icons/fa';
+import { useEffect } from 'react';
+import axios from 'axios';
 
 const navLinks = [
   { name: 'Dashboard', href: '/inventory-dashboard' },
@@ -20,64 +22,9 @@ const InventoryMonitoring = () => {
   const [sortOrder, setSortOrder] = useState('asc');
   const itemsPerPage = 10;
 
-  const inventoryData = [
-    {
-      id: 1,
-      name: 'Hydraulic Pump – CAT 320',
-      serial: 'HP-CAT320-001',
-      category: 'Excavator Parts',
-      stock: 3,
-      minLevel: 5,
-      status: 'Low Stock',
-      statusColor: 'bg-red-100 text-red-800',
-      type: 'Machinery'
-    },
-    {
-      id: 2,
-      name: 'Steel Reinforcement Bars',
-      serial: 'Grade: 60, Size: 16mm',
-      category: 'Construction Materials',
-      stock: 150,
-      minLevel: 50,
-      status: 'Good',
-      statusColor: 'bg-deep_green/10 text-deep_green',
-      type: 'Materials'
-    },
-    {
-      id: 3,
-      name: 'Concrete Mixer Blades',
-      serial: 'Model: CMB-500',
-      category: 'Mixer Parts',
-      stock: 8,
-      minLevel: 10,
-      status: 'Medium',
-      statusColor: 'bg-web_yellow/10 text-web_yellow',
-      type: 'Spare Parts'
-    },
-    {
-      id: 4,
-      name: 'Engine Oil Filter',
-      serial: 'OF-HD450-002',
-      category: 'Engine Parts',
-      stock: 2,
-      minLevel: 8,
-      status: 'Critical',
-      statusColor: 'bg-red-100 text-red-800',
-      type: 'Spare Parts'
-    },
-    {
-      id: 5,
-      name: 'Hydraulic Hoses',
-      serial: 'HH-CAT320-005',
-      category: 'Hydraulic Parts',
-      stock: 12,
-      minLevel: 6,
-      status: 'Good',
-      statusColor: 'bg-deep_green/10 text-deep_green',
-      type: 'Spare Parts'
-    }
-  ];
+  const [inventoryData, setInventoryData] = useState([]);
 
+  
   const filterOptions = ['All Items', 'Machinery', 'Spare Parts', 'Materials', 'Low Stock', 'Critical'];
 
   // Filter and search logic
@@ -98,6 +45,7 @@ const InventoryMonitoring = () => {
       }
     }
     
+
     return matchesSearch && matchesFilter;
   });
 
@@ -137,6 +85,25 @@ const InventoryMonitoring = () => {
   const lowStockItems = inventoryData.filter(item => item.status === 'Low Stock').length;
   const criticalItems = inventoryData.filter(item => item.status === 'Critical').length;
   const goodStockItems = inventoryData.filter(item => item.status === 'Good').length;
+
+  useEffect(() => {
+  axios.get('http://localhost:8080/api/inventory/all')
+    .then(response => {
+      setInventoryData(response.data);
+    })
+    .catch(error => {
+      console.error('Error fetching inventory data:', error);
+    });
+}, []);
+
+
+const getStatus = (quantityInStock, reorderLevel) => {
+  if (quantityInStock === 0) return { text: "Critical", color: "bg-red-100 text-red-800" };
+  if (quantityInStock < reorderLevel) return { text: "Low Stock", color: "bg-red-100 text-red-800" };
+  if (quantityInStock === reorderLevel) return { text: "Medium", color: "bg-web_yellow/10 text-web_yellow" };
+  return { text: "Good", color: "bg-deep_green/10 text-deep_green" };
+};
+
 
   return (
     <div className="min-h-screen bg-purewhite font-poppins">
@@ -295,13 +262,18 @@ const InventoryMonitoring = () => {
                       </td>
                       <td className="px-6 py-4 text-sm text-gray-600">{item.category}</td>
                       <td className="px-6 py-4">
-                        <span className="text-sm font-bold text-main_dark">{item.stock}</span>
+                        <span className="text-sm font-bold text-main_dark">{item.quantityInStock}</span>
                       </td>
-                      <td className="px-6 py-4 text-sm text-gray-600">{item.minLevel}</td>
+                      <td className="px-6 py-4 text-sm text-gray-600">{item.reorderLevel}</td>
                       <td className="px-6 py-4">
-                        <span className={`px-3 py-1 rounded-full text-xs font-medium ${item.statusColor}`}>
-                          {item.status}
-                        </span>
+                        {(() => {
+  const status = getStatus(item.quantityInStock, item.reorderLevel);
+  return (
+    <span className={`px-3 py-1 rounded-full text-xs font-medium ${status.color}`}>
+      {status.text}
+    </span>
+  );
+})()}
                       </td>
                       <td className="px-6 py-4">
                         <div className="flex gap-2">

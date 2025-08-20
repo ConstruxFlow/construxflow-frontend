@@ -3,7 +3,7 @@ import { Calendar, Upload, FolderPlus, Save, X, Plus, Trash2, ChevronDown, Chevr
 import { pdfjs } from 'react-pdf';
 import { useNavigate } from 'react-router-dom';
 import { AuthContext } from '../../Context/AuthContext';
-import toast from 'react-hot-toast';
+import { toast } from 'react-toastify';
 
 pdfjs.GlobalWorkerOptions.workerSrc = `${process.env.PUBLIC_URL}/pdf.worker.min.js`;
 

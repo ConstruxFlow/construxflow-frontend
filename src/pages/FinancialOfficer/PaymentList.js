@@ -117,10 +117,10 @@ const PaymentList = () => {
   const checkAmountRange = (amount, range) => {
     const amt = parseFloat(amount) || 0;
     switch (range) {
-      case 'Under $10K': return amt < 10000;
-      case '$10K - $50K': return amt >= 10000 && amt < 50000;
-      case '$50K - $100K': return amt >= 50000 && amt < 100000;
-      case 'Over $100K': return amt >= 100000;
+      case 'Under RS 10K': return amt < 10000;
+      case 'RS 10K - RS 50K': return amt >= 10000 && amt < 50000;
+      case 'RS 50K - RS 100K': return amt >= 50000 && amt < 100000;
+      case 'Over RS 100K': return amt >= 100000;
       default: return true;
     }
   };
@@ -181,7 +181,7 @@ const PaymentList = () => {
   const formatCurrency = (amount) => {
     return new Intl.NumberFormat("en-US", {
       style: "currency",
-      currency: "USD",
+      currency: "LKR",
     }).format(amount);
   };
 
@@ -200,8 +200,8 @@ const PaymentList = () => {
   const paginatedOrders = filteredOrders.slice(startIndex, startIndex + itemsPerPage);
 
   const paymentStatuses = ['All Payment Status', 'Pending', 'Approved', 'Rejected', 'Processing'];
-  const amountRanges = ['All Amounts', 'Under $10K', '$10K - $50K', '$50K - $100K', 'Over $100K'];
-  
+  const amountRanges = ['All Amounts', 'Under RS 10K', 'RS 10K - RS 50K', 'RS 50K - RS 100K', 'Over RS 100K'];
+
   // Get unique suppliers for filter
   const suppliers = ['All Suppliers', ...new Set(purchaseOrders.map(order => order.supplier.name))];
 
@@ -297,7 +297,7 @@ const PaymentList = () => {
               <div className="flex items-center justify-between">
                 <div>
                   <div className="text-2xl font-bold text-blue-600">
-                    {formatCurrency(stats.totalValue).replace('$', 'LKR')}
+                    {formatCurrency(stats.totalValue).replace('$', 'RS ')}
                   </div>
                   <div className="text-sm text-gray-600">Total Value</div>
                 </div>
