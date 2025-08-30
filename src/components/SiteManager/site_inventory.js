@@ -16,10 +16,10 @@ const SiteInventory = () => {
     },
     {
       title: 'Manage Site Equipment',
-      description: 'Monitor and maintain equipment inventory',
+      description: 'Browse, request, and track equipment for your projects',
       icon: Settings,
       iconBg: 'bg-gradient-to-br from-web_yellow to-web_yellow/90',
-      route: '/site-equipment-info',
+      route: '/site-manager/project-selection', // Updated route to project selection
       hoverClass: 'hover:border-web_yellow/40 hover:shadow-lg'
     }
   ];
