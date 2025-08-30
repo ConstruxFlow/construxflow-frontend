@@ -1,6 +1,13 @@
 import { useEffect, useState } from "react";
-import { Calendar, ChevronDown, Upload, Plus, Settings, Wrench } from "lucide-react";
-import { useNavigate } from "react-router-dom";
+import {
+  Calendar,
+  ChevronDown,
+  Upload,
+  Plus,
+  Settings,
+  Wrench,
+} from "lucide-react";
+import { useNavigate, useParams } from "react-router-dom";
 import NavBar from "../../components/NavBar";
 import TeamSection from "../../components/MaintenanceHead/TeamSection";
 import LoadingOverlay from "../../components/LoadingOverlay";
@@ -46,9 +53,11 @@ export default function ScheduleMaintenanceAndRequestMaterials() {
 
   const [showTeam, setShowTeam] = useState(false);
   const navigation = useNavigate();
+  const { equipmentId } = useParams(); // Get equipment ID from URL
   const [isLoggedIn, setIsLoggedIn] = useState(false);
   const [equipdata, setEquipmentData] = useState([]);
   const [loadingProgress, setLoadingProgress] = useState(0);
+  const [selectedEquipmentData, setSelectedEquipmentData] = useState(null); // Store selected equipment data
 
   // Unit options
   const unitOptions = [
@@ -174,7 +183,10 @@ export default function ScheduleMaintenanceAndRequestMaterials() {
         urgencyLevel: urgencyLevel.toUpperCase(),
       };
 
-      console.log("Sending Request Body:", JSON.stringify(requestBody, null, 2));
+      console.log(
+        "Sending Request Body:",
+        JSON.stringify(requestBody, null, 2)
+      );
 
       setLoadingProgress(50);
 
@@ -212,6 +224,37 @@ export default function ScheduleMaintenanceAndRequestMaterials() {
     };
     fetchData();
   }, []);
+
+  // Effect to fetch specific equipment data and auto-populate form when equipmentId is provided
+  useEffect(() => {
+    if (equipmentId && equipdata.length > 0) {
+      const fetchEquipmentById = async () => {
+        try {
+          const response = await fetch(
+            `http://localhost:8080/api/equipment/by-id?id=${equipmentId}`
+          );
+          if (!response.ok) {
+            throw new Error("Failed to fetch equipment details");
+          }
+          const equipmentDetails = await response.json();
+          setSelectedEquipmentData(equipmentDetails);
+
+          // Auto-populate form fields
+          setEquipmentType(equipmentDetails.type || "");
+          setEquipment(equipmentDetails.id.toString());
+
+          toast.success(
+            `Equipment ${equipmentDetails.name} selected for scheduling`
+          );
+        } catch (err) {
+          toast.error("Failed to load equipment details");
+          console.error("Equipment fetch error:", err);
+        }
+      };
+
+      fetchEquipmentById();
+    }
+  }, [equipmentId, equipdata]);
 
   // Reset form function
   const resetForm = () => {
@@ -257,18 +300,17 @@ export default function ScheduleMaintenanceAndRequestMaterials() {
     <>
       <NavBar
         profileURL="/maintenance/profile"
-        links={navLinks.map(link => ({
+        links={navLinks.map((link) => ({
           ...link,
-          onClick: link.name === "Team" ? () => setShowTeam(true) : () => navigation(link.href)
+          onClick:
+            link.name === "Team"
+              ? () => setShowTeam(true)
+              : () => navigation(link.href),
         }))}
-
       />
-      
+
       {isLoading && (
-        <LoadingOverlay
-          progress={loadingProgress}
-          message="Processing..."
-        />
+        <LoadingOverlay progress={loadingProgress} message="Processing..." />
       )}
 
       <div className="bg-purewhite min-h-screen">
@@ -279,7 +321,14 @@ export default function ScheduleMaintenanceAndRequestMaterials() {
               Schedule Maintenance and Request Materials
             </h1>
             <p className="text-slatebluegray text-base">
-              Manage equipment maintenance schedules and request inventory materials
+              Manage equipment maintenance schedules and request inventory
+              materials
+              {selectedEquipmentData && (
+                <span className="block mt-1 text-deep_green font-medium">
+                  ✓ Pre-selected: {selectedEquipmentData.name} (
+                  {selectedEquipmentData.type})
+                </span>
+              )}
             </p>
           </div>
 
@@ -297,14 +346,22 @@ export default function ScheduleMaintenanceAndRequestMaterials() {
                 <div className="w-10 h-10 bg-gradient-to-br from-deep_green to-deep_green/80 rounded-xl flex items-center justify-center shadow-lg">
                   <Calendar className="w-5 h-5 text-white" />
                 </div>
-                <h2 className="text-lg font-semibold text-main_dark">Schedule Maintenance</h2>
+                <h2 className="text-lg font-semibold text-main_dark">
+                  Schedule Maintenance
+                </h2>
               </div>
 
               <form className="space-y-6">
                 {/* Equipment Type */}
                 <div>
                   <label className="block text-sm font-medium text-slatebluegray mb-2">
-                    Select Equipment Type <span className="text-red-500">*</span>
+                    Select Equipment Type{" "}
+                    <span className="text-red-500">*</span>
+                    {selectedEquipmentData && (
+                      <span className="text-deep_green text-xs ml-2">
+                        (Pre-selected from equipment log)
+                      </span>
+                    )}
                   </label>
                   <div className="relative">
                     <select
@@ -332,6 +389,11 @@ export default function ScheduleMaintenanceAndRequestMaterials() {
                 <div>
                   <label className="block text-sm font-medium text-slatebluegray mb-2">
                     Select Equipment <span className="text-red-500">*</span>
+                    {selectedEquipmentData && (
+                      <span className="text-deep_green text-xs ml-2">
+                        (Pre-selected from equipment log)
+                      </span>
+                    )}
                   </label>
                   <div className="relative">
                     <select
@@ -455,7 +517,9 @@ export default function ScheduleMaintenanceAndRequestMaterials() {
                 <div className="w-10 h-10 bg-gradient-to-br from-web_yellow to-web_yellow/80 rounded-xl flex items-center justify-center shadow-lg">
                   <Upload className="w-5 h-5 text-main_dark" />
                 </div>
-                <h2 className="text-lg font-semibold text-main_dark">Request Inventory Materials</h2>
+                <h2 className="text-lg font-semibold text-main_dark">
+                  Request Inventory Materials
+                </h2>
               </div>
 
               <form className="space-y-6">
@@ -466,7 +530,10 @@ export default function ScheduleMaintenanceAndRequestMaterials() {
                   </label>
                   <div className="space-y-4">
                     {materialItems.map((item, index) => (
-                      <div key={item.id} className="p-4 bg-gray-50 rounded-lg border border-gray-200">
+                      <div
+                        key={item.id}
+                        className="p-4 bg-gray-50 rounded-lg border border-gray-200"
+                      >
                         <div className="text-xs text-slatebluegray font-medium mb-2">
                           Item #{item.id}
                         </div>
