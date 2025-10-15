@@ -90,6 +90,7 @@ import AdminProjectDetails from "./pages/Admin/AdminProjectDetails";
 import ManagerReg from "./pages/Admin/ManagerReg";
 import InventoryProfile from "./pages/InventoryManager/ManagerProfile";
 import InventoryRequests from "./pages/InventoryManager/InventoryRequests";
+import UpdateInventory from "./pages/InventoryManager/UpdateInventory";
 
 
 
@@ -376,7 +377,10 @@ import InventoryRequests from "./pages/InventoryManager/InventoryRequests";
   path: "/Inventory-requests",
   element: <InventoryRequests />,
 },
-
+{
+  path: "/update-inventory",
+  element: <UpdateInventory />,
+},
 
 ReorderMaterialPage
 

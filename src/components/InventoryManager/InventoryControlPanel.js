@@ -1,6 +1,6 @@
 import React from 'react';
 import { useNavigate } from 'react-router-dom';
-import { Plus, Package, Settings, Wrench, BarChart3, AlertTriangle, FileText, Calendar, Users, TrendingUp } from 'lucide-react';
+import { Plus, Package, Settings, RefreshCcw, Trash2,Wrench, BarChart3, AlertTriangle, FileText, Calendar, Users, TrendingUp } from 'lucide-react';
 
 const InventoryControlPanel = () => {
   const navigate = useNavigate();
@@ -21,7 +21,24 @@ const InventoryControlPanel = () => {
       iconBg: 'bg-gradient-to-br from-web_yellow to-web_yellow/80',
       route: '/add-material',
       hoverClass: 'hover:border-web_yellow/30'
-    }
+    },
+    
+    {
+      title: 'Update Inventory',
+      description: 'Modify quantities, replace old items, or adjust stock details for existing materials.',
+      icon: RefreshCcw,
+      iconBg: 'bg-gradient-to-br from-web_yellow to-web_yellow/80',
+      route: '/update-inventory',
+      hoverClass: 'hover:border-web_yellow/30'
+    },
+    {
+      title: 'Delete Item',
+      description: 'Remove outdated, damaged, or unnecessary materials from your inventory records.',
+      icon: Trash2,
+      iconBg: 'bg-gradient-to-br from-red-500 to-red-400',
+      route: '/delete-item',
+      hoverClass: 'hover:border-red-400/30'
+    },
   ];
 
   const inventoryFeatures = [

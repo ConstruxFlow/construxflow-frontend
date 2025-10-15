@@ -27,6 +27,7 @@ const EquipmentForm = ({ onSubmit }) => {
     brand: '',
     model: '',
     serialNumber: '',
+    quantity: 1,
     condition: '',
     purchaseDate: '',
     purchaseSource: '',
@@ -65,6 +66,7 @@ const EquipmentForm = ({ onSubmit }) => {
         brand: formData.brand || null,
         model: formData.model || null,
         serialNumber: formData.serialNumber || null,
+        quantity: formData.quantity === '' ? 1 : Number(formData.quantity),
         condition: formData.condition || null,
         purchaseDate: formData.purchaseDate || null,
         purchaseSource: formData.purchaseSource || null,
@@ -109,6 +111,7 @@ const EquipmentForm = ({ onSubmit }) => {
       brand: '',
       model: '',
       serialNumber: '',
+      quantity: 1,
       condition: '',
       purchaseDate: '',
       purchaseSource: '',
@@ -169,6 +172,22 @@ const EquipmentForm = ({ onSubmit }) => {
                   onChange={handleChange}
                   className="w-full px-4 py-3 border border-gray-300 rounded-lg focus:outline-none focus:ring-2 focus:ring-web_yellow focus:border-transparent transition-all duration-150"
                   placeholder="Enter equipment name"
+                  required
+                />
+              </div>
+
+              <div>
+                <label className="block text-sm font-medium text-slatebluegray mb-2">
+                  Quantity
+                </label>
+                <input
+                  type="number"
+                  name="quantity"
+                  value={formData.quantity}
+                  onChange={handleChange}
+                  className="w-full px-4 py-3 border border-gray-300 rounded-lg focus:outline-none focus:ring-2 focus:ring-web_yellow focus:border-transparent transition-all duration-150"
+                  placeholder="Enter quantity"
+                  min="1"
                   required
                 />
               </div>
