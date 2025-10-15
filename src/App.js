@@ -89,6 +89,9 @@ import AdminProjectsList from "./pages/Admin/AdminProjectsList";
 import AdminProjectDetails from "./pages/Admin/AdminProjectDetails";
 import ManagerReg from "./pages/Admin/ManagerReg";
 import InventoryProfile from "./pages/InventoryManager/ManagerProfile";
+import InventoryRequests from "./pages/InventoryManager/InventoryRequests";
+import UpdateInventory from "./pages/InventoryManager/UpdateInventory";
+
 
 
   export const routes = createBrowserRouter([
@@ -370,6 +373,14 @@ import InventoryProfile from "./pages/InventoryManager/ManagerProfile";
   element: <InventoryProfile />,
 },
 
+{
+  path: "/Inventory-requests",
+  element: <InventoryRequests />,
+},
+{
+  path: "/update-inventory",
+  element: <UpdateInventory />,
+},
 
 ReorderMaterialPage
 

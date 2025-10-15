@@ -87,7 +87,7 @@ const InventoryMonitoring = () => {
   const goodStockItems = inventoryData.filter(item => item.status === 'Good').length;
 
   useEffect(() => {
-  axios.get('http://localhost:8080/api/inventory/all')
+  axios.get('http://localhost:8080/api/materials/all')
     .then(response => {
       setInventoryData(response.data);
     })
