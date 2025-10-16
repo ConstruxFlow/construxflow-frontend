@@ -706,13 +706,8 @@ const SubmitQuotation = () => {
             )}
           </section>
 
-<<<<<<< HEAD
           {/* Quotation Summary - UPDATED */}
           <section className="bg-light_gray rounded-lg p-6 mb-6">
-=======
-          {/* Quotation Summary */}
-          <section className="bg-light_gray rounded-lg p-4 sm:p-6 mb-6">
->>>>>>> 2d09f9b8af1524338a63d5631b4d951d8ead307c
             <div className="font-semibold text-main_dark mb-4">
               Quotation Summary
             </div>
