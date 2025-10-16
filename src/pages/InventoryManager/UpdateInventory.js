@@ -1,6 +1,6 @@
 import React, { useState } from 'react';
 import NavBar from '../../components/NavBar';
-import { Search, Package, Warehouse, AlertTriangle } from 'lucide-react';
+import { Search, Package, Warehouse, AlertTriangle, Trash2 } from 'lucide-react';
 
 const navLinks = [
   { name: 'Dashboard', href: '/inventory-dashboard' },
@@ -17,10 +17,12 @@ const UpdateInventory = () => {
   const [stockChange, setStockChange] = useState('');
   const [action, setAction] = useState('add');
   const [isLoading, setIsLoading] = useState(false);
+  const [isDeleting, setIsDeleting] = useState(false);
   const [searchResults, setSearchResults] = useState([]);
   const [showResults, setShowResults] = useState(false);
+  const [showDeleteModal, setShowDeleteModal] = useState(false);
 
-  // Handle search for items
+  // Search function (existing)
   const handleSearch = async () => {
     if (!type || !searchTerm.trim()) {
       alert('Please select a type and enter a search term');
@@ -52,19 +54,19 @@ const UpdateInventory = () => {
     }
   };
 
-  // Handle item selection from search results
+  // Select item function (existing)
   const handleSelectItem = (item) => {
     setSelectedItem({
       id: item.id,
       name: item.name,
       stock: type === 'equipment' ? item.quantity : item.quantityInStock,
-      currentData: item // Keep the full item data for reference
+      currentData: item
     });
     setShowResults(false);
-    setSearchTerm(item.name); // Show the selected item name in search box
+    setSearchTerm(item.name);
   };
 
-  // Handle save/update inventory
+  // Save/Update function (existing)
   const handleSave = async () => {
     if (!selectedItem || !stockChange || parseInt(stockChange) <= 0) {
       alert('Please select an item and enter a valid quantity');
@@ -102,12 +104,7 @@ const UpdateInventory = () => {
       
       alert(`✅ ${selectedItem.name} updated successfully!\nNew stock: ${result.newStock}`);
 
-      // Reset form
-      setSelectedItem(null);
-      setStockChange('');
-      setSearchTerm('');
-      setSearchResults([]);
-      setShowResults(false);
+      handleReset();
     } catch (error) {
       console.error('Update error:', error);
       alert('Error updating inventory: ' + error.message);
@@ -116,18 +113,108 @@ const UpdateInventory = () => {
     }
   };
 
-  // Reset the form
+  // ✅ NEW: Delete item function
+  const handleDelete = async () => {
+    if (!selectedItem) return;
+
+    setIsDeleting(true);
+    try {
+      const response = await fetch(
+        `http://localhost:8080/api/inventory/delete?type=${type}&id=${selectedItem.id}`,
+        {
+          method: 'DELETE',
+        }
+      );
+
+      if (!response.ok) {
+        const errorText = await response.text();
+        throw new Error(errorText || 'Delete failed');
+      }
+      
+      const result = await response.json();
+      
+      alert(`🗑️ ${selectedItem.name} deleted successfully!`);
+      setShowDeleteModal(false);
+      handleReset();
+    } catch (error) {
+      console.error('Delete error:', error);
+      alert('Error deleting item: ' + error.message);
+    } finally {
+      setIsDeleting(false);
+    }
+  };
+
+  // Reset form function
   const handleReset = () => {
     setSelectedItem(null);
     setStockChange('');
     setSearchTerm('');
     setSearchResults([]);
     setShowResults(false);
+    setShowDeleteModal(false);
+  };
+
+  // Open delete confirmation modal
+  const openDeleteModal = () => {
+    setShowDeleteModal(true);
+  };
+
+  // Close delete confirmation modal
+  const closeDeleteModal = () => {
+    setShowDeleteModal(false);
   };
 
   return (
     <div className="bg-gray-50 min-h-screen">
       <NavBar links={navLinks} logoSrc="/logo1.png" />
+
+      {/* Delete Confirmation Modal */}
+      {showDeleteModal && (
+        <div className="fixed inset-0 bg-black bg-opacity-50 flex items-center justify-center z-50 p-4">
+          <div className="bg-white rounded-2xl p-6 max-w-md w-full">
+            <div className="flex items-center gap-3 mb-4">
+              <div className="w-10 h-10 bg-red-100 rounded-full flex items-center justify-center">
+                <Trash2 className="w-5 h-5 text-red-600" />
+              </div>
+              <h3 className="text-lg font-semibold text-gray-900">Confirm Deletion</h3>
+            </div>
+            
+            <p className="text-gray-600 mb-2">
+              Are you sure you want to delete <strong>"{selectedItem?.name}"</strong>?
+            </p>
+            <p className="text-sm text-red-600 mb-6">
+              ⚠️ This action cannot be undone. All data for this item will be permanently removed.
+            </p>
+            
+            <div className="flex gap-3">
+              <button
+                onClick={closeDeleteModal}
+                className="flex-1 bg-gray-300 text-gray-700 font-semibold py-2 px-4 rounded-lg hover:bg-gray-400 transition-colors"
+                disabled={isDeleting}
+              >
+                Cancel
+              </button>
+              <button
+                onClick={handleDelete}
+                disabled={isDeleting}
+                className="flex-1 bg-red-600 text-white font-semibold py-2 px-4 rounded-lg hover:bg-red-700 transition-colors disabled:opacity-50 flex items-center justify-center gap-2"
+              >
+                {isDeleting ? (
+                  <>
+                    <div className="animate-spin rounded-full h-4 w-4 border-b-2 border-white"></div>
+                    Deleting...
+                  </>
+                ) : (
+                  <>
+                    <Trash2 className="w-4 h-4" />
+                    Delete
+                  </>
+                )}
+              </button>
+            </div>
+          </div>
+        </div>
+      )}
 
       <div className="max-w-4xl mx-auto px-4 py-8">
         {/* Header */}
@@ -153,7 +240,7 @@ const UpdateInventory = () => {
                 value={type}
                 onChange={(e) => {
                   setType(e.target.value);
-                  handleReset(); // Reset when type changes
+                  handleReset();
                 }}
                 className="w-full border border-gray-300 rounded-lg p-3 focus:outline-none focus:ring-2 focus:ring-web_yellow focus:border-transparent transition-all duration-200"
               >
@@ -219,10 +306,20 @@ const UpdateInventory = () => {
             {/* Step 3: Selected Item Details */}
             {selectedItem && (
               <div className="mb-8 p-6 border-2 border-green-200 rounded-xl bg-green-50">
-                <label className="block text-lg font-semibold text-gray-800 mb-4 flex items-center gap-2">
-                  <Warehouse className="w-5 h-5 text-green-600" />
-                  3. Item Details
-                </label>
+                <div className="flex justify-between items-start mb-4">
+                  <label className="block text-lg font-semibold text-gray-800 flex items-center gap-2">
+                    <Warehouse className="w-5 h-5 text-green-600" />
+                    3. Item Details
+                  </label>
+                  {/* ✅ DELETE BUTTON */}
+                  <button
+                    onClick={openDeleteModal}
+                    className="flex items-center gap-2 bg-red-100 text-red-700 px-4 py-2 rounded-lg hover:bg-red-200 transition-colors duration-200"
+                  >
+                    <Trash2 className="w-4 h-4" />
+                    Delete Item
+                  </button>
+                </div>
                 <div className="grid grid-cols-1 md:grid-cols-2 gap-4">
                   <div>
                     <p className="text-gray-700">
@@ -261,7 +358,6 @@ const UpdateInventory = () => {
                   4. Update Stock
                 </label>
 
-                {/* Action Selection */}
                 <div className="grid grid-cols-1 md:grid-cols-2 gap-6">
                   <div>
                     <label className="block text-sm font-medium text-gray-700 mb-2">
@@ -292,7 +388,6 @@ const UpdateInventory = () => {
                   </div>
                 </div>
 
-                {/* Preview Calculation */}
                 {stockChange && parseInt(stockChange) > 0 && (
                   <div className="p-4 bg-blue-50 border border-blue-200 rounded-lg">
                     <p className="text-blue-800 font-medium">
@@ -311,7 +406,6 @@ const UpdateInventory = () => {
                   </div>
                 )}
 
-                {/* Action Buttons */}
                 <div className="flex gap-4 pt-4">
                   <button
                     onClick={handleReset}
@@ -338,70 +432,6 @@ const UpdateInventory = () => {
                 </div>
               </div>
             )}
-          </div>
-        </div>
-
-        {/* Information Cards */}
-        <div className="grid grid-cols-1 md:grid-cols-3 gap-6 mt-8">
-          <div className="bg-white rounded-xl p-6 shadow-lg border border-gray-200">
-            <div className="flex items-center mb-4">
-              <div className="w-12 h-12 bg-gradient-to-br from-blue-500 to-blue-600 rounded-xl flex items-center justify-center shadow-lg mr-4">
-                <Package className="w-6 h-6 text-white" />
-              </div>
-              <h3 className="font-bold text-gray-900">Real-time Updates</h3>
-            </div>
-            <p className="text-gray-600 text-sm">
-              All inventory changes are immediately synchronized with the central database and reflected across the system.
-            </p>
-          </div>
-
-          <div className="bg-white rounded-xl p-6 shadow-lg border border-gray-200">
-            <div className="flex items-center mb-4">
-              <div className="w-12 h-12 bg-gradient-to-br from-green-500 to-green-600 rounded-xl flex items-center justify-center shadow-lg mr-4">
-                <Warehouse className="w-6 h-6 text-white" />
-              </div>
-              <h3 className="font-bold text-gray-900">Stock Control</h3>
-            </div>
-            <p className="text-gray-600 text-sm">
-              Maintain optimal stock levels with easy add/remove functionality. Prevent stockouts and overstocking.
-            </p>
-          </div>
-
-          <div className="bg-white rounded-xl p-6 shadow-lg border border-gray-200">
-            <div className="flex items-center mb-4">
-              <div className="w-12 h-12 bg-gradient-to-br from-orange-500 to-orange-600 rounded-xl flex items-center justify-center shadow-lg mr-4">
-                <AlertTriangle className="w-6 h-6 text-white" />
-              </div>
-              <h3 className="font-bold text-gray-900">Audit Trail</h3>
-            </div>
-            <p className="text-gray-600 text-sm">
-              Every inventory change is logged with timestamp and details for complete audit compliance and tracking.
-            </p>
-          </div>
-        </div>
-
-        {/* Quick Stats */}
-        <div className="mt-8 bg-white rounded-xl p-6 shadow-lg border border-gray-200">
-          <h3 className="font-bold text-gray-900 mb-4">Quick Actions</h3>
-          <div className="grid grid-cols-1 md:grid-cols-2 gap-4">
-            <div className="p-4 border border-gray-200 rounded-lg hover:border-web_yellow transition-colors duration-200">
-              <h4 className="font-semibold text-gray-800 mb-2">Need to Add Multiple Items?</h4>
-              <p className="text-gray-600 text-sm mb-3">
-                Use batch import for adding multiple inventory items at once.
-              </p>
-              <button className="text-web_yellow font-medium text-sm hover:underline">
-                Open Batch Import →
-              </button>
-            </div>
-            <div className="p-4 border border-gray-200 rounded-lg hover:border-web_yellow transition-colors duration-200">
-              <h4 className="font-semibold text-gray-800 mb-2">Low Stock Alerts</h4>
-              <p className="text-gray-600 text-sm mb-3">
-                View items that are running low and need reordering.
-              </p>
-              <button className="text-web_yellow font-medium text-sm hover:underline">
-                Check Low Stock Items →
-              </button>
-            </div>
           </div>
         </div>
       </div>
