@@ -28,6 +28,7 @@ const SubmitQuotation = () => {
     { item: "", quantity: "", unitPrice: "" },
   ]);
   const [advancedPayment, setAdvancedPayment] = useState("");
+  const [isPercentage, setIsPercentage] = useState(false); // New state for percentage toggle
   const [deliveries, setDeliveries] = useState([
     {
       requiredDate: "",
@@ -80,15 +81,6 @@ const SubmitQuotation = () => {
               deliveryDate: delivery.deliveryDate,
             }))
           );
-
-          // setDeliveries([
-          //   {
-          //     requiredDate: "",
-          //     deliveryLocation: "",
-          //     shippingCost: "",
-          //     deliveryDate: reqDate,
-          //   },
-          // ]);
         }
       })
       .catch((err) => {
@@ -96,8 +88,6 @@ const SubmitQuotation = () => {
         console.error(err);
       });
   }, [id]);
-  // console.log(requestSummary);
-  // console.log(itemsRequested);
 
   const handlePricingChange = (idx, e) => {
     const { name, value } = e.target;
@@ -133,6 +123,7 @@ const SubmitQuotation = () => {
     setAttachments(Array.from(e.target.files));
   };
 
+  // Updated calculations with percentage support
   const subtotal = pricing.reduce(
     (sum, item) =>
       sum +
@@ -143,6 +134,12 @@ const SubmitQuotation = () => {
     (sum, d) => sum + parseFloat(d.shippingCost || 0),
     0
   );
+
+  // Calculate advanced payment amount
+  const advancedPaymentAmount = isPercentage 
+    ? (parseFloat(advancedPayment || 0) / 100) * subtotal 
+    : parseFloat(advancedPayment || 0);
+
   const total = subtotal + totalShipping;
 
   const handleSubmit = async (e) => {
@@ -185,6 +182,7 @@ const SubmitQuotation = () => {
       setLoading(false);
       return;
     }
+
     const invalidDeliveryDates = deliveries.some((d) => {
       const deliveryDate = new Date(d.requiredDate);
       const requiredDate = new Date(d.deliveryDate);
@@ -200,6 +198,16 @@ const SubmitQuotation = () => {
 
     if (!paymentTerms) {
       toast.error("Please select payment terms.");
+      setIsLoading(false);
+      setLoading(false);
+      return;
+    }
+
+    // Validate percentage range
+    if (isPercentage && (parseFloat(advancedPayment || 0) < 0 || parseFloat(advancedPayment || 0) > 100)) {
+      toast.error("Percentage must be between 0 and 100.");
+      setIsLoading(false);
+      setLoading(false);
       return;
     }
 
@@ -208,7 +216,8 @@ const SubmitQuotation = () => {
     setLoading(true);
     const payload = {
       quotationRequestId: id,
-      advancedPayment: parseFloat(advancedPayment || 0),
+      advancedPayment: advancedPaymentAmount, // Use calculated amount
+      advancedPaymentPercentage: isPercentage ? parseFloat(advancedPayment || 0) : null, // Store percentage if applicable
       paymentTerms,
       notes,
       totalAmount: total,
@@ -232,7 +241,6 @@ const SubmitQuotation = () => {
       })),
     };
     setLoadingProgress(50);
-    // console.log("Submitting payload:", payload);
 
     try {
       const res = await fetch("http://localhost:8080/api/quotations/create", {
@@ -255,6 +263,7 @@ const SubmitQuotation = () => {
       navigate("/supplier/quotations");
       setPricing([{ item: "", quantity: "", unitPrice: "" }]);
       setAdvancedPayment("");
+      setIsPercentage(false);
       setDeliveries([
         {
           requiredDate: "",
@@ -275,8 +284,6 @@ const SubmitQuotation = () => {
     }
   };
 
-  // console.log(deliveries);
-
   return (
     <div className="bg-[#f6f7f9] min-h-screen font-poppins">
       <NavBar
@@ -288,7 +295,7 @@ const SubmitQuotation = () => {
       {isLoading && (
         <LoadingOverlay
           progress={loadingProgress}
-          message="Registering supplier details..."
+          message="Submitting quotation details..."
         />
       )}
 
@@ -376,11 +383,6 @@ const SubmitQuotation = () => {
             </div>
           </div>
         )}
-
-        {/* ✅ FORM START (keep all your existing section components from previous code) */}
-
-        {/* CUT: Pricing / Advanced Payment / Delivery / Terms / Notes / Attachments / Quotation Summary */}
-        {/* ✅ Already included in your previous code. You can paste that code after this summary block and it will work. */}
 
         <form onSubmit={handleSubmit}>
           {/* Pricing Information */}
@@ -477,30 +479,67 @@ const SubmitQuotation = () => {
             </div>
           </section>
 
-          {/* Advanced Payment Information */}
+          {/* Advanced Payment Information - UPDATED */}
           <section className="bg-purewhite border border-light_gray rounded-lg p-6 mb-6">
             <div className="font-semibold text-main_dark mb-4">
               Advanced Payment Information
             </div>
+            
+            {/* Toggle between Amount and Percentage */}
+            <div className="mb-4">
+              <div className="flex items-center gap-4">
+                <label className="flex items-center">
+                  <input
+                    type="radio"
+                    name="paymentType"
+                    checked={!isPercentage}
+                    onChange={() => setIsPercentage(false)}
+                    className="mr-2"
+                  />
+                  <span className="text-sm text-main_dark">Fixed Amount</span>
+                </label>
+                <label className="flex items-center">
+                  <input
+                    type="radio"
+                    name="paymentType"
+                    checked={isPercentage}
+                    onChange={() => setIsPercentage(true)}
+                    className="mr-2"
+                  />
+                  <span className="text-sm text-main_dark">Percentage of Total</span>
+                </label>
+              </div>
+            </div>
+
             <div>
               <label className="block text-sm text-slatebluegray mb-1">
-                Advanced Payment Amount
+                Advanced Payment {isPercentage ? 'Percentage' : 'Amount'}
               </label>
               <div className="relative">
                 <span className="absolute left-3 top-1/2 -translate-y-1/2 text-slatebluegray">
-                  $
+                  {isPercentage ? '%' : '$'}
                 </span>
                 <input
                   type="number"
                   name="advancedPayment"
                   value={advancedPayment}
                   onChange={(e) => setAdvancedPayment(e.target.value)}
-                  placeholder="0.00"
+                  placeholder={isPercentage ? "0" : "0.00"}
                   className="w-full border border-light_gray rounded-lg pl-7 pr-3 py-2 text-main_dark focus:outline-none"
                   min="0"
-                  step="0.01"
+                  max={isPercentage ? "100" : undefined}
+                  step={isPercentage ? "1" : "0.01"}
                 />
               </div>
+              
+              {/* Show calculated amount if percentage is selected */}
+              {isPercentage && advancedPayment && (
+                <div className="mt-2 text-sm text-slatebluegray">
+                  Calculated Amount: <span className="font-medium text-main_dark">
+                    ${((parseFloat(advancedPayment) / 100) * subtotal).toFixed(2)}
+                  </span>
+                </div>
+              )}
             </div>
           </section>
 
@@ -619,7 +658,6 @@ const SubmitQuotation = () => {
                 <option value="">Select payment terms</option>
                 <option value="Net 30">Net 30</option>
                 <option value="Net 60">Net 60</option>
-                {/* <option value="Advance">Advance</option> */}
               </select>
             </div>
           </section>
@@ -679,7 +717,7 @@ const SubmitQuotation = () => {
             )}
           </section>
 
-          {/* Quotation Summary */}
+          {/* Quotation Summary - UPDATED */}
           <section className="bg-light_gray rounded-lg p-6 mb-6">
             <div className="font-semibold text-main_dark mb-4">
               Quotation Summary
@@ -693,15 +731,25 @@ const SubmitQuotation = () => {
                 <span>Shipping:</span>
                 <span>${totalShipping.toFixed(2)}</span>
               </div>
-              {/* <div className="flex justify-between">
-                <span>Tax:</span>
-                <span>$0.00</span>
-              </div> */}
+              {advancedPaymentAmount > 0 && (
+                <div className="flex justify-between text-deep_green">
+                  <span>
+                    Advanced Payment {isPercentage ? `(${advancedPayment}%)` : ''}:
+                  </span>
+                  <span>${advancedPaymentAmount.toFixed(2)}</span>
+                </div>
+              )}
               <hr className="border-gray-300 my-2" />
               <div className="flex justify-between font-bold text-lg">
                 <span>Total:</span>
                 <span className="text-web_yellow">${total.toFixed(2)}</span>
               </div>
+              {advancedPaymentAmount > 0 && (
+                <div className="flex justify-between text-sm text-slatebluegray">
+                  <span>Remaining Amount:</span>
+                  <span>${(total - advancedPaymentAmount).toFixed(2)}</span>
+                </div>
+              )}
             </div>
           </section>
 
