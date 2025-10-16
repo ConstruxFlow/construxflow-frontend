@@ -311,8 +311,73 @@ const CreatePurchaseOrder = () => {
     return calculateSubtotal() + shippingTotal;
   };
 
+  const validateForm = () => {
+    let isValid = true;
+
+    // Validate supplier information
+    if (!orderData.supplier.supplier) {
+      toast.error("Supplier company name is required");
+      isValid = false;
+    }
+    if (!orderData.supplier.contactPerson) {
+      toast.error("Supplier contact person is required");
+      isValid = false;
+    }
+    if (!orderData.supplier.email || !/\S+@\S+\.\S+/.test(orderData.supplier.email)) {
+      toast.error("Valid supplier email is required");
+      isValid = false;
+    }
+    if (!orderData.supplier.phone) {
+      toast.error("Supplier phone number is required");
+      isValid = false;
+    }
+
+    // Validate order details
+    if (!orderData.order_date) {
+      toast.error("Order date is required");
+      isValid = false;
+    }
+
+    // Validate order items
+    const validMaterials = orderItems.filter(
+      (item) => item.material.material_id && parseFloat(item.quantity) > 0 && parseFloat(item.unitPrice) > 0
+    );
+    if (validMaterials.length === 0) {
+      toast.error("At least one valid order item is required (with material, quantity > 0, and unit price > 0)");
+      isValid = false;
+    }
+    orderItems.forEach((item) => {
+      if (item.material.material_id && (parseFloat(item.quantity) <= 0 || parseFloat(item.unitPrice) <= 0)) {
+        toast.error(`Invalid quantity or unit price for material ${item.material.material_id}`);
+        isValid = false;
+      }
+    });
+
+    // Validate delivery schedule
+    const validDeliveries = deliverySchedule.filter(
+      (item) => item.location && item.requiredDate && parseFloat(item.shippingCost) >= 0
+    );
+    if (validDeliveries.length === 0) {
+      toast.error("At least one valid delivery schedule is required (with location, required date, and shipping cost >= 0)");
+      isValid = false;
+    }
+    deliverySchedule.forEach((item) => {
+      if (item.location && item.requiredDate && parseFloat(item.shippingCost) < 0) {
+        toast.error(`Shipping cost cannot be negative for location ${item.location}`);
+        isValid = false;
+      }
+    });
+
+    return isValid;
+  };
+
   const handleSubmit = async (e) => {
     e.preventDefault();
+
+    if (!validateForm()) {
+      return;
+    }
+
     setIsLoading(true);
     setLoadingProgress(0);
 
@@ -342,8 +407,8 @@ const CreatePurchaseOrder = () => {
         additional_info: orderData.additional_info,
         subTotal: calculateTotal(),
         items: validMaterials.length,
-        material_req_id:quotationData.material_req_id,
-        projectId:quotationData.projectId,
+        material_req_id: quotationData.material_req_id,
+        projectId: quotationData.projectId,
         supplier: {
           supplier_id: orderData.supplier.supplier_id,
         },
@@ -388,7 +453,7 @@ const CreatePurchaseOrder = () => {
       {isLoading && <LoadingOverlay progress={loadingProgress} />}
 
       <NavBar
-      profileURL="/purchasing/profile"
+        profileURL="/purchasing/profile"
         links={[
           { name: "Dashboard", path: "/purchasing/dashboard" },
           {
@@ -664,7 +729,7 @@ const CreatePurchaseOrder = () => {
                           </td>
                           <td className="px-4 py-3">
                             <span className="font-medium text-main_dark">
-                              ${item.cost.toFixed(2)}
+                              RS {item.cost.toFixed(2)}
                             </span>
                           </td>
                           <td className="px-4 py-3">
@@ -817,13 +882,13 @@ const CreatePurchaseOrder = () => {
                   <div className="flex justify-between">
                     <span className="text-gray-600">Subtotal:</span>
                     <span className="font-medium text-main_dark">
-                      ${calculateSubtotal().toFixed(2)}
+                      RS {calculateSubtotal().toFixed(2)}
                     </span>
                   </div>
                   <div className="flex justify-between">
                     <span className="text-gray-600">Shipping:</span>
                     <span className="font-medium text-main_dark">
-                      $
+                      RS{" "}
                       {deliverySchedule
                         .reduce(
                           (sum, delivery) =>
@@ -839,7 +904,7 @@ const CreatePurchaseOrder = () => {
                       Total:
                     </span>
                     <span className="text-lg font-bold text-web_yellow">
-                      ${calculateTotal().toFixed(2)}
+                      RS {calculateTotal().toFixed(2)}
                     </span>
                   </div>
 

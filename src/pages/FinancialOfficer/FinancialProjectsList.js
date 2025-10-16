@@ -122,11 +122,11 @@ const FinancialProjectsList = () => {
 
   const checkBudgetRange = (budget, range) => {
     switch (range) {
-      case 'Under $50K': return budget < 50000;
-      case '$50K - $200K': return budget >= 50000 && budget < 200000;
-      case '$200K - $500K': return budget >= 200000 && budget < 500000;
-      case '$500K - $1M': return budget >= 500000 && budget < 1000000;
-      case 'Over $1M': return budget >= 1000000;
+      case 'Under RS 50K': return budget < 50000;
+      case 'RS 50K - 200K': return budget >= 50000 && budget < 200000;
+      case 'RS 200K - 500K': return budget >= 200000 && budget < 500000;
+      case 'RS 500K - 1M': return budget >= 500000 && budget < 1000000;
+      case 'Over RS 1M': return budget >= 1000000;
       default: return true;
     }
   };
@@ -173,7 +173,7 @@ const FinancialProjectsList = () => {
   const formatCurrency = (amount) => {
     return new Intl.NumberFormat("en-US", {
       style: "currency",
-      currency: "USD",
+      currency: "LKR",
     }).format(amount);
   };
 
@@ -209,7 +209,7 @@ const FinancialProjectsList = () => {
   const paginatedProjects = filteredProjects.slice(startIndex, startIndex + itemsPerPage);
 
   const statusOptions = ['All Status', 'not-started', 'in-progress', 'completed', 'on-hold', 'delayed'];
-  const budgetRanges = ['All Budgets', 'Under $50K', '$50K - $200K', '$200K - $500K', '$500K - $1M', 'Over $1M'];
+  const budgetRanges = ['All Budgets', 'Under RS 50K', 'RS 50K - 200K', 'RS 200K - 500K', 'RS 500K - 1M', 'Over RS 1M'];
 
   if (loading) {
     return (

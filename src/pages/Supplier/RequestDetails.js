@@ -72,21 +72,8 @@ const RequestDetails = () => {
       {/* NavBar */}
       <NavBar links={navLinks} profileURL="/supplier/profile" logoSrc="/logo1.png" />
       
-      {/* Page Title and Info Banner */}
-      {/* <div className="w-full bg-gradient-to-r from-slate-100 to-white px-6 md:px-16 pt-8 pb-4">
-        <div className="max-w-7xl mx-auto">
-          <h1 className="text-3xl font-black text-main_dark mb-2 tracking-tight">Material Request Details</h1>
-          <div className="flex items-center gap-3 mb-3">
-            <FiInfo className="text-blue-600 text-xl" />
-            <p className="text-slate-600 text-base font-medium">
-              Review all request information, materials and attachments. <span className="text-blue-700 font-semibold">Send quotations</span> or return to Requests anytime.
-            </p>
-          </div>
-        </div>
-      </div> */}
-
       {/* Breadcrumb */}
-      <div className="w-full max-w-full px-24 pt-7 pb-3 text-sm text-slatebluegray bg-purewhite">
+      <div className="w-full max-w-full px-4 sm:px-8 lg:px-24 pt-7 pb-3 text-sm text-slatebluegray bg-purewhite">
         <a href="/supplier/dashboard" className="hover:underline text-deep_green font-semibold">Dashboard</a>
         &nbsp;/&nbsp;
         <a href="/supplier/requests" className="hover:underline text-deep_green font-semibold">Requests</a>
@@ -97,8 +84,8 @@ const RequestDetails = () => {
       {/* Split Panel */}
       <div className="flex flex-col lg:flex-row gap-0 lg:gap-0 min-h-[calc(100vh-68px)] bg-purewhite">
         {/* --- Left Info Panel --- */}
-        <div className="flex-1 flex flex-col px-0 sm:px-6 md:px-1 py-4">
-          <div className="w-full max-w-full px-24 ml-0">
+        <div className="flex-1 flex flex-col px-4 sm:px-6 lg:px-1 py-4">
+          <div className="w-full max-w-full px-4 sm:px-8 lg:px-24 ml-0">
             {/* REQUEST HEADLINE */}
             <h2 className="text-main_dark text-xl sm:text-2xl font-bold mb-1 mt-0">
               Material Request #{request.id}
@@ -108,8 +95,8 @@ const RequestDetails = () => {
             </p>
             <div className="flex flex-wrap items-center gap-2 mb-5">
               <span className="inline-block bg-deep_green text-purewhite px-4 py-1 rounded-full text-sm font-medium ">{request.status}</span>
-              <span className="inline-flex  bg-web_yellow text-main_dark px-4 py-1 rounded-full text-sm font-medium gap-1">
-                 {request.priorityLevel}
+              <span className="inline-flex bg-web_yellow text-main_dark px-4 py-1 rounded-full text-sm font-medium gap-1">
+                {request.priorityLevel}
               </span>
               <span className="inline-block text-slatebluegray/70 text-xs">{formatDate(request.requestDate)}</span>
             </div>
@@ -150,15 +137,15 @@ const RequestDetails = () => {
             <div className="bg-purewhite border border-light_gray rounded-lg px-0 sm:px-4 py-2 sm:py-4 text-main_dark text-base mb-7">
               {request.quotationReqMaterials?.length > 0 ? (
                 request.quotationReqMaterials.map((mat, idx) => (
-                  <div key={idx} className="flex justify-between items-center py-4 px-2 border-b last:border-b-0">
-                    <div>
+                  <div key={idx} className="flex flex-col sm:flex-row justify-between items-start sm:items-center py-4 px-2 border-b last:border-b-0">
+                    <div className="mb-2 sm:mb-0">
                       <div className="font-semibold text-base">{mat.material?.materialName}</div>
                       <div className="text-xs text-slatebluegray">Type: {mat.material?.materialType}</div>
                       <div className="text-sm mt-2 text-slatebluegray">
                         Standard Unit Price: <span className="text-main_dark">{mat.unitPrice}</span>
                       </div>
                     </div>
-                    <div className="font-semibold text-main_dark text-lg text-right mr-5">
+                    <div className="font-semibold text-main_dark text-lg text-left sm:text-right mr-0 sm:mr-5">
                       {mat.quantity} <span className="font-light text-sm">{mat.material?.unitOfMeasurement}</span>
                     </div>
                   </div>
@@ -204,7 +191,7 @@ const RequestDetails = () => {
             <div className="bg-purewhite border border-light_gray rounded-lg px-0 sm:px-4 py-2 sm:py-4 text-main_dark text-sm flex flex-col gap-3 mb-7">
               {request.quotationReqDocs?.length > 0 ? (
                 request.quotationReqDocs.map((file, idx) => (
-                  <div key={idx} className="flex items-center gap-4 group rounded hover:bg-light_gray/50 p-2 transition">
+                  <div key={idx} className="flex flex-col sm:flex-row items-start sm:items-center gap-4 group rounded hover:bg-light_gray/50 p-2 transition">
                     <div className={`min-w-[38px] min-h-[38px] flex items-center justify-center rounded-md ${file.documentName.endsWith('.pdf') ? 'bg-red-100' : 'bg-blue-100'}`}>
                       {file.documentName.endsWith('.pdf') ? (
                         <span className="text-red-600 text-xl">📄</span>
@@ -212,7 +199,7 @@ const RequestDetails = () => {
                         <span className="text-blue-600 text-xl">🖼️</span>
                       )}
                     </div>
-                    <div className="flex-1 min-w-0">
+                    <div className="flex-1 min-w-0 mb-2 sm:mb-0">
                       <div className="font-bold truncate">{file.documentName}</div>
                       <div className="text-xs text-slatebluegray">{file.documentSize || ""}</div>
                     </div>
@@ -241,7 +228,7 @@ const RequestDetails = () => {
         </div>
 
         {/* --- Right Panel: Info/Quick Links/Branding --- */}
-        <div className="w-full lg:w-[390px] flex-shrink-0 px-2 sm:px-2 py-4 flex flex-col mr-14">
+        <div className="w-full lg:w-[390px] flex-shrink-0 px-4 sm:px-2 py-4 flex flex-col mr-0 lg:mr-14">
           <div className="sticky top-6">
             <div className="rounded-2xl border border-light_gray bg-white p-7 flex flex-col items-center mb-8">
               <div className="text-xl font-semibold text-main_dark mb-2 text-center mt-3">

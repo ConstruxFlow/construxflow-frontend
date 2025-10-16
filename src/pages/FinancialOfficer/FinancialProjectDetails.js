@@ -152,7 +152,7 @@ const FinancialProjectDetails = () => {
   const formatCurrency = (amount) => {
     return new Intl.NumberFormat("en-US", {
       style: "currency",
-      currency: "USD",
+      currency: "LKR",
     }).format(amount);
   };
 
@@ -232,10 +232,10 @@ const FinancialProjectDetails = () => {
       
       <NavBar
         links={[
-          { name: "Dashboard", path: "/financial/dashboard" },
-          { name: "Payment Approvals", path: "/financial/payment-approvals" },
-          { name: "Projects", path: "/financial/projects" },
-          { name: "Reports", path: "/financial/reports" },
+          { name: 'Dashboard', path: '/financial/dashboard' },
+          { name: 'Payment Approvals', path: '/financial/payment-list' },
+          { name: 'Purchase Orders', path: '/financial/purchase-order-list' },
+          { name: 'Projects', path: '/financial/financial-projects' },
         ]}
       />
 

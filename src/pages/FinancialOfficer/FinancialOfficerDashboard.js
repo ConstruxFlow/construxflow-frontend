@@ -318,7 +318,7 @@ const FinancialOfficerDashboard = () => {
   const formatCurrency = (amount) => {
     return new Intl.NumberFormat("en-US", {
       style: "currency",
-      currency: "USD",
+      currency: "LKR",
     }).format(amount);
   };
 
@@ -432,7 +432,7 @@ const FinancialOfficerDashboard = () => {
                 <div>
                   <p className="text-sm text-gray-600">Total Payment Value</p>
                   <p className="text-2xl font-bold text-main_dark">
-                    {formatCurrency(dashboardData.totalPaymentValue).replace('$', '$')}
+                    {formatCurrency(dashboardData.totalPaymentValue).replace('$', 'RS ')}
                   </p>
                 </div>
                 <div className="p-3 bg-blue-100 rounded-lg">
@@ -805,7 +805,7 @@ const FinancialOfficerDashboard = () => {
                     <span className="font-semibold text-main_dark">
                       {dashboardData.monthlyVolume > 0 
                         ? formatCurrency(dashboardData.totalPaymentValue / dashboardData.monthlyVolume)
-                        : '$0'}
+                        : 'RS 0'}
                     </span>
                   </div>
                   <div className="pt-4 border-t">

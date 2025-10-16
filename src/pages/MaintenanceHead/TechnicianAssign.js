@@ -76,6 +76,7 @@ export default function TechnicianAssignmentMain() {
     }, 200);
 
     const reqBody = {
+      equipmentId: equipment.equipmentId,
       equipmentSchedulingId: id,
       technicianIds: selectedTechs, // an array
       duration,
@@ -203,7 +204,6 @@ export default function TechnicianAssignmentMain() {
             onClick: () => navigation("/maintenance/add-member"),
           },
         ]}
-
       />
       {isLoading && (
         <LoadingOverlay progress={loadingProgress} message="Processing..." />
@@ -329,17 +329,19 @@ export default function TechnicianAssignmentMain() {
                   value=""
                   onChange={(e) => {
                     const selectedId = e.target.value;
-                    const selectedName = e.target.selectedOptions[0]?.text;
 
-                    if (!selectedTechs.includes(selectedId)) {
+                    // ✅ Only add if value exists and is not already selected
+                    if (selectedId && !selectedTechs.includes(selectedId)) {
                       setSelectedTechs([...selectedTechs, selectedId]);
                     }
+
+                    // ✅ Reset dropdown immediately after selection
+                    e.target.value = "";
                   }}
                 >
                   <option value="" disabled>
                     Select a technician...
                   </option>
-
                   {teamMembers
                     .filter(
                       (tech) =>
@@ -353,6 +355,7 @@ export default function TechnicianAssignmentMain() {
                     ))}
                 </select>
               </div>
+
               <div className="mt-2 flex flex-wrap gap-2">
                 {selectedTechs.map((techId) => {
                   const tech = teamMembers.find((t) => t.empId === techId);
@@ -360,7 +363,7 @@ export default function TechnicianAssignmentMain() {
                   return (
                     <span
                       key={techId}
-                      className="inline-flex items-center gap-2 bg-blue-100 text-blue-800 text-sm px-3 py-1 rounded-full"
+                      className="inline-flex items-center gap-2 bg-[#236571] text-white text-sm px-3 py-1 rounded-full"
                     >
                       {tech.name}
                       <button
@@ -370,9 +373,9 @@ export default function TechnicianAssignmentMain() {
                             selectedTechs.filter((id) => id !== techId)
                           )
                         }
-                        className="text-blue-800 hover:text-red-500"
+                        className="text-white hover:text-red-300 font-bold"
                       >
-                        &times;
+                        ×
                       </button>
                     </span>
                   );
@@ -447,7 +450,7 @@ export default function TechnicianAssignmentMain() {
                 type="button"
                 className="px-6 py-2 rounded-md border border-[#236571] text-[#236571] font-semibold bg-white hover:bg-gray-50 transition"
                 onClick={() => {
-                  setSelectedTechs("");
+                  setSelectedTechs([]); // ✅ Fixed: Use empty array instead of empty string
                   setDuration("1-2 hours");
                   setInstructions("");
                   setStartDate("");
@@ -458,10 +461,15 @@ export default function TechnicianAssignmentMain() {
               >
                 Cancel
               </button>
+
               <button
                 type="submit"
-                className="px-6 py-2 rounded-md bg-[#EFC11A] hover:bg-yellow-400 text-yellow-900 font-semibold flex items-center gap-2 shadow transition"
-                disabled={submitting}
+                className={`px-6 py-2 rounded-md font-semibold flex items-center gap-2 shadow transition ${
+                  selectedTechs.length === 0
+                    ? "bg-gray-300 text-gray-500 cursor-not-allowed"
+                    : "bg-[#EFC11A] hover:bg-yellow-400 text-yellow-900"
+                }`}
+                disabled={submitting || selectedTechs.length === 0}
               >
                 <UserPlus className="w-5 h-5" />
                 {submitting ? "Assigning..." : "Assign Technician"}

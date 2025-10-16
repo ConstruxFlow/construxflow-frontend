@@ -1,10 +1,12 @@
 // TeamSection.jsx
 import React, { useEffect, useState } from "react";
+import { useNavigate } from "react-router-dom";
 
 export default function TeamSection({ onClose }) {
   const [teamMembers, setTeamMembers] = useState([]);
   const [loading, setLoading] = useState(true);
   const [error, setError] = useState(null);
+  const navigate = useNavigate();
 
   useEffect(() => {
     fetch("http://localhost:8080/api/team/all")
@@ -85,6 +87,7 @@ export default function TeamSection({ onClose }) {
               <div
                 key={member.empId}
                 className="flex items-center px-2 py-2 rounded-lg hover:bg-gray-50 transition"
+                onClick={()=>navigate(`/maintenance/worker-profile/${member.empId}`)}
               >
                 <div className="w-10 h-10 rounded-full flex items-center justify-center font-bold text-lg bg-[#236571] text-white mr-3">
                   {getInitials(member.name)}

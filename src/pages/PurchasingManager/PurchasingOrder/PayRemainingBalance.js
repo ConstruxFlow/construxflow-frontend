@@ -168,7 +168,7 @@ const PayRemainingBalance = () => {
                   <div className="flex justify-between items-center">
                     <span className="text-gray-600">Total Order Amount</span>
                     <span className="font-semibold text-gray-900">
-                      ${orderData.totalAmount.toLocaleString()}
+                      RS {orderData.totalAmount.toLocaleString()}
                     </span>
                   </div>
 
@@ -180,7 +180,7 @@ const PayRemainingBalance = () => {
                       </p>
                     </div>
                     <span className="font-medium text-green-600">
-                      -${orderData.advancePaid.toLocaleString()}
+                      -RS {orderData.advancePaid.toLocaleString()}
                     </span>
                   </div>
 
@@ -188,7 +188,7 @@ const PayRemainingBalance = () => {
                     <div className="flex justify-between items-center">
                       <span className="font-medium text-gray-900">Remaining Balance</span>
                       <span className="text-2xl font-bold text-gray-900">
-                        ${orderData.remainingBalance.toLocaleString()}
+                        RS {orderData.remainingBalance.toLocaleString()}
                       </span>
                     </div>
                   </div>
@@ -401,7 +401,7 @@ const PayRemainingBalance = () => {
                   className="w-full bg-yellow-500 hover:bg-yellow-600 text-white font-medium py-3 px-4 rounded-lg transition-colors disabled:opacity-50 disabled:cursor-not-allowed flex items-center justify-center"
                 >
                   <MdPayment className="w-5 h-5 mr-2" />
-                  {loading ? 'Processing...' : `Pay Now - $${orderData.remainingBalance.toLocaleString()}`}
+                  {loading ? 'Processing...' : `Pay Now - RS ${orderData.remainingBalance.toLocaleString()}`}
                 </button>
 
                 <div className="flex gap-3 mt-4">

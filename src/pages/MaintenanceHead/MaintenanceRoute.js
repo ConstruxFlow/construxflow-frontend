@@ -25,52 +25,56 @@ export const MaintenanceRoute = {
       element: <MaintenanceDashboard />,
     },
     {
-        path: 'requests',
-        element: <MaintenanceMaterialRequest />,
+      path: "requests",
+      element: <MaintenanceMaterialRequest />,
     },
     {
-        path: 'tracker',
-        element: <MaintenanceRequestTracker />,
+      path: "tracker",
+      element: <MaintenanceRequestTracker />,
     },
     {
-        path: 'equipment',
-        element: <EquipmentLogContainer />,
+      path: "equipment",
+      element: <EquipmentLogContainer />,
     },
     {
-        path: 'log',
-        element: <ServiceHistoryContainer/>,
+      path: "log",
+      element: <ServiceHistoryContainer />,
     },
     {
-        path: 'technician-assignment/:id',
-        element: <TechnicianAssignmentMain/>,
+      path: "technician-assignment/:id",
+      element: <TechnicianAssignmentMain />,
     },
     {
-        path: 'upcoming-maintenance',
-        element: <NextScheduleContainer/>,
+      path: "upcoming-maintenance",
+      element: <NextScheduleContainer />,
     },
     {
-        path: 'task-complete/:id',
-        element: <TaskCompleteContainer/>,
+      path: "task-complete/:id",
+      element: <TaskCompleteContainer />,
     },
     {
-        path: 'worker-profile',
-        element: <WorkerProfile/>,
+      path: "worker-profile/:id",
+      element: <WorkerProfile />,
     },
     {
-        path: 'profile',
-        element: <ManagerProfileView/>,
+      path: "profile",
+      element: <ManagerProfileView />,
     },
     {
-        path: 'scheduling',
-        element: <ScheduleMaintenanceAndRequestMaterials/>,
+      path: "scheduling",
+      element: <ScheduleMaintenanceAndRequestMaterials />,
     },
     {
-        path: "update-equipment-maintenance",
-        element: <UpdateEquipmentMaintenance/>
+      path: "scheduling/:equipmentId",
+      element: <ScheduleMaintenanceAndRequestMaterials />,
     },
     {
-        path: "add-member",
-        element: <TeamMemberDetailsForm/>
-    }
+      path: "update-equipment-maintenance",
+      element: <UpdateEquipmentMaintenance />,
+    },
+    {
+      path: "add-member",
+      element: <TeamMemberDetailsForm />,
+    },
   ],
 };

@@ -25,8 +25,8 @@ const Profile = () => {
 
     const navigate = useNavigate();
 
-    // console.log("Supplier ID:");
-    
+  // console.log("Supplier ID:");
+  
   // Replace with actual supplier ID logic (from auth or route params)
   const supplierId = authState?.user?.supplierId;
   console.log("Supplier ID:", supplierId);
@@ -55,6 +55,7 @@ const Profile = () => {
 }, [supplierId]);
 
 
+
   if (loading) {
     return (
       <div className="min-h-screen bg-purewhite font-poppins flex items-center justify-center">
@@ -69,22 +70,22 @@ const Profile = () => {
     <div className="bg-purewhite min-h-screen font-poppins">
       <NavBar links={navLinks} profileURL="/supplier/profile" logoSrc="/logo1.png" />
 
-      <div className="max-w-full mx-auto px-16 py-8">
+      <div className="max-w-full mx-auto px-4 sm:px-8 lg:px-16 py-8">
         {/* Header */}
-        <div className="bg-purewhite rounded-lg p-6 mb-6 flex items-center justify-between border border-light_gray">
-          <div>
-            <h1 className="text-3xl font-bold text-deep_green mb-2">
+        <div className="bg-purewhite rounded-lg p-4 sm:p-6 mb-6 flex flex-col sm:flex-row items-center sm:items-start sm:justify-between gap-4 sm:gap-0 border border-light_gray">
+          <div className="text-center sm:text-left">
+            <h1 className="text-2xl sm:text-3xl font-bold text-deep_green mb-2">
               {supplierData?.company_name || "Company Name"}
             </h1>
             <p className="text-gray-500 mb-5">
               Premium construction materials and equipment supplier
             </p>
-            <button onClick={() => navigate('/supplier/profile/edit')} className="bg-web_yellow text-main_dark px-4 py-2 rounded-lg font-medium flex items-center gap-2 hover:opacity-90 transition">
+            <button onClick={() => navigate('/supplier/profile/edit')} className="bg-web_yellow text-main_dark px-4 py-2 rounded-lg font-medium flex items-center gap-2 hover:opacity-90 transition mx-auto sm:mx-0">
               <FaEdit /> Edit Profile
             </button>
           </div>
           <div className="flex items-center gap-4">
-            <div className="w-28 h-28 rounded-full bg-light_gray flex items-center justify-center overflow-hidden border-2 border-web_yellow mr-5">
+            <div className="w-28 h-28 rounded-full bg-light_gray flex items-center justify-center overflow-hidden border-2 border-web_yellow mr-0 sm:mr-5">
               <img src="/assets/profile/supplier.jpg" alt="Company Logo" className="w-52 h-52 object-contain" />
             </div>
           </div>
@@ -242,7 +243,7 @@ const Profile = () => {
         </div>
 
         {/* Save Button */}
-        <div className="flex gap-4 justify-center mt-6">
+        <div className="flex flex-col sm:flex-row gap-4 justify-center mt-6">
           {/* <button className="bg-web_yellow text-main_dark px-8 py-3 rounded-lg font-semibold text-lg shadow hover:opacity-90 transition">
             Save All Changes
           </button> */}
