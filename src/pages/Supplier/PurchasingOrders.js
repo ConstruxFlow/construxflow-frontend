@@ -142,7 +142,7 @@ const PurchasingOrders = () => {
       case 'paid': return 'bg-deep_green text-purewhite';
       case 'completed': return 'bg-deep_green text-purewhite';
       case 'pending': return 'bg-web_yellow text-main_dark';
-      case 'partial': return 'bg-orange-100 text-orange-800';
+      case 'partially paid': return 'bg-orange-100 text-orange-800';
       case 'overdue': return 'bg-red-100 text-red-800';
       default: return 'bg-gray-100 text-gray-800';
     }
@@ -211,7 +211,7 @@ const PurchasingOrders = () => {
   const paginatedOrders = filteredOrders.slice(startIndex, startIndex + itemsPerPage);
 
   const statuses = ['All Status', 'Pending', 'Ordered', 'Approved', 'Dispatched', 'Delivered', 'Completed', 'Cancelled'];
-  const paymentStatuses = ['All Payment Status', 'Pending', 'Paid', 'Completed', 'Partial', 'Overdue'];
+  const paymentStatuses = ['All Payment Status', 'Pending', 'Paid', 'Completed', 'Partially Paid', 'Overdue'];
 
   if (isLoading) {
     return (

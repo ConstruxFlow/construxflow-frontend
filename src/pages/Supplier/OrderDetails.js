@@ -29,6 +29,7 @@ const statusColors = {
   completed: "bg-deep_green text-purewhite",
   pending: "bg-web_yellow text-main_dark",
   upcoming: "bg-light_gray text-slatebluegray",
+  "partially paid": "bg-blue-100 text-blue-800",
 };
 
 const OrderDetails = () => {
@@ -85,52 +86,144 @@ const OrderDetails = () => {
   };
 
   const getPaymentTimeline = () => {
-    if (!orderData?.orderPayment) return [];
+    if (!orderData?.orderPayment) {
+      return [
+        {
+          label: "Payment Not Initiated",
+          date: "Awaiting Setup",
+          status: "upcoming",
+          amount: orderData?.subTotal || 0,
+          description: "Payment record not created yet"
+        }
+      ];
+    }
 
     const timeline = [];
     const payment = orderData.orderPayment;
     const totalAmount = payment.amount || 0;
     const paidAmount = payment.paidAmount || 0;
     const remainingAmount = payment.remainingAmount || 0;
+    
+    // Use the actual status from database (case-insensitive)
+    const paymentStatus = payment.status?.toLowerCase().trim() || 'pending';
 
-    // Advance payment
-    if (paidAmount > 0) {
-      timeline.push({
-        label: "Advance Paid",
-        date: formatDate(payment.createdDate),
-        status: "completed",
-        amount: paidAmount
-      });
-    }
+    console.log('=== PAYMENT TIMELINE DATA ===');
+    console.log('Payment Status (from DB):', paymentStatus);
+    console.log('Total Amount:', totalAmount);
+    console.log('Paid Amount:', paidAmount);
+    console.log('Remaining Amount:', remainingAmount);
 
-    // Remaining payment
-    if (remainingAmount > 0) {
+    // Scenario 1: Status = "Pending" (No payment made yet)
+    if (paymentStatus === 'pending') {
+      console.log('PENDING PAYMENT - No payment made yet');
+      
       timeline.push({
-        label: "Remaining Due",
-        date: "Current Status",
+        label: "Payment Pending",
+        date: formatDate(payment.createdDate) || "Order Created",
         status: "pending",
-        amount: remainingAmount
+        amount: totalAmount,
+        description: "Awaiting advance payment"
       });
+
+      timeline.push({
+        label: "Advance Payment",
+        date: "Not Yet Paid",
+        status: "upcoming",
+        amount: totalAmount * 0.3, // Assuming 30% advance
+        description: "30% of total amount"
+      });
+
+      timeline.push({
+        label: "Full Payment",
+        date: "Not Yet Paid",
+        status: "upcoming",
+        amount: totalAmount,
+        description: "Complete payment pending"
+      });
+
+      return timeline;
     }
 
-    // Fully paid status
-    if (paidAmount >= totalAmount && totalAmount > 0) {
+    // Scenario 2: Status = "Completed" (Fully paid)
+    if (paymentStatus === 'completed') {
+      console.log('COMPLETED PAYMENT - Fully paid');
+      
+      // Calculate advance amount (30% of total)
+      const advanceAmount = totalAmount * 0.3;
+      const remainingAmountPaid = totalAmount - advanceAmount;
+
       timeline.push({
-        label: "Fully Paid",
+        label: "Advance Payment",
         date: formatDate(payment.createdDate),
         status: "completed",
-        amount: totalAmount
+        amount: advanceAmount,
+        description: "30% advance paid ✓"
       });
-    } else {
+
+      timeline.push({
+        label: "Remaining Payment",
+        date: formatDate(payment.paymentDate) || formatDate(payment.updatedDate),
+        status: "completed",
+        amount: remainingAmountPaid,
+        description: "70% balance paid ✓"
+      });
+
       timeline.push({
         label: "Fully Paid",
-        date: "Awaiting Payment",
-        status: "upcoming",
-        amount: totalAmount
+        date: formatDate(payment.paymentDate) || formatDate(payment.updatedDate),
+        status: "completed",
+        amount: totalAmount,
+        description: "Payment complete ✓"
       });
+
+      return timeline;
     }
 
-    return timeline;
+    // Scenario 3: Status = "Partially Paid" (Advance paid, remaining due)
+    if (paymentStatus === 'partially paid' || paymentStatus === 'partial') {
+      console.log(' PARTIAL PAYMENT - Advance paid, remaining due');
+      
+      const percentage = ((paidAmount / totalAmount) * 100).toFixed(0);
+      
+      timeline.push({
+        label: "Advance Payment",
+        date: formatDate(payment.paymentDate) || formatDate(payment.updatedDate),
+        status: "completed",
+        amount: paidAmount,
+        description: `${percentage}% paid ✓`
+      });
+
+      const remainingPercentage = ((remainingAmount / totalAmount) * 100).toFixed(0);
+      timeline.push({
+        label: "Remaining Payment",
+        date: "Pending",
+        status: "pending",
+        amount: remainingAmount,
+        description: `${remainingPercentage}% due`
+      });
+
+      timeline.push({
+        label: "Full Payment",
+        date: "Awaiting",
+        status: "upcoming",
+        amount: totalAmount,
+        description: "Complete payment pending"
+      });
+
+      return timeline;
+    }
+
+    // Fallback - Unknown status
+    console.log('UNKNOWN PAYMENT STATUS:', paymentStatus);
+    return [
+      {
+        label: "Payment Status Unknown",
+        date: formatDate(payment.createdDate),
+        status: "pending",
+        amount: totalAmount,
+        description: `Status: "${paymentStatus}" - Contact support`
+      }
+    ];
   };
 
   const getStatusTimeline = () => {
@@ -174,7 +267,6 @@ const OrderDetails = () => {
       console.log('Current Status:', orderData.status);
       console.log('New Status: Dispatched');
 
-      //  Use the PATCH endpoint for status updates only
       const response = await fetch(
         `http://localhost:8080/api/purchasingorder/${orderData.poId}/status`,
         {
@@ -189,11 +281,9 @@ const OrderDetails = () => {
 
       if (response.ok) {
         const result = await response.json();
-        console.log('✅ Update Success:', result);
+        console.log(' Update Success:', result);
         
         toast.success('Order marked as dispatched!');
-        
-        // Refresh order details
         await fetchOrderDetails();
       } else {
         const errorData = await response.text();
@@ -302,22 +392,29 @@ const OrderDetails = () => {
             <div className="font-semibold text-main_dark mb-1">Payment Timeline</div>
             <div className="flex flex-col gap-3">
               {paymentTimeline.map((pt, idx) => (
-                <div key={idx} className="flex items-center gap-2">
-                  <span className={`h-3 w-3 rounded-full ${statusColors[pt.status]}`}></span>
-                  <div className="flex-1">
-                    <span className="text-main_dark text-sm">{pt.label}</span>
-                    <span className="ml-2 text-slatebluegray text-xs">{pt.date}</span>
+                <div key={idx} className="flex items-start gap-2">
+                  <span className={`h-3 w-3 rounded-full mt-1 flex-shrink-0 ${statusColors[pt.status]}`}></span>
+                  <div className="flex-1 min-w-0">
+                    <div className="flex items-center justify-between mb-1 gap-2">
+                      <span className="text-main_dark text-sm font-semibold">{pt.label}</span>
+                      <span className={`px-2 py-1 rounded-full text-xs font-semibold whitespace-nowrap ${statusColors[pt.status]}`}>
+                        {pt.status === "completed" && "✓ Paid"}
+                        {pt.status === "pending" && "Pending"}
+                        {pt.status === "upcoming" && "Awaiting"}
+                      </span>
+                    </div>
+                    <div className="text-slatebluegray text-xs mb-1">{pt.date}</div>
                     {pt.amount > 0 && (
-                      <div className="text-xs text-gray-500 mt-0.5">
-                        RS {pt.amount.toLocaleString()}
+                      <div className="text-xs text-gray-700 font-medium">
+                        RS {pt.amount.toLocaleString(undefined, { minimumFractionDigits: 2 })}
+                      </div>
+                    )}
+                    {pt.description && (
+                      <div className="text-xs text-gray-500 mt-0.5 italic">
+                        {pt.description}
                       </div>
                     )}
                   </div>
-                  <span className={`px-3 py-1 rounded-full text-xs font-semibold ${statusColors[pt.status]}`}>
-                    {pt.status === "completed" && "Completed"}
-                    {pt.status === "pending" && "Pending"}
-                    {pt.status === "upcoming" && "Awaiting"}
-                  </span>
                 </div>
               ))}
             </div>
