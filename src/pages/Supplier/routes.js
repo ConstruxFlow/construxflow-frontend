@@ -43,7 +43,7 @@ export const SupplierRoutes = {
       element: <PurchasingOrders />,
     },
     {
-      path: "orders/:id",
+      path: "orders/:ponumber",
       element: <OrderDetails />,
     },
     { path: "payments", element: <PaymentStatus /> },
