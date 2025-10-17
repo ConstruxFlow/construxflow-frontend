@@ -7,14 +7,20 @@ import {
   FaUser, 
   FaCheck, 
   FaTimes,
-  FaEdit
+  FaEdit,
+  FaBox,
+  FaExclamationTriangle
 } from 'react-icons/fa';
-import { Save, Package } from 'lucide-react';
+import { Save, Package, AlertTriangle, CheckCircle, XCircle } from 'lucide-react';
+import axios from 'axios';
 
-const MaintenanceRequestDetails = ({ request, onUpdate }) => {
+const MaintenanceRequestDetails = ({ request, onUpdate, equipmentId }) => {
   const [isApproving, setIsApproving] = useState(false);
   const [isRejecting, setIsRejecting] = useState(false);
   const [isUpdating, setIsUpdating] = useState(false);
+  const [inventoryCheck, setInventoryCheck] = useState(null);
+  const [showConfirmDialog, setShowConfirmDialog] = useState(false);
+  const [actionType, setActionType] = useState(''); // 'approve' or 'reject'
 
   const getPriorityColor = (priority) => {
     switch (priority?.toLowerCase()) {
@@ -46,34 +52,103 @@ const MaintenanceRequestDetails = ({ request, onUpdate }) => {
     }
   };
 
+  const checkInventoryAvailability = async () => {
+    try {
+      const response = await axios.get(
+        `http://localhost:8080/api/schedule-maintenance-materials/${equipmentId}/check-inventory`
+      );
+      setInventoryCheck(response.data);
+      return response.data;
+    } catch (error) {
+      console.error("Failed to check inventory:", error);
+      alert('Failed to check inventory availability');
+      return null;
+    }
+  };
+
   const handleApprove = async () => {
+    // First check inventory
+    const inventoryResult = await checkInventoryAvailability();
+    
+    if (!inventoryResult || !inventoryResult.allMaterialsAvailable) {
+      setInventoryCheck(inventoryResult);
+      setActionType('approve');
+      setShowConfirmDialog(true);
+      return;
+    }
+
+    // If all materials available, proceed with approval
+    await executeApprove();
+  };
+
+  const executeApprove = async () => {
     setIsApproving(true);
-    // Simulate API call
-    setTimeout(() => {
+    try {
+      const response = await axios.post(
+        `http://localhost:8080/api/schedule-maintenance-materials/${equipmentId}/approve`
+      );
+
+      if (response.data.success) {
+        alert(`Request approved successfully! ${response.data.inventoryItemsUpdated} inventory items updated.`);
+        if (onUpdate) onUpdate();
+      } else {
+        alert('Failed to approve request: ' + response.data.message);
+      }
+    } catch (err) {
+      console.error("Failed to approve request:", err);
+      alert('Failed to approve request: ' + (err.response?.data?.message || err.message));
+    } finally {
       setIsApproving(false);
-      alert('Request approved successfully!');
-      if (onUpdate) onUpdate();
-    }, 2000);
+      setShowConfirmDialog(false);
+    }
   };
 
   const handleReject = async () => {
+    setActionType('reject');
+    setShowConfirmDialog(true);
+  };
+
+  const executeReject = async () => {
     setIsRejecting(true);
-    // Simulate API call
-    setTimeout(() => {
+    try {
+      const response = await axios.post(
+        `http://localhost:8080/api/schedule-maintenance-materials/${equipmentId}/reject`
+      );
+
+      if (response.data.success) {
+        alert('Request rejected successfully!');
+        if (onUpdate) onUpdate();
+      } else {
+        alert('Failed to reject request: ' + response.data.message);
+      }
+    } catch (err) {
+      console.error("Failed to reject request:", err);
+      alert('Failed to reject request: ' + (err.response?.data?.message || err.message));
+    } finally {
       setIsRejecting(false);
-      alert('Request rejected successfully!');
-      if (onUpdate) onUpdate();
-    }, 2000);
+      setShowConfirmDialog(false);
+    }
   };
 
   const handleUpdateInventory = async () => {
     setIsUpdating(true);
-    // Simulate API call
-    setTimeout(() => {
+    try {
+      const response = await axios.post(
+        `http://localhost:8080/api/schedule-maintenance-materials/${equipmentId}/update-inventory`
+      );
+
+      if (response.data.success) {
+        alert(`Inventory updated successfully! ${response.data.inventoryItemsUpdated} items processed.`);
+        if (onUpdate) onUpdate();
+      } else {
+        alert('Failed to update inventory: ' + response.data.message);
+      }
+    } catch (err) {
+      console.error("Failed to update inventory:", err);
+      alert('Failed to update inventory: ' + (err.response?.data?.message || err.message));
+    } finally {
       setIsUpdating(false);
-      alert('Inventory updated successfully!');
-      if (onUpdate) onUpdate();
-    }, 2000);
+    }
   };
 
   const formatDate = (dateString) => {
@@ -87,6 +162,115 @@ const MaintenanceRequestDetails = ({ request, onUpdate }) => {
     });
   };
 
+  const renderInventoryCheck = () => {
+    if (!inventoryCheck || !inventoryCheck.materialAvailability) return null;
+
+    return (
+      <div className="bg-yellow-50 border border-yellow-200 rounded-lg p-4 mb-4">
+        <div className="flex items-center gap-2 mb-3">
+          <AlertTriangle className="w-5 h-5 text-yellow-600" />
+          <h4 className="font-semibold text-yellow-800">Inventory Check</h4>
+        </div>
+        
+        <div className="space-y-2">
+          {inventoryCheck.materialAvailability.map((material, index) => (
+            <div key={index} className="flex justify-between items-center p-2 bg-white rounded">
+              <span className="font-medium">{material.materialName}</span>
+              <div className="flex items-center gap-4">
+                <span className="text-sm">
+                  Requested: <strong>{material.requestedQuantity}</strong>
+                </span>
+                <span className="text-sm">
+                  Available: <strong>{material.availableQuantity}</strong>
+                </span>
+                {material.isAvailable ? (
+                  <CheckCircle className="w-4 h-4 text-green-600" />
+                ) : (
+                  <XCircle className="w-4 h-4 text-red-600" />
+                )}
+              </div>
+            </div>
+          ))}
+        </div>
+        
+        {!inventoryCheck.allMaterialsAvailable && (
+          <div className="mt-3 p-2 bg-red-50 border border-red-200 rounded">
+            <p className="text-red-700 text-sm">
+              ⚠️ Some materials have insufficient stock. You can still approve, but inventory won't be updated for unavailable items.
+            </p>
+          </div>
+        )}
+      </div>
+    );
+  };
+
+  const renderConfirmDialog = () => {
+    if (!showConfirmDialog) return null;
+
+    const isApprove = actionType === 'approve';
+    const hasInventoryIssues = inventoryCheck && !inventoryCheck.allMaterialsAvailable;
+
+    return (
+      <div className="fixed inset-0 bg-black bg-opacity-50 flex items-center justify-center z-50">
+        <div className="bg-white rounded-lg p-6 max-w-md w-full mx-4">
+          <div className="flex items-center gap-3 mb-4">
+            <AlertTriangle className="w-6 h-6 text-yellow-600" />
+            <h3 className="text-lg font-semibold text-main_dark">
+              Confirm {isApprove ? 'Approval' : 'Rejection'}
+            </h3>
+          </div>
+
+          {isApprove && hasInventoryIssues && (
+            <div className="mb-4 p-3 bg-red-50 border border-red-200 rounded">
+              <p className="text-red-700 text-sm">
+                <strong>Warning:</strong> Some materials have insufficient stock. 
+                Inventory will only be updated for available items.
+              </p>
+            </div>
+          )}
+
+          <p className="text-gray-600 mb-6">
+            Are you sure you want to {isApprove ? 'approve' : 'reject'} this maintenance request?
+            This action cannot be undone.
+          </p>
+
+          <div className="flex gap-3 justify-end">
+            <button
+              onClick={() => setShowConfirmDialog(false)}
+              className="px-4 py-2 text-gray-600 border border-gray-300 rounded-lg hover:bg-gray-50 transition-colors"
+            >
+              Cancel
+            </button>
+            <button
+              onClick={isApprove ? executeApprove : executeReject}
+              disabled={isApproving || isRejecting}
+              className={`px-4 py-2 text-white rounded-lg transition-colors flex items-center gap-2 ${
+                isApprove 
+                  ? 'bg-green-600 hover:bg-green-700' 
+                  : 'bg-red-600 hover:bg-red-700'
+              } disabled:opacity-50 disabled:cursor-not-allowed`}
+            >
+              {(isApproving || isRejecting) ? (
+                <>
+                  <div className="animate-spin rounded-full h-4 w-4 border-b-2 border-white"></div>
+                  {isApprove ? 'Approving...' : 'Rejecting...'}
+                </>
+              ) : (
+                <>
+                  {isApprove ? <FaCheck className="w-4 h-4" /> : <FaTimes className="w-4 h-4" />}
+                  Confirm {isApprove ? 'Approve' : 'Reject'}
+                </>
+              )}
+            </button>
+          </div>
+        </div>
+      </div>
+    );
+  };
+
+  // Don't show action buttons if request is already approved/rejected
+  const showActionButtons = !request.status || request.status.toLowerCase() === 'pending';
+
   return (
     <div className="space-y-6">
       {/* Page Header */}
@@ -98,6 +282,9 @@ const MaintenanceRequestDetails = ({ request, onUpdate }) => {
           Review and manage material requests for maintenance operations
         </p>
       </div>
+
+      {/* Inventory Check Results */}
+      {inventoryCheck && renderInventoryCheck()}
 
       {/* Request Overview */}
       <div className="bg-purewhite border border-gray-200 rounded-xl p-6 shadow-sm">
@@ -247,65 +434,94 @@ const MaintenanceRequestDetails = ({ request, onUpdate }) => {
         )}
       </div>
 
-      {/* Actions */}
-      <div className="bg-purewhite border border-gray-200 rounded-xl p-6 shadow-sm">
-        <h3 className="text-lg font-semibold text-main_dark mb-4">Actions</h3>
-        <div className="flex flex-wrap gap-4">
-          <button
-            onClick={handleApprove}
-            disabled={isApproving}
-            className="bg-green-600 hover:bg-green-700 text-white px-6 py-3 rounded-lg font-semibold transition-all duration-150 shadow-sm hover:shadow-md flex items-center gap-2 disabled:opacity-50 disabled:cursor-not-allowed"
-          >
-            {isApproving ? (
-              <>
-                <div className="animate-spin rounded-full h-4 w-4 border-b-2 border-white"></div>
-                Approving...
-              </>
-            ) : (
-              <>
-                <FaCheck className="w-4 h-4" />
-                Approve Request
-              </>
-            )}
-          </button>
+      {/* Actions - Only show if request is pending */}
+      {showActionButtons && (
+        <div className="bg-purewhite border border-gray-200 rounded-xl p-6 shadow-sm">
+          <h3 className="text-lg font-semibold text-main_dark mb-4">Actions</h3>
+          <div className="flex flex-wrap gap-4">
+            <button
+              onClick={handleApprove}
+              disabled={isApproving}
+              className="bg-green-600 hover:bg-green-700 text-white px-6 py-3 rounded-lg font-semibold transition-all duration-150 shadow-sm hover:shadow-md flex items-center gap-2 disabled:opacity-50 disabled:cursor-not-allowed"
+            >
+              {isApproving ? (
+                <>
+                  <div className="animate-spin rounded-full h-4 w-4 border-b-2 border-white"></div>
+                  Approving...
+                </>
+              ) : (
+                <>
+                  <FaCheck className="w-4 h-4" />
+                  Approve Request
+                </>
+              )}
+            </button>
 
-          <button
-            onClick={handleReject}
-            disabled={isRejecting}
-            className="bg-red-600 hover:bg-red-700 text-white px-6 py-3 rounded-lg font-semibold transition-all duration-150 shadow-sm hover:shadow-md flex items-center gap-2 disabled:opacity-50 disabled:cursor-not-allowed"
-          >
-            {isRejecting ? (
-              <>
-                <div className="animate-spin rounded-full h-4 w-4 border-b-2 border-white"></div>
-                Rejecting...
+            <button
+              onClick={handleReject}
+              disabled={isRejecting}
+              className="bg-red-600 hover:bg-red-700 text-white px-6 py-3 rounded-lg font-semibold transition-all duration-150 shadow-sm hover:shadow-md flex items-center gap-2 disabled:opacity-50 disabled:cursor-not-allowed"
+            >
+              {isRejecting ? (
+                <>
+                  <div className="animate-spin rounded-full h-4 w-4 border-b-2 border-white"></div>
+                  Rejecting...
               </>
-            ) : (
-              <>
-                <FaTimes className="w-4 h-4" />
-                Reject Request
-              </>
-            )}
-          </button>
+              ) : (
+                <>
+                  <FaTimes className="w-4 h-4" />
+                  Reject Request
+                </>
+              )}
+            </button>
 
-          <button
-            onClick={handleUpdateInventory}
-            disabled={isUpdating}
-            className="bg-deep_green hover:bg-deep_green/80 text-white px-6 py-3 rounded-lg font-semibold transition-all duration-150 shadow-sm hover:shadow-md flex items-center gap-2 disabled:opacity-50 disabled:cursor-not-allowed"
-          >
-            {isUpdating ? (
-              <>
-                <div className="animate-spin rounded-full h-4 w-4 border-b-2 border-white"></div>
-                Updating...
-              </>
-            ) : (
-              <>
-                <FaEdit className="w-4 h-4" />
-                Update Inventory
-              </>
+            {/* Optional: Manual inventory update button for approved requests */}
+            {request.status && request.status.toLowerCase() === 'approved' && (
+              <button
+                onClick={handleUpdateInventory}
+                disabled={isUpdating}
+                className="bg-deep_green hover:bg-deep_green/80 text-white px-6 py-3 rounded-lg font-semibold transition-all duration-150 shadow-sm hover:shadow-md flex items-center gap-2 disabled:opacity-50 disabled:cursor-not-allowed"
+              >
+                {isUpdating ? (
+                  <>
+                    <div className="animate-spin rounded-full h-4 w-4 border-b-2 border-white"></div>
+                    Updating...
+                  </>
+                ) : (
+                  <>
+                    <FaEdit className="w-4 h-4" />
+                    Update Inventory
+                  </>
+                )}
+              </button>
             )}
-          </button>
+          </div>
         </div>
-      </div>
+      )}
+
+      {/* Status Display for non-pending requests */}
+      {!showActionButtons && (
+        <div className="bg-purewhite border border-gray-200 rounded-xl p-6 shadow-sm">
+          <h3 className="text-lg font-semibold text-main_dark mb-4">Request Status</h3>
+          <div className={`inline-flex items-center gap-2 px-4 py-2 rounded-lg ${
+            request.status?.toLowerCase() === 'approved' 
+              ? 'bg-green-100 text-green-800' 
+              : 'bg-red-100 text-red-800'
+          }`}>
+            {request.status?.toLowerCase() === 'approved' ? (
+              <CheckCircle className="w-5 h-5" />
+            ) : (
+              <XCircle className="w-5 h-5" />
+            )}
+            <span className="font-semibold">
+              This request has been {request.status?.toLowerCase()}
+            </span>
+          </div>
+        </div>
+      )}
+
+      {/* Confirmation Dialog */}
+      {renderConfirmDialog()}
     </div>
   );
 };
