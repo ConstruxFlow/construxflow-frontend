@@ -1,17 +1,17 @@
-import React, { useState, useEffect, useContext } from 'react';
-import { 
-  FaSearch, 
-  FaEye, 
+import React, { useState, useEffect, useContext } from "react";
+import {
+  FaSearch,
+  FaEye,
   FaDownload,
   FaCalendarAlt,
   FaTruck,
   FaDollarSign,
   FaBoxOpen,
-  FaTimesCircle
-} from 'react-icons/fa';
-import NavBar from '../../components/NavBar';
-import { useNavigate } from 'react-router-dom';
-import { AuthContext } from '../../Context/AuthContext';
+  FaTimesCircle,
+} from "react-icons/fa";
+import NavBar from "../../components/NavBar";
+import { useNavigate } from "react-router-dom";
+import { AuthContext } from "../../Context/AuthContext";
 
 const navLinks = [
   { name: "Dashboard", href: "/supplier/dashboard" },
@@ -25,12 +25,13 @@ const PurchasingOrders = () => {
   const [isLoading, setIsLoading] = useState(true);
   const [purchaseOrders, setPurchaseOrders] = useState([]);
   const [filteredOrders, setFilteredOrders] = useState([]);
-  const [searchTerm, setSearchTerm] = useState('');
-  const [selectedStatus, setSelectedStatus] = useState('All Status');
-  const [selectedPaymentStatus, setSelectedPaymentStatus] = useState('All Payment Status');
+  const [searchTerm, setSearchTerm] = useState("");
+  const [selectedStatus, setSelectedStatus] = useState("All Status");
+  const [selectedPaymentStatus, setSelectedPaymentStatus] =
+    useState("All Payment Status");
   const [currentPage, setCurrentPage] = useState(1);
-  const [sortBy, setSortBy] = useState('orderDate');
-  const [sortOrder, setSortOrder] = useState('desc');
+  const [sortBy, setSortBy] = useState("orderDate");
+  const [sortOrder, setSortOrder] = useState("desc");
   const [error, setError] = useState(null);
   const itemsPerPage = 10;
 
@@ -43,60 +44,77 @@ const PurchasingOrders = () => {
 
   useEffect(() => {
     filterOrders();
-  }, [purchaseOrders, searchTerm, selectedStatus, selectedPaymentStatus, sortBy, sortOrder]);
+  }, [
+    purchaseOrders,
+    searchTerm,
+    selectedStatus,
+    selectedPaymentStatus,
+    sortBy,
+    sortOrder,
+  ]);
 
   const fetchSupplierOrders = async () => {
     setIsLoading(true);
     setError(null);
-    
+
     const supplierId = authState?.user?.supplierId;
-    
+
     if (!supplierId) {
-      setError('Supplier ID not found. Please log in again.');
+      setError("Supplier ID not found. Please log in again.");
       setIsLoading(false);
       return;
     }
 
     try {
-      const response = await fetch('http://localhost:8080/api/purchasingorder/all');
-      
+      const response = await fetch(
+        "http://localhost:8080/api/purchasingorder/all"
+      );
+
       if (!response.ok) {
         throw new Error(`HTTP error! status: ${response.status}`);
       }
-      
+
       const data = await response.json();
-      
-      if (data.status === 'success') {
+
+      if (data.status === "success") {
         // Filter orders for this specific supplier
-        const supplierOrders = (data.data || []).filter(order => {
+        const supplierOrders = (data.data || []).filter((order) => {
           if (!order.supplier) return false;
-          const orderSupplierId = order.supplier.supplierId || order.supplier.supplier_id;
+          const orderSupplierId =
+            order.supplier.supplierId || order.supplier.supplier_id;
           return String(orderSupplierId).trim() === String(supplierId).trim();
         });
-        
+
         setPurchaseOrders(supplierOrders);
       } else {
-        setError('Failed to fetch purchase orders');
+        setError("Failed to fetch purchase orders");
       }
     } catch (error) {
       setError(`Network error: ${error.message}`);
-      console.error('Error fetching purchase orders:', error);
+      console.error("Error fetching purchase orders:", error);
     } finally {
       setIsLoading(false);
     }
   };
 
   const filterOrders = () => {
-    let filtered = purchaseOrders.filter(order => {
-      const matchesSearch = 
+    let filtered = purchaseOrders.filter((order) => {
+      const matchesSearch =
         order.ponumber?.toLowerCase().includes(searchTerm.toLowerCase()) ||
-        (order.project && order.project.toLowerCase().includes(searchTerm.toLowerCase())) ||
-        (order.additionalInfo && order.additionalInfo.toLowerCase().includes(searchTerm.toLowerCase()));
-      
-      const matchesStatus = selectedStatus === 'All Status' || order.status === selectedStatus;
-      const matchesPaymentStatus = selectedPaymentStatus === 'All Payment Status' || 
-        (order.orderPayment && order.orderPayment.status === selectedPaymentStatus);
-      
+        (order.project &&
+          order.project.toLowerCase().includes(searchTerm.toLowerCase())) ||
+        (order.additionalInfo &&
+          order.additionalInfo
+            .toLowerCase()
+            .includes(searchTerm.toLowerCase()));
+
+      const matchesStatus =
+        selectedStatus === "All Status" || order.status === selectedStatus;
+      const matchesPaymentStatus =
+        selectedPaymentStatus === "All Payment Status" ||
+        (order.orderPayment &&
+          order.orderPayment.status === selectedPaymentStatus);
+
       return matchesSearch && matchesStatus && matchesPaymentStatus;
     });
 
@@ -104,16 +122,16 @@ const PurchasingOrders = () => {
     filtered.sort((a, b) => {
       let aValue = a[sortBy];
       let bValue = b[sortBy];
-      
-      if (sortBy === 'subTotal') {
+
+      if (sortBy === "subTotal") {
         aValue = parseFloat(aValue) || 0;
         bValue = parseFloat(bValue) || 0;
-      } else if (sortBy === 'orderDate' || sortBy === 'deliveryDate') {
+      } else if (sortBy === "orderDate" || sortBy === "deliveryDate") {
         aValue = new Date(aValue);
         bValue = new Date(bValue);
       }
-      
-      if (sortOrder === 'asc') {
+
+      if (sortOrder === "asc") {
         return aValue > bValue ? 1 : -1;
       } else {
         return aValue < bValue ? 1 : -1;
@@ -126,47 +144,61 @@ const PurchasingOrders = () => {
 
   const getStatusColor = (status) => {
     switch (status?.toLowerCase()) {
-      case 'pending': return 'bg-yellow-100 text-yellow-800';
-      case 'ordered': return 'bg-web_yellow text-main_dark';
-      case 'approved': return 'bg-green-100 text-green-800';
-      case 'dispatched': return 'bg-blue-100 text-blue-800';
-      case 'delivered': return 'bg-deep_green text-purewhite';
-      case 'completed': return 'bg-blue-100 text-blue-800';
-      case 'cancelled': return 'bg-gray-100 text-gray-800';
-      default: return 'bg-gray-100 text-gray-800';
+      case "pending":
+        return "bg-yellow-100 text-yellow-800";
+      case "ordered":
+        return "bg-web_yellow text-main_dark";
+      case "approved":
+        return "bg-green-100 text-green-800";
+      case "dispatched":
+        return "bg-blue-100 text-blue-800";
+      case "delivered":
+        return "bg-deep_green text-purewhite";
+      case "completed":
+        return "bg-blue-100 text-blue-800";
+      case "cancelled":
+        return "bg-gray-100 text-gray-800";
+      default:
+        return "bg-gray-100 text-gray-800";
     }
   };
 
   const getPaymentStatusColor = (status) => {
     switch (status?.toLowerCase()) {
-      case 'paid': return 'bg-deep_green text-purewhite';
-      case 'completed': return 'bg-deep_green text-purewhite';
-      case 'pending': return 'bg-web_yellow text-main_dark';
-      case 'partially paid': return 'bg-orange-100 text-orange-800';
-      case 'overdue': return 'bg-red-100 text-red-800';
-      default: return 'bg-gray-100 text-gray-800';
+      case "paid":
+        return "bg-deep_green text-purewhite";
+      case "completed":
+        return "bg-deep_green text-purewhite";
+      case "pending":
+        return "bg-web_yellow text-main_dark";
+      case "partially paid":
+        return "bg-orange-100 text-orange-800";
+      case "overdue":
+        return "bg-red-100 text-red-800";
+      default:
+        return "bg-gray-100 text-gray-800";
     }
   };
 
   const handleSort = (field) => {
     if (sortBy === field) {
-      setSortOrder(sortOrder === 'asc' ? 'desc' : 'asc');
+      setSortOrder(sortOrder === "asc" ? "desc" : "asc");
     } else {
       setSortBy(field);
-      setSortOrder('asc');
+      setSortOrder("asc");
     }
   };
 
   const formatDate = (dateString) => {
-    if (!dateString) return 'N/A';
+    if (!dateString) return "N/A";
     try {
-      return new Date(dateString).toLocaleDateString('en-US', {
-        year: 'numeric',
-        month: 'short',
-        day: 'numeric'
+      return new Date(dateString).toLocaleDateString("en-US", {
+        year: "numeric",
+        month: "short",
+        day: "numeric",
       });
     } catch (e) {
-      return 'Invalid Date';
+      return "Invalid Date";
     }
   };
 
@@ -184,23 +216,35 @@ const PurchasingOrders = () => {
   };
 
   const handleExport = () => {
-    const headers = ['PO Number', 'Project', 'Order Date', 'Delivery Date', 'Status', 'Amount', 'Payment Status'];
-    const csvData = filteredOrders.map(order => [
+    const headers = [
+      "PO Number",
+      "Project",
+      "Order Date",
+      "Delivery Date",
+      "Status",
+      "Amount",
+      "Payment Status",
+    ];
+    const csvData = filteredOrders.map((order) => [
       order.ponumber,
-      order.project || 'N/A',
+      order.materialRequest?.project_id ||
+        order.materialRequest?.projectId ||
+        "N/A",
       formatDate(order.orderDate),
       formatDate(order.deliveryDate),
       order.status,
       order.subTotal || 0,
-      order.orderPayment?.status || 'N/A'
+      order.orderPayment?.status || "N/A",
     ]);
 
-    const csv = [headers, ...csvData].map(row => row.join(',')).join('\n');
-    const blob = new Blob([csv], { type: 'text/csv' });
+    const csv = [headers, ...csvData].map((row) => row.join(",")).join("\n");
+    const blob = new Blob([csv], { type: "text/csv" });
     const url = window.URL.createObjectURL(blob);
-    const a = document.createElement('a');
+    const a = document.createElement("a");
     a.href = url;
-    a.download = `supplier_orders_${new Date().toISOString().split('T')[0]}.csv`;
+    a.download = `supplier_orders_${
+      new Date().toISOString().split("T")[0]
+    }.csv`;
     a.click();
     window.URL.revokeObjectURL(url);
   };
@@ -208,10 +252,29 @@ const PurchasingOrders = () => {
   // Pagination
   const totalPages = Math.ceil(filteredOrders.length / itemsPerPage);
   const startIndex = (currentPage - 1) * itemsPerPage;
-  const paginatedOrders = filteredOrders.slice(startIndex, startIndex + itemsPerPage);
+  const paginatedOrders = filteredOrders.slice(
+    startIndex,
+    startIndex + itemsPerPage
+  );
 
-  const statuses = ['All Status', 'Pending', 'Ordered', 'Approved', 'Dispatched', 'Delivered', 'Completed', 'Cancelled'];
-  const paymentStatuses = ['All Payment Status', 'Pending', 'Paid', 'Completed', 'Partially Paid', 'Overdue'];
+  const statuses = [
+    "All Status",
+    "Pending",
+    "Ordered",
+    "Approved",
+    "Dispatched",
+    "Delivered",
+    "Completed",
+    "Cancelled",
+  ];
+  const paymentStatuses = [
+    "All Payment Status",
+    "Pending",
+    "Paid",
+    "Completed",
+    "Partially Paid",
+    "Overdue",
+  ];
 
   if (isLoading) {
     return (
@@ -227,7 +290,11 @@ const PurchasingOrders = () => {
   if (error) {
     return (
       <div className="min-h-screen bg-purewhite font-poppins">
-        <NavBar links={navLinks} profileURL="/supplier/profile" logoSrc="/logo1.png" />
+        <NavBar
+          links={navLinks}
+          profileURL="/supplier/profile"
+          logoSrc="/logo1.png"
+        />
         <div className="flex items-center justify-center h-96">
           <div className="text-center">
             <FaTimesCircle className="text-red-500 text-5xl mx-auto mb-4" />
@@ -246,7 +313,11 @@ const PurchasingOrders = () => {
 
   return (
     <div className="min-h-screen bg-purewhite font-poppins">
-      <NavBar links={navLinks} profileURL="/supplier/profile" logoSrc="/logo1.png" />
+      <NavBar
+        links={navLinks}
+        profileURL="/supplier/profile"
+        logoSrc="/logo1.png"
+      />
 
       <main className="py-4 sm:py-6">
         <div className="max-w-full mx-auto px-4 sm:px-8 lg:px-16">
@@ -261,7 +332,7 @@ const PurchasingOrders = () => {
               </p>
             </div>
             <div className="flex flex-col sm:flex-row gap-3">
-              <button 
+              <button
                 onClick={handleExport}
                 disabled={filteredOrders.length === 0}
                 className="px-4 py-2 bg-deep_green text-purewhite rounded-md hover:bg-deep_green/90 transition-colors flex items-center justify-center gap-2 text-sm font-semibold disabled:opacity-50 disabled:cursor-not-allowed"
@@ -275,24 +346,45 @@ const PurchasingOrders = () => {
           {/* Stats Cards */}
           <div className="grid grid-cols-2 lg:grid-cols-4 gap-4 mb-6">
             <div className="bg-purewhite border border-gray-200 rounded-lg p-4">
-              <div className="text-2xl font-bold text-main_dark">{purchaseOrders.length}</div>
+              <div className="text-2xl font-bold text-main_dark">
+                {purchaseOrders.length}
+              </div>
               <div className="text-sm text-gray-600">Total Orders</div>
             </div>
             <div className="bg-purewhite border border-gray-200 rounded-lg p-4">
               <div className="text-2xl font-bold text-yellow-600">
-                {purchaseOrders.filter(order => order.status === 'Ordered' || order.status === 'Pending' || order.status === 'Approved').length}
+                {
+                  purchaseOrders.filter(
+                    (order) =>
+                      order.status === "Ordered" ||
+                      order.status === "Pending" ||
+                      order.status === "Approved"
+                  ).length
+                }
               </div>
               <div className="text-sm text-gray-600">Pending</div>
             </div>
             <div className="bg-purewhite border border-gray-200 rounded-lg p-4">
               <div className="text-2xl font-bold text-green-600">
-                {purchaseOrders.filter(order => order.status === 'Delivered' || order.status === 'Completed').length}
+                {
+                  purchaseOrders.filter(
+                    (order) =>
+                      order.status === "Delivered" ||
+                      order.status === "Completed"
+                  ).length
+                }
               </div>
               <div className="text-sm text-gray-600">Delivered</div>
             </div>
             <div className="bg-purewhite border border-gray-200 rounded-lg p-4">
               <div className="text-2xl font-bold text-blue-600">
-                RS {purchaseOrders.reduce((sum, order) => sum + (parseFloat(order.subTotal) || 0), 0).toLocaleString(undefined, { minimumFractionDigits: 2 })}
+                RS{" "}
+                {purchaseOrders
+                  .reduce(
+                    (sum, order) => sum + (parseFloat(order.subTotal) || 0),
+                    0
+                  )
+                  .toLocaleString(undefined, { minimumFractionDigits: 2 })}
               </div>
               <div className="text-sm text-gray-600">Total Value</div>
             </div>
@@ -303,7 +395,9 @@ const PurchasingOrders = () => {
             <div className="flex flex-col lg:flex-row gap-4 items-start lg:items-end">
               {/* Search Bar */}
               <div className="flex-1 w-full lg:max-w-md">
-                <label className="block text-sm font-medium text-gray-700 mb-2">Search Orders</label>
+                <label className="block text-sm font-medium text-gray-700 mb-2">
+                  Search Orders
+                </label>
                 <div className="relative">
                   <FaSearch className="absolute left-3 top-3 h-4 w-4 text-gray-400" />
                   <input
@@ -318,28 +412,36 @@ const PurchasingOrders = () => {
 
               {/* Status Filter */}
               <div className="w-full lg:w-auto">
-                <label className="block text-sm font-medium text-gray-700 mb-2">Order Status</label>
+                <label className="block text-sm font-medium text-gray-700 mb-2">
+                  Order Status
+                </label>
                 <select
                   value={selectedStatus}
                   onChange={(e) => setSelectedStatus(e.target.value)}
                   className="w-full lg:w-48 px-3 py-2 border border-gray-300 rounded-md focus:outline-none focus:ring-2 focus:ring-web_yellow focus:border-transparent text-sm"
                 >
-                  {statuses.map(status => (
-                    <option key={status} value={status}>{status}</option>
+                  {statuses.map((status) => (
+                    <option key={status} value={status}>
+                      {status}
+                    </option>
                   ))}
                 </select>
               </div>
 
               {/* Payment Status Filter */}
               <div className="w-full lg:w-auto">
-                <label className="block text-sm font-medium text-gray-700 mb-2">Payment Status</label>
+                <label className="block text-sm font-medium text-gray-700 mb-2">
+                  Payment Status
+                </label>
                 <select
                   value={selectedPaymentStatus}
                   onChange={(e) => setSelectedPaymentStatus(e.target.value)}
                   className="w-full lg:w-48 px-3 py-2 border border-gray-300 rounded-md focus:outline-none focus:ring-2 focus:ring-web_yellow focus:border-transparent text-sm"
                 >
-                  {paymentStatuses.map(status => (
-                    <option key={status} value={status}>{status}</option>
+                  {paymentStatuses.map((status) => (
+                    <option key={status} value={status}>
+                      {status}
+                    </option>
                   ))}
                 </select>
               </div>
@@ -349,7 +451,9 @@ const PurchasingOrders = () => {
           {/* Results Summary */}
           <div className="flex flex-col sm:flex-row sm:items-center sm:justify-between mb-4 gap-2">
             <p className="text-sm text-gray-600">
-              Showing {filteredOrders.length === 0 ? 0 : startIndex + 1} to {Math.min(startIndex + itemsPerPage, filteredOrders.length)} of {filteredOrders.length} orders
+              Showing {filteredOrders.length === 0 ? 0 : startIndex + 1} to{" "}
+              {Math.min(startIndex + itemsPerPage, filteredOrders.length)} of{" "}
+              {filteredOrders.length} orders
             </p>
           </div>
 
@@ -378,15 +482,17 @@ const PurchasingOrders = () => {
                         <th className="px-6 py-4 text-left text-sm font-semibold text-main_dark">
                           Project
                         </th>
-                        <th 
+                        <th
                           className="px-6 py-4 text-left text-sm font-semibold text-main_dark cursor-pointer hover:bg-light_brown/50"
-                          onClick={() => handleSort('orderDate')}
+                          onClick={() => handleSort("orderDate")}
                         >
                           <div className="flex items-center gap-2">
                             <FaCalendarAlt className="w-4 h-4" />
                             Order Date
-                            {sortBy === 'orderDate' && (
-                              <span className="text-xs">{sortOrder === 'asc' ? '↑' : '↓'}</span>
+                            {sortBy === "orderDate" && (
+                              <span className="text-xs">
+                                {sortOrder === "asc" ? "↑" : "↓"}
+                              </span>
                             )}
                           </div>
                         </th>
@@ -396,68 +502,98 @@ const PurchasingOrders = () => {
                             Delivery Date
                           </div>
                         </th>
-                        <th className="px-6 py-4 text-left text-sm font-semibold text-main_dark">Status</th>
-                        <th className="px-6 py-4 text-left text-sm font-semibold text-main_dark">Items</th>
-                        <th 
+                        <th className="px-6 py-4 text-left text-sm font-semibold text-main_dark">
+                          Status
+                        </th>
+                        <th className="px-6 py-4 text-left text-sm font-semibold text-main_dark">
+                          Items
+                        </th>
+                        <th
                           className="px-6 py-4 text-left text-sm font-semibold text-main_dark cursor-pointer hover:bg-light_brown/50"
-                          onClick={() => handleSort('subTotal')}
+                          onClick={() => handleSort("subTotal")}
                         >
                           <div className="flex items-center gap-2">
                             <FaDollarSign className="w-4 h-4" />
                             Amount
-                            {sortBy === 'subTotal' && (
-                              <span className="text-xs">{sortOrder === 'asc' ? '↑' : '↓'}</span>
+                            {sortBy === "subTotal" && (
+                              <span className="text-xs">
+                                {sortOrder === "asc" ? "↑" : "↓"}
+                              </span>
                             )}
                           </div>
                         </th>
-                        <th className="px-6 py-4 text-left text-sm font-semibold text-main_dark">Payment</th>
-                        <th className="px-6 py-4 text-left text-sm font-semibold text-main_dark">Actions</th>
+                        <th className="px-6 py-4 text-left text-sm font-semibold text-main_dark">
+                          Payment
+                        </th>
+                        <th className="px-6 py-4 text-left text-sm font-semibold text-main_dark">
+                          Actions
+                        </th>
                       </tr>
                     </thead>
                     <tbody className="divide-y divide-gray-200">
                       {paginatedOrders.map((order, idx) => (
-                        <tr key={order.poId || idx} className="hover:bg-gray-50 transition-colors">
+                        <tr
+                          key={order.poId || idx}
+                          className="hover:bg-gray-50 transition-colors"
+                        >
                           <td className="px-6 py-4 text-sm font-medium text-main_dark">
-                            {order.ponumber || 'N/A'}
+                            {order.ponumber || "N/A"}
                           </td>
                           <td className="px-6 py-4 text-sm text-main_dark">
-                            {order.project || 'N/A'}
+                            {order.materialRequest?.project_id ||
+                              order.materialRequest?.projectId ||
+                              order.project_id ||
+                              order.projectId ||
+                              "N/A"}
                           </td>
                           <td className="px-6 py-4 text-sm text-gray-600">
                             {formatDate(order.orderDate)}
                           </td>
                           <td className="px-6 py-4 text-sm text-gray-600">
-                        {order.deliveries && order.deliveries.length > 0 ? (
-                          <div className="space-y-1">
-                            {order.deliveries.slice(0, 1).map((delivery, index) => (
-                              <div key={index} className="text-xs">
-                                <div>{delivery.location}</div>
-                                <div className="text-gray-400">{formatDate(delivery.requiredDate)}</div>
+                            {order.deliveries && order.deliveries.length > 0 ? (
+                              <div className="space-y-1">
+                                {order.deliveries
+                                  .slice(0, 1)
+                                  .map((delivery, index) => (
+                                    <div key={index} className="text-xs">
+                                      <div>{delivery.location}</div>
+                                      <div className="text-gray-400">
+                                        {formatDate(delivery.requiredDate)}
+                                      </div>
+                                    </div>
+                                  ))}
+                                {order.deliveries.length > 1 && (
+                                  <div className="text-xs text-gray-400">
+                                    +{order.deliveries.length - 1} more
+                                  </div>
+                                )}
                               </div>
-                            ))}
-                            {order.deliveries.length > 1 && (
-                              <div className="text-xs text-gray-400">
-                                +{order.deliveries.length - 1} more
-                              </div>
+                            ) : (
+                              <span className="text-gray-400">
+                                No deliveries
+                              </span>
                             )}
-                          </div>
-                        ) : (
-                          <span className="text-gray-400">No deliveries</span>
-                        )}
-                      </td>
+                          </td>
                           <td className="px-6 py-4">
-                            <span className={`px-3 py-1 rounded-full text-xs font-medium ${getStatusColor(order.status)}`}>
-                              {order.status || 'Unknown'}
+                            <span
+                              className={`px-3 py-1 rounded-full text-xs font-medium ${getStatusColor(
+                                order.status
+                              )}`}
+                            >
+                              {order.status || "Unknown"}
                             </span>
                           </td>
                           <td className="px-6 py-4 text-sm text-gray-600">
                             {order.materials && order.materials.length > 0 ? (
                               <div className="space-y-1">
-                                {order.materials.slice(0, 2).map((material, index) => (
-                                  <div key={index} className="text-xs">
-                                    {material.material?.materialName || 'Unknown'}
-                                  </div>
-                                ))}
+                                {order.materials
+                                  .slice(0, 2)
+                                  .map((material, index) => (
+                                    <div key={index} className="text-xs">
+                                      {material.material?.materialName ||
+                                        "Unknown"}
+                                    </div>
+                                  ))}
                                 {order.materials.length > 2 && (
                                   <div className="text-xs text-gray-400">
                                     +{order.materials.length - 2} more
@@ -465,36 +601,57 @@ const PurchasingOrders = () => {
                                 )}
                               </div>
                             ) : (
-                              <span className="text-gray-400">No materials</span>
+                              <span className="text-gray-400">
+                                No materials
+                              </span>
                             )}
                           </td>
                           <td className="px-6 py-4 text-sm font-semibold text-main_dark">
-                            RS {order.subTotal ? parseFloat(order.subTotal).toLocaleString(undefined, { minimumFractionDigits: 2 }) : 'N/A'}
+                            RS{" "}
+                            {order.subTotal
+                              ? parseFloat(order.subTotal).toLocaleString(
+                                  undefined,
+                                  { minimumFractionDigits: 2 }
+                                )
+                              : "N/A"}
                           </td>
                           <td className="px-6 py-4">
                             {order.orderPayment ? (
                               <div className="space-y-1">
-                                <span className={`px-2 py-1 rounded-full text-xs font-medium ${getPaymentStatusColor(order.orderPayment.status)}`}>
-                                  {order.orderPayment.status || 'Pending'}
+                                <span
+                                  className={`px-2 py-1 rounded-full text-xs font-medium ${getPaymentStatusColor(
+                                    order.orderPayment.status
+                                  )}`}
+                                >
+                                  {order.orderPayment.status || "Pending"}
                                 </span>
                                 <div className="text-xs text-gray-500">
-                                  RS {order.orderPayment.paidAmount || 0} / RS {order.orderPayment.amount || 0}
+                                  RS {order.orderPayment.paidAmount || 0} / RS{" "}
+                                  {order.orderPayment.amount || 0}
                                 </div>
                                 <div className="w-full bg-gray-200 rounded-full h-1">
-                                  <div 
-                                    className="bg-green-500 h-1 rounded-full" 
-                                    style={{ width: `${getPaymentProgress(order.orderPayment)}%` }}
+                                  <div
+                                    className="bg-green-500 h-1 rounded-full"
+                                    style={{
+                                      width: `${getPaymentProgress(
+                                        order.orderPayment
+                                      )}%`,
+                                    }}
                                   ></div>
                                 </div>
                               </div>
                             ) : (
-                              <span className="text-gray-400">No payment info</span>
+                              <span className="text-gray-400">
+                                No payment info
+                              </span>
                             )}
                           </td>
                           <td className="px-6 py-4">
                             <div className="flex items-center gap-2">
-                              <button 
-                                onClick={() => navigate(`/supplier/orders/${order.ponumber}`)} 
+                              <button
+                                onClick={() =>
+                                  navigate(`/supplier/orders/${order.ponumber}`)
+                                }
                                 className="text-deep_green hover:text-deep_green/80 transition-colors"
                                 title="View Details"
                               >
@@ -515,51 +672,77 @@ const PurchasingOrders = () => {
                       <div className="flex justify-between items-start mb-3">
                         <div className="flex-1">
                           <div className="flex items-center gap-2 mb-1">
-                            <h3 className="font-semibold text-main_dark text-sm">{order.ponumber || 'N/A'}</h3>
+                            <h3 className="font-semibold text-main_dark text-sm">
+                              {order.ponumber || "N/A"}
+                            </h3>
                           </div>
-                          <p className="text-xs text-gray-600 mb-1">{order.project || 'N/A'}</p>
+                          <p className="text-xs text-gray-600 mb-1">
+                            {order.project || "N/A"}
+                          </p>
                           <div className="flex items-center gap-2 text-xs text-gray-500">
                             <FaCalendarAlt className="w-3 h-3" />
                             {formatDate(order.orderDate)}
                           </div>
                         </div>
                         <div className="flex flex-col gap-1">
-                          <span className={`px-2 py-1 rounded-full text-xs font-medium ${getStatusColor(order.status)}`}>
-                            {order.status || 'Unknown'}
+                          <span
+                            className={`px-2 py-1 rounded-full text-xs font-medium ${getStatusColor(
+                              order.status
+                            )}`}
+                          >
+                            {order.status || "Unknown"}
                           </span>
                           {order.orderPayment && (
-                            <span className={`px-2 py-1 rounded-full text-xs font-medium ${getPaymentStatusColor(order.orderPayment.status)}`}>
-                              {order.orderPayment.status || 'Pending'}
+                            <span
+                              className={`px-2 py-1 rounded-full text-xs font-medium ${getPaymentStatusColor(
+                                order.orderPayment.status
+                              )}`}
+                            >
+                              {order.orderPayment.status || "Pending"}
                             </span>
                           )}
                         </div>
                       </div>
-                      
+
                       <div className="grid grid-cols-2 gap-4 mb-3 text-xs">
                         <div>
                           <span className="text-gray-500">Amount:</span>
                           <div className="font-semibold">
-                            RS {order.subTotal ? parseFloat(order.subTotal).toLocaleString(undefined, { minimumFractionDigits: 2 }) : 'N/A'}
+                            RS{" "}
+                            {order.subTotal
+                              ? parseFloat(order.subTotal).toLocaleString(
+                                  undefined,
+                                  { minimumFractionDigits: 2 }
+                                )
+                              : "N/A"}
                           </div>
                         </div>
                         <div>
                           <span className="text-gray-500">Items:</span>
-                          <div className="font-semibold">{getTotalMaterialsCount(order.materials)}</div>
+                          <div className="font-semibold">
+                            {getTotalMaterialsCount(order.materials)}
+                          </div>
                         </div>
                       </div>
 
                       {/* Materials Preview */}
                       {order.materials && order.materials.length > 0 && (
                         <div className="mb-3">
-                          <span className="text-xs text-gray-500">Materials:</span>
+                          <span className="text-xs text-gray-500">
+                            Materials:
+                          </span>
                           <div className="text-xs text-gray-700 mt-1">
-                            {order.materials.slice(0, 2).map((material, index) => (
-                              <div key={index}>
-                                {material.material?.materialName || 'Unknown'}
-                              </div>
-                            ))}
+                            {order.materials
+                              .slice(0, 2)
+                              .map((material, index) => (
+                                <div key={index}>
+                                  {material.material?.materialName || "Unknown"}
+                                </div>
+                              ))}
                             {order.materials.length > 2 && (
-                              <div className="text-gray-400">+{order.materials.length - 2} more</div>
+                              <div className="text-gray-400">
+                                +{order.materials.length - 2} more
+                              </div>
                             )}
                           </div>
                         </div>
@@ -570,24 +753,35 @@ const PurchasingOrders = () => {
                         <div className="mb-3">
                           <div className="flex justify-between text-xs text-gray-500 mb-1">
                             <span>Payment Progress</span>
-                            <span>RS {order.orderPayment.paidAmount || 0} / RS {order.orderPayment.amount || 0}</span>
+                            <span>
+                              RS {order.orderPayment.paidAmount || 0} / RS{" "}
+                              {order.orderPayment.amount || 0}
+                            </span>
                           </div>
                           <div className="w-full bg-gray-200 rounded-full h-2">
-                            <div 
-                              className="bg-green-500 h-2 rounded-full" 
-                              style={{ width: `${getPaymentProgress(order.orderPayment)}%` }}
+                            <div
+                              className="bg-green-500 h-2 rounded-full"
+                              style={{
+                                width: `${getPaymentProgress(
+                                  order.orderPayment
+                                )}%`,
+                              }}
                             ></div>
                           </div>
                         </div>
                       )}
-                      
+
                       <div className="flex justify-between items-center">
                         <div className="text-xs text-gray-600">
-                          {getTotalMaterialsCount(order.materials)} materials • {getTotalDeliveryLocations(order.deliveries)} locations
+                          {getTotalMaterialsCount(order.materials)} materials •{" "}
+                          {getTotalDeliveryLocations(order.deliveries)}{" "}
+                          locations
                         </div>
                         <div className="flex items-center gap-2">
-                          <button 
-                            onClick={() => navigate(`/supplier/orders/${order.ponumber}`)} 
+                          <button
+                            onClick={() =>
+                              navigate(`/supplier/orders/${order.ponumber}`)
+                            }
                             className="text-deep_green hover:text-deep_green/80 transition-colors"
                           >
                             <FaEye className="w-4 h-4" />
@@ -605,10 +799,12 @@ const PurchasingOrders = () => {
           {totalPages > 1 && (
             <div className="flex flex-col sm:flex-row sm:items-center sm:justify-between gap-4">
               <div className="text-sm text-gray-600">
-                Showing {startIndex + 1} to {Math.min(startIndex + itemsPerPage, filteredOrders.length)} of {filteredOrders.length} results
+                Showing {startIndex + 1} to{" "}
+                {Math.min(startIndex + itemsPerPage, filteredOrders.length)} of{" "}
+                {filteredOrders.length} results
               </div>
               <div className="flex items-center gap-2">
-                <button 
+                <button
                   onClick={() => setCurrentPage(Math.max(1, currentPage - 1))}
                   disabled={currentPage === 1}
                   className="px-3 py-1 text-sm text-gray-600 hover:text-gray-900 transition-colors disabled:opacity-50 disabled:cursor-not-allowed"
@@ -621,15 +817,17 @@ const PurchasingOrders = () => {
                     onClick={() => setCurrentPage(index + 1)}
                     className={`px-3 py-1 text-sm rounded font-medium transition-colors ${
                       currentPage === index + 1
-                        ? 'bg-web_yellow text-main_dark'
-                        : 'text-gray-600 hover:text-gray-900'
+                        ? "bg-web_yellow text-main_dark"
+                        : "text-gray-600 hover:text-gray-900"
                     }`}
                   >
                     {index + 1}
                   </button>
                 ))}
-                <button 
-                  onClick={() => setCurrentPage(Math.min(totalPages, currentPage + 1))}
+                <button
+                  onClick={() =>
+                    setCurrentPage(Math.min(totalPages, currentPage + 1))
+                  }
                   disabled={currentPage === totalPages}
                   className="px-3 py-1 text-sm text-gray-600 hover:text-gray-900 transition-colors disabled:opacity-50 disabled:cursor-not-allowed"
                 >
