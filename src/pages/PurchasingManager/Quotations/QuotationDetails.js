@@ -365,7 +365,7 @@ const QuotationDetail = () => {
                     <p className="font-medium text-main_dark flex items-center gap-2 text-sm sm:text-base">
                       <FaCalendarAlt className="text-web_yellow w-4 h-4" />
                       {new Date(
-                        quotationData?.deliveryInformation.requiredDate || ""
+                        quotationData1?.deliveryInfos[0]?.deliveryDate || ""
                       ).toLocaleDateString()}
                     </p>
                   </div>
@@ -409,7 +409,7 @@ const QuotationDetail = () => {
                       Warranty Period
                     </label>
                     <p className="font-medium text-main_dark text-sm sm:text-base">
-                      {quotationData.termsAndConditions.warrantyPeriod || "N/A"}
+                      {quotationData1?.termsAndConditions?.warrantyPeriod || "N/A"}
                     </p>
                   </div>
                   <div className="sm:col-span-2 lg:col-span-1">

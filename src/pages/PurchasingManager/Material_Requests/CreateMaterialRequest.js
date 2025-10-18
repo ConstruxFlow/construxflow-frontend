@@ -371,7 +371,8 @@ const CreateMaterialRequest = () => {
                     <input
                       type="date"
                       name="request_date"
-                      value={Requestdata.request_date}
+                      readOnly
+                      value={new Date().toISOString().split("T")[0]}
                       onChange={handleChange}
                       className="w-full px-3 py-2 border border-gray-300 rounded-md focus:outline-none focus:ring-2 focus:ring-web_yellow"
                     />

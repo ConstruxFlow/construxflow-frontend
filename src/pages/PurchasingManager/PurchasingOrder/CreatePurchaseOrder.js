@@ -26,7 +26,7 @@ const CreatePurchaseOrder = () => {
 
   const [orderData, setOrderData] = useState({
     ponumber: "",
-    order_date: "",
+    order_date: new Date().toISOString().split("T")[0],
     supplier: {
       supplier_id: "",
       supplier: "",
@@ -333,10 +333,7 @@ const CreatePurchaseOrder = () => {
     }
 
     // Validate order details
-    if (!orderData.order_date) {
-      toast.error("Order date is required");
-      isValid = false;
-    }
+   
 
     // Validate order items
     const validMaterials = orderItems.filter(
@@ -403,12 +400,13 @@ const CreatePurchaseOrder = () => {
       const submitData = {
         ponumber: orderData.ponumber,
         order_date: orderData.order_date,
+        required_date: orderData.deliveries?.[0]?.requiredDate,
         status: orderData.status,
         additional_info: orderData.additional_info,
         subTotal: calculateTotal(),
         items: validMaterials.length,
         material_req_id: quotationData.material_req_id,
-        projectId: quotationData.projectId,
+        projectId: quotationRequestDetails?.projectId,
         supplier: {
           supplier_id: orderData.supplier.supplier_id,
         },
@@ -605,7 +603,8 @@ const CreatePurchaseOrder = () => {
                     <input
                       type="date"
                       name="order_date"
-                      value={orderData.order_date}
+                      readOnly
+                      value={new Date().toISOString().split("T")[0]}
                       onChange={handleChange}
                       className="w-full px-3 py-2 border border-gray-300 rounded-md focus:outline-none focus:ring-2 focus:ring-web_yellow focus:border-transparent"
                     />
@@ -808,11 +807,11 @@ const CreatePurchaseOrder = () => {
                       </div>
                       <div>
                         <label className="block text-sm font-medium text-gray-700 mb-2">
-                          Required Date
+                          Delivery Date
                         </label>
                         <input
                           type="date"
-                          value={item.requiredDate}
+                          value={item.DeliveryDate}
                           onChange={(e) =>
                             updateDeliverySchedule(
                               item.id,
@@ -936,7 +935,7 @@ const CreatePurchaseOrder = () => {
                       </div>
                       <div>
                         <strong>Order Date:</strong>{" "}
-                        {orderData.order_date || "Not set"}
+                        { new Date().toISOString().split("T")[0] || "Not set"}
                       </div>
                     </div>
                   </div>

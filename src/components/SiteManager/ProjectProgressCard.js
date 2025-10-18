@@ -136,7 +136,7 @@ const ProjectProgressCard = ({ project, onStatusUpdate, onDelete, onEdit }) => {
             <Edit className="w-4 h-4" />
           </button>
           <button
-            onClick={() => navigate(`/site-manager/projects-list/edit-project/${project.projectId || project.id}`)}
+            onClick={() => navigate(`/site-manager/projects-list/view-project/${project.projectId || project.id}`)}
             className="p-2 text-gray-600 hover:text-green-600 hover:bg-green-50 rounded-lg transition-colors"
             title="View Project"
           >

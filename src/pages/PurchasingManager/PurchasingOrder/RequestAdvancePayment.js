@@ -73,10 +73,6 @@ const RequestAdvancePayment = () => {
 
     console.log(quotationData);
     
-
-
-
-
   useEffect(() => {
     if (orderDetails) {
       setPaymentRequest((prev) => ({
