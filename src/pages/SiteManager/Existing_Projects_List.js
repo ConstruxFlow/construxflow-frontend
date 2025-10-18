@@ -12,6 +12,7 @@ function Existing_Projects_List() {
           { name: "Projects", href: "/site-manager/projects-list" },
           { name: "Materials", href: "/site-manager/material-request-list" },
           { name: "Inventory", href: "/site-manager/site-inventory" },
+          { name: "Purchase Orders", href: "/site-manager/order-details" }
           // { name: "Purchase Orders", href: "/site-manager/projects-list" },
         ]}
         // showButton={true}

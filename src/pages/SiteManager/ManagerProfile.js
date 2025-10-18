@@ -95,6 +95,7 @@ const ManagerProfileView = () => {
           { name: "Projects", href: "/site-manager/projects-list" },
           { name: "Materials", href: "/site-manager/material-request-list" },
           { name: "Inventory", href: "/site-manager/site-material-info" },
+          { name: "Purchase Orders", href: "/site-manager/order-details" }
           // { name: "Purchase Orders", href: "/site-manager/projects-list" },
         ]}
         // showButton={true}

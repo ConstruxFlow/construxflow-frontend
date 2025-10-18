@@ -1,15 +1,12 @@
 import React, { useContext, useEffect, useState } from "react";
 import {
-  FaRegUserCircle,
   FaTruck,
   FaRegFileAlt,
   FaEye,
   FaUser,
   FaHeadset,
-  FaRegCheckCircle,
-  FaRegFolderOpen,
 } from "react-icons/fa";
-import { MdOutlineStorage, MdOutlineNotificationsNone } from "react-icons/md";
+import { MdOutlineStorage } from "react-icons/md";
 import { BsCreditCard2Back } from "react-icons/bs";
 import NavBar from "../../components/NavBar";
 import { useNavigate } from "react-router-dom";
@@ -45,66 +42,6 @@ const navLinks = [
   { name: "Payments", href: "/supplier/payments" },
 ];
 
-const materialRequestsData = {
-  labels: [
-    "Jan",
-    "Feb",
-    "Mar",
-    "Apr",
-    "May",
-    "Jun",
-    "Jul",
-    "Aug",
-    "Sep",
-    "Oct",
-    "Nov",
-    "Dec",
-  ],
-  datasets: [
-    {
-      label: "Requests",
-      data: [15, 22, 18, 35, 28, 42, 30, 25, 40, 38, 45, 50],
-      fill: false,
-      borderColor: "#236571",
-      backgroundColor: "#236571",
-      pointBackgroundColor: "#236571",
-      pointBorderColor: "#236571",
-      pointRadius: 4,
-      pointHoverRadius: 5,
-      pointBorderWidth: 1,
-      tension: 0.3,
-    },
-  ],
-};
-
-const materialRequestsOptions = {
-  responsive: true,
-  maintainAspectRatio: false,
-  plugins: {
-    legend: { display: false },
-    title: { display: false },
-    tooltip: {
-      mode: "index",
-      intersect: false,
-    },
-  },
-  scales: {
-    x: {
-      grid: { display: false },
-      ticks: { color: "#555", font: { size: 14 } },
-    },
-    y: {
-      grid: { color: "#eee" },
-      ticks: { color: "#555", font: { size: 14 } },
-      beginAtZero: true,
-      suggestedMax: 50,
-    },
-  },
-  elements: {
-    line: { borderWidth: 3 },
-  },
-};
-
 function ActionTile({ onClick, icon, label, iconColorClass, hoverClass }) {
   return (
     <button
@@ -125,7 +62,9 @@ function ActionTile({ onClick, icon, label, iconColorClass, hoverClass }) {
 const SupplierDashboard = () => {
   const [supplierData, setSupplierData] = useState(null);
   const [purchaseOrders, setPurchaseOrders] = useState([]);
-  const [quotations, setQuotations] = useState([]); // ✅ Added
+  const [quotations, setQuotations] = useState([]);
+  const [quotationRequests, setQuotationRequests] = useState([]);
+  const [quotationChartData, setQuotationChartData] = useState(null);
   const [orderStats, setOrderStats] = useState({
     totalOrders: 0,
     ordersInTransit: 0,
@@ -133,9 +72,11 @@ const SupplierDashboard = () => {
     pendingPayments: 0,
   });
   const [quotationStats, setQuotationStats] = useState({
-    // ✅ Added
     approvedQuotations: 0,
     pendingQuotations: 0,
+  });
+  const [requestStats, setRequestStats] = useState({
+    pendingRequests: 0,
   });
   const [loading, setLoading] = useState(true);
   const [error, setError] = useState(null);
@@ -169,42 +110,71 @@ const SupplierDashboard = () => {
       setSupplierData(supplierRes.data.data);
       console.log("Supplier Data:", supplierRes.data.data);
 
-      // ✅ Fetch all quotations and filter by supplier
+      // ✅ Fetch Quotation Requests
+      try {
+        const requestsRes = await axios.get(
+          `http://localhost:8080/api/quotationrequest/all`
+        );
+        const allRequests = Array.isArray(requestsRes.data)
+          ? requestsRes.data
+          : requestsRes.data.data || [];
+
+        console.log("=== QUOTATION REQUESTS ===");
+        console.log("All Requests:", allRequests.length);
+        
+        if (allRequests.length > 0) {
+          console.log("Sample Request:", allRequests[0]);
+          console.log("Sample Material:", allRequests[0]?.quotationReqMaterials?.[0]);
+        }
+
+        // Count ALL pending requests (not filtered by supplier yet)
+        const allPendingRequests = allRequests.filter(
+          (request) => request.status?.toLowerCase() === "pending"
+        );
+        console.log("All Pending Requests:", allPendingRequests.length);
+
+        // For now, show all pending requests
+        
+        setQuotationRequests(allPendingRequests);
+        calculateRequestStats(allPendingRequests);
+      } catch (reqError) {
+        console.error("Error fetching quotation requests:", reqError);
+        setQuotationRequests([]);
+        setRequestStats({ pendingRequests: 0 });
+      }
+
+      // Fetch all quotations and filter by supplier
       try {
         const quotationsRes = await axios.get(
           `http://localhost:8080/api/quotations/all`
         );
-        // Handle both response structures
         const allQuotations = Array.isArray(quotationsRes.data)
           ? quotationsRes.data
           : quotationsRes.data.data || [];
 
+        console.log("=== QUOTATIONS ===");
         console.log("All Quotations:", allQuotations.length);
-        console.log("Sample Quotation:", allQuotations[0]);
+        if (allQuotations.length > 0) {
+          console.log("Sample Quotation:", allQuotations[0]);
+        }
 
         // Filter quotations for this supplier
         const supplierQuotations = allQuotations.filter((quotation) => {
           const quotSupplierId = quotation.supplierId;
-          console.log(
-            `Quotation ${
-              quotation.id
-            }: supplierId = ${quotSupplierId}, Match = ${
-              quotSupplierId === supplierId
-            }`
-          );
-          return String(quotSupplierId).trim() === String(supplierId).trim();
+          const match = String(quotSupplierId).trim() === String(supplierId).trim();
+          console.log(`Quotation ${quotation.id}: supplierId=${quotSupplierId}, match=${match}`);
+          return match;
         });
 
         console.log("Supplier Quotations:", supplierQuotations.length);
         setQuotations(supplierQuotations);
-
-        // Calculate quotation statistics
         calculateQuotationStats(supplierQuotations);
+        generateQuotationChartData(supplierQuotations);
       } catch (quotError) {
         console.error("Error fetching quotations:", quotError);
-        // Continue with orders even if quotations fail
         setQuotations([]);
         setQuotationStats({ approvedQuotations: 0, pendingQuotations: 0 });
+        setQuotationChartData(null);
       }
 
       // Fetch all purchase orders and filter by supplier
@@ -213,53 +183,109 @@ const SupplierDashboard = () => {
       );
       const allOrders = ordersRes.data.data || [];
 
-      console.log("All Orders:", allOrders.length);
-
-      // Filter orders for this supplier
       const supplierOrders = allOrders.filter((order) => {
         const orderSupplierId =
           order.supplier?.supplierId || order.supplier?.supplier_id;
         return String(orderSupplierId).trim() === String(supplierId).trim();
       });
 
+      console.log("=== ORDERS ===");
       console.log("Supplier Orders:", supplierOrders.length);
       setPurchaseOrders(supplierOrders);
-
-      // Calculate order statistics
       calculateOrderStats(supplierOrders);
     } catch (err) {
       console.error("Error fetching dashboard data:", err);
-      console.error("Error details:", err.response?.data);
       setError("Failed to load dashboard data");
     } finally {
       setLoading(false);
     }
   };
 
-  const calculateOrderStats = (orders) => {
-    // Total Purchase Orders
-    const totalOrders = orders.length;
+  const calculateRequestStats = (requests) => {
+    const pendingRequests = requests.length;
 
-    // Orders in Transit (status = "Dispatched")
+    console.log("=== REQUEST STATISTICS ===");
+    console.log("Pending Requests:", pendingRequests);
+
+    setRequestStats({
+      pendingRequests,
+    });
+  };
+
+  const generateQuotationChartData = (quotations) => {
+    console.log("\n=== GENERATING CHART DATA ===");
+    console.log("Total Quotations Received:", quotations.length);
+
+    const monthlyApprovedCounts = Array(12).fill(0);
+    const monthNames = [
+      "Jan", "Feb", "Mar", "Apr", "May", "Jun",
+      "Jul", "Aug", "Sep", "Oct", "Nov", "Dec",
+    ];
+
+    quotations.forEach((quotation) => {
+      if (quotation.status?.toLowerCase() === "approved") {
+        const dateValue = 
+          quotation.createdDate || 
+          quotation.created_at || 
+          quotation.quotationDate ||
+          quotation.date ||
+          quotation.submittedDate ||
+          quotation.createdAt ||
+          quotation.approvedDate ||
+          quotation.timestamp;
+
+        if (dateValue) {
+          try {
+            const date = new Date(dateValue);
+            if (!isNaN(date.getTime())) {
+              const month = date.getMonth();
+              monthlyApprovedCounts[month]++;
+            }
+          } catch (error) {
+            console.error("Error parsing date:", error);
+          }
+        } else {
+          const currentMonth = new Date().getMonth();
+          monthlyApprovedCounts[currentMonth]++;
+        }
+      }
+    });
+
+    console.log("Monthly Approved Counts:", monthlyApprovedCounts);
+
+    const chartData = {
+      labels: monthNames,
+      datasets: [
+        {
+          label: "Approved Quotations",
+          data: monthlyApprovedCounts,
+          fill: false,
+          borderColor: "#236571",
+          backgroundColor: "#236571",
+          pointBackgroundColor: "#236571",
+          pointBorderColor: "#236571",
+          pointRadius: 4,
+          pointHoverRadius: 6,
+          pointBorderWidth: 1,
+          tension: 0.3,
+        },
+      ],
+    };
+
+    setQuotationChartData(chartData);
+  };
+
+  const calculateOrderStats = (orders) => {
+    const totalOrders = orders.length;
     const inTransitOrders = orders.filter(
       (o) => o.status?.toLowerCase() === "dispatched"
     ).length;
-
-    // Total Payments (sum of all order payments)
     const totalPayments = orders.reduce((sum, order) => {
       return sum + (parseFloat(order.orderPayment?.amount) || 0);
     }, 0);
-
-    // Pending Payments (sum of remaining amounts)
     const pendingPayments = orders.reduce((sum, order) => {
       return sum + (parseFloat(order.orderPayment?.remainingAmount) || 0);
     }, 0);
-
-    console.log("=== ORDER STATISTICS ===");
-    console.log("Total Orders:", totalOrders);
-    console.log("In Transit:", inTransitOrders);
-    console.log("Total Payments:", totalPayments);
-    console.log("Pending Payments:", pendingPayments);
 
     setOrderStats({
       totalOrders,
@@ -269,26 +295,54 @@ const SupplierDashboard = () => {
     });
   };
 
-  // ✅ NEW FUNCTION: Calculate quotation statistics
   const calculateQuotationStats = (quotations) => {
-    // Approved Quotations (status = "Approved")
     const approvedQuotations = quotations.filter(
       (q) => q.status?.toLowerCase() === "approved"
     ).length;
-
-    // Pending Quotations (status = "Pending")
     const pendingQuotations = quotations.filter(
       (q) => q.status?.toLowerCase() === "pending"
     ).length;
 
     console.log("=== QUOTATION STATISTICS ===");
-    console.log("Approved Quotations:", approvedQuotations);
-    console.log("Pending Quotations:", pendingQuotations);
+    console.log("Approved:", approvedQuotations);
+    console.log("Pending:", pendingQuotations);
 
     setQuotationStats({
       approvedQuotations,
       pendingQuotations,
     });
+  };
+
+  const quotationChartOptions = {
+    responsive: true,
+    maintainAspectRatio: false,
+    plugins: {
+      legend: { display: false },
+      title: { display: false },
+      tooltip: {
+        mode: "index",
+        intersect: false,
+        callbacks: {
+          label: function (context) {
+            return `Approved: ${context.parsed.y}`;
+          },
+        },
+      },
+    },
+    scales: {
+      x: {
+        grid: { display: false },
+        ticks: { color: "#555", font: { size: 14 } },
+      },
+      y: {
+        grid: { color: "#eee" },
+        ticks: { color: "#555", font: { size: 14 }, stepSize: 1 },
+        beginAtZero: true,
+      },
+    },
+    elements: {
+      line: { borderWidth: 3 },
+    },
   };
 
   if (loading) {
@@ -345,42 +399,52 @@ const SupplierDashboard = () => {
         </p>
 
         {/* Urgent Actions */}
-        {quotationStats.pendingQuotations > 0 && (
+        {(quotationStats.pendingQuotations > 0 || requestStats.pendingRequests > 0) && (
           <div className="bg-gradient-to-r from-web_yellow/15 via-web_yellow/8 to-transparent border-l-4 border-web_yellow rounded-lg p-4 mb-8 flex items-start gap-4 shadow-md">
             <div className="text-yellow-600 text-2xl mt-1">⚠</div>
             <div>
               <h3 className="font-semibold text-base text-gray-800 mb-1 tracking-wide">
                 Urgent Actions Required
               </h3>
-              <p className="text-gray-500 text-sm font-medium">
-                You have {quotationStats.pendingQuotations} pending quotation
-                {quotationStats.pendingQuotations > 1 ? "s" : ""} awaiting
-                review. Please check for updates to avoid delays in your supply
-                chain.
-              </p>
+              <div className="space-y-1">
+                {/* {requestStats.pendingRequests > 0 && (
+                  <p className="text-gray-500 text-sm font-medium">
+                    • {requestStats.pendingRequests} pending material request
+                    {requestStats.pendingRequests > 1 ? "s" : ""} awaiting quotation submission.
+                  </p>
+                )} */}
+                {quotationStats.pendingQuotations > 0 && (
+                  <p className="text-gray-500 text-sm font-medium">
+                    You have {quotationStats.pendingQuotations} pending quotation
+                    {quotationStats.pendingQuotations > 1 ? "s" : ""} awaiting review. Please check for updates to avoid delays in your supply chain.
+                  </p>
+                )}
+              </div>
             </div>
           </div>
         )}
 
         {/* Stats Cards */}
         <div className="grid grid-cols-1 sm:grid-cols-2 lg:grid-cols-4 gap-3 sm:gap-4 mb-8">
-          {/* Card 1 - Static for now */}
+          {/* Pending Requests Card */}
           <div className="bg-purewhite border border-gray-200 rounded-xl p-4 sm:p-5 flex items-center gap-3 sm:gap-4 shadow-sm hover:shadow-md hover:-translate-y-0.5 transition-all duration-150">
             <div className="flex-1 min-w-0">
               <p className="text-slatebluegray font-medium text-sm mb-0.5 truncate">
                 Pending Requests
               </p>
               <h3 className="text-xl sm:text-2xl font-bold text-main_dark leading-tight mb-0.5">
-                -
+                {requestStats.pendingRequests}
               </h3>
-              <span className="text-deep_green text-xs">Coming soon</span>
+              <span className="text-deep_green text-xs">
+                {requestStats.pendingRequests > 0 ? "Action required" : "All clear"}
+              </span>
             </div>
             <div className="w-12 h-12 bg-gradient-to-br from-web_yellow via-web_yellow to-web_yellow/80 rounded-xl flex items-center justify-center shadow-lg">
               <MdOutlineStorage className="text-purewhite text-lg" />
             </div>
           </div>
 
-          {/* Card 2 - Approved Quotations (FROM BACKEND) ✅ */}
+          {/* Approved Quotations Card */}
           <div className="bg-purewhite border border-gray-200 rounded-xl p-4 sm:p-5 flex items-center gap-3 sm:gap-4 shadow-sm hover:shadow-md hover:-translate-y-0.5 transition-all duration-150">
             <div className="flex-1 min-w-0">
               <p className="text-slatebluegray font-medium text-sm mb-0.5 truncate">
@@ -398,7 +462,7 @@ const SupplierDashboard = () => {
             </div>
           </div>
 
-          {/* Card 3 - Purchase Orders (FROM BACKEND) */}
+          {/* Purchase Orders Card */}
           <div className="bg-purewhite border border-gray-200 rounded-xl p-4 sm:p-5 flex items-center gap-3 sm:gap-4 shadow-sm hover:shadow-md hover:-translate-y-0.5 transition-all duration-150">
             <div className="flex-1 min-w-0">
               <p className="text-slatebluegray font-medium text-sm mb-0.5 truncate">
@@ -416,7 +480,7 @@ const SupplierDashboard = () => {
             </div>
           </div>
 
-          {/* Card 4 - Total Payments (FROM BACKEND) */}
+          {/* Total Payments Card */}
           <div className="bg-purewhite border border-gray-200 rounded-xl p-4 sm:p-5 flex items-center gap-3 sm:gap-4 shadow-sm hover:shadow-md hover:-translate-y-0.5 transition-all duration-150">
             <div className="flex-1 min-w-0">
               <p className="text-slatebluegray font-medium text-sm mb-0.5 truncate">
@@ -476,22 +540,49 @@ const SupplierDashboard = () => {
         <div className="grid grid-cols-1 md:grid-cols-2 gap-4 mb-6">
           <div className="bg-purewhite border border-gray-200 rounded-xl p-5 min-h-[230px]">
             <div className="font-semibold mb-2 text-lg text-gray-700">
-              Material Requests Trend
+              Approved Quotations Trend
             </div>
             <div className="w-full h-60 px-5 mt-5">
-              <Line
-                data={materialRequestsData}
-                options={materialRequestsOptions}
-              />
+              {quotationChartData ? (
+                <Line
+                  data={quotationChartData}
+                  options={quotationChartOptions}
+                />
+              ) : (
+                <div className="flex items-center justify-center h-full text-gray-400">
+                  <div className="text-center">
+                    <FaRegFileAlt className="text-4xl mx-auto mb-2 opacity-30" />
+                    <p className="text-sm">No quotation data available</p>
+                  </div>
+                </div>
+              )}
             </div>
           </div>
+
           <div className="bg-purewhite border border-gray-200 rounded-xl p-5 min-h-[230px]">
             <div className="font-semibold mb-2 text-lg text-gray-700">
               Urgent Notifications
             </div>
             <div className="space-y-3">
+              {/* {requestStats.pendingRequests > 0 && (
+                <div className="flex items-start bg-blue-50 rounded-lg p-4 border-l-4 border-blue-400 shadow mt-8">
+                  <div className="flex-1 ml-3">
+                    <div className="font-semibold text-blue-700">
+                      Pending Material Requests
+                    </div>
+                    <div className="text-sm text-blue-800">
+                      {requestStats.pendingRequests} material request
+                      {requestStats.pendingRequests > 1 ? "s need" : " needs"}{" "}
+                      your quotation.
+                    </div>
+                    <div className="text-xs text-blue-500 mt-1">
+                      Submit quotations in Requests page
+                    </div>
+                  </div>
+                </div>
+              )} */}
               {quotationStats.pendingQuotations > 0 && (
-                <div className="flex items-start bg-yellow-50 rounded-lg p-4 border-l-4 border-yellow-400 shadow mt-8">
+                <div className="flex items-start bg-yellow-50 rounded-lg p-4 border-l-4 border-yellow-400 shadow">
                   <div className="flex-1 ml-3">
                     <div className="font-semibold text-yellow-700">
                       Pending Quotations
@@ -524,22 +615,6 @@ const SupplierDashboard = () => {
                   </div>
                 </div>
               )}
-              {/* {orderStats.pendingPayments > 0 && (
-                <div className="flex items-start bg-yellow-50 rounded-lg p-4 border-l-4 border-yellow-400 shadow">
-                  <div className="flex-1 ml-3">
-                    <div className="font-semibold text-yellow-700">
-                      Pending Payments
-                    </div>
-                    <div className="text-sm text-yellow-800">
-                      RS {orderStats.pendingPayments.toLocaleString()} in
-                      payments pending.
-                    </div>
-                    <div className="text-xs text-yellow-500 mt-1">
-                      View details
-                    </div>
-                  </div>
-                </div>
-              )} */}
             </div>
           </div>
         </div>
