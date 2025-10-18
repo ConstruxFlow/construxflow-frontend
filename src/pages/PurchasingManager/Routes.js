@@ -107,7 +107,7 @@ export const purchasingManagerRoutes = {
       element: <EditPurchaseOrder />,
     },
     {
-      path: 'orders/payment',
+      path: 'orders/payment/:id',
       element: <PayRemainingBalance />,
     },
     {
