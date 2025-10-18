@@ -24,6 +24,10 @@ import EquipmentRequestForm from '../../components/SiteManager/EquipmentRequestF
 import ProjectEquipmentDashboard from '../../components/SiteManager/ProjectEquipmentDashboard';
 import EquipmentUsageUpdate from '../../components/SiteManager/EquipmentUsageUpdate';
 import ProjectSelection from '../../components/SiteManager/ProjectSelection';
+import { elements } from 'chart.js';
+import SiteManagerOrdersOverview from './SiteManagerOrdersOverview';
+import SiteManagerOrderDetails from './SiteManagerOrderDetails';
+import ProjectView from './ProjectView';
 
 export const siteManagerRoutes = {
   path: '/site-manager',
@@ -48,6 +52,10 @@ export const siteManagerRoutes = {
     {
       path: 'projects-list/edit-project/:projectId',
       element: <Edit_Project />,
+    },
+    {
+      path: 'projects-list/view-project/:projectId',
+      element: <ProjectView />,
     },
     {
       path: 'projects-list/create-project/project-phase',
@@ -129,6 +137,14 @@ export const siteManagerRoutes = {
     {
       path: 'equipment-usage/:equipmentId',
       element: <EquipmentUsageUpdate />,
+    },
+    {
+      path: 'order-details',
+      element: <SiteManagerOrdersOverview />,
+    },
+    {
+      path: 'order-details/:id',
+      element: <SiteManagerOrderDetails />,
     }
   ]
 }; 

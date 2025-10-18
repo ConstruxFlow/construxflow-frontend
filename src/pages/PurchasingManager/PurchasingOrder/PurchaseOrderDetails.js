@@ -332,34 +332,32 @@ const PurchaseOrderDetails = () => {
                   
                   <div className="space-y-3">
                     <div className="flex justify-between items-center">
-                      <span className="text-sm text-gray-600">Deposit (30%)</span>
+                      <span className="text-sm text-gray-600">Advance Payment ({(orderData.orderPayment?.paidAmount / orderData.orderPayment?.amount * 100).toFixed(1)}%)</span>
                       <div className="text-right">
                         <p className="font-semibold text-main_dark">
                           RS {(orderData.orderPayment?.paidAmount || 0).toLocaleString()}
                         </p>
-                        <p className="text-xs text-green-600">Paid - May 15</p>
                       </div>
                     </div>
                     
                     <div className="flex justify-between items-center">
-                      <span className="text-sm text-gray-600">Progress Payment (50%)</span>
-                      <div className="text-right">
-                        <p className="font-semibold text-main_dark">
-                          RS {((orderData.orderPayment?.amount || 0) * 0.5).toLocaleString()}
-                        </p>
-                        <p className="text-xs text-orange-600">Due</p>
-                      </div>
-                    </div>
-                    
-                    <div className="flex justify-between items-center">
-                      <span className="text-sm text-gray-600">Final Payment (20%)</span>
+                      <span className="text-sm text-gray-600">Remaining Payment ({(orderData.orderPayment?.remainingAmount / orderData.orderPayment?.amount * 100).toFixed(1)}%)</span>
                       <div className="text-right">
                         <p className="font-semibold text-main_dark">
                           RS {(orderData.orderPayment?.remainingAmount || 0).toLocaleString()}
                         </p>
-                        <p className="text-xs text-gray-500">Pending</p>
                       </div>
                     </div>
+
+                    <div className="flex justify-between items-center">
+                      <span className="text-sm text-gray-600">Sub Total</span>
+                      <div className="text-right">
+                        <p className="font-semibold text-main_dark">
+                          RS {((orderData?.orderPayment.amount || 0)).toLocaleString()}
+                        </p>
+                      </div>
+                    </div>
+                    
                   </div>
 
                   <div className="pt-4 border-t">
@@ -381,7 +379,7 @@ const PurchaseOrderDetails = () => {
                     <button className="flex-1 px-4 py-2 bg-deep_green text-purewhite rounded-md hover:bg-deep_green/90 transition-colors">
                       Download Invoice
                     </button>
-                    <button onClick={() => navigate('/purchasing/orders/payment')} className="flex-1 px-4 py-2 bg-web_yellow text-main_dark rounded-md hover:bg-web_yellow/90 transition-colors">
+                    <button onClick={() => navigate(`/purchasing/orders/payment/${orderData.ponumber}`)} className="flex-1 px-4 py-2 bg-web_yellow text-main_dark rounded-md hover:bg-web_yellow/90 transition-colors">
                       Payment
                     </button>
                   </div>

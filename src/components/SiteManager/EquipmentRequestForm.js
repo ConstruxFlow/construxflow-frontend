@@ -11,6 +11,7 @@ import {
   Send,
   Package
 } from 'lucide-react';
+import NavBar from '../NavBar';
 
 const EquipmentRequestForm = () => {
   const navigate = useNavigate();
@@ -118,35 +119,70 @@ const EquipmentRequestForm = () => {
 
   if (loading) {
     return (
-      <div className="min-h-screen bg-gradient-to-br from-purewhite to-gray-50/50 flex items-center justify-center">
-        <div className="text-center">
-          <div className="animate-spin rounded-full h-12 w-12 border-b-2 border-deep_green mx-auto mb-4"></div>
-          <p className="text-slatebluegray">Loading equipment details...</p>
+      <>
+        <NavBar
+          profileURL='profile'
+          links={[
+            { name: "Dashboard", href: "/site-manager" },
+            { name: "Projects", href: "/site-manager/projects-list" },
+            { name: "Materials", href: "/site-manager/material-request-list" },
+            { name: "Inventory", href: "/site-manager/site-inventory" },
+            { name: "Purchase Orders", href: "/site-manager/order-details" },
+          ]}
+        />
+        <div className="min-h-screen bg-gradient-to-br from-purewhite to-gray-50/50 flex items-center justify-center">
+          <div className="text-center">
+            <div className="animate-spin rounded-full h-12 w-12 border-b-2 border-deep_green mx-auto mb-4"></div>
+            <p className="text-slatebluegray">Loading equipment details...</p>
+          </div>
         </div>
-      </div>
+      </>
     );
   }
 
   if (selectedEquipmentIds.length === 0) {
     return (
-      <div className="min-h-screen bg-gradient-to-br from-purewhite to-gray-50/50 flex items-center justify-center">
-        <div className="text-center">
-          <div className="text-6xl mb-4">⚠️</div>
-          <h3 className="text-xl font-semibold text-main_dark mb-2">No Equipment Selected</h3>
-          <p className="text-slatebluegray mb-4">Please go back and select equipment first.</p>
-          <button
-            onClick={() => navigate(-1)}
-            className="bg-deep_green text-white px-6 py-2 rounded-lg font-semibold hover:bg-deep_green/90 transition-colors duration-150"
-          >
-            Go Back
-          </button>
+      <>
+        <NavBar
+          profileURL='profile'
+          links={[
+            { name: "Dashboard", href: "/site-manager" },
+            { name: "Projects", href: "/site-manager/projects-list" },
+            { name: "Materials", href: "/site-manager/material-request-list" },
+            { name: "Inventory", href: "/site-manager/site-inventory" },
+            { name: "Purchase Orders", href: "/site-manager/order-details" },
+          ]}
+        />
+        <div className="min-h-screen bg-gradient-to-br from-purewhite to-gray-50/50 flex items-center justify-center">
+          <div className="text-center">
+            <div className="text-6xl mb-4">⚠️</div>
+            <h3 className="text-xl font-semibold text-main_dark mb-2">No Equipment Selected</h3>
+            <p className="text-slatebluegray mb-4">Please go back and select equipment first.</p>
+            <button
+              onClick={() => navigate(-1)}
+              className="bg-deep_green text-white px-6 py-2 rounded-lg font-semibold hover:bg-deep_green/90 transition-colors duration-150"
+            >
+              Go Back
+            </button>
+          </div>
         </div>
-      </div>
+      </>
     );
   }
 
   return (
-    <div className="min-h-screen bg-gradient-to-br from-purewhite to-gray-50/50">
+    <>
+      <NavBar
+        profileURL='profile'
+        links={[
+          { name: "Dashboard", href: "/site-manager" },
+          { name: "Projects", href: "/site-manager/projects-list" },
+          { name: "Materials", href: "/site-manager/material-request-list" },
+          { name: "Inventory", href: "/site-manager/site-inventory" },
+          { name: "Purchase Orders", href: "/site-manager/order-details" },
+        ]}
+      />
+      <div className="min-h-screen bg-gradient-to-br from-purewhite to-gray-50/50">
       <div className="max-w-4xl mx-auto px-4 sm:px-6 lg:px-8 py-8">
         {/* Header */}
         <div className="mb-8">
@@ -348,10 +384,13 @@ const EquipmentRequestForm = () => {
         </form>
       </div>
     </div>
+    </>
   );
 };
 
 export default EquipmentRequestForm;
+
+
 
 
 
