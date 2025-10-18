@@ -18,6 +18,7 @@ import {
   TrendingUp,
   Activity
 } from 'lucide-react';
+import NavBar from '../NavBar';
 
 const ProjectEquipmentDashboard = () => {
   const navigate = useNavigate();
@@ -172,17 +173,40 @@ const ProjectEquipmentDashboard = () => {
 
   if (loading) {
     return (
-      <div className="min-h-screen bg-gradient-to-br from-purewhite to-gray-50/50 flex items-center justify-center">
-        <div className="text-center">
-          <div className="animate-spin rounded-full h-12 w-12 border-b-2 border-deep_green mx-auto mb-4"></div>
-          <p className="text-slatebluegray">Loading project equipment...</p>
+      <>
+        <NavBar
+          profileURL='profile'
+          links={[
+            { name: "Dashboard", href: "/site-manager" },
+            { name: "Projects", href: "/site-manager/projects-list" },
+            { name: "Materials", href: "/site-manager/material-request-list" },
+            { name: "Inventory", href: "/site-manager/site-inventory" },
+            { name: "Purchase Orders", href: "/site-manager/order-details" },
+          ]}
+        />
+        <div className="min-h-screen bg-gradient-to-br from-purewhite to-gray-50/50 flex items-center justify-center">
+          <div className="text-center">
+            <div className="animate-spin rounded-full h-12 w-12 border-b-2 border-deep_green mx-auto mb-4"></div>
+            <p className="text-slatebluegray">Loading project equipment...</p>
+          </div>
         </div>
-      </div>
+      </>
     );
   }
 
   return (
-    <div className="min-h-screen bg-gradient-to-br from-purewhite to-gray-50/50">
+    <>
+      <NavBar
+        profileURL='profile'
+        links={[
+          { name: "Dashboard", href: "/site-manager" },
+          { name: "Projects", href: "/site-manager/projects-list" },
+          { name: "Materials", href: "/site-manager/material-request-list" },
+          { name: "Inventory", href: "/site-manager/site-inventory" },
+          { name: "Purchase Orders", href: "/site-manager/order-details" },
+        ]}
+      />
+      <div className="min-h-screen bg-gradient-to-br from-purewhite to-gray-50/50">
       <div className="max-w-7xl mx-auto px-4 sm:px-6 lg:px-8 py-8">
         {/* Header */}
         <div className="mb-8">
@@ -453,6 +477,7 @@ const ProjectEquipmentDashboard = () => {
         )}
       </div>
     </div>
+    </>
   );
 };
 
