@@ -34,8 +34,10 @@ export const SupplierRoutes = {
     { path: "quotations/submit/:id", element: <SubmitQuotation /> },
     { path: "quotations", element: <QuotationStatus /> },
     { path: "quotations/:id", element: <QuotationDetails /> },
-    { path: "payments/receive-advanced", element: <ReceiveAdvancedPayment /> },
-    { path: "payments/receive-full", element: <ReceiveFullPayment /> },
+    // In SupplierRoutes.jsx
+{ path: "payments/receive-advanced/:ponumber", element: <ReceiveAdvancedPayment /> }, 
+
+    
     { path: "quotations/update/:id", element: <UpdateQuotation /> },
 
     {

@@ -115,10 +115,10 @@ const QuotationStatus = () => {
           />
           <SummaryCard
             icon={<FaCheckCircle />}
-            title="Accepted"
-            value={quotations.filter((q) => q.status === "Accepted").length}
+            title="Approved"
+            value={quotations.filter((q) => q.status === "Approved").length}
             subtitle="Approved by client"
-            type="accepted"
+            type="approved"
           />
           <SummaryCard
             icon={<FaClock />}
@@ -149,7 +149,7 @@ const QuotationStatus = () => {
             >
               <option>All Status</option>
               <option>Pending</option>
-              <option>Accepted</option>
+              <option>Approved</option>
               <option>Rejected</option>
             </select>
             <FaChevronDown className="absolute right-3 top-1/2 -translate-y-1/2 text-gray-400 pointer-events-none" />
