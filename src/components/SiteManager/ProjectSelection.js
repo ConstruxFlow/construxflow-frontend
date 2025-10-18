@@ -129,6 +129,7 @@ const ProjectSelection = () => {
             { name: "Projects", href: "/site-manager/projects-list" },
             { name: "Materials", href: "/site-manager/material-request-list" },
             { name: "Inventory", href: "/site-manager/site-inventory" },
+            { name: "Purchase Orders", href: "/site-manager/order-details" }
           ]}
         />
         <div className="min-h-screen bg-gradient-to-br from-purewhite to-gray-50/50 flex items-center justify-center">
@@ -150,6 +151,7 @@ const ProjectSelection = () => {
           { name: "Projects", href: "/site-manager/projects-list" },
           { name: "Materials", href: "/site-manager/material-request-list" },
           { name: "Inventory", href: "/site-manager/site-inventory" },
+          { name: "Purchase Orders", href: "/site-manager/order-details" }
         ]}
       />
       <div className="min-h-screen bg-gradient-to-br from-purewhite to-gray-50/50">
