@@ -13,7 +13,7 @@ const navLinks = [
 const AddMaterial = () => {
   const handleAddMaterial = async (formData) => {
     try {
-      const response = await fetch("http://localhost:8080/api/inventory/add", {
+      const response = await fetch("http://localhost:8080/api/materials/add", {
         method: "POST",
         headers: { "Content-Type": "application/json" },
         body: JSON.stringify(formData),
