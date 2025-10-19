@@ -232,17 +232,15 @@ const ReceiveAdvancedPayment = () => {
   }
 
   const payment = orderData.order_payment || orderData.orderPayment;
-  const paymentDate = payment?.payment_date 
-    ? new Date(payment.payment_date).toLocaleDateString('en-US', { 
-        year: 'numeric', 
-        month: 'long', 
-        day: 'numeric' 
-      })
+  
+  // ✅ Use created_date instead of payment_date
+  const paymentCreatedDate = payment?.created_date || payment?.createdDate
+    ? formatDate(payment.created_date || payment.createdDate)
     : 'N/A';
 
   const paymentDetails = getPaymentDetails();
   
-  // ✅ Get order date - handle both snake_case and camelCase
+  // Get order date - handle both snake_case and camelCase
   const orderDate = formatDate(orderData.order_date || orderData.orderDate);
 
   return (
@@ -291,8 +289,8 @@ const ReceiveAdvancedPayment = () => {
               </div>
               <div className="mb-2 flex items-center gap-2">
                 <FaRegCalendarAlt className="text-slatebluegray" />
-                <span className="text-sm text-slatebluegray">Payment Date</span>
-                <span className="font-medium text-main_dark ml-2">{paymentDate}</span>
+                <span className="text-sm text-slatebluegray">Payment Created</span>
+                <span className="font-medium text-main_dark ml-2">{paymentCreatedDate}</span>
               </div>
               <div className="mb-2">
                 <span className="text-sm text-slatebluegray">Supplier</span>
@@ -379,8 +377,8 @@ const ReceiveAdvancedPayment = () => {
                 </div>
               </div>
               <div>
-                <div className="text-slatebluegray">Payment Date</div>
-                <div className="font-medium">{paymentDate}</div>
+                <div className="text-slatebluegray">Payment Created</div>
+                <div className="font-medium">{paymentCreatedDate}</div>
               </div>
             </div>
           </div>

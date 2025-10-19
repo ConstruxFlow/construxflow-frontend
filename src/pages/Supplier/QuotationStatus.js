@@ -26,7 +26,7 @@ const navLinks = [
 
 const statusColors = {
   Pending: "bg-yellow-100 text-yellow-800",
-  Accepted: "bg-green-100 text-green-800",
+  Approved: "bg-green-100 text-green-800",
   Rejected: "bg-red-100 text-red-800",
 };
 
@@ -34,7 +34,8 @@ const QuotationStatus = () => {
   const [quotations, setQuotations] = useState([]);
   const [search, setSearch] = useState("");
   const [status, setStatus] = useState("All Status");
-  const [date, setDate] = useState("");
+  const [startDate, setStartDate] = useState("");
+  const [endDate, setEndDate] = useState("");
   const navigate = useNavigate();
   const { authState } = useContext(AuthContext);
   const [loading, setLoading] = useState(true);
@@ -46,40 +47,93 @@ const QuotationStatus = () => {
     const supplierId = authState?.user?.supplierId;
     if (!supplierId) {
       setQuotations([]);
+      setLoading(false);
       return;
     }
 
     axios
       .get("http://localhost:8080/api/quotations/all")
       .then((res) => {
-        setQuotations(
-          res.data.filter((q) => q.supplierId === supplierId)
-        );
+        const filteredData = res.data.filter((q) => q.supplierId === supplierId);
+        console.log("Fetched Quotations:", filteredData);
+        setQuotations(filteredData);
         setLoading(false);
       })
       .catch((err) => {
         console.error("Failed to fetch quotations", err);
+        setLoading(false);
       });
   }, [authState?.user?.supplierId]);
 
-  // Processed list
+  // Enhanced filtering logic
   const filteredQuotations = quotations.filter((q) => {
-    const materialName = q.items?.[0]?.material?.materialName || "";
-    const submittedDate = new Date(q.createdAt).toISOString().split("T")[0]; // format to yyyy-mm-dd
+    // Get all material names from items array
+    const materialNames = q.items
+      ?.map((item) => item.material?.materialName || "")
+      .filter(Boolean)
+      .join(", ")
+      .toLowerCase();
 
-    return (
-      (status === "All Status" || q.status === status) &&
-      (search === "" ||
-        q.id?.toString().toLowerCase().includes(search.toLowerCase()) ||
-        materialName.toLowerCase().includes(search.toLowerCase())) &&
-      (date === "" || submittedDate === date)
-    );
+    // Search filter - matches Quotation ID and Material Names
+    const searchLower = search.toLowerCase().trim();
+    const matchesSearch =
+      search === "" ||
+      // Search by Quotation ID (902, QT-902, qt902, etc.)
+      q.id?.toString().includes(searchLower.replace(/[^0-9]/g, "")) ||
+      // Search by Material Names
+      materialNames.includes(searchLower);
+
+    // Status filter
+    const matchesStatus = status === "All Status" || q.status === status;
+
+    // Date range filter on submitted date (createdAt)
+    let matchesDateRange = true;
+    if (startDate || endDate) {
+      const submittedDate = q.createdAt ? new Date(q.createdAt) : null;
+
+      if (submittedDate) {
+        if (startDate && endDate) {
+          const start = new Date(startDate);
+          const end = new Date(endDate);
+          end.setHours(23, 59, 59, 999);
+          matchesDateRange = submittedDate >= start && submittedDate <= end;
+        } else if (startDate) {
+          const start = new Date(startDate);
+          matchesDateRange = submittedDate >= start;
+        } else if (endDate) {
+          const end = new Date(endDate);
+          end.setHours(23, 59, 59, 999);
+          matchesDateRange = submittedDate <= end;
+        }
+      } else {
+        matchesDateRange = false;
+      }
+    }
+
+    return matchesSearch && matchesStatus && matchesDateRange;
   });
 
   // Pagination
   const totalPages = Math.ceil(filteredQuotations.length / itemsPerPage);
   const startIndex = (currentPage - 1) * itemsPerPage;
-  const paginatedQuotations = filteredQuotations.slice(startIndex, startIndex + itemsPerPage);
+  const paginatedQuotations = filteredQuotations.slice(
+    startIndex,
+    startIndex + itemsPerPage
+  );
+
+  // Reset to page 1 when filters change
+  useEffect(() => {
+    setCurrentPage(1);
+  }, [search, status, startDate, endDate]);
+
+  // Clear all filters
+  const clearFilters = () => {
+    setSearch("");
+    setStatus("All Status");
+    setStartDate("");
+    setEndDate("");
+    setCurrentPage(1);
+  };
 
   if (loading) {
     return (
@@ -94,7 +148,11 @@ const QuotationStatus = () => {
 
   return (
     <div className="bg-purewhite min-h-screen font-poppins">
-      <NavBar links={navLinks} profileURL="/supplier/profile" logoSrc="/logo1.png" />
+      <NavBar
+        links={navLinks}
+        profileURL="/supplier/profile"
+        logoSrc="/logo1.png"
+      />
 
       <div className="max-w-full mx-auto px-4 sm:px-8 lg:px-16 py-8">
         <h1 className="text-xxl md:text-2xl font-bold text-main_dark mb-2">
@@ -130,38 +188,85 @@ const QuotationStatus = () => {
         </div>
 
         {/* Filters */}
-        <div className="bg-purewhite border border-gray-200 rounded-lg p-4 sm:p-6 flex flex-col md:flex-row md:items-center gap-4 mb-6">
-          <div className="relative flex-1">
-            <FaSearch className="absolute left-3 top-1/2 -translate-y-1/2 text-gray-400" />
-            <input
-              type="text"
-              value={search}
-              onChange={(e) => setSearch(e.target.value)}
-              placeholder="Search quotations..."
-              className="w-full text-sm pl-10 pr-4 py-2 border border-light_gray rounded-lg focus:outline-none focus:ring-2 focus:ring-web_yellow"
-            />
+        <div className="bg-purewhite border border-gray-200 rounded-lg p-4 sm:p-6 mb-6">
+          <div className="grid grid-cols-1 md:grid-cols-4 gap-4">
+            <div className="relative flex-1">
+              <label className="block text-sm font-medium text-main_dark mb-2">
+                Search
+              </label>
+              <div className="relative">
+                <FaSearch className="absolute left-3 top-1/2 -translate-y-1/2 text-gray-400" />
+                <input
+                  type="text"
+                  value={search}
+                  onChange={(e) => setSearch(e.target.value)}
+                  placeholder="Search by ID..."
+                  className="w-full text-sm pl-10 pr-4 py-2 border border-light_gray rounded-lg focus:outline-none focus:ring-2 focus:ring-web_yellow"
+                />
+              </div>
+            </div>
+            <div>
+              <label className="block text-sm font-medium text-main_dark mb-2">
+                Status
+              </label>
+              <div className="relative">
+                <select
+                  value={status}
+                  onChange={(e) => setStatus(e.target.value)}
+                  className="w-full text-sm px-4 py-2 border border-light_gray rounded-lg focus:outline-none focus:ring-2 focus:ring-web_yellow appearance-none bg-white"
+                >
+                  <option>All Status</option>
+                  <option>Pending</option>
+                  <option>Approved</option>
+                  <option>Rejected</option>
+                </select>
+                <FaChevronDown className="absolute right-3 top-1/2 -translate-y-1/2 text-gray-400 pointer-events-none" />
+              </div>
+            </div>
+            <div>
+              <label className="block text-sm font-medium text-main_dark mb-2">
+                Start Date
+              </label>
+              <input
+                type="date"
+                value={startDate}
+                onChange={(e) => setStartDate(e.target.value)}
+                className="w-full text-sm px-4 py-2 border border-light_gray rounded-lg focus:outline-none focus:ring-2 focus:ring-web_yellow"
+              />
+            </div>
+            <div>
+              <label className="block text-sm font-medium text-main_dark mb-2">
+                End Date
+              </label>
+              <input
+                type="date"
+                value={endDate}
+                onChange={(e) => setEndDate(e.target.value)}
+                className="w-full text-sm px-4 py-2 border border-light_gray rounded-lg focus:outline-none focus:ring-2 focus:ring-web_yellow"
+              />
+            </div>
           </div>
-          <div className="relative w-full md:w-auto">
-            <select
-              value={status}
-              onChange={(e) => setStatus(e.target.value)}
-              className="w-full md:w-48 text-sm px-4 py-2 border border-light_gray rounded-lg focus:outline-none focus:ring-2 focus:ring-web_yellow appearance-none bg-white"
-            >
-              <option>All Status</option>
-              <option>Pending</option>
-              <option>Approved</option>
-              <option>Rejected</option>
-            </select>
-            <FaChevronDown className="absolute right-3 top-1/2 -translate-y-1/2 text-gray-400 pointer-events-none" />
-          </div>
-          <div className="relative w-full md:w-auto">
-            <input
-              type="date"
-              value={date}
-              onChange={(e) => setDate(e.target.value)}
-              className="w-full md:w-48 text-sm px-4 py-2 border border-light_gray rounded-lg focus:outline-none focus:ring-2 focus:ring-web_yellow"
-            />
-          </div>
+
+          {/* Clear Filters */}
+          {(search ||
+            status !== "All Status" ||
+            startDate ||
+            endDate) && (
+            <div className="mt-4 flex justify-end">
+              <button
+                onClick={clearFilters}
+                className="text-sm text-deep_green hover:text-deep_green/80 font-medium underline"
+              >
+                Clear all filters
+              </button>
+            </div>
+          )}
+        </div>
+
+        {/* Results Summary */}
+        <div className="mb-4 text-sm text-gray-600">
+          Showing {filteredQuotations.length} of {quotations.length} quotation
+          {quotations.length !== 1 ? "s" : ""}
         </div>
 
         {/* Table */}
@@ -227,7 +332,9 @@ const QuotationStatus = () => {
                   return (
                     <tr key={q.id} className="hover:bg-gray-50">
                       <td className="px-6 py-4 text-main_dark font-medium text-sm">{`QT-${q.id}`}</td>
-                      <td className="px-6 py-4 text-sm">{material}</td>
+                      <td className="px-6 py-4 text-sm max-w-xs truncate">
+                        {material}
+                      </td>
                       <td className="px-6 py-4 text-sm">{quantity}</td>
                       <td className="px-6 py-4 text-sm font-semibold text-main_dark">
                         {price}
@@ -236,7 +343,8 @@ const QuotationStatus = () => {
                       <td className="px-6 py-4">
                         <span
                           className={`px-3 py-1 rounded-full text-xs font-medium ${
-                            statusColors[q.status] || "bg-gray-100 text-gray-800"
+                            statusColors[q.status] ||
+                            "bg-gray-100 text-gray-800"
                           }`}
                         >
                           {q.status}
@@ -244,7 +352,9 @@ const QuotationStatus = () => {
                       </td>
                       <td className="px-6 py-4">
                         <button
-                          onClick={() => navigate(`/supplier/quotations/${q.id}`)}
+                          onClick={() =>
+                            navigate(`/supplier/quotations/${q.id}`)
+                          }
                           className="p-2 text-deep_green hover:bg-gray-100 rounded"
                         >
                           <FaEye />
@@ -253,6 +363,19 @@ const QuotationStatus = () => {
                     </tr>
                   );
                 })}
+                {paginatedQuotations.length === 0 && (
+                  <tr>
+                    <td
+                      colSpan={7}
+                      className="px-6 py-8 text-center text-gray-400"
+                    >
+                      <div className="flex flex-col items-center justify-center">
+                        <FaSearch className="text-4xl mb-2 opacity-30" />
+                        <p>No quotations found matching your filters.</p>
+                      </div>
+                    </td>
+                  </tr>
+                )}
               </tbody>
             </table>
           </div>
@@ -283,7 +406,9 @@ const QuotationStatus = () => {
                   <div className="flex justify-between items-start mb-3">
                     <div className="flex-1">
                       <div className="flex items-center gap-2 mb-1">
-                        <h3 className="font-semibold text-main_dark text-sm">QT-{q.id}</h3>
+                        <h3 className="font-semibold text-main_dark text-sm">
+                          QT-{q.id}
+                        </h3>
                       </div>
                       <p className="text-xs text-gray-600 mb-1">{material}</p>
                       <div className="text-xs text-gray-500">
@@ -300,12 +425,16 @@ const QuotationStatus = () => {
                       </span>
                     </div>
                   </div>
-                  
+
                   <div className="space-y-1 text-xs text-gray-600 mb-3">
-                    <p><span className="font-medium">Quantity:</span> {quantity}</p>
-                    <p><span className="font-medium">Price:</span> {price}</p>
+                    <p>
+                      <span className="font-medium">Quantity:</span> {quantity}
+                    </p>
+                    <p>
+                      <span className="font-medium">Price:</span> {price}
+                    </p>
                   </div>
-                  
+
                   <div className="flex justify-end">
                     <button
                       onClick={() => navigate(`/supplier/quotations/${q.id}`)}
@@ -317,59 +446,67 @@ const QuotationStatus = () => {
                 </div>
               );
             })}
+            {paginatedQuotations.length === 0 && (
+              <div className="p-8 text-center text-gray-400">
+                <FaSearch className="text-4xl mx-auto mb-2 opacity-30" />
+                <p>No quotations found matching your filters.</p>
+              </div>
+            )}
           </div>
 
           {/* Pagination */}
-          <div className="flex justify-between items-center px-6 py-4 border-t border-light_gray bg-purewhite">
-            <div className="text-sm text-slatebluegray">
-              Showing {startIndex + 1} to{" "}
-              {Math.min(startIndex + itemsPerPage, filteredQuotations.length)} of{" "}
-              {filteredQuotations.length} results
-            </div>
-            <div className="flex items-center gap-2">
-              <button
-                className="px-3 py-1 text-sm text-slatebluegray hover:bg-gray-100 rounded"
-                disabled={currentPage === 1}
-                onClick={() => setCurrentPage((p) => Math.max(1, p - 1))}
-              >
-                Previous
-              </button>
-              {[
-                ...Array(
-                  Math.ceil(filteredQuotations.length / itemsPerPage)
-                ).keys(),
-              ].map((page) => (
+          {filteredQuotations.length > 0 && (
+            <div className="flex flex-col sm:flex-row justify-between items-center px-6 py-4 border-t border-light_gray bg-purewhite gap-4">
+              <div className="text-sm text-slatebluegray">
+                Showing {startIndex + 1} to{" "}
+                {Math.min(startIndex + itemsPerPage, filteredQuotations.length)}{" "}
+                of {filteredQuotations.length} results
+              </div>
+              <div className="flex items-center gap-2">
                 <button
-                  key={page}
-                  className={`px-3 py-1 text-sm ${
-                    currentPage === page + 1
-                      ? "bg-web_yellow text-main_dark font-medium"
-                      : "text-slatebluegray hover:bg-gray-100 rounded"
-                  }`}
-                  onClick={() => setCurrentPage(page + 1)}
+                  className="px-3 py-1 text-sm text-slatebluegray hover:bg-gray-100 rounded disabled:opacity-50 disabled:cursor-not-allowed"
+                  disabled={currentPage === 1}
+                  onClick={() => setCurrentPage((p) => Math.max(1, p - 1))}
                 >
-                  {page + 1}
+                  Previous
                 </button>
-              ))}
-              <button
-                className="px-3 py-1 text-sm text-slatebluegray hover:bg-gray-100 rounded"
-                disabled={
-                  currentPage ===
-                  Math.ceil(filteredQuotations.length / itemsPerPage)
-                }
-                onClick={() =>
-                  setCurrentPage((p) =>
-                    Math.min(
-                      Math.ceil(filteredQuotations.length / itemsPerPage),
-                      p + 1
+                {[
+                  ...Array(
+                    Math.ceil(filteredQuotations.length / itemsPerPage)
+                  ).keys(),
+                ].map((page) => (
+                  <button
+                    key={page}
+                    className={`px-3 py-1 text-sm rounded ${
+                      currentPage === page + 1
+                        ? "bg-web_yellow text-main_dark font-medium"
+                        : "text-slatebluegray hover:bg-gray-100"
+                    }`}
+                    onClick={() => setCurrentPage(page + 1)}
+                  >
+                    {page + 1}
+                  </button>
+                ))}
+                <button
+                  className="px-3 py-1 text-sm text-slatebluegray hover:bg-gray-100 rounded disabled:opacity-50 disabled:cursor-not-allowed"
+                  disabled={
+                    currentPage ===
+                    Math.ceil(filteredQuotations.length / itemsPerPage)
+                  }
+                  onClick={() =>
+                    setCurrentPage((p) =>
+                      Math.min(
+                        Math.ceil(filteredQuotations.length / itemsPerPage),
+                        p + 1
+                      )
                     )
-                  )
-                }
-              >
-                Next
-              </button>
+                  }
+                >
+                  Next
+                </button>
+              </div>
             </div>
-          </div>
+          )}
         </div>
       </div>
     </div>
@@ -378,7 +515,6 @@ const QuotationStatus = () => {
 
 // Summary card component
 const SummaryCard = ({ icon, title, value, subtitle, type }) => {
-  // Choose color mapping and gradients based on 'type'
   const cardStyles = {
     total: {
       bg: "bg-gradient-to-bl from-light_gray to-purewhite",
@@ -386,7 +522,7 @@ const SummaryCard = ({ icon, title, value, subtitle, type }) => {
       iconBg: "bg-web_yellow",
       iconColor: "text-purewhite",
     },
-    accepted: {
+    approved: {
       bg: "bg-gradient-to-br from-purewhite to-deep_green/10",
       border: "border-deep_green",
       iconBg: "bg-deep_green",
@@ -408,9 +544,7 @@ const SummaryCard = ({ icon, title, value, subtitle, type }) => {
   const style = cardStyles[type] || cardStyles.total;
 
   return (
-    <div
-      className={`bg-purewhite border border-gray-200 rounded-xl p-4 sm:p-5 flex items-center gap-3 sm:gap-4 shadow-sm hover:shadow-md hover:-translate-y-0.5 transition-all duration-150`}
-    >
+    <div className="bg-purewhite border border-gray-200 rounded-xl p-4 sm:p-5 flex items-center gap-3 sm:gap-4 shadow-sm hover:shadow-md hover:-translate-y-0.5 transition-all duration-150">
       <div className="flex-1">
         <div className="text-slatebluegray font-medium text-sm mb-0.5 truncate">
           {title}
