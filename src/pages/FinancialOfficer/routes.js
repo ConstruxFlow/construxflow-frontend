@@ -8,6 +8,7 @@ import FinancialOfficerDashboard from "./FinancialOfficerDashboard";
 import FinancialProjectsList from "./FinancialProjectsList";
 import FinancialProjectDetails from "./FinancialProjectDetails";
 import ManagerProfileView from "./ManagerProfile";
+import FullPaymentCompletion from "./FullPaymentCompletion";
 
 export const FinanceManagerRoutes = {
   path: "/financial",
@@ -44,6 +45,10 @@ export const FinanceManagerRoutes = {
     {
       path: "financial-project-details/:projectId",
       element: <FinancialProjectDetails />,
+    },
+    {
+      path: "full-payment-completion/:poId",
+      element: <FullPaymentCompletion />,
     },
     {
       path: "profile",

@@ -133,6 +133,7 @@ const MaintenanceRequestsOverview = () => {
             {name: 'Inventory Control', path: '/inventory-control'},
             {name: 'Inventory Monitoring', path: '/inventory-monitoring'},
             {name: 'Maintenance Requests', path: '/maintenance-requests-overview'},
+            { name: 'Equipment Request', path: '/Inventory-requests' },
             {name: 'Equipment Scheduling', path: '/equipment-scheduling'},
           ]}
         />
@@ -155,6 +156,7 @@ const MaintenanceRequestsOverview = () => {
             {name: 'Inventory Control', path: '/inventory-control'},
             {name: 'Inventory Monitoring', path: '/inventory-monitoring'},
             {name: 'Maintenance Requests', path: '/maintenance-requests-overview'},
+            { name: 'Equipment Request', path: '/Inventory-requests' },
             {name: 'Equipment Scheduling', path: '/equipment-scheduling'},
           ]}
         />
@@ -175,6 +177,7 @@ const MaintenanceRequestsOverview = () => {
           {name: 'Inventory Control', path: '/inventory-control'},
           {name: 'Inventory Monitoring', path: '/inventory-monitoring'},
           {name: 'Maintenance Requests', path: '/maintenance-requests-overview'},
+          { name: 'Equipment Request', path: '/Inventory-requests' },
           {name: 'Equipment Scheduling', path: '/equipment-scheduling'},
         ]}
       />

@@ -1,4 +1,4 @@
-import React, { useState } from 'react';
+import React, { useState, useEffect } from 'react';
 import { Users, UserPlus, Clock, CheckCircle, Plus, X, Mail, Lock, Download, Clipboard } from 'lucide-react';
 import { useNavigate } from "react-router-dom";
 
@@ -16,10 +16,14 @@ function ActionTile({ onClick, icon, label, iconColorClass, hoverClass }) {
     </button>
   );
 }
+
 const UserDashboard = () => {
   const navigate = useNavigate();
   const [showAddUser, setShowAddUser] = useState(false);
   const [newUser, setNewUser] = useState({ name: '', email: '', status: 'Active', role: 'Team Member' });
+  const [loading, setLoading] = useState(true);
+  const [error, setError] = useState(null);
+  
   const [users, setUsers] = useState([
     {
       id: 1,
@@ -39,6 +43,47 @@ const UserDashboard = () => {
     }
   ]);
 
+  // Initialize stats with loading placeholders
+  const [stats, setStats] = useState([
+    { title: 'Total Users', value: '-', icon: Users, color: 'bg-light_brown' },
+    { title: 'Active Users', value: '-', icon: CheckCircle, color: 'bg-deep_green' },
+    { title: 'New This Month', value: '156', icon: UserPlus, color: 'bg-web_yellow' },
+    { title: 'Pending Approval', value: '23', icon: Clock, color: 'bg-light_gray' }
+  ]);
+
+  // Fetch dashboard stats from backend when component mounts
+  useEffect(() => {
+    const fetchDashboardStats = async () => {
+      try {
+        setLoading(true);
+        const response = await fetch('http://localhost:8080/api/admin/dashboard-stats');
+        
+        if (!response.ok) {
+          throw new Error(`Error: ${response.status}`);
+        }
+        
+        const data = await response.json();
+        
+        // Update stats with real data
+        setStats([
+          { title: 'Total Users', value: data.totalUsers.toString(), icon: Users, color: 'bg-light_brown' },
+          { title: 'Active Users', value: data.activeUsers.toString(), icon: CheckCircle, color: 'bg-deep_green' },
+          { title: 'New This Month', value: '156', icon: UserPlus, color: 'bg-web_yellow' },
+          { title: 'Pending Approval', value: '23', icon: Clock, color: 'bg-light_gray' }
+        ]);
+        
+        setError(null);
+      } catch (err) {
+        console.error('Error fetching dashboard stats:', err);
+        setError('Failed to load dashboard statistics');
+      } finally {
+        setLoading(false);
+      }
+    };
+
+    fetchDashboardStats();
+  }, []);
+
   const handleAddUser = () => {
     if (newUser.name && newUser.email) {
       const user = {
@@ -57,13 +102,6 @@ const UserDashboard = () => {
     alert(`Performing bulk action: ${action}`);
     // Placeholder for actual bulk action logic (e.g., API calls)
   };
-
-  const stats = [
-    { title: 'Total Users', value: '2,847', icon: Users, color: 'bg-light_brown' },
-    { title: 'Active Users', value: '1,234', icon: CheckCircle, color: 'bg-deep_green' },
-    { title: 'New This Month', value: '156', icon: UserPlus, color: 'bg-web_yellow' },
-    { title: 'Pending Approval', value: '23', icon: Clock, color: 'bg-light_gray' }
-  ];
 
   const siteManagers = [
     {
@@ -91,6 +129,15 @@ const UserDashboard = () => {
         <p className="text-gray-600 mb-8 text-base">
           Manage your team members, track their activities, and perform bulk actions to streamline operations.
         </p>
+        
+        {/* Error Message */}
+        {error && (
+          <div className="bg-red-100 border border-red-400 text-red-700 px-4 py-3 rounded mb-6" role="alert">
+            <strong className="font-bold">Error: </strong>
+            <span className="block sm:inline">{error}</span>
+          </div>
+        )}
+        
         {/* Stats Cards */}
         <div className="grid grid-cols-1 sm:grid-cols-2 lg:grid-cols-4 gap-3 mb-8">
           {stats.map((stat, index) => (
@@ -101,7 +148,13 @@ const UserDashboard = () => {
               <div className="flex items-center justify-between">
                 <div>
                   <p className="text-sm font-medium text-gray-600">{stat.title}</p>
-                  <p className="text-2xl font-bold text-main_dark mt-1">{stat.value}</p>
+                  <p className="text-2xl font-bold text-main_dark mt-1">
+                    {loading ? (
+                      <span className="inline-block w-16 h-8 bg-gray-200 animate-pulse rounded"></span>
+                    ) : (
+                      stat.value
+                    )}
+                  </p>
                 </div>
                 <div className={`p-3 rounded-full ${stat.color} text-white`}>
                   <stat.icon className="w-6 h-6" />
@@ -180,42 +233,41 @@ const UserDashboard = () => {
           </div>
 
           {/* Bulk Actions Panel - Styled Like ActionTile Buttons */}
-<div className="lg:col-span-2 bg-purewhite border border-gray-200 rounded-xl p-5 shadow mb-6">
-  <div className="font-semibold text-main_dark text-lg mb-4 border-b border-light_gray/60 pb-1">
-    Bulk Actions
-  </div>
-  <div className="grid grid-cols-1 sm:grid-cols-2 gap-4 mt-4">
-    <ActionTile
-      onClick={() => handleBulkAction('Send Emails')}
-      icon={<Mail className="text-xl" />}
-      iconColorClass="text-deep_green"
-      label="Send Emails"
-      hoverClass="hover:bg-deep_green/10"
-    />
-    <ActionTile
-      onClick={() => handleBulkAction('Suspend/Activate Accounts')}
-      icon={<Users className="text-xl" />}
-      iconColorClass="text-light_brown"
-      label="Suspend/Activate"
-      hoverClass="hover:bg-light_brown/15"
-    />
-    <ActionTile
-      onClick={() => handleBulkAction('Reset Passwords')}
-      icon={<Lock className="text-xl" />}
-      iconColorClass="text-main_dark"
-      label="Reset Passwords"
-      hoverClass="hover:bg-light_gray/70"
-    />
-    <ActionTile
-      onClick={() => handleBulkAction('Export User List')}
-      icon={<Download className="text-xl" />}
-      iconColorClass="text-web_yellow"
-      label="Export User List"
-      hoverClass="hover:bg-web_yellow/15"
-    />
-  </div>
-</div>
-
+          <div className="lg:col-span-2 bg-purewhite border border-gray-200 rounded-xl p-5 shadow mb-6">
+            <div className="font-semibold text-main_dark text-lg mb-4 border-b border-light_gray/60 pb-1">
+              Bulk Actions
+            </div>
+            <div className="grid grid-cols-1 sm:grid-cols-2 gap-4 mt-4">
+              <ActionTile
+                onClick={() => handleBulkAction('Send Emails')}
+                icon={<Mail className="text-xl" />}
+                iconColorClass="text-deep_green"
+                label="Send Emails"
+                hoverClass="hover:bg-deep_green/10"
+              />
+              <ActionTile
+                onClick={() => handleBulkAction('Suspend/Activate Accounts')}
+                icon={<Users className="text-xl" />}
+                iconColorClass="text-light_brown"
+                label="Suspend/Activate"
+                hoverClass="hover:bg-light_brown/15"
+              />
+              <ActionTile
+                onClick={() => handleBulkAction('Reset Passwords')}
+                icon={<Lock className="text-xl" />}
+                iconColorClass="text-main_dark"
+                label="Reset Passwords"
+                hoverClass="hover:bg-light_gray/70"
+              />
+              <ActionTile
+                onClick={() => handleBulkAction('Export User List')}
+                icon={<Download className="text-xl" />}
+                iconColorClass="text-web_yellow"
+                label="Export User List"
+                hoverClass="hover:bg-web_yellow/15"
+              />
+            </div>
+          </div>
 
           {/* Site Manager Overview */}
           <div className="bg-white rounded-xl shadow-md p-6">

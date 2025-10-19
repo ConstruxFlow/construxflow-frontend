@@ -140,7 +140,7 @@ const Login = () => {
       if (!res.ok) {
         setLoading(false);
         const error = await res.text();
-        console.error("Login failed: " + error);
+        // console.error("Login failed: " + error);
         toast.error("Login failed: " + error);
         return;
       }
