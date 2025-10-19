@@ -572,6 +572,7 @@ export default function UpcomingEquipmentMaintenance() {
   const [searchTerm, setSearchTerm] = useState("");
   const [selectedStatus, setSelectedStatus] = useState("All");
   const [selectedEquipmentType, setSelectedEquipmentType] = useState("All");
+  const navigation = useNavigate();
 
   useEffect(() => {
     setLoading(true);
@@ -766,7 +767,7 @@ export default function UpcomingEquipmentMaintenance() {
                 Schedule Maintenance
               </button>
               <button className="relative p-2 hover:bg-gray-100 rounded-lg transition-colors">
-                <Bell className="w-5 h-5 text-slatebluegray" />
+                <Bell className="w-5 h-5 text-slatebluegray" onClick={()=>navigation("/maintenance/inventory-request")}/>
                 <span className="absolute -top-1 -right-1 bg-red-500 text-white text-xs rounded-full px-1">
                   3
                 </span>
