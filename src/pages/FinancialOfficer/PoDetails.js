@@ -112,11 +112,11 @@ const PoDetails = () => {
 
   const getOrderStatusSteps = () => {
     const steps = [
-      { id: "placed", label: "Placed", icon: FaFileAlt },
+      { id: "pending", label: "Pending", icon: FaFileAlt },
       { id: "approved", label: "Approved", icon: FaCheck },
-      { id: "shipped", label: "Shipped", icon: FaTruck },
+      { id: "dispatch", label: "Dispatched", icon: FaTruck },
       { id: "delivered", label: "Delivered", icon: FaMapMarkerAlt },
-      { id: "completed", label: "Completed", icon: FaCheck },
+      { id: "delivered", label: "Completed", icon: FaCheck },
     ];
 
     const currentStatusIndex = steps.findIndex(
@@ -296,7 +296,7 @@ const PoDetails = () => {
                         >
                           {step.label}
                         </span>
-                        {index < statusSteps.length - 1 && (
+                        {/* {index < statusSteps.length - 1 && (
                           <div
                             className={`absolute h-0.5 w-16 mt-6 ${
                               step.isCompleted ? "bg-web_yellow" : "bg-gray-200"
@@ -307,7 +307,7 @@ const PoDetails = () => {
                               }%`,
                             }}
                           />
-                        )}
+                        )} */}
                       </div>
                     );
                   })}

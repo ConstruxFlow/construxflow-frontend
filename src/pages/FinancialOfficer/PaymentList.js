@@ -19,11 +19,13 @@ import { toast } from 'react-toastify';
 import { useNavigate } from 'react-router-dom';
 import NavBar from '../../components/NavBar';
 import LoadingOverlay from '../../components/LoadingOverlay';
+import { or } from 'ajv/dist/compile/codegen';
 
 const PaymentList = () => {
   const [isLoading, setIsLoading] = useState(false);
   const [purchaseOrders, setPurchaseOrders] = useState([]);
   const [filteredOrders, setFilteredOrders] = useState([]);
+  const [porders, setPorders] = useState([]);
   const [searchTerm, setSearchTerm] = useState('');
   const [selectedPaymentStatus, setSelectedPaymentStatus] = useState('All Payment Status');
   const [selectedSupplier, setSelectedSupplier] = useState('All Suppliers');
@@ -55,6 +57,7 @@ const PaymentList = () => {
         // Filter only orders that have payment information
         const ordersWithPayments = data.data.filter(order => order.orderPayment);
         setPurchaseOrders(ordersWithPayments || []);
+        setPorders(data.data || []);
       } else {
         setLoading(false);
         toast.error('Failed to fetch purchase orders');
@@ -66,7 +69,7 @@ const PaymentList = () => {
       setLoading(false);
     }
   };
-//   console.log(purchaseOrders);
+  console.log(porders);
   
   const filterOrders = () => {
     let filtered = purchaseOrders.filter(order => {
@@ -127,9 +130,10 @@ const PaymentList = () => {
 
   const getPaymentStatusColor = (status) => {
     switch (status?.toLowerCase()) {
-      case 'approved': return 'bg-green-100 text-green-800';
+      case 'completed': return 'bg-green-100 text-green-800';
       case 'rejected': return 'bg-red-100 text-red-800';
       case 'pending': return 'bg-yellow-100 text-yellow-800';
+      case 'delivered': return 'bg-yellow-100 text-yellow-800';
       case 'processing': return 'bg-blue-100 text-blue-800';
       default: return 'bg-gray-100 text-gray-800';
     }
@@ -191,7 +195,11 @@ const PaymentList = () => {
   };
 
   const handleViewPayment = (order) => {
-    navigate(`/financial/advance-payment-approval/${order.ponumber}`);
+    if(order.orderPayment.status==="Pending"){
+      navigate(`/financial/advance-payment-approval/${order.ponumber}`);
+    }else{
+      navigate(`/financial/full-payment-completion/${order.ponumber}`);
+    }
   };
 
   // Pagination
@@ -435,6 +443,8 @@ const PaymentList = () => {
                 <tbody className="divide-y divide-gray-200">
                   {paginatedOrders.map((order) => {
                     const priority = getPriorityLevel(order);
+                    console.log(order);
+                    
                     return (
                       <tr key={order.poId} className="hover:bg-gray-50 transition-colors">
                         <td className="px-6 py-4">
@@ -482,8 +492,8 @@ const PaymentList = () => {
                           </div>
                         </td>
                         <td className="px-6 py-4">
-                          <span className={`px-3 py-1 rounded-full text-xs font-medium ${getPaymentStatusColor(order.orderPayment.status)}`}>
-                            {order.orderPayment.status}
+                          <span className={`px-3 py-1 rounded-full text-xs font-medium ${ order.status==="Delivered" && order.orderPayment.status==="Partially Paid"? getPaymentStatusColor(order.status):getPaymentStatusColor(order.orderPayment.status)}`}>
+                            {order.status==="Delivered" && order.orderPayment.status==="Partially Paid"? "Remaining Pending":order.orderPayment.status}
                           </span>
                         </td>
                         <td className="px-6 py-4 text-sm text-gray-600">

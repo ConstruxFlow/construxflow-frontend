@@ -18,7 +18,7 @@ const AddMaterial = () => {
         headers: { "Content-Type": "application/json" },
         body: JSON.stringify(formData),
       });
-
+      
       if (!response.ok) {
         throw new Error(`HTTP error! Status: ${response.status}`);
       }
