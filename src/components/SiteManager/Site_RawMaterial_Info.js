@@ -71,11 +71,20 @@ export default function Site_RawMaterial_Info() {
   const loadMaterialsForProject = async (project) => {
     try {
       setLoading(true);
-      // Call backend for delivered materials for selected project
+      console.log('Loading materials for project:', project);
+      
       try {
-        const res = await axios.get(`${API_BASE}/api/purchasingorder/project/${project.projectId}/delivered-materials`);
-        // ApiResponse has shape { success: true, message: '', data: [...] }
-        const list = res?.data?.data || [];
+        // Try /api/projects/{id}/materials first
+        const res = await axios.get(`${API_BASE}/api/projects/${project.projectId}/materials`);
+        console.log('API Response:', res.data);
+
+        if (!res.data) {
+          throw new Error('No data in response');
+        }
+
+        // Handle both array response and ApiResponse wrapper
+        const list = Array.isArray(res.data) ? res.data : (res.data.data || []);
+        console.log('Parsed material list:', list);
 
         // Map PurchasingOrderMaterialDTO to UI material shape
         const mapped = list.map(item => ({
@@ -87,22 +96,62 @@ export default function Site_RawMaterial_Info() {
           criticalLevel: item.criticalLevel || 0,
           urgentLevel: item.urgentLevel || 0,
           unitOfMeasurement: item.material?.unitOfMeasurement || '',
-          stockStatus: 'NORMAL',
+          // Compute stock status based on quantity vs levels
+          stockStatus: item.quantity <= item.urgentLevel ? 'URGENT' 
+                    : item.quantity <= item.criticalLevel ? 'CRITICAL'
+                    : item.quantity <= item.warningLevel ? 'WARNING'
+                    : 'NORMAL',
           projectName: project.projectName || ''
         }));
 
+        console.log('Mapped materials:', mapped);
         setMaterials(mapped);
         return;
       } catch (err) {
-        console.error('Error fetching delivered materials from backend:', err?.message || err);
-        // fallthrough to mock
+        console.error('Error fetching materials from primary endpoint:', err?.message || err);
+        
+        // Try fallback to purchasing order endpoint
+        try {
+          console.log('Trying fallback endpoint...');
+          const res = await axios.get(`${API_BASE}/api/purchasingorder/project/${project.projectId}/delivered-materials`);
+          const list = res?.data?.data || [];
+          console.log('Fallback response:', list);
+          
+          if (list && list.length > 0) {
+            const mapped = list.map(item => ({
+              rawMaterialId: item.purchasingOrderMaterialId,
+              materialName: item.material?.materialName || 'Unknown',
+              materialType: item.material?.materialType || 'Unknown',
+              currentQuantity: item.quantity ? Number(item.quantity) : 0,
+              warningLevel: item.warningLevel || 0,
+              criticalLevel: item.criticalLevel || 0,
+              urgentLevel: item.urgentLevel || 0,
+              unitOfMeasurement: item.material?.unitOfMeasurement || '',
+              stockStatus: item.quantity <= item.urgentLevel ? 'URGENT' 
+                        : item.quantity <= item.criticalLevel ? 'CRITICAL'
+                        : item.quantity <= item.warningLevel ? 'WARNING'
+                        : 'NORMAL',
+              projectName: project.projectName || ''
+            }));
+            console.log('Mapped fallback materials:', mapped);
+            setMaterials(mapped);
+            return;
+          }
+        } catch (fallbackErr) {
+          console.error('Error fetching from fallback endpoint:', fallbackErr?.message || fallbackErr);
+        }
+        
+        // Both endpoints failed, use mock data
+        console.log('Using mock data as fallback');
       }
 
       // Fallback to mock data if backend fails
       const mockMaterials = getMockMaterialsForProject(project.projectId);
+      console.log('Mock materials:', mockMaterials);
       setMaterials(mockMaterials);
     } catch (error) {
       console.error('Error loading materials:', error);
+      setMaterials([]); // Reset on total failure
     } finally {
       setLoading(false);
     }
