@@ -1,7 +1,6 @@
 import React, { useState, useEffect, useContext } from "react";
 import {
   FaEye,
-  FaReply,
   FaRegCheckCircle,
   FaFileInvoice,
   FaProjectDiagram,
@@ -56,7 +55,6 @@ const PaymentStatus = () => {
   const [notifications, setNotifications] = useState([]);
   const [search, setSearch] = useState("");
   const [status, setStatus] = useState("All Status");
-  const [date, setDate] = useState("");
   const [currentPage, setCurrentPage] = useState(1);
   const [loading, setLoading] = useState(true);
   const [error, setError] = useState(null);
@@ -74,7 +72,7 @@ const PaymentStatus = () => {
     fetchPayments();
   }, [supplierId]);
 
-  //  Helper function to fetch project name by ID
+  // Helper function to fetch project name by ID
   const fetchProjectName = async (projectId) => {
     if (!projectId) return 'N/A';
     
@@ -83,7 +81,7 @@ const PaymentStatus = () => {
       return response.data.projectName || response.data.project_name || 'N/A';
     } catch (error) {
       console.error(`Error fetching project ${projectId}:`, error);
-      return projectId; // Return ID if name fetch fails
+      return projectId;
     }
   };
 
@@ -95,14 +93,11 @@ const PaymentStatus = () => {
       console.log('=== FETCHING PAYMENT DATA ===');
       console.log('Supplier ID:', supplierId);
 
-      // Fetch all purchase orders to get payments
       const ordersRes = await axios.get(`http://localhost:8080/api/purchasingorder/all`);
       const allOrders = ordersRes.data.data || [];
 
       console.log('All Orders:', allOrders.length);
-      console.log('Sample Order:', allOrders[0]);
 
-      // Filter orders for this supplier
       const supplierOrders = allOrders.filter(order => {
         const orderSupplierId = order.supplier?.supplierId || order.supplier?.supplier_id;
         return String(orderSupplierId).trim() === String(supplierId).trim();
@@ -110,30 +105,23 @@ const PaymentStatus = () => {
 
       console.log('Supplier Orders with Payments:', supplierOrders.length);
 
-      // Fetch project names for all orders in parallel
       const paymentsWithProjects = await Promise.all(
         supplierOrders.map(async (order) => {
           const payment = order.orderPayment || order.order_payment;
           
-          // Get project ID from order
           const projectId = order.projectId || 
                            order.project_id || 
                            order.project?.projectId ||
                            order.project?.project_id;
           
-          console.log(`Order ${order.ponumber}: projectId = ${projectId}`);
-          
-          // Fetch project name using the endpoint
           const projectName = projectId 
             ? await fetchProjectName(projectId)
             : 'N/A';
-          
-          console.log(`Order ${order.ponumber}: projectName = ${projectName}`);
 
           return {
             po: order.ponumber || 'N/A',
             invoice: payment.reference_number || payment.referenceNumber || `INV-${order.po_id || order.poId}`,
-            project: projectName, //  Fetched project name
+            project: projectName,
             amount: parseFloat(payment.amount || 0),
             paidAmount: parseFloat(payment.paidAmount || payment.paid_amount || 0),
             remainingAmount: parseFloat(payment.remainingAmount || payment.remaining_amount || 0),
@@ -151,15 +139,11 @@ const PaymentStatus = () => {
       );
 
       console.log('Supplier Payments with Project Names:', paymentsWithProjects.length);
-      console.log('Sample Payment:', paymentsWithProjects[0]);
       setPayments(paymentsWithProjects);
-
-      // Generate notifications from payment data
       generateNotifications(paymentsWithProjects);
 
     } catch (err) {
       console.error('Error fetching payments:', err);
-      console.error('Error details:', err.response?.data);
       setError('Failed to load payment data');
     } finally {
       setLoading(false);
@@ -169,7 +153,6 @@ const PaymentStatus = () => {
   const generateNotifications = (paymentsData) => {
     const notifs = [];
 
-    // Recent completed payments
     const recentCompleted = paymentsData
       .filter(p => p.status?.toLowerCase() === 'completed')
       .sort((a, b) => new Date(b.createdDate) - new Date(a.createdDate))
@@ -183,7 +166,6 @@ const PaymentStatus = () => {
       });
     }
 
-    // Overdue payments
     const overdue = paymentsData.filter(p => p.status?.toLowerCase() === 'overdue');
     if (overdue.length > 0) {
       notifs.push({
@@ -193,7 +175,6 @@ const PaymentStatus = () => {
       });
     }
 
-    // Partial payments
     const partial = paymentsData
       .filter(p => p.status?.toLowerCase() === 'partially paid')
       .slice(0, 1);
@@ -223,15 +204,14 @@ const PaymentStatus = () => {
     return date.toLocaleDateString();
   };
 
-  // Filter logic
+  // Filter logic - removed date filter
   const filtered = payments.filter(
     (p) =>
       (status === "All Status" || p.status === status) &&
       (search === "" ||
         p.po.toLowerCase().includes(search.toLowerCase()) ||
         p.invoice.toLowerCase().includes(search.toLowerCase()) ||
-        p.project.toLowerCase().includes(search.toLowerCase())) &&
-      (date === "" || p.date === date)
+        p.project.toLowerCase().includes(search.toLowerCase()))
   );
 
   // Pagination
@@ -239,14 +219,15 @@ const PaymentStatus = () => {
   const startIndex = (currentPage - 1) * itemsPerPage;
   const paginatedPayments = filtered.slice(startIndex, startIndex + itemsPerPage);
 
-  // Handle payment view click
-  // In PaymentStatus.jsx
-// Handle payment view click
-const handleViewClick = (paymentStatus, poNumber) => {
-  navigate(`/supplier/payments/receive-advanced/${poNumber}`); // ✅ Pass PO number
-};
+  const handleViewClick = (paymentStatus, poNumber) => {
+    navigate(`/supplier/payments/receive-advanced/${poNumber}`);
+  };
 
-
+  const clearFilters = () => {
+    setSearch("");
+    setStatus("All Status");
+    setCurrentPage(1);
+  };
 
   if (loading) {
     return (
@@ -291,32 +272,42 @@ const handleViewClick = (paymentStatus, poNumber) => {
         </p>
 
         {/* Search and Filter */}
-        <div className="bg-purewhite rounded-xl border border-light_gray p-4 sm:p-6 mb-8 flex flex-col md:flex-row md:items-center gap-4">
-          <input
-            type="text"
-            value={search}
-            onChange={(e) => setSearch(e.target.value)}
-            placeholder="Search by PO ID, Invoice Number, or Project..."
-            className="flex-1 text-sm border border-light_gray rounded-lg px-5 py-2 text-main_dark bg-purewhite focus:outline-none focus:ring-2 focus:ring-web_yellow"
-          />
-          <select
-            value={status}
-            onChange={(e) => setStatus(e.target.value)}
-            className="w-full md:w-48 text-sm border border-light_gray rounded-lg px-4 py-2 bg-purewhite text-main_dark focus:outline-none focus:ring-2 focus:ring-web_yellow"
-          >
-            <option>All Status</option>
-            <option>Completed</option>
-            <option>Partially Paid</option>
-            <option>Pending</option>
-            <option>Overdue</option>
-          </select>
-          <input
-            type="date"
-            value={date}
-            onChange={(e) => setDate(e.target.value)}
-            className="w-full md:w-48 text-sm border border-light_gray rounded-lg px-4 py-2 bg-purewhite text-main_dark focus:outline-none focus:ring-2 focus:ring-web_yellow"
-            placeholder="mm/dd/yyyy"
-          />
+        <div className="bg-purewhite rounded-xl border border-light_gray p-4 sm:p-6 mb-8">
+          <div className="flex flex-col md:flex-row md:items-center gap-4">
+            <input
+              type="text"
+              value={search}
+              onChange={(e) => setSearch(e.target.value)}
+              placeholder="Search by PO ID, Invoice Number, or Project..."
+              className="flex-1 text-sm border border-light_gray rounded-lg px-5 py-2 text-main_dark bg-purewhite focus:outline-none focus:ring-2 focus:ring-web_yellow"
+            />
+            <select
+              value={status}
+              onChange={(e) => setStatus(e.target.value)}
+              className="w-full md:w-48 text-sm border border-light_gray rounded-lg px-4 py-2 bg-purewhite text-main_dark focus:outline-none focus:ring-2 focus:ring-web_yellow"
+            >
+              <option>All Status</option>
+              <option>Completed</option>
+              <option>Partially Paid</option>
+              <option>Pending</option>
+              <option>Overdue</option>
+            </select>
+            
+            {/* Clear Filters Button */}
+            {(search || status !== "All Status") && (
+              <button
+                onClick={clearFilters}
+                className="text-sm text-deep_green hover:text-deep_green/80 font-medium underline whitespace-nowrap"
+              >
+                Clear filters
+              </button>
+            )}
+          </div>
+        </div>
+
+        {/* Results Summary */}
+        <div className="mb-4 text-sm text-gray-600">
+          Showing {filtered.length} of {payments.length} payment{payments.length !== 1 ? 's' : ''}
         </div>
 
         {/* Payment Table */}
