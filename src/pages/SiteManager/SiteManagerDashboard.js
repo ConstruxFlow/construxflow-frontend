@@ -142,7 +142,7 @@ const SiteManagerDashboard = () => {
         </p>
 
         {/* Highlight Banner */}
-        <div className="bg-gradient-to-r from-web_yellow/15 via-web_yellow/8 to-transparent border-l-4 border-web_yellow rounded-lg p-4 mb-8 flex items-start gap-4 shadow-md">
+        {/* <div className="bg-gradient-to-r from-web_yellow/15 via-web_yellow/8 to-transparent border-l-4 border-web_yellow rounded-lg p-4 mb-8 flex items-start gap-4 shadow-md">
           <div className="text-yellow-600 text-2xl mt-1">🚨</div>
           <div>
             <h3 className="font-semibold text-base text-gray-800 mb-1 tracking-wide">
@@ -154,7 +154,7 @@ const SiteManagerDashboard = () => {
               <li>4 pending material requests need your review.</li>
             </ul>
           </div>
-        </div>
+        </div> */}
 
         {/* Stats Cards */}
         <div className="grid grid-cols-1 sm:grid-cols-2 lg:grid-cols-4 gap-3 sm:gap-4 mb-8">

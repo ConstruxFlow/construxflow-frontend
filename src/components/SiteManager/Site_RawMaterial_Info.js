@@ -1,6 +1,10 @@
 import React, { useState, useEffect } from 'react';
 import { FaSearch, FaEye, FaEdit, FaHistory, FaExclamationTriangle, FaExclamationCircle, FaTimesCircle } from 'react-icons/fa';
 import { useNavigate } from 'react-router-dom';
+import axios from 'axios';
+
+// Base API URL for backend. Set REACT_APP_API_BASE in .env to override.
+const API_BASE = process.env.REACT_APP_API_BASE || 'http://localhost:8080';
 
 export default function Site_RawMaterial_Info() {
   const [searchTerm, setSearchTerm] = useState('');
@@ -34,7 +38,21 @@ export default function Site_RawMaterial_Info() {
   const loadProjects = async () => {
     try {
       setProjectsLoading(true);
-      // For now, use mock projects. Replace with actual API call when ready
+      // Try to load projects from backend
+      try {
+        const res = await axios.get(`${API_BASE}/api/projects/all`);
+        if (res && res.data && Array.isArray(res.data) && res.data.length > 0) {
+          setProjects(res.data);
+          // prefer to set selectedProject to an object with same shape as mock (projectId, projectName)
+          setSelectedProject(res.data[0]);
+          return;
+        }
+      } catch (err) {
+        console.error('Error fetching projects from backend:', err.message || err);
+        // fallthrough to set mock projects
+      }
+
+      // Fallback to mock projects
       const mockProjects = [
         { projectId: 1, projectName: 'Residential Complex A', status: 'ONGOING', location: 'Downtown Area' },
         { projectId: 2, projectName: 'Office Tower B', status: 'ONGOING', location: 'Business District' },
@@ -53,11 +71,87 @@ export default function Site_RawMaterial_Info() {
   const loadMaterialsForProject = async (project) => {
     try {
       setLoading(true);
-      // For now, use mock data. Replace with actual API call when ready
+      console.log('Loading materials for project:', project);
+      
+      try {
+        // Try /api/projects/{id}/materials first
+        const res = await axios.get(`${API_BASE}/api/projects/${project.projectId}/materials`);
+        console.log('API Response:', res.data);
+
+        if (!res.data) {
+          throw new Error('No data in response');
+        }
+
+        // Handle both array response and ApiResponse wrapper
+        const list = Array.isArray(res.data) ? res.data : (res.data.data || []);
+        console.log('Parsed material list:', list);
+
+        // Map PurchasingOrderMaterialDTO to UI material shape
+        const mapped = list.map(item => ({
+          rawMaterialId: item.purchasingOrderMaterialId,
+          materialName: item.material?.materialName || 'Unknown',
+          materialType: item.material?.materialType || 'Unknown',
+          currentQuantity: item.quantity ? Number(item.quantity) : 0,
+          warningLevel: item.warningLevel || 0,
+          criticalLevel: item.criticalLevel || 0,
+          urgentLevel: item.urgentLevel || 0,
+          unitOfMeasurement: item.material?.unitOfMeasurement || '',
+          // Compute stock status based on quantity vs levels
+          stockStatus: item.quantity <= item.urgentLevel ? 'URGENT' 
+                    : item.quantity <= item.criticalLevel ? 'CRITICAL'
+                    : item.quantity <= item.warningLevel ? 'WARNING'
+                    : 'NORMAL',
+          projectName: project.projectName || ''
+        }));
+
+        console.log('Mapped materials:', mapped);
+        setMaterials(mapped);
+        return;
+      } catch (err) {
+        console.error('Error fetching materials from primary endpoint:', err?.message || err);
+        
+        // Try fallback to purchasing order endpoint
+        try {
+          console.log('Trying fallback endpoint...');
+          const res = await axios.get(`${API_BASE}/api/purchasingorder/project/${project.projectId}/delivered-materials`);
+          const list = res?.data?.data || [];
+          console.log('Fallback response:', list);
+          
+          if (list && list.length > 0) {
+            const mapped = list.map(item => ({
+              rawMaterialId: item.purchasingOrderMaterialId,
+              materialName: item.material?.materialName || 'Unknown',
+              materialType: item.material?.materialType || 'Unknown',
+              currentQuantity: item.quantity ? Number(item.quantity) : 0,
+              warningLevel: item.warningLevel || 0,
+              criticalLevel: item.criticalLevel || 0,
+              urgentLevel: item.urgentLevel || 0,
+              unitOfMeasurement: item.material?.unitOfMeasurement || '',
+              stockStatus: item.quantity <= item.urgentLevel ? 'URGENT' 
+                        : item.quantity <= item.criticalLevel ? 'CRITICAL'
+                        : item.quantity <= item.warningLevel ? 'WARNING'
+                        : 'NORMAL',
+              projectName: project.projectName || ''
+            }));
+            console.log('Mapped fallback materials:', mapped);
+            setMaterials(mapped);
+            return;
+          }
+        } catch (fallbackErr) {
+          console.error('Error fetching from fallback endpoint:', fallbackErr?.message || fallbackErr);
+        }
+        
+        // Both endpoints failed, use mock data
+        console.log('Using mock data as fallback');
+      }
+
+      // Fallback to mock data if backend fails
       const mockMaterials = getMockMaterialsForProject(project.projectId);
+      console.log('Mock materials:', mockMaterials);
       setMaterials(mockMaterials);
     } catch (error) {
       console.error('Error loading materials:', error);
+      setMaterials([]); // Reset on total failure
     } finally {
       setLoading(false);
     }
@@ -422,8 +516,9 @@ export default function Site_RawMaterial_Info() {
                 <select
                   value={selectedProject?.projectId || ''}
                   onChange={(e) => {
-                    const project = projects.find(p => p.projectId === parseInt(e.target.value));
-                    setSelectedProject(project);
+                    const val = e.target.value;
+                    const found = projects.find(p => String(p.projectId) === String(val));
+                    setSelectedProject(found || null);
                     setCurrentPage(1); // Reset to first page when changing projects
                   }}
                   className="px-4 py-2 border border-gray-300 rounded-lg focus:outline-none focus:ring-2 focus:ring-web_yellow focus:border-transparent text-sm min-w-[200px]"
@@ -703,37 +798,6 @@ export default function Site_RawMaterial_Info() {
                       </button>
                     </div>
                   </div>
-                ))}
-              </div>
-            </div>
-          )}
-
-          {/* Pagination */}
-          {materials.length > 0 && (
-            <div className="flex flex-col sm:flex-row sm:items-center sm:justify-between gap-4">
-              <div className="text-sm text-gray-600">
-                Showing {startIndex + 1} to {Math.min(startIndex + itemsPerPage, sortedMaterials.length)} of {sortedMaterials.length} results
-              </div>
-              <div className="flex items-center gap-2">
-                <button 
-                  onClick={() => setCurrentPage(Math.max(1, currentPage - 1))}
-                  disabled={currentPage === 1}
-                  className="px-3 py-1 text-sm text-gray-600 hover:text-gray-900 transition-colors disabled:opacity-50 disabled:cursor-not-allowed"
-                >
-                  Previous
-                </button>
-                {[...Array(totalPages)].map((_, index) => (
-                  <button
-                    key={index + 1}
-                    onClick={() => setCurrentPage(index + 1)}
-                    className={`px-3 py-1 text-sm rounded font-medium transition-colors ${
-                      currentPage === index + 1
-                        ? 'bg-web_yellow text-main_dark'
-                        : 'text-gray-600 hover:text-gray-900'
-                    }`}
-                  >
-                    {index + 1}
-                  </button>
                 ))}
                 <button 
                   onClick={() => setCurrentPage(Math.min(totalPages, currentPage + 1))}

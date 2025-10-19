@@ -29,6 +29,7 @@ const PurchasingOrders = () => {
   const [selectedStatus, setSelectedStatus] = useState("All Status");
   const [selectedPaymentStatus, setSelectedPaymentStatus] =
     useState("All Payment Status");
+  const [deliveryDate, setDeliveryDate] = useState("");
   const [currentPage, setCurrentPage] = useState(1);
   const [sortBy, setSortBy] = useState("orderDate");
   const [sortOrder, setSortOrder] = useState("desc");
@@ -49,6 +50,7 @@ const PurchasingOrders = () => {
     searchTerm,
     selectedStatus,
     selectedPaymentStatus,
+    deliveryDate,
     sortBy,
     sortOrder,
   ]);
@@ -77,7 +79,6 @@ const PurchasingOrders = () => {
       const data = await response.json();
 
       if (data.status === "success") {
-        // Filter orders for this specific supplier
         const supplierOrders = (data.data || []).filter((order) => {
           if (!order.supplier) return false;
           const orderSupplierId =
@@ -99,26 +100,70 @@ const PurchasingOrders = () => {
 
   const filterOrders = () => {
     let filtered = purchaseOrders.filter((order) => {
+      const searchLower = searchTerm.toLowerCase().trim();
+
+      const projectId = (
+        order.materialRequest?.project_id ||
+        order.materialRequest?.projectId ||
+        order.project_id ||
+        order.projectId ||
+        ""
+      ).toLowerCase();
+
+      const materialNames = order.materials
+        ?.map((mat) => mat.material?.materialName || "")
+        .join(" ")
+        .toLowerCase();
+
       const matchesSearch =
-        order.ponumber?.toLowerCase().includes(searchTerm.toLowerCase()) ||
-        (order.project &&
-          order.project.toLowerCase().includes(searchTerm.toLowerCase())) ||
-        (order.additionalInfo &&
-          order.additionalInfo
-            .toLowerCase()
-            .includes(searchTerm.toLowerCase()));
+        searchTerm === "" ||
+        order.ponumber?.toLowerCase().includes(searchLower) ||
+        projectId.includes(searchLower) ||
+        materialNames.includes(searchLower) ||
+        order.additionalInfo?.toLowerCase().includes(searchLower);
 
       const matchesStatus =
         selectedStatus === "All Status" || order.status === selectedStatus;
+
       const matchesPaymentStatus =
         selectedPaymentStatus === "All Payment Status" ||
         (order.orderPayment &&
           order.orderPayment.status === selectedPaymentStatus);
 
-      return matchesSearch && matchesStatus && matchesPaymentStatus;
+      // Delivery Date Filter
+      let matchesDeliveryDate = true;
+      if (deliveryDate) {
+        if (order.deliveries && order.deliveries.length > 0) {
+          const deliveryDates = order.deliveries
+            .map((d) => (d.requiredDate ? new Date(d.requiredDate) : null))
+            .filter(Boolean);
+
+          if (deliveryDates.length > 0) {
+            const selectedDate = new Date(deliveryDate);
+            selectedDate.setHours(0, 0, 0, 0);
+
+            // Check if any delivery matches the selected date
+            matchesDeliveryDate = deliveryDates.some((date) => {
+              const deliveryDateOnly = new Date(date);
+              deliveryDateOnly.setHours(0, 0, 0, 0);
+              return deliveryDateOnly.getTime() === selectedDate.getTime();
+            });
+          } else {
+            matchesDeliveryDate = false;
+          }
+        } else {
+          matchesDeliveryDate = false;
+        }
+      }
+
+      return (
+        matchesSearch &&
+        matchesStatus &&
+        matchesPaymentStatus &&
+        matchesDeliveryDate
+      );
     });
 
-    // Sort filtered results
     filtered.sort((a, b) => {
       let aValue = a[sortBy];
       let bValue = b[sortBy];
@@ -139,6 +184,14 @@ const PurchasingOrders = () => {
     });
 
     setFilteredOrders(filtered);
+    setCurrentPage(1);
+  };
+
+  const clearFilters = () => {
+    setSearchTerm("");
+    setSelectedStatus("All Status");
+    setSelectedPaymentStatus("All Payment Status");
+    setDeliveryDate("");
     setCurrentPage(1);
   };
 
@@ -249,7 +302,6 @@ const PurchasingOrders = () => {
     window.URL.revokeObjectURL(url);
   };
 
-  // Pagination
   const totalPages = Math.ceil(filteredOrders.length / itemsPerPage);
   const startIndex = (currentPage - 1) * itemsPerPage;
   const paginatedOrders = filteredOrders.slice(
@@ -259,18 +311,14 @@ const PurchasingOrders = () => {
 
   const statuses = [
     "All Status",
-    "Pending",
-    "Ordered",
     "Approved",
     "Dispatched",
     "Delivered",
-    "Completed",
     "Cancelled",
   ];
   const paymentStatuses = [
     "All Payment Status",
     "Pending",
-    "Paid",
     "Completed",
     "Partially Paid",
     "Overdue",
@@ -402,7 +450,7 @@ const PurchasingOrders = () => {
                   <FaSearch className="absolute left-3 top-3 h-4 w-4 text-gray-400" />
                   <input
                     type="text"
-                    placeholder="Search by PO number or project..."
+                    placeholder="PO, project, material..."
                     value={searchTerm}
                     onChange={(e) => setSearchTerm(e.target.value)}
                     className="w-full pl-10 pr-4 py-2 border border-gray-300 rounded-md focus:outline-none focus:ring-2 focus:ring-web_yellow focus:border-transparent text-sm"
@@ -445,15 +493,41 @@ const PurchasingOrders = () => {
                   ))}
                 </select>
               </div>
+
+              {/* Delivery Date */}
+              <div className="w-full lg:w-auto">
+                <label className="block text-sm font-medium text-gray-700 mb-2">
+                  Delivery Date
+                </label>
+                <input
+                  type="date"
+                  value={deliveryDate}
+                  onChange={(e) => setDeliveryDate(e.target.value)}
+                  className="w-full lg:w-48 px-3 py-2 border border-gray-300 rounded-md focus:outline-none focus:ring-2 focus:ring-web_yellow focus:border-transparent text-sm"
+                />
+              </div>
+
+              {/* Clear Filters Button */}
+              {(searchTerm ||
+                selectedStatus !== "All Status" ||
+                selectedPaymentStatus !== "All Payment Status" ||
+                deliveryDate) && (
+                <div className="w-full lg:w-auto flex items-end">
+                  <button
+                    onClick={clearFilters}
+                    className="px-4 py-2 text-sm text-deep_green hover:text-deep_green/80 font-medium underline"
+                  >
+                    Clear filters
+                  </button>
+                </div>
+              )}
             </div>
           </div>
 
           {/* Results Summary */}
           <div className="flex flex-col sm:flex-row sm:items-center sm:justify-between mb-4 gap-2">
             <p className="text-sm text-gray-600">
-              Showing {filteredOrders.length === 0 ? 0 : startIndex + 1} to{" "}
-              {Math.min(startIndex + itemsPerPage, filteredOrders.length)} of{" "}
-              {filteredOrders.length} orders
+              Showing {filteredOrders.length} of {purchaseOrders.length} orders
             </p>
           </div>
 
@@ -677,7 +751,11 @@ const PurchasingOrders = () => {
                             </h3>
                           </div>
                           <p className="text-xs text-gray-600 mb-1">
-                            {order.project || "N/A"}
+                            {order.materialRequest?.project_id ||
+                              order.materialRequest?.projectId ||
+                              order.project_id ||
+                              order.projectId ||
+                              "N/A"}
                           </p>
                           <div className="flex items-center gap-2 text-xs text-gray-500">
                             <FaCalendarAlt className="w-3 h-3" />
@@ -725,7 +803,6 @@ const PurchasingOrders = () => {
                         </div>
                       </div>
 
-                      {/* Materials Preview */}
                       {order.materials && order.materials.length > 0 && (
                         <div className="mb-3">
                           <span className="text-xs text-gray-500">
@@ -748,7 +825,6 @@ const PurchasingOrders = () => {
                         </div>
                       )}
 
-                      {/* Payment Progress */}
                       {order.orderPayment && (
                         <div className="mb-3">
                           <div className="flex justify-between text-xs text-gray-500 mb-1">

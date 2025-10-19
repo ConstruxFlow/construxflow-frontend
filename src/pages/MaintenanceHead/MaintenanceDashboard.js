@@ -7,6 +7,7 @@ import {
   Eye,
   Plus,
   FileText,
+  Bell,
 } from "lucide-react";
 import ScheduleOverview from "../../components/MaintenanceHead/ScheduleOverview";
 import NavBar from "../../components/NavBar";
@@ -53,13 +54,19 @@ const MaintenanceDashboard = () => {
   const upcomingTasksCount = equipmentList.filter(
     (task) => task.status?.toLowerCase() === "pending"
   ).length;
-  // Overdue logic: current date > task.dueDate
+  // Overdue logic: current date > task.date (not dueDate)
   const today = new Date();
+  today.setHours(23, 59, 59, 999); // Set to end of today for accurate comparison
+  
   const overdueTasksCount = equipmentList.filter((task) => {
-    if (!task.dueDate) return false;
-    const dueDate = new Date(task.dueDate);
-    return today > dueDate && task.status?.toLowerCase() !== "completed";
+    if (!task.date) return false;
+    
+    const taskDate = new Date(task.date);
+    const isOverdue = today > taskDate;
+    const isNotCompleted = task.status?.toLowerCase() !== "completed";
+    return isOverdue && isNotCompleted;
   }).length;
+
 
   // Check login state on mount
   useEffect(() => {
@@ -149,6 +156,13 @@ const MaintenanceDashboard = () => {
       });
   }, []);
 
+
+//   const res = await fetch('http://localhost:8080/api/send-sms', {
+//   method: 'POST',
+//   headers: { 'Content-Type': 'application/json' },
+//   body: JSON.stringify({ phoneNumber, message }),
+// });
+
   return (
     <>
       <NavBar
@@ -196,13 +210,30 @@ const MaintenanceDashboard = () => {
       <div className="bg-purewhite min-h-screen">
         <div className="max-w-full mx-auto px-6 sm:px-8 lg:px-16 py-6">
           {/* Header */}
-          <div className="mb-6">
-            <h1 className="text-2xl font-bold text-main_dark mb-2">
-              Maintenance Dashboard
-            </h1>
-            <p className="text-slatebluegray text-base">
-              Welcome back, John. Here's your maintenance overview.
-            </p>
+          <div className="flex items-center justify-between mb-6">
+            <div>
+              <h1 className="text-2xl font-bold text-main_dark mb-2">
+                Maintenance Dashboard
+              </h1>
+              <p className="text-slatebluegray text-base">
+                Welcome back, John. Here's your maintenance overview.
+              </p>
+            </div>
+            
+            {/* Notification Icon */}
+            <div className="flex items-center">
+              <button
+                onClick={() => navigation("/maintenance/inventory-request")}
+                className="relative p-3 hover:bg-gray-100 rounded-lg transition-colors group"
+                title="View Inventory Requests"
+              >
+                <Bell className="w-6 h-6 text-slatebluegray group-hover:text-main_dark transition-colors" />
+                {/* Notification Badge */}
+                <span className="absolute -top-1 -right-1 bg-red-500 text-white text-xs rounded-full h-5 w-5 flex items-center justify-center font-medium">
+                  3
+                </span>
+              </button>
+            </div>
           </div>
 
           {/* Alert Banner */}
@@ -409,9 +440,9 @@ const MaintenanceDashboard = () => {
                   hoverColor="hover:bg-deep_green/80"
                 />
                 <ActionTile
-                  onClick={() => {}} // Add your navigation here
-                  icon={<Plus className="h-5 w-5" />}
-                  label="Request Material"
+                  onClick={() => navigation("/maintenance/inventory-request")} // Add your navigation here
+                  icon={<Bell className="h-5 w-5" />}
+                  label="Notification"
                   bgColor="bg-web_yellow"
                   hoverColor="hover:bg-web_yellow/80"
                 />

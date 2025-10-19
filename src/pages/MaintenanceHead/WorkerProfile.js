@@ -17,6 +17,11 @@ export default function WorkerProfile() {
   const navigation = useNavigate();
   const { id } = useParams();
   const location = useLocation();
+  const [equipmentData, setEquipmentData] = useState([]);
+  const [showAssignModal, setShowAssignModal] = useState(false);
+  const [acceptedSchedulingData, setAcceptedSchedulingData] = useState([]);
+  const [modalLoading, setModalLoading] = useState(false);
+
 
   // Get technician data from navigation state or fetch from API
   useEffect(() => {
@@ -253,6 +258,45 @@ export default function WorkerProfile() {
       console.error("Error updating technician status:", error);
       alert("Error updating status. Please check your connection.");
     }
+  };
+
+const handleGetEquipment = async () => {
+    setModalLoading(true);
+    setShowAssignModal(true);
+
+    try {
+      const response = await fetch("http://localhost:8080/api/equipment-scheduling");
+
+      if (!response.ok) {
+        throw new Error("Network response was not ok");
+      }
+
+      const data = await response.json();
+      
+      // Filter only accepted scheduling data
+      const acceptedData = data.filter(item => 
+        item.status === "Accept" ||
+        item.status === "Pending"
+        
+      );
+      
+      setAcceptedSchedulingData(acceptedData);
+      console.log("Accepted scheduling data:", acceptedData);
+    } catch (err) {
+      console.error("Failed to fetch scheduling data:", err);
+      setAcceptedSchedulingData([]);
+    } finally {
+      setModalLoading(false);
+    }
+  };
+
+  const handleStartMaintenance = (id) => {
+    navigation(`/maintenance/technician-assignment/${id}`, {
+      state: { 
+        technicianId: technicianData?.empId,
+        technicianName: technicianData?.name 
+      }
+    });
   };
 
   // Get filtered tasks
@@ -560,7 +604,9 @@ export default function WorkerProfile() {
                       {tasksLoading ? "..." : assignedTasks.length}
                     </span>
                   </div>
-                  <button className="flex items-center gap-2 bg-web_yellow hover:bg-web_yellow/80 text-main_dark font-semibold px-4 py-3 rounded-lg transition-all duration-150 shadow-sm hover:shadow-md">
+                  <button className="flex items-center gap-2 bg-web_yellow hover:bg-web_yellow/80 text-main_dark font-semibold px-4 py-3 rounded-lg transition-all duration-150 shadow-sm hover:shadow-md"
+                  onClick={handleGetEquipment}
+                  >
                     <Plus className="w-4 h-4" />
                     Assign New Task
                   </button>
@@ -688,6 +734,117 @@ export default function WorkerProfile() {
           )}
         </div>
       </div>
+
+      {/* Assign New Task Modal */}
+      {showAssignModal && (
+        <>
+          {/* Modal Overlay */}
+          <div 
+            className="fixed inset-0 z-50 bg-black bg-opacity-50 backdrop-blur-sm transition-all"
+            onClick={() => setShowAssignModal(false)}
+          />
+          
+          {/* Modal Content */}
+          <div className="fixed inset-0 z-50 flex items-center justify-center p-4">
+            <div 
+              className="bg-white rounded-xl shadow-xl max-w-4xl w-full max-h-[80vh] overflow-hidden"
+              onClick={(e) => e.stopPropagation()}
+            >
+              {/* Modal Header */}
+              <div className="bg-deep_green text-white p-6 flex items-center justify-between">
+                <div>
+                  <h2 className="text-xl font-bold">Assign New Task</h2>
+                  <p className="text-green-100 text-sm">Select from available accepted scheduling requests</p>
+                </div>
+                <button 
+                  onClick={() => setShowAssignModal(false)}
+                  className="text-white hover:text-gray-200 text-2xl font-bold"
+                >
+                  ×
+                </button>
+              </div>
+
+              {/* Modal Body */}
+              <div className="p-6 overflow-y-auto max-h-[60vh]">
+                {modalLoading ? (
+                  <div className="flex justify-center items-center py-12">
+                    <div className="animate-spin rounded-full h-12 w-12 border-b-2 border-deep_green"></div>
+                    <span className="ml-3 text-gray-600">Loading accepted schedules...</span>
+                  </div>
+                ) : acceptedSchedulingData.length === 0 ? (
+                  <div className="text-center py-12">
+                    <div className="text-6xl mb-4">📋</div>
+                    <h3 className="text-lg font-semibold text-gray-700 mb-2">No Accepted Schedules</h3>
+                    <p className="text-gray-500">There are no accepted scheduling requests available for assignment.</p>
+                  </div>
+                ) : (
+                  <div className="space-y-4">
+                    <h3 className="text-lg font-semibold text-gray-800 mb-4">
+                      Available Accepted Schedules ({acceptedSchedulingData.length})
+                    </h3>
+                    
+                    {/* Schedule Cards */}
+                    <div className="grid gap-4">
+                      {acceptedSchedulingData.map((schedule, index) => (
+                        <div 
+                          key={schedule.id || index} 
+                          className="border border-gray-200 rounded-lg p-4 hover:shadow-md transition-shadow cursor-pointer hover:border-deep_green"
+                          onClick={() => {
+                            // Navigate to assignment page with schedule data
+                            handleStartMaintenance(schedule.id);
+                            setShowAssignModal(false);
+                          }}
+                        >
+                          <div className="flex items-start justify-between">
+                            <div className="flex-1">
+                              <div className="flex items-center gap-3 mb-2">
+                                <h4 className="font-semibold text-gray-800">
+                                  {schedule.equipmentName || schedule.equipment || 'Equipment'}
+                                </h4>
+                                <span className={`px-2 py-1 rounded-full text-xs font-medium ${
+                                  schedule.status === 'Accept' ? 'bg-green-100 text-green-800' :
+                                  schedule.status === 'Pending' ? 'bg-blue-100 text-blue-800' :
+                                  'bg-yellow-100 text-yellow-800'
+                                }`}>
+                                  {schedule.status}
+                                </span>
+                              </div>
+                              
+                              <div className="grid grid-cols-1 md:grid-cols-3 gap-3 text-sm text-gray-600">
+                                <div>
+                                  <span className="font-medium">Type:</span> {schedule.equipmentType || 'N/A'}
+                                </div>
+                                <div>
+                                  <span className="font-medium">Date:</span> {
+                                    schedule.date ? new Date(schedule.date).toLocaleDateString() : 'N/A'
+                                  }
+                                </div>
+                                <div>
+                                  <span className="font-medium">Time:</span> {schedule.time || 'N/A'}
+                                </div>
+                              </div>
+                              
+                              {schedule.description && (
+                                <div className="mt-2 text-sm text-gray-600">
+                                  <span className="font-medium">Description:</span> {schedule.description}
+                                </div>
+                              )}
+                            </div>
+                            
+                            <button className="ml-4 bg-deep_green text-white px-4 py-2 rounded-lg text-sm font-medium hover:bg-deep_green/80 transition-colors">
+                              Assign
+                            </button>
+                          </div>
+                        </div>
+                      ))}
+                    </div>
+                  </div>
+                )}
+              </div>
+            </div>
+          </div>
+        </>
+      )}
 
       {/* Overlay and Team Sidebar */}
       {showTeam && (

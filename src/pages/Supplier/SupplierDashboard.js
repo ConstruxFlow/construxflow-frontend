@@ -399,12 +399,12 @@ const SupplierDashboard = () => {
         </p>
 
         {/* Urgent Actions */}
-        {(quotationStats.pendingQuotations > 0 || requestStats.pendingRequests > 0) && (
+        {(quotationStats.pendingQuotations > 0 ) && (
           <div className="bg-gradient-to-r from-web_yellow/15 via-web_yellow/8 to-transparent border-l-4 border-web_yellow rounded-lg p-4 mb-8 flex items-start gap-4 shadow-md">
             <div className="text-yellow-600 text-2xl mt-1">⚠</div>
             <div>
               <h3 className="font-semibold text-base text-gray-800 mb-1 tracking-wide">
-                Urgent Actions Required
+                Quotations Requiring Attention
               </h3>
               <div className="space-y-1">
                 {/* {requestStats.pendingRequests > 0 && (

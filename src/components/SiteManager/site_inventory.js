@@ -87,7 +87,7 @@ const SiteInventory = () => {
         </div>
 
         {/* Quick Stats */}
-        <div className="grid grid-cols-1 md:grid-cols-3 gap-6 mb-12">
+        {/* <div className="grid grid-cols-1 md:grid-cols-3 gap-6 mb-12">
           {quickStats.map((stat, index) => {
             const IconComponent = stat.icon;
             return (
@@ -100,7 +100,7 @@ const SiteInventory = () => {
               </div>
             );
           })}
-        </div>
+        </div> */}
 
         {/* Main Action Cards */}
         <div className="grid grid-cols-1 lg:grid-cols-2 gap-8 mb-16">

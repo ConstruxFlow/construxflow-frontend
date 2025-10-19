@@ -27,7 +27,8 @@ const MaterialRequests = () => {
   const [searchTerm, setSearchTerm] = useState("");
   const [statusFilter, setStatusFilter] = useState("All Status");
   const [priorityFilter, setPriorityFilter] = useState("All Priorities");
-  const [dateRange, setDateRange] = useState("");
+  const [startDate, setStartDate] = useState("");
+  const [endDate, setEndDate] = useState("");
   const [currentPage, setCurrentPage] = useState(1);
   const [loading, setLoading] = useState(true);
 
@@ -38,47 +39,88 @@ const MaterialRequests = () => {
     fetch("http://localhost:8080/api/quotationrequest/all")
       .then((res) => res.json())
       .then((data) => {
-        // If your API wraps data in { data: [...] }, adjust accordingly
         setRequests(data.data || []);
         setLoading(false);
       })
       .catch((err) => {
         console.error("Failed to fetch requests:", err);
+        setLoading(false);
       });
   }, []);
 
-  // Filtering logic
+  // Enhanced filtering logic
   const filteredRequests = requests.filter((request) => {
+    // Search filter - matches Request ID, Requester Name, Type, and Material Names
     const matchesSearch =
       searchTerm === "" ||
+      // Search by Request ID (#152, 152, etc.)
+      request.id?.toString().includes(searchTerm.replace("#", "")) ||
+      // Search by Requester Name
       request.requesterName?.toLowerCase().includes(searchTerm.toLowerCase()) ||
+      // Search by Type
       request.quotationType?.toLowerCase().includes(searchTerm.toLowerCase()) ||
+      // Search by Material Names
       (request.quotationReqMaterials &&
         request.quotationReqMaterials
-          .map((m) => m.material.materialName)
+          .map((m) => m.material?.materialName || "")
           .join(", ")
           .toLowerCase()
           .includes(searchTerm.toLowerCase()));
 
+    // Status filter
     const matchesStatus =
       statusFilter === "All Status" || request.status === statusFilter;
 
+    // Priority filter
     const matchesPriority =
       priorityFilter === "All Priorities" ||
       request.priorityLevel === priorityFilter;
 
-    // Optionally add date range filter here
+    // Date range filter
+    let matchesDateRange = true;
+    if (startDate || endDate) {
+      const deadlineDate = request.quotationDeadline
+        ? new Date(request.quotationDeadline)
+        : null;
 
-    return matchesSearch && matchesStatus && matchesPriority;
+      if (deadlineDate) {
+        if (startDate && endDate) {
+          // Both start and end date provided
+          const start = new Date(startDate);
+          const end = new Date(endDate);
+          end.setHours(23, 59, 59, 999); // Include the end date fully
+          matchesDateRange = deadlineDate >= start && deadlineDate <= end;
+        } else if (startDate) {
+          // Only start date provided
+          const start = new Date(startDate);
+          matchesDateRange = deadlineDate >= start;
+        } else if (endDate) {
+          // Only end date provided
+          const end = new Date(endDate);
+          end.setHours(23, 59, 59, 999);
+          matchesDateRange = deadlineDate <= end;
+        }
+      } else {
+        // If no deadline date, exclude from filtered results when date filter is active
+        matchesDateRange = false;
+      }
+    }
+
+    return matchesSearch && matchesStatus && matchesPriority && matchesDateRange;
   });
 
-  // Pagination logic (adjust itemsPerPage as needed)
+  // Pagination logic
   const itemsPerPage = 10;
   const startIndex = (currentPage - 1) * itemsPerPage;
   const paginatedRequests = filteredRequests.slice(
     startIndex,
     startIndex + itemsPerPage
   );
+
+  // Reset to page 1 when filters change
+  useEffect(() => {
+    setCurrentPage(1);
+  }, [searchTerm, statusFilter, priorityFilter, startDate, endDate]);
 
   const getStatusBadge = (status) => {
     const baseClasses = "px-3 py-1 rounded-full text-xs font-medium";
@@ -111,7 +153,7 @@ const MaterialRequests = () => {
 
   // Helper to format date
   const formatDate = (dateStr) => {
-    if (!dateStr) return 'N/A';
+    if (!dateStr) return "N/A";
     const d = new Date(dateStr);
     return d.toLocaleDateString("en-US", {
       year: "numeric",
@@ -133,6 +175,16 @@ const MaterialRequests = () => {
       .join(", ");
   };
 
+  // Clear all filters
+  const clearFilters = () => {
+    setSearchTerm("");
+    setStatusFilter("All Status");
+    setPriorityFilter("All Priorities");
+    setStartDate("");
+    setEndDate("");
+    setCurrentPage(1);
+  };
+
   if (loading) {
     return (
       <div className="min-h-screen bg-purewhite font-poppins flex items-center justify-center">
@@ -146,24 +198,26 @@ const MaterialRequests = () => {
 
   return (
     <div className="bg-[#f8f9fa] min-h-screen font-poppins">
-      <NavBar links={navLinks} profileURL="/supplier/profile" logoSrc="/logo1.png" />
+      <NavBar
+        links={navLinks}
+        profileURL="/supplier/profile"
+        logoSrc="/logo1.png"
+      />
 
       <div className="max-w-full mx-auto px-4 sm:px-6 lg:px-16 py-8">
         {/* Header */}
-        <div className="flex">
-          <div className="mb-6">
-            <h1 className="text-2xl font-bold text-main_dark mb-1">
-              Material Requests
-            </h1>
-            <p className="text-gray-600 text-base">
-              Manage and respond to material requests from managers
-            </p>
-          </div>
+        <div className="mb-6">
+          <h1 className="text-2xl font-bold text-main_dark mb-1">
+            Material Requests
+          </h1>
+          <p className="text-gray-600 text-base">
+            Manage and respond to material requests from managers
+          </p>
         </div>
 
         {/* Filters */}
         <div className="bg-purewhite border border-gray-200 rounded-lg p-4 sm:p-6 mb-6">
-          <div className="grid grid-cols-1 md:grid-cols-4 gap-4">
+          <div className="grid grid-cols-1 md:grid-cols-5 gap-4">
             {/* Search */}
             <div className="relative">
               <label className="block text-sm font-medium text-main_dark mb-2">
@@ -173,7 +227,7 @@ const MaterialRequests = () => {
                 <FaSearch className="absolute left-3 top-1/2 transform -translate-y-1/2 text-gray-400" />
                 <input
                   type="text"
-                  placeholder="Search requests..."
+                  placeholder="ID, Type, Requester..."
                   value={searchTerm}
                   onChange={(e) => setSearchTerm(e.target.value)}
                   className="w-full text-sm pl-10 pr-4 py-2 border border-light_gray rounded-lg focus:outline-none focus:ring-2 focus:ring-web_yellow"
@@ -222,22 +276,49 @@ const MaterialRequests = () => {
               </div>
             </div>
 
-            {/* Date Range */}
+            {/* Start Date */}
             <div>
               <label className="block text-sm font-medium text-main_dark mb-2">
-                Date Range
+                Start Date
               </label>
-              <div className="relative">
-                <input
-                  type="date"
-                  placeholder="mm/dd/yyyy"
-                  className="w-full text-sm px-4 py-2 border border-light_gray rounded-lg focus:outline-none focus:ring-2 focus:ring-web_yellow"
-                  value={dateRange}
-                  onChange={(e) => setDateRange(e.target.value)}
-                />
-              </div>
+              <input
+                type="date"
+                className="w-full text-sm px-4 py-2 border border-light_gray rounded-lg focus:outline-none focus:ring-2 focus:ring-web_yellow"
+                value={startDate}
+                onChange={(e) => setStartDate(e.target.value)}
+              />
+            </div>
+
+            {/* End Date */}
+            <div>
+              <label className="block text-sm font-medium text-main_dark mb-2">
+                End Date
+              </label>
+              <input
+                type="date"
+                className="w-full text-sm px-4 py-2 border border-light_gray rounded-lg focus:outline-none focus:ring-2 focus:ring-web_yellow"
+                value={endDate}
+                onChange={(e) => setEndDate(e.target.value)}
+              />
             </div>
           </div>
+
+          {/* Clear Filters Button */}
+          {(searchTerm || statusFilter !== "All Status" || priorityFilter !== "All Priorities" || startDate || endDate) && (
+            <div className="mt-4 flex justify-end">
+              <button
+                onClick={clearFilters}
+                className="text-sm text-deep_green hover:text-deep_green/80 font-medium underline"
+              >
+                Clear all filters
+              </button>
+            </div>
+          )}
+        </div>
+
+        {/* Results Summary */}
+        <div className="mb-4 text-sm text-gray-600">
+          Showing {filteredRequests.length} of {requests.length} request{requests.length !== 1 ? 's' : ''}
         </div>
 
         {/* Table */}
@@ -297,7 +378,7 @@ const MaterialRequests = () => {
                     <td className="px-6 py-4 text-sm text-main_dark">
                       {request.quotationType || "-"}
                     </td>
-                    <td className="px-6 py-4 text-sm text-main_dark">
+                    <td className="px-6 py-4 text-sm text-main_dark max-w-xs truncate">
                       {getMaterialNames(request.quotationReqMaterials)}
                     </td>
                     <td className="px-6 py-4 text-sm text-main_dark font-semibold">
@@ -317,7 +398,9 @@ const MaterialRequests = () => {
                       <div className="flex items-center gap-2">
                         <button
                           className="p-2 text-deep_green hover:bg-gray-100 rounded"
-                          onClick={() => navigate(`/supplier/requests/${request.id}`)}
+                          onClick={() =>
+                            navigate(`/supplier/requests/${request.id}`)
+                          }
                         >
                           <FaEye />
                         </button>
@@ -332,9 +415,12 @@ const MaterialRequests = () => {
                   <tr>
                     <td
                       colSpan={8}
-                      className="px-6 py-4 text-center text-gray-400"
+                      className="px-6 py-8 text-center text-gray-400"
                     >
-                      No requests found.
+                      <div className="flex flex-col items-center justify-center">
+                        <FaSearch className="text-4xl mb-2 opacity-30" />
+                        <p>No requests found matching your filters.</p>
+                      </div>
                     </td>
                   </tr>
                 )}
@@ -349,11 +435,17 @@ const MaterialRequests = () => {
                 <div className="flex justify-between items-start mb-3">
                   <div className="flex-1">
                     <div className="flex items-center gap-2 mb-1">
-                      <h3 className="font-semibold text-main_dark text-sm">#{request.id || '-'}</h3>
+                      <h3 className="font-semibold text-main_dark text-sm">
+                        #{request.id || "-"}
+                      </h3>
                       <span className="text-xs text-gray-500">•</span>
-                      <span className="font-semibold text-main_dark text-sm">{request.requesterName || '-'}</span>
+                      <span className="font-semibold text-main_dark text-sm">
+                        {request.requesterName || "-"}
+                      </span>
                     </div>
-                    <p className="text-xs text-gray-600 mb-1">{request.quotationType || '-'}</p>
+                    <p className="text-xs text-gray-600 mb-1">
+                      {request.quotationType || "-"}
+                    </p>
                     <div className="text-xs text-gray-500">
                       Deadline: {formatDate(request.quotationDeadline)}
                     </div>
@@ -367,15 +459,20 @@ const MaterialRequests = () => {
                     </span>
                   </div>
                 </div>
-                
+
                 <div className="space-y-1 text-xs text-gray-600 mb-3">
-                  <p><span className="font-medium">Materials:</span> {getMaterialNames(request.quotationReqMaterials)}</p>
+                  <p>
+                    <span className="font-medium">Materials:</span>{" "}
+                    {getMaterialNames(request.quotationReqMaterials)}
+                  </p>
                 </div>
-                
+
                 <div className="flex justify-end gap-2">
                   <button
                     className="text-deep_green hover:text-deep_green/80 transition-colors"
-                    onClick={() => navigate(`/supplier/requests/${request.id}`)}
+                    onClick={() =>
+                      navigate(`/supplier/requests/${request.id}`)
+                    }
                   >
                     <FaEye className="w-4 h-4" />
                   </button>
@@ -387,62 +484,65 @@ const MaterialRequests = () => {
             ))}
             {paginatedRequests.length === 0 && (
               <div className="p-8 text-center text-gray-400">
-                No requests found.
+                <FaSearch className="text-4xl mx-auto mb-2 opacity-30" />
+                <p>No requests found matching your filters.</p>
               </div>
             )}
           </div>
 
           {/* Pagination */}
-          <div className="flex justify-between items-center px-6 py-4 border-t border-light_gray bg-purewhite">
-            <div className="text-sm text-slatebluegray">
-              Showing {startIndex + 1} to{" "}
-              {Math.min(startIndex + itemsPerPage, filteredRequests.length)} of{" "}
-              {filteredRequests.length} results
-            </div>
-            <div className="flex items-center gap-2">
-              <button
-                className="px-3 py-1 text-sm text-slatebluegray hover:bg-gray-100 rounded"
-                disabled={currentPage === 1}
-                onClick={() => setCurrentPage((p) => Math.max(1, p - 1))}
-              >
-                Previous
-              </button>
-              {[
-                ...Array(
-                  Math.ceil(filteredRequests.length / itemsPerPage)
-                ).keys(),
-              ].map((page) => (
+          {filteredRequests.length > 0 && (
+            <div className="flex flex-col sm:flex-row justify-between items-center px-6 py-4 border-t border-light_gray bg-purewhite gap-4">
+              <div className="text-sm text-slatebluegray">
+                Showing {startIndex + 1} to{" "}
+                {Math.min(startIndex + itemsPerPage, filteredRequests.length)}{" "}
+                of {filteredRequests.length} results
+              </div>
+              <div className="flex items-center gap-2">
                 <button
-                  key={page}
-                  className={`px-3 py-1 text-sm ${
-                    currentPage === page + 1
-                      ? "bg-web_yellow text-main_dark font-medium"
-                      : "text-slatebluegray hover:bg-gray-100 rounded"
-                  }`}
-                  onClick={() => setCurrentPage(page + 1)}
+                  className="px-3 py-1 text-sm text-slatebluegray hover:bg-gray-100 rounded disabled:opacity-50 disabled:cursor-not-allowed"
+                  disabled={currentPage === 1}
+                  onClick={() => setCurrentPage((p) => Math.max(1, p - 1))}
                 >
-                  {page + 1}
+                  Previous
                 </button>
-              ))}
-              <button
-                className="px-3 py-1 text-sm text-slatebluegray hover:bg-gray-100 rounded"
-                disabled={
-                  currentPage ===
-                  Math.ceil(filteredRequests.length / itemsPerPage)
-                }
-                onClick={() =>
-                  setCurrentPage((p) =>
-                    Math.min(
-                      Math.ceil(filteredRequests.length / itemsPerPage),
-                      p + 1
+                {[
+                  ...Array(
+                    Math.ceil(filteredRequests.length / itemsPerPage)
+                  ).keys(),
+                ].map((page) => (
+                  <button
+                    key={page}
+                    className={`px-3 py-1 text-sm rounded ${
+                      currentPage === page + 1
+                        ? "bg-web_yellow text-main_dark font-medium"
+                        : "text-slatebluegray hover:bg-gray-100"
+                    }`}
+                    onClick={() => setCurrentPage(page + 1)}
+                  >
+                    {page + 1}
+                  </button>
+                ))}
+                <button
+                  className="px-3 py-1 text-sm text-slatebluegray hover:bg-gray-100 rounded disabled:opacity-50 disabled:cursor-not-allowed"
+                  disabled={
+                    currentPage ===
+                    Math.ceil(filteredRequests.length / itemsPerPage)
+                  }
+                  onClick={() =>
+                    setCurrentPage((p) =>
+                      Math.min(
+                        Math.ceil(filteredRequests.length / itemsPerPage),
+                        p + 1
+                      )
                     )
-                  )
-                }
-              >
-                Next
-              </button>
+                  }
+                >
+                  Next
+                </button>
+              </div>
             </div>
-          </div>
+          )}
         </div>
       </div>
     </div>
