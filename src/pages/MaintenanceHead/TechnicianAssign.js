@@ -1,5 +1,5 @@
 import { useState, useEffect } from "react";
-import { useNavigate, useParams } from "react-router-dom";
+import { useNavigate, useParams, useLocation } from "react-router-dom";
 import { UserPlus } from "lucide-react";
 import TechnicianCard from "../../components/MaintenanceHead/TechnicianCard";
 import NavBar from "../../components/NavBar";
@@ -9,6 +9,7 @@ import LoadingOverlay from "../../components/LoadingOverlay";
 
 export default function TechnicianAssignmentMain() {
   const { id } = useParams();
+  const location = useLocation();
   const [equipment, setEquipment] = useState(null);
   const [loading, setLoading] = useState(true);
 
@@ -30,6 +31,14 @@ export default function TechnicianAssignmentMain() {
   const navigation = useNavigate();
   const [loadingProgress, setLoadingProgress] = useState(0);
   const [isLoading, setIsLoading] = useState(false);
+
+  // States for assigned tasks tracking
+  const [technicianAssignedDates, setTechnicianAssignedDates] = useState([]);
+  const [loadingAssignedTasks, setLoadingAssignedTasks] = useState(false);
+
+  // Check if technician ID is passed from WorkerProfile
+  const preselectedTechnicianId = location.state?.technicianId;
+  const isFromWorkerProfile = !!preselectedTechnicianId;
 
   // Fetch equipment details
   useEffect(() => {
@@ -56,14 +65,269 @@ export default function TechnicianAssignmentMain() {
       })
       .then((data) => {
         setTeamMembers(data);
+        
+        // Auto-select technician if coming from WorkerProfile
+        if (preselectedTechnicianId && data.length > 0) {
+          const technicianExists = data.find(tech => tech.empId === preselectedTechnicianId);
+          if (technicianExists) {
+            setSelectedTechs([preselectedTechnicianId]);
+            console.log(`Auto-selected technician: ${technicianExists.name} (${preselectedTechnicianId})`);
+          }
+        }
+        
         setLoadingTeam(false);
       })
       .catch(() => setLoadingTeam(false));
-  }, []);
+  }, [preselectedTechnicianId]);
 
   console.log(teamMembers);
 
+  // Fetch assigned tasks for selected technicians
+  const fetchAssignedTasksForTechnicians = async (technicianIds) => {
+    if (!technicianIds || technicianIds.length === 0) {
+      setTechnicianAssignedDates([]);
+      return;
+    }
+
+    try {
+      setLoadingAssignedTasks(true);
+      const assignedDatesSet = new Set();
+
+      // Fetch assigned tasks for each selected technician
+      for (const techId of technicianIds) {
+        try {
+          const response = await fetch(
+            `http://localhost:8080/api/equipmentassigntechnician/getbytechnicianId?id=${encodeURIComponent(techId)}`
+          );
+
+          if (response.ok) {
+            const tasksData = await response.json();
+            
+            // Extract assigned dates from tasks
+            tasksData.forEach(task => {
+              if (task.startDate) {
+                const taskDate = new Date(task.startDate);
+                // Format as YYYY-MM-DD for date input comparison
+                const dateString = taskDate.toISOString().split('T')[0];
+                assignedDatesSet.add(dateString);
+              }
+            });
+          }
+        } catch (err) {
+          console.error(`Error fetching tasks for technician ${techId}:`, err);
+        }
+      }
+
+      // Convert Set to Array
+      const assignedDatesArray = Array.from(assignedDatesSet);
+      setTechnicianAssignedDates(assignedDatesArray);
+      console.log("Assigned dates for selected technicians:", assignedDatesArray);
+
+    } catch (err) {
+      console.error("Error fetching assigned tasks:", err);
+      setTechnicianAssignedDates([]);
+    } finally {
+      setLoadingAssignedTasks(false);
+    }
+  };
+
+  // Update assigned dates when selected technicians change
+  useEffect(() => {
+    fetchAssignedTasksForTechnicians(selectedTechs);
+  }, [selectedTechs]);
+
+  // Check if a date is already assigned to selected technicians
+  const isDateAssigned = (dateString) => {
+    return technicianAssignedDates.includes(dateString);
+  };
+
+  // Handle date change with validation
+  const handleDateChange = (e) => {
+    const selectedDate = e.target.value;
+    
+    if (isDateAssigned(selectedDate)) {
+      toast.error("Selected date is already assigned to one or more selected technicians. Please choose a different date.");
+      return;
+    }
+    
+    setStartDate(selectedDate);
+  };
+
+  // Get today's date in YYYY-MM-DD format for min date
+  const getTodayDate = () => {
+    return new Date().toISOString().split('T')[0];
+  };
+
+  // Phone number formatting function
+  const formatPhoneNumber = (phoneNumber) => {
+    if (!phoneNumber) return null;
+    
+    // Remove any spaces, dashes, or other characters
+    let cleaned = phoneNumber.replace(/\D/g, '');
+    
+    // If number starts with 0 (Sri Lankan local format like 071, 077, etc.)
+    if (cleaned.startsWith('0') && cleaned.length === 10) {
+      // Remove leading 0 and add +94
+      return '+94' + cleaned.substring(1);
+    }
+    
+    // If number already starts with 94 but no +
+    if (cleaned.startsWith('94') && cleaned.length === 11) {
+      return '+' + cleaned;
+    }
+    
+    // If number already has +94 format
+    if (phoneNumber.startsWith('+94')) {
+      return phoneNumber;
+    }
+    
+    // Return as is if format is unknown
+    return phoneNumber;
+  };
+
   // Assignment submit handler
+  // SMS sending function
+  const sendSMSToTechnicians = async (selectedTechnicianIds) => {
+    try {
+      console.log("Starting SMS sending process...");
+      console.log("Selected technician IDs:", selectedTechnicianIds);
+      console.log("Team members data:", teamMembers);
+
+      // Get selected technicians with phone numbers
+      const selectedTechnicians = teamMembers.filter(tech => 
+        selectedTechnicianIds.includes(tech.empId)
+      );
+
+      console.log("Filtered selected technicians:", selectedTechnicians);
+
+      if (selectedTechnicians.length === 0) {
+        console.warn("No technicians found for selected IDs");
+        return;
+      }
+
+      // Create assignment message
+      const message = formatAssignmentMessage();
+      console.log("Generated message:", message);
+
+      // Send SMS to each selected technician
+      for (const technician of selectedTechnicians) {
+        console.log(`Processing technician: ${technician.name}`);
+        
+        // Check multiple possible phone field names
+        const phoneNumber = technician.phoneNumber || technician.phone || technician.contactNumber || technician.mobile;
+        console.log(`Phone number for ${technician.name}:`, phoneNumber);
+        
+        if (phoneNumber) {
+          const formattedPhone = formatPhoneNumber(phoneNumber);
+          console.log(`Formatted phone for ${technician.name}:`, formattedPhone);
+          
+          if (formattedPhone) {
+            try {
+              await sendSMS(formattedPhone, message);
+              console.log(`✅ SMS sent successfully to ${technician.name} (${formattedPhone})`);
+            } catch (smsError) {
+              console.error(`❌ Failed to send SMS to ${technician.name}:`, smsError);
+              // Continue with other technicians even if one fails
+            }
+          } else {
+            console.warn(`⚠️ Invalid phone number format for technician: ${technician.name}`);
+          }
+        } else {
+          console.warn(`⚠️ No phone number found for technician: ${technician.name}`);
+          console.log("Available fields:", Object.keys(technician));
+        }
+      }
+
+      toast.success("Assignment notifications sent to technicians!");
+    } catch (error) {
+      console.error("SMS sending error:", error);
+      toast.error("Assignment successful, but failed to send SMS notifications");
+    }
+  };
+
+  // Format assignment message
+  const formatAssignmentMessage = () => {
+    const technicianNames = teamMembers
+      .filter(tech => selectedTechs.includes(tech.empId))
+      .map(tech => tech.name)
+      .join(", ");
+
+    return `🔧 MAINTENANCE ASSIGNMENT
+
+Technician(s): ${technicianNames}
+Equipment: ${equipment?.equipmentName || 'N/A'}
+Type: ${equipment?.equipmentType || 'N/A'}
+Location: Equipment ID ${equipment?.equipmentId || 'N/A'}
+
+📅 Schedule:
+Date: ${startDate}
+Time: ${startTime}
+Duration: ${duration}
+
+📝 Instructions:
+${instructions || 'No special instructions'}
+
+Description: ${equipment?.description || 'N/A'}
+
+Please report to the assigned location at the scheduled time. Contact maintenance head for any clarifications.
+
+- ConstruxFlow Maintenance Team`;
+  };
+
+  // Send individual SMS
+  const sendSMS = async (phoneNumber, message) => {
+    console.log(`Attempting to send SMS to: ${phoneNumber}`);
+    console.log(`Message length: ${message.length} characters`);
+    
+    try {
+      const res = await fetch('http://localhost:8080/api/sms/send-sms', {
+        method: 'POST',
+        headers: { 'Content-Type': 'application/json' },
+        body: JSON.stringify({ phoneNumber, message }),
+      });
+
+      console.log(`SMS API response status: ${res.status}`);
+      console.log(`SMS API response ok: ${res.ok}`);
+
+      if (!res.ok) {
+        const errorText = await res.text();
+        console.error(`SMS API error response: ${errorText}`);
+        throw new Error(`SMS API returned ${res.status}: ${errorText}`);
+      }
+
+      // Handle both JSON and text responses
+      const contentType = res.headers.get('content-type');
+      let responseData;
+      
+      if (contentType && contentType.includes('application/json')) {
+        // Backend returned JSON
+        responseData = await res.json();
+        console.log(`SMS API JSON response:`, responseData);
+      } else {
+        // Backend returned plain text
+        responseData = await res.text();
+        console.log(`SMS API text response: ${responseData}`);
+      }
+      
+      return responseData;
+    } catch (fetchError) {
+      console.error(`SMS fetch error:`, fetchError);
+      
+      // Handle JSON parse errors specifically
+      if (fetchError.name === 'SyntaxError' && fetchError.message.includes('JSON')) {
+        console.log('Backend returned non-JSON response, but request was successful');
+        return { success: true, message: 'SMS sent successfully' };
+      }
+      
+      // Check if it's a network/connection error
+      if (fetchError.name === 'TypeError' || fetchError.message.includes('fetch')) {
+        throw new Error(`Cannot connect to SMS service. Please check if the backend is running on http://localhost:8080`);
+      }
+      
+      throw fetchError;
+    }
+  };
+
   const handleAssign = async (e) => {
     e.preventDefault();
     setSubmitting(true);
@@ -76,6 +340,7 @@ export default function TechnicianAssignmentMain() {
     }, 200);
 
     const reqBody = {
+      equipmentId: equipment.equipmentId,
       equipmentSchedulingId: id,
       technicianIds: selectedTechs, // an array
       duration,
@@ -104,6 +369,17 @@ export default function TechnicianAssignmentMain() {
       if (res.ok) {
         // Update scheduling status
         await updateSchedulingStatus(id, "ASSIGNED");
+        
+        setLoadingProgress(75);
+
+        // Send SMS notifications to assigned technicians
+        try {
+          await sendSMSToTechnicians(selectedTechs);
+        } catch (smsError) {
+          console.error("SMS notification failed:", smsError);
+          // Don't fail the assignment if SMS fails
+        }
+
         setLoadingProgress(100); // Final progress
         toast.success("Technician assigned successfully!");
         navigation("/maintenance/update-equipment-maintenance");
@@ -164,6 +440,7 @@ export default function TechnicianAssignmentMain() {
   return (
     <>
       <NavBar
+        profileURL="/maintenance/profile"
         links={[
           {
             name: "Dashboard",
@@ -202,9 +479,6 @@ export default function TechnicianAssignmentMain() {
             onClick: () => navigation("/maintenance/add-member"),
           },
         ]}
-        showButton={true}
-        buttonLabel={isLoggedIn ? "Logout" : "Get Started"}
-        onButtonClick={isLoggedIn ? handleLogout : handleLogin}
       />
       {isLoading && (
         <LoadingOverlay progress={loadingProgress} message="Processing..." />
@@ -215,10 +489,13 @@ export default function TechnicianAssignmentMain() {
           {/* Page Title */}
           <div className="mb-6">
             <h1 className="text-2xl font-bold text-gray-900">
-              Technician Assignment
+              {preselectedTechnicianId ? "Assign Task to Technician" : "Technician Assignment"}
             </h1>
             <p className="text-gray-600">
-              Assign maintenance requests to available technicians
+              {preselectedTechnicianId 
+                ? `Assigning maintenance request to ${location.state?.technicianName || 'selected technician'}`
+                : "Assign maintenance requests to available technicians"
+              }
             </p>
           </div>
 
@@ -323,62 +600,84 @@ export default function TechnicianAssignmentMain() {
             <div className="grid grid-cols-1 md:grid-cols-2 gap-4 mb-4">
               <div>
                 <label className="block text-sm font-medium text-gray-600 mb-1">
-                  Select Technicians <span className="text-red-500">*</span>
-                </label>
-                <select
-                  className="w-full border border-gray-200 rounded-md px-3 py-2 text-gray-800 bg-gray-50"
-                  value=""
-                  onChange={(e) => {
-                    const selectedId = e.target.value;
-                    const selectedName = e.target.selectedOptions[0]?.text;
-
-                    if (!selectedTechs.includes(selectedId)) {
-                      setSelectedTechs([...selectedTechs, selectedId]);
-                    }
-                  }}
-                >
-                  <option value="" disabled>
-                    Select a technician...
-                  </option>
-
-                  {teamMembers
-                    .filter(
-                      (tech) =>
-                        tech.availabilityStatus === "AVAILABLE" &&
-                        !selectedTechs.includes(tech.empId)
-                    )
-                    .map((tech) => (
-                      <option key={tech.empId} value={tech.empId}>
-                        {tech.name} ({tech.specializations?.join(", ")})
-                      </option>
-                    ))}
-                </select>
-              </div>
-              <div className="mt-2 flex flex-wrap gap-2">
-                {selectedTechs.map((techId) => {
-                  const tech = teamMembers.find((t) => t.empId === techId);
-                  if (!tech) return null;
-                  return (
-                    <span
-                      key={techId}
-                      className="inline-flex items-center gap-2 bg-blue-100 text-blue-800 text-sm px-3 py-1 rounded-full"
-                    >
-                      {tech.name}
-                      <button
-                        type="button"
-                        onClick={() =>
-                          setSelectedTechs(
-                            selectedTechs.filter((id) => id !== techId)
-                          )
-                        }
-                        className="text-blue-800 hover:text-red-500"
-                      >
-                        &times;
-                      </button>
+                  {preselectedTechnicianId ? "Assigned Technician" : "Select Technicians"} <span className="text-red-500">*</span>
+                  {preselectedTechnicianId && (
+                    <span className="text-xs text-blue-600 ml-2">
+                      (Auto-selected from Worker Profile)
                     </span>
-                  );
-                })}
+                  )}
+                </label>
+                {preselectedTechnicianId ? (
+                  // Show read-only selected technician when coming from WorkerProfile
+                  <div className="w-full border border-blue-200 bg-blue-50 rounded-md px-3 py-2 text-gray-800">
+                    {(() => {
+                      const selectedTech = teamMembers.find(tech => tech.empId === preselectedTechnicianId);
+                      return selectedTech ? 
+                        `${selectedTech.name} (${selectedTech.specializations?.join(", ") || 'No specializations'}) - ${selectedTech.availabilityStatus}` :
+                        'Loading technician details...';
+                    })()}
+                  </div>
+                ) : (
+                  // Show normal dropdown when accessed normally
+                  <select
+                    className="w-full border border-gray-200 rounded-md px-3 py-2 text-gray-800 bg-gray-50"
+                    value=""
+                    onChange={(e) => {
+                      const selectedId = e.target.value;
+
+                      // ✅ Only add if value exists and is not already selected
+                      if (selectedId && !selectedTechs.includes(selectedId)) {
+                        setSelectedTechs([...selectedTechs, selectedId]);
+                      }
+
+                      // ✅ Reset dropdown immediately after selection
+                      e.target.value = "";
+                    }}
+                  >
+                    <option value="" disabled>
+                      Select a technician...
+                    </option>
+                    {teamMembers
+                      .filter(
+                        (tech) =>
+                          !selectedTechs.includes(tech.empId)
+                      )
+                      .map((tech) => (
+                        <option key={tech.empId} value={tech.empId}>
+                          {tech.name} ({tech.specializations?.join(", ")}) - {tech.availabilityStatus}
+                        </option>
+                      ))}
+                  </select>
+                )}
               </div>
+
+              {!preselectedTechnicianId && (
+                <div className="mt-2 flex flex-wrap gap-2">
+                  {selectedTechs.map((techId) => {
+                    const tech = teamMembers.find((t) => t.empId === techId);
+                    if (!tech) return null;
+                    return (
+                      <span
+                        key={techId}
+                        className="inline-flex items-center gap-2 bg-[#236571] text-white text-sm px-3 py-1 rounded-full"
+                      >
+                        {tech.name}
+                        <button
+                          type="button"
+                          onClick={() =>
+                            setSelectedTechs(
+                              selectedTechs.filter((id) => id !== techId)
+                            )
+                          }
+                          className="text-white hover:text-red-300 font-bold"
+                        >
+                          ×
+                        </button>
+                      </span>
+                    );
+                  })}
+                </div>
+              )}
 
               <div>
                 <label className="block text-sm font-medium text-gray-600 mb-1">
@@ -398,14 +697,30 @@ export default function TechnicianAssignmentMain() {
               <div>
                 <label className="block text-sm font-medium text-gray-600 mb-1">
                   Start Date
+                  
                 </label>
                 <input
                   type="date"
-                  className="w-full border border-gray-200 rounded-md px-3 py-2 text-gray-800 bg-gray-50"
+                  className={`w-full border rounded-md px-3 py-2 text-gray-800 bg-gray-50 ${
+                    startDate && isDateAssigned(startDate) 
+                      ? "border-red-500 bg-red-50" 
+                      : "border-gray-200"
+                  }`}
                   value={startDate}
-                  onChange={(e) => setStartDate(e.target.value)}
+                  onChange={handleDateChange}
+                  min={getTodayDate()}
                   required
                 />
+                {startDate && isDateAssigned(startDate) && (
+                  <p className="text-red-500 text-xs mt-1">
+                    ⚠️ This date is already assigned to selected technician(s)
+                  </p>
+                )}
+                {loadingAssignedTasks && (
+                  <p className="text-blue-500 text-xs mt-1">
+                    🔄 Checking assigned dates...
+                  </p>
+                )}
               </div>
               <div>
                 <label className="block text-sm font-medium text-gray-600 mb-1">
@@ -448,7 +763,7 @@ export default function TechnicianAssignmentMain() {
                 type="button"
                 className="px-6 py-2 rounded-md border border-[#236571] text-[#236571] font-semibold bg-white hover:bg-gray-50 transition"
                 onClick={() => {
-                  setSelectedTechs("");
+                  setSelectedTechs([]); // ✅ Fixed: Use empty array instead of empty string
                   setDuration("1-2 hours");
                   setInstructions("");
                   setStartDate("");
@@ -459,10 +774,15 @@ export default function TechnicianAssignmentMain() {
               >
                 Cancel
               </button>
+
               <button
                 type="submit"
-                className="px-6 py-2 rounded-md bg-[#EFC11A] hover:bg-yellow-400 text-yellow-900 font-semibold flex items-center gap-2 shadow transition"
-                disabled={submitting}
+                className={`px-6 py-2 rounded-md font-semibold flex items-center gap-2 shadow transition ${
+                  selectedTechs.length === 0
+                    ? "bg-gray-300 text-gray-500 cursor-not-allowed"
+                    : "bg-[#EFC11A] hover:bg-yellow-400 text-yellow-900"
+                }`}
+                disabled={submitting || selectedTechs.length === 0}
               >
                 <UserPlus className="w-5 h-5" />
                 {submitting ? "Assigning..." : "Assign Technician"}
@@ -474,31 +794,31 @@ export default function TechnicianAssignmentMain() {
         {/* Technicians List */}
         <aside className="w-full md:w-80 bg-white rounded-xl shadow p-5">
           <div className="text-[#236571] font-semibold mb-4 text-lg">
-            Available Technicians
+            All Technicians
           </div>
           <div>
             {loadingTeam ? (
               <div className="text-gray-500">Loading...</div>
             ) : (
-              teamMembers
-                .filter((member) => member.availabilityStatus === "AVAILABLE")
-                .map((member) => (
-                  <TechnicianCard
-                    key={member.empId}
-                    initials={member.name
-                      .split(" ")
-                      .map((n) => n[0])
-                      .join("")
-                      .toUpperCase()}
-                    name={member.name}
-                    skills={member.specializations?.join(", ")}
-                    status={
-                      member.availabilityStatus === "AVAILABLE"
-                        ? "Active"
-                        : "Unavailable"
-                    }
-                  />
-                ))
+              teamMembers.map((member) => (
+                <TechnicianCard
+                  key={member.empId}
+                  initials={member.name
+                    .split(" ")
+                    .map((n) => n[0])
+                    .join("")
+                    .toUpperCase()}
+                  name={member.name}
+                  skills={member.specializations?.join(", ")}
+                  status={
+                    member.availabilityStatus === "AVAILABLE"
+                      ? "Available"
+                      : member.availabilityStatus === "ONTASK"
+                      ? "On Task"
+                      : "Unavailable"
+                  }
+                />
+              ))
             )}
           </div>
         </aside>

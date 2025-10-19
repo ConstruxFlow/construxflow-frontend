@@ -172,7 +172,7 @@ export default function ConstructionDashboard() {
   }, []);
 
   return (
-    <div className="max-w-full mx-auto py-10 px-16">
+    <div className="max-w-full mx-auto py-10 px-4 sm:px-8 lg:px-16">
       {/* Dashboard Header */}
       <section className="mb-8 flex flex-col md:flex-row md:items-center md:justify-between gap-4">
         <div>
@@ -300,7 +300,7 @@ export default function ConstructionDashboard() {
         </div>
 
         <div className="overflow-x-auto">
-          <table className="w-full text-main_dark">
+          <table className="w-full text-main_dark min-w-max">
             <thead className="bg-light_brown/35 rounded-t-lg">
               <tr>
                 <th className="px-6 py-3 text-left text-xs font-semibold tracking-wider">

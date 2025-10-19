@@ -1,4 +1,3 @@
-// src/pages/Supplier/UpdateQuotation.jsx
 import React, { useState, useEffect } from "react";
 import { useNavigate, useParams } from "react-router-dom";
 import NavBar from "../../components/NavBar";
@@ -14,23 +13,25 @@ const navLinks = [
 ];
 
 const UpdateQuotation = () => {
-  const { id } = useParams(); // quotation ID from URL
+  const { id } = useParams();
   const navigate = useNavigate();
   const [requestSummary, setRequestSummary] = useState(null);
   const [itemsRequested, setItemsRequested] = useState([]);
 
-  // Maintain similar structure as SubmitQuotation
   const [pricing, setPricing] = useState([]);
   const [advancedPayment, setAdvancedPayment] = useState("");
+  const [isPercentage, setIsPercentage] = useState(false);
   const [deliveries, setDeliveries] = useState([]);
   const [paymentTerms, setPaymentTerms] = useState("");
   const [notes, setNotes] = useState("");
   const [attachments, setAttachments] = useState([]);
   const [initAttachmentNames, setInitAttachmentNames] = useState([]);
 
+  const [quotationRequestId, setQuotationRequestId] = useState(null);
+  const [supplierId, setSupplierId] = useState(null);
+
   const [loading, setLoading] = useState(false);
 
-  // Fetch the quotation details (to edit)
   useEffect(() => {
     if (!id) return;
     (async () => {
@@ -39,7 +40,16 @@ const UpdateQuotation = () => {
         if (!res.ok) throw new Error("Could not load quotation.");
         const data = await res.json();
         const q = data;
-        // Get the quotation request to map item names and original delivery dates (if needed)
+
+        console.log("=== FETCHED QUOTATION DATA ===");
+        console.log("Full Quotation:", q);
+        console.log("Quotation Request ID:", q.quotationRequestId);
+        console.log("Supplier ID:", q.supplierId);
+        
+        // ✅ STORE THE IDs
+        setQuotationRequestId(q.quotationRequestId);
+        setSupplierId(q.supplierId);
+        
         const reqRes = await fetch(`http://localhost:8080/api/quotationrequest/find/${q.quotationRequestId}`);
         const reqData = await reqRes.json();
 
@@ -53,17 +63,30 @@ const UpdateQuotation = () => {
           })) || [];
         setItemsRequested(materials);
 
-        // Pre-populate pricing from loaded quotation
         setPricing(
           (q.items || []).map((item) => ({
             item: item.material.materialId,
             quantity: item.quantity,
             unitPrice: item.unitPrice,
             estimatedUnitPrice:
-              reqData.data.quotationReqMaterials?.find((m) => m.material.materialId === item.material.materialId)?.unitPrice || "",
+              reqData.data.quotationReqMaterials?.find(
+                (m) => m.material.materialId === item.material.materialId
+              )?.unitPrice || "",
           }))
         );
-        setAdvancedPayment(q.advancedPayment || "");
+
+        // Load advanced payment - check which type was used
+        if (q.advancedPaymentPercentage !== null && q.advancedPaymentPercentage !== undefined && q.advancedPaymentPercentage > 0) {
+          setIsPercentage(true);
+          setAdvancedPayment(q.advancedPaymentPercentage.toString());
+        } else if (q.advancedPayment !== null && q.advancedPayment !== undefined && q.advancedPayment > 0) {
+          setIsPercentage(false);
+          setAdvancedPayment(q.advancedPayment.toString());
+        } else {
+          setIsPercentage(false);
+          setAdvancedPayment("");
+        }
+
         setDeliveries(
           (q.deliveryInfos || []).map((d, i) => ({
             requiredDate: d.deliveryDate,
@@ -77,7 +100,6 @@ const UpdateQuotation = () => {
         );
         setPaymentTerms(q.paymentTerms || "");
         setNotes(q.notes || "");
-        // Existing attachments (show file names, you may want to support removal/preview)
         setInitAttachmentNames(q.attachments?.map((a) => a.fileName) || []);
         setAttachments([]);
       } catch (err) {
@@ -93,8 +115,10 @@ const UpdateQuotation = () => {
       pricing.map((item, i) => (i === idx ? { ...item, [name]: value } : item))
     );
   };
+  
   const handleAddPricing = () =>
     setPricing([...pricing, { item: "", quantity: "", unitPrice: "" }]);
+  
   const handleDeletePricing = (idx) =>
     setPricing(pricing.filter((_, i) => i !== idx));
 
@@ -104,16 +128,24 @@ const UpdateQuotation = () => {
       deliveries.map((d, i) => (i === idx ? { ...d, [name]: value } : d))
     );
   };
+  
   const handleAddLocation = () =>
     setDeliveries([
       ...deliveries,
       { requiredDate: "", deliveryLocation: "", shippingCost: "", deliveryDate: deliveries[0]?.deliveryDate || "" },
     ]);
+  
   const handleDeleteLocation = (idx) =>
     setDeliveries(deliveries.filter((_, i) => i !== idx));
 
   const handleAttachmentChange = (e) => {
     setAttachments(Array.from(e.target.files));
+  };
+
+  // Handle payment type toggle - clear value when switching
+  const handlePaymentTypeChange = (isPercentageType) => {
+    setIsPercentage(isPercentageType);
+    setAdvancedPayment(""); // Clear the input when switching
   };
 
   const subtotal = pricing.reduce(
@@ -122,16 +154,23 @@ const UpdateQuotation = () => {
       (parseFloat(item.unitPrice || 0) * parseFloat(item.quantity || 0) || 0),
     0
   );
+  
   const totalShipping = deliveries.reduce(
     (sum, d) => sum + parseFloat(d.shippingCost || 0),
     0
   );
+
+  // Calculate advanced payment amount based on type
+  const advancedPaymentAmount = isPercentage 
+    ? (parseFloat(advancedPayment || 0) / 100) * subtotal 
+    : parseFloat(advancedPayment || 0);
+
   const total = subtotal + totalShipping;
 
   const handleSubmit = async (e) => {
     e.preventDefault();
 
-    // Validation similar to SubmitQuotation
+    // Validation
     if (
       pricing.some(
         (p) =>
@@ -159,16 +198,46 @@ const UpdateQuotation = () => {
       return;
     }
 
+    const invalidDeliveryDates = deliveries.some((d) => {
+      const deliveryDate = new Date(d.requiredDate);
+      const requiredDate = new Date(d.deliveryDate);
+      return deliveryDate > requiredDate;
+    });
+
+    if (invalidDeliveryDates) {
+      toast.error("Delivery Date cannot be after Required Date.");
+      return;
+    }
+
     if (!paymentTerms) {
       toast.error("Please select payment terms.");
       return;
     }
 
+    // Validate percentage range if percentage is selected
+    if (isPercentage && advancedPayment) {
+      const percentValue = parseFloat(advancedPayment);
+      if (percentValue < 0 || percentValue > 100) {
+        toast.error("Percentage must be between 0 and 100.");
+        return;
+      }
+    }
+
+    // ✅ VALIDATION: Check if IDs exist
+    if (!quotationRequestId || !supplierId) {
+      toast.error("Missing quotation request or supplier information!");
+      console.error("❌ Missing IDs:", { quotationRequestId, supplierId });
+      return;
+    }
+
     setLoading(true);
 
-    // If updating, handle only new files: backend must also persist pre-existing attachments (not shown here)
+    // Prepare payload based on selected payment type
     const payload = {
-      advancedPayment: parseFloat(advancedPayment || 0),
+      quotationRequestId: quotationRequestId,  // ✅ ADD THIS
+      supplierId: supplierId,
+      advancedPayment: isPercentage ? advancedPaymentAmount : parseFloat(advancedPayment || 0),
+      advancedPaymentPercentage: isPercentage ? parseFloat(advancedPayment || 0) : null,
       paymentTerms,
       notes,
       totalAmount: total,
@@ -191,6 +260,12 @@ const UpdateQuotation = () => {
       })),
     };
 
+     // ✅ CONSOLE LOG: Check payload before sending
+    console.log("=== UPDATE PAYLOAD ===");
+    console.log("Full Payload:", JSON.stringify(payload, null, 2));
+    console.log("Quotation Request ID in Payload:", payload.quotationRequestId);
+    console.log("Supplier ID in Payload:", payload.supplierId);
+
     try {
       const res = await fetch(`http://localhost:8080/api/quotations/update/${id}`, {
         method: "PUT",
@@ -198,10 +273,19 @@ const UpdateQuotation = () => {
         body: JSON.stringify(payload),
       });
 
+      // ✅ CONSOLE LOG: Check response
+      console.log("=== API RESPONSE ===");
+      console.log("Status:", res.status);
+      console.log("OK:", res.ok)
+
       if (!res.ok) {
         const err = await res.text();
         throw new Error(err);
       }
+
+       const responseData = await res.json();
+      console.log("✅ Response Data:", responseData);
+
       toast.success("Quotation updated successfully!");
       navigate("/supplier/quotations");
     } catch (err) {
@@ -215,14 +299,14 @@ const UpdateQuotation = () => {
     <div className="bg-[#f6f7f9] min-h-screen font-poppins">
       <NavBar links={navLinks} profileURL="/supplier/profile" logoSrc="/logo1.png" />
 
-      <div className="max-w-full mx-auto px-20 py-8">
+      <div className="max-w-full mx-auto px-4 sm:px-8 lg:px-20 py-8">
         {/* Breadcrumb */}
         <div className="text-sm text-slatebluegray mb-2">
           <a href="/supplier/dashboard" className="hover:underline text-deep_green">
             Dashboard
           </a>{" "}
           &nbsp;/&nbsp;
-          <a href="/quotations" className="hover:underline text-deep_green">
+          <a href="/supplier/quotations" className="hover:underline text-deep_green">
             Quotations
           </a>{" "}
           &nbsp;/&nbsp;
@@ -232,10 +316,19 @@ const UpdateQuotation = () => {
         <h1 className="text-2xl font-bold text-main_dark mb-1">Update Quotation</h1>
         <p className="text-gray-500 mb-6">Edit your quotation if further changes are required.</p>
 
+        
+        {quotationRequestId && supplierId && (
+          <div className="bg-blue-50 border border-blue-200 rounded-lg p-4 mb-6">
+            <p className="text-sm text-blue-800">
+               Quotation Request ID: {quotationRequestId} | Supplier ID: {supplierId}
+            </p>
+          </div>
+        )}
+
         {/* Request Summary Block */}
         {requestSummary && (
-          <div className="bg-light_gray rounded-lg p-6 mb-7">
-            <div className="flex flex-col md:flex-row md:justify-between items-start md:items-center">
+          <div className="bg-light_gray rounded-lg p-4 sm:p-6 mb-7">
+            <div className="flex flex-col md:flex-row md:justify-between items-start md:items-center gap-4 md:gap-0">
               <div>
                 <div className="flex items-center mb-3">
                   <span className="text-main_dark font-medium text-lg mr-3">
@@ -258,18 +351,20 @@ const UpdateQuotation = () => {
                   </span>
                 </div>
               </div>
-              <div className="mt-4 md:mt-0 w-full md:w-auto">
+              <div className="w-full md:w-auto mt-4 md:mt-0">
                 <div className="text-slatebluegray mb-2">Items Requested:</div>
-                <table className="w-full text-main_dark">
-                  <tbody>
-                    {itemsRequested.map((item, i) => (
-                      <tr key={i}>
-                        <td>{item.name}</td>
-                        <td className="text-right">{item.quantity}</td>
-                      </tr>
-                    ))}
-                  </tbody>
-                </table>
+                <div className="overflow-x-auto">
+                  <table className="w-full text-main_dark min-w-max">
+                    <tbody>
+                      {itemsRequested.map((item, i) => (
+                        <tr key={i}>
+                          <td>{item.name}</td>
+                          <td className="text-right">{item.quantity}</td>
+                        </tr>
+                      ))}
+                    </tbody>
+                  </table>
+                </div>
               </div>
             </div>
           </div>
@@ -277,13 +372,13 @@ const UpdateQuotation = () => {
 
         <form onSubmit={handleSubmit}>
           {/* Pricing Information */}
-          <section className="bg-purewhite border border-light_gray rounded-lg p-6 mb-6">
+          <section className="bg-purewhite border border-light_gray rounded-lg p-4 sm:p-6 mb-6">
             <div className="font-semibold text-main_dark mb-4 flex items-center gap-2">
               Pricing Information
             </div>
             <div className="space-y-4">
               {pricing.map((row, idx) => (
-                <div key={idx} className="grid grid-cols-4 gap-4 items-end">
+                <div key={idx} className="grid grid-cols-1 sm:grid-cols-4 gap-4 items-end">
                   <div>
                     <label className="block text-sm text-slatebluegray mb-1">
                       Item Requested
@@ -319,8 +414,8 @@ const UpdateQuotation = () => {
                     <label className="block text-sm text-slatebluegray mb-1">
                       Standard Unit Price
                     </label>
-                    <span className="absolute left-3 top-9 text-slatebluegray">
-                      $
+                    <span className="absolute left-1 top-8 text-slatebluegray">
+                      RS
                     </span>
                     <input
                       type="number"
@@ -335,8 +430,8 @@ const UpdateQuotation = () => {
                     <label className="block text-sm text-slatebluegray mb-1">
                       Unit Price
                     </label>
-                    <span className="absolute left-3 top-9 text-slatebluegray">
-                      $
+                    <span className="absolute left-1 top-8 text-slatebluegray">
+                      RS
                     </span>
                     <input
                       type="number"
@@ -352,7 +447,7 @@ const UpdateQuotation = () => {
                     <button
                       type="button"
                       onClick={() => handleDeletePricing(idx)}
-                      className="ml-2 text-red-500 hover:text-red-700"
+                      className="text-red-500 hover:text-red-700 sm:col-span-4 sm:text-right"
                       aria-label="Delete item"
                     >
                       <FaTrash />
@@ -370,36 +465,86 @@ const UpdateQuotation = () => {
             </div>
           </section>
 
-          {/* Advanced Payment Information */}
+          {/* Advanced Payment Information - UPDATED */}
           <section className="bg-purewhite border border-light_gray rounded-lg p-6 mb-6">
             <div className="font-semibold text-main_dark mb-4">
               Advanced Payment Information
             </div>
+            
+            {/* Toggle between Amount and Percentage */}
+            <div className="mb-4">
+              <div className="flex items-center gap-4">
+                <label className="flex items-center cursor-pointer">
+                  <input
+                    type="radio"
+                    name="paymentType"
+                    checked={!isPercentage}
+                    onChange={() => handlePaymentTypeChange(false)}
+                    className="mr-2"
+                  />
+                  <span className="text-sm text-main_dark">Fixed Amount</span>
+                </label>
+                <label className="flex items-center cursor-pointer">
+                  <input
+                    type="radio"
+                    name="paymentType"
+                    checked={isPercentage}
+                    onChange={() => handlePaymentTypeChange(true)}
+                    className="mr-2"
+                  />
+                  <span className="text-sm text-main_dark">Percentage of Subtotal</span>
+                </label>
+              </div>
+            </div>
+
             <div>
               <label className="block text-sm text-slatebluegray mb-1">
-                Advanced Payment Amount
+                Advanced Payment {isPercentage ? 'Percentage' : 'Amount'}
               </label>
               <div className="relative">
-                <span className="absolute left-3 top-1/2 -translate-y-1/2 text-slatebluegray">
-                  $
+                <span className="absolute left-3 top-1/2 -translate-y-1/2 text-slatebluegray font-medium">
+                  {isPercentage ? '%' : 'RS'}
                 </span>
                 <input
                   type="number"
                   name="advancedPayment"
                   value={advancedPayment}
                   onChange={(e) => setAdvancedPayment(e.target.value)}
-                  placeholder="0.00"
-                  className="w-full border border-light_gray rounded-lg pl-7 pr-3 py-2 text-main_dark focus:outline-none"
+                  placeholder={isPercentage ? "Enter percentage (0-100)" : "Enter amount"}
+                  className="w-full border border-light_gray rounded-lg pl-12 pr-3 py-2 text-main_dark focus:outline-none focus:ring-2 focus:ring-web_yellow"
                   min="0"
-                  step="0.01"
+                  max={isPercentage ? "100" : undefined}
+                  step={isPercentage ? "0.1" : "0.01"}
                 />
               </div>
+              
+              {/* Show calculated amount if percentage is selected and has value */}
+              {isPercentage && advancedPayment && subtotal > 0 && (
+                <div className="mt-2 p-3 bg-deep_green/10 rounded-lg">
+                  <div className="text-sm text-slatebluegray">
+                    Calculated Amount:{" "}
+                    <span className="font-semibold text-deep_green text-base">
+                      RS {advancedPaymentAmount.toFixed(2)}
+                    </span>
+                  </div>
+                  <div className="text-xs text-gray-500 mt-1">
+                    ({advancedPayment}% of RS {subtotal.toFixed(2)})
+                  </div>
+                </div>
+              )}
+
+              {/* Show info message for fixed amount */}
+              {!isPercentage && advancedPayment && (
+                <div className="mt-2 text-sm text-slatebluegray">
+                  Fixed advanced payment: <span className="font-medium text-main_dark">RS {parseFloat(advancedPayment).toFixed(2)}</span>
+                </div>
+              )}
             </div>
           </section>
 
           {/* Delivery Information */}
-          <section className="bg-purewhite border border-light_gray rounded-lg p-6 mb-6">
-            <div className="flex items-center justify-between mb-4">
+          <section className="bg-purewhite border border-light_gray rounded-lg p-4 sm:p-6 mb-6">
+            <div className="flex flex-col sm:flex-row items-start sm:items-center justify-between mb-4 gap-4 sm:gap-0">
               <div className="font-semibold text-main_dark">
                 Delivery Information
               </div>
@@ -411,33 +556,22 @@ const UpdateQuotation = () => {
                 + Add Location
               </button>
             </div>
-            <div className="grid grid-cols-4 gap-x-6 gap-y-4">
-              <div>
-                <label className="block text-sm text-slatebluegray mb-1">Required Date</label>
-              </div>
-              <div>
-                <label className="block text-sm text-slatebluegray mb-1">Delivery Date</label>
-              </div>
-              <div>
-                <label className="block text-sm text-slatebluegray mb-1">Delivery Location</label>
-              </div>
-              <div>
-                <label className="block text-sm text-slatebluegray mb-1">Shipping Cost</label>
-              </div>
+            <div className="space-y-4">
               {deliveries.map((row, idx) => (
-                <React.Fragment key={idx}>
-                  <div className="flex items-center">
+                <div key={idx} className="grid grid-cols-1 sm:grid-cols-4 gap-4 items-end">
+                  <div>
+                    <label className="block text-sm text-slatebluegray mb-1">Required Date</label>
                     <input
                       type="date"
                       name="deliveryDate"
                       value={row.deliveryDate}
                       readOnly
                       disabled
-                      onChange={(e) => handleDeliveryChange(idx, e)}
-                      className="w-full border border-light_gray rounded-md px-3 py-2 text-main_dark text-sm focus:outline-none"
+                      className="w-full border border-light_gray rounded-md px-3 py-2 text-main_dark text-sm focus:outline-none bg-gray-50"
                     />
                   </div>
-                  <div className="flex items-center">
+                  <div>
+                    <label className="block text-sm text-slatebluegray mb-1">Delivery Date</label>
                     <input
                       type="date"
                       name="requiredDate"
@@ -446,7 +580,8 @@ const UpdateQuotation = () => {
                       className="w-full border border-light_gray rounded-md px-3 py-2 text-main_dark text-sm focus:outline-none"
                     />
                   </div>
-                  <div className="flex items-center">
+                  <div>
+                    <label className="block text-sm text-slatebluegray mb-1">Delivery Location</label>
                     <input
                       type="text"
                       name="deliveryLocation"
@@ -456,9 +591,10 @@ const UpdateQuotation = () => {
                       placeholder="Enter location"
                     />
                   </div>
-                  <div className="relative flex items-center">
-                    <span className="absolute left-3 top-1/2 -translate-y-1/2 text-slatebluegray">
-                      $
+                  <div className="relative">
+                    <label className="block text-sm text-slatebluegray mb-1">Shipping Cost</label>
+                    <span className="absolute left-1 top-2 text-slatebluegray">
+                      RS
                     </span>
                     <input
                       type="number"
@@ -470,24 +606,24 @@ const UpdateQuotation = () => {
                       min="0"
                       step="0.01"
                     />
-                    {deliveries.length > 1 && (
-                      <button
-                        type="button"
-                        onClick={() => handleDeleteLocation(idx)}
-                        className="ml-2 text-red-500 hover:text-red-700"
-                        aria-label="Delete location"
-                      >
-                        <FaTrash />
-                      </button>
-                    )}
                   </div>
-                </React.Fragment>
+                  {deliveries.length > 1 && (
+                    <button
+                      type="button"
+                      onClick={() => handleDeleteLocation(idx)}
+                      className="text-red-500 hover:text-red-700 sm:col-span-4 sm:text-right"
+                      aria-label="Delete location"
+                    >
+                      <FaTrash />
+                    </button>
+                  )}
+                </div>
               ))}
             </div>
           </section>
 
           {/* Terms & Conditions */}
-          <section className="bg-purewhite border border-light_gray rounded-lg p-6 mb-6">
+          <section className="bg-purewhite border border-light_gray rounded-lg p-4 sm:p-6 mb-6">
             <div className="font-semibold text-main_dark mb-4">Terms & Conditions</div>
             <div>
               <label className="block text-sm text-slatebluegray mb-1">
@@ -502,13 +638,12 @@ const UpdateQuotation = () => {
                 <option value="">Select payment terms</option>
                 <option value="Net 30">Net 30</option>
                 <option value="Net 60">Net 60</option>
-                {/* <option value="Advance">Advance</option> */}
               </select>
             </div>
           </section>
 
           {/* Additional Notes */}
-          <section className="bg-purewhite border border-light_gray rounded-lg p-6 mb-6">
+          <section className="bg-purewhite border border-light_gray rounded-lg p-4 sm:p-6 mb-6">
             <div className="font-semibold text-main_dark mb-4">
               Additional Notes
             </div>
@@ -526,18 +661,21 @@ const UpdateQuotation = () => {
           </section>
 
           {/* Attachments */}
-          <section className="bg-purewhite border border-light_gray rounded-lg p-6 mb-6">
+          <section className="bg-purewhite border border-light_gray rounded-lg p-4 sm:p-6 mb-6">
             <div className="font-semibold text-main_dark mb-4">Attachments</div>
-            {/* Show original attachment file names, if any */}
             {initAttachmentNames.length > 0 && (
-              <div className="mb-2 text-slatebluegray text-xs font-semibold">
-                Existing Attachments:
-                <ul className="list-disc pl-6 mt-1">
+              <div className="mb-4 p-3 bg-blue-50 rounded-lg">
+                <div className="text-sm font-semibold text-main_dark mb-2">
+                  Existing Attachments:
+                </div>
+                <ul className="list-disc pl-6 space-y-1">
                   {initAttachmentNames.map((name, idx) => (
-                    <li key={idx}>{name}</li>
+                    <li key={idx} className="text-sm text-gray-700"> {name}</li>
                   ))}
                 </ul>
-                <span className="block text-slatebluegray text-xs mt-1">Uploading new files will not remove these.</span>
+                <div className="text-xs text-gray-500 mt-2">
+                  Note: Uploading new files will not remove existing attachments.
+                </div>
               </div>
             )}
             <div className="flex flex-col items-center justify-center border-2 border-dashed border-light_gray rounded-lg py-8 bg-gray-50">
@@ -564,17 +702,22 @@ const UpdateQuotation = () => {
               </label>
             </div>
             {attachments.length > 0 && (
-              <ul className="text-sm text-slatebluegray mt-3">
-                {attachments.map((file, idx) => (
-                  <li key={idx} className="py-1">
-                    📄 {file.name}
-                  </li>
-                ))}
-              </ul>
+              <div className="mt-3 p-3 bg-green-50 rounded-lg">
+                <div className="text-sm font-semibold text-main_dark mb-2">
+                  New Files to Upload:
+                </div>
+                <ul className="space-y-1">
+                  {attachments.map((file, idx) => (
+                    <li key={idx} className="text-sm text-gray-700">
+                       {file.name}
+                    </li>
+                  ))}
+                </ul>
+              </div>
             )}
           </section>
 
-          {/* Quotation Summary */}
+          {/* Quotation Summary - UPDATED */}
           <section className="bg-light_gray rounded-lg p-6 mb-6">
             <div className="font-semibold text-main_dark mb-4">
               Quotation Summary
@@ -582,39 +725,49 @@ const UpdateQuotation = () => {
             <div className="space-y-2 text-main_dark">
               <div className="flex justify-between">
                 <span>Subtotal:</span>
-                <span>${subtotal.toFixed(2)}</span>
+                <span>RS {subtotal.toFixed(2)}</span>
               </div>
               <div className="flex justify-between">
                 <span>Shipping:</span>
-                <span>${totalShipping.toFixed(2)}</span>
+                <span>RS {totalShipping.toFixed(2)}</span>
               </div>
-              {/* <div className="flex justify-between">
-                <span>Tax:</span>
-                <span>$0.00</span>
-              </div> */}
+              {advancedPaymentAmount > 0 && (
+                <div className="flex justify-between text-deep_green font-medium">
+                  <span>
+                    Advanced Payment {isPercentage ? `(${advancedPayment}%)` : ''}:
+                  </span>
+                  <span>RS {advancedPaymentAmount.toFixed(2)}</span>
+                </div>
+              )}
               <hr className="border-gray-300 my-2" />
               <div className="flex justify-between font-bold text-lg">
                 <span>Total:</span>
-                <span className="text-web_yellow">${total.toFixed(2)}</span>
+                <span className="text-web_yellow">RS {total.toFixed(2)}</span>
               </div>
+              {advancedPaymentAmount > 0 && (
+                <div className="flex justify-between text-sm text-slatebluegray pt-2 border-t border-gray-200">
+                  <span>Remaining Amount:</span>
+                  <span className="font-semibold">RS {(total - advancedPaymentAmount).toFixed(2)}</span>
+                </div>
+              )}
             </div>
           </section>
 
           {/* Action Buttons */}
-          <div className="flex justify-end gap-4">
+          <div className="flex flex-col sm:flex-row justify-end gap-4">
+            <button
+              type="button"
+              onClick={() => navigate('/supplier/quotations')}
+              className="bg-gray-200 text-main_dark px-6 py-3 rounded-lg font-medium hover:bg-gray-300 transition"
+            >
+              Cancel
+            </button>
             <button
               type="submit"
               className="bg-web_yellow text-main_dark px-6 py-3 rounded-lg font-medium hover:opacity-90 transition"
               disabled={loading}
             >
               {loading ? "Updating..." : "Update Quotation"}
-            </button>
-            <button
-              type="button"
-              onClick={() => navigate('/supplier/quotations')}
-              className="bg-deep_green text-purewhite px-6 py-3 rounded-lg font-medium hover:bg-main_dark transition"
-            >
-              Cancel
             </button>
           </div>
         </form>

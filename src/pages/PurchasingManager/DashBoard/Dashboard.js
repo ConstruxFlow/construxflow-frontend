@@ -1,17 +1,23 @@
-import React, { useState, useEffect, useContext, useRef } from 'react';
-import NavBar from '../../../components/NavBar';
+import React, { useState, useEffect, useContext, useRef } from "react";
+import NavBar from "../../../components/NavBar";
 import { MdOutlinePendingActions } from "react-icons/md";
 import { LiaNotesMedicalSolid } from "react-icons/lia";
 import { GrDeliver } from "react-icons/gr";
 import { IoMdCheckmark } from "react-icons/io";
-import { FaUser, FaEye, FaCalendarAlt, FaBuilding, FaDollarSign } from "react-icons/fa";
+import {
+  FaUser,
+  FaEye,
+  FaCalendarAlt,
+  FaBuilding,
+  FaDollarSign,
+} from "react-icons/fa";
 import { TfiWrite } from "react-icons/tfi";
 import { IoSearch } from "react-icons/io5";
 import { SiGoogleanalytics } from "react-icons/si";
-import { useNavigate } from 'react-router-dom';
-import { toast } from 'react-toastify';
-import { AuthContext } from '../../../Context/AuthContext';
-import { Space } from 'lucide-react';
+import { useNavigate } from "react-router-dom";
+import { toast } from "react-toastify";
+import { AuthContext } from "../../../Context/AuthContext";
+import { Space } from "lucide-react";
 import {
   Chart as ChartJS,
   CategoryScale,
@@ -23,8 +29,8 @@ import {
   Tooltip,
   Legend,
   ArcElement,
-} from 'chart.js';
-import { Line, Doughnut } from 'react-chartjs-2';
+} from "chart.js";
+import { Line, Doughnut } from "react-chartjs-2";
 
 ChartJS.register(
   CategoryScale,
@@ -50,17 +56,19 @@ const PurchasingDashboard = () => {
 
   const fetchPurchaseOrders = async () => {
     try {
-      const response = await fetch('http://localhost:8080/api/purchasingorder/all');
+      const response = await fetch(
+        "http://localhost:8080/api/purchasingorder/all"
+      );
       const data = await response.json();
-      
-      if (data.status === 'success') {
+
+      if (data.status === "success") {
         setPurchaseOrders(data.data || []);
       } else {
-        toast.error('Failed to fetch purchase orders');
+        toast.error("Failed to fetch purchase orders");
       }
     } catch (error) {
-      toast.error('Network error: Failed to fetch purchase orders');
-      console.error('Error fetching purchase orders:', error);
+      toast.error("Network error: Failed to fetch purchase orders");
+      console.error("Error fetching purchase orders:", error);
     } finally {
       setLoading(false);
     }
@@ -70,22 +78,32 @@ const PurchasingDashboard = () => {
   const prepareProcurementTrendsData = () => {
     const last6Months = [];
     const currentDate = new Date();
-    
+
     for (let i = 5; i >= 0; i--) {
-      const date = new Date(currentDate.getFullYear(), currentDate.getMonth() - i, 1);
+      const date = new Date(
+        currentDate.getFullYear(),
+        currentDate.getMonth() - i,
+        1
+      );
       last6Months.push({
-        month: date.toLocaleDateString('en-US', { month: 'short', year: 'numeric' }),
+        month: date.toLocaleDateString("en-US", {
+          month: "short",
+          year: "numeric",
+        }),
         orders: 0,
-        amount: 0
+        amount: 0,
       });
     }
 
     // Process purchase orders data
-    purchaseOrders.forEach(order => {
+    purchaseOrders.forEach((order) => {
       const orderDate = new Date(order.createdDate);
-      const monthKey = orderDate.toLocaleDateString('en-US', { month: 'short', year: 'numeric' });
-      
-      const monthData = last6Months.find(m => m.month === monthKey);
+      const monthKey = orderDate.toLocaleDateString("en-US", {
+        month: "short",
+        year: "numeric",
+      });
+
+      const monthData = last6Months.find((m) => m.month === monthKey);
       if (monthData) {
         monthData.orders += 1;
         monthData.amount += order.subTotal || 0;
@@ -93,23 +111,23 @@ const PurchasingDashboard = () => {
     });
 
     return {
-      labels: last6Months.map(m => m.month),
+      labels: last6Months.map((m) => m.month),
       datasets: [
         {
-          label: 'Purchase Orders',
-          data: last6Months.map(m => m.orders),
-          borderColor: '#efc11a',
-          backgroundColor: 'rgba(245, 158, 11, 0.1)',
+          label: "Purchase Orders",
+          data: last6Months.map((m) => m.orders),
+          borderColor: "#efc11a",
+          backgroundColor: "rgba(245, 158, 11, 0.1)",
           tension: 0.4,
-          yAxisID: 'y',
+          yAxisID: "y",
         },
         {
-          label: 'Amount ($)',
-          data: last6Months.map(m => m.amount),
-          borderColor: '#236571',
-          backgroundColor: 'rgba(16, 185, 129, 0.1)',
+          label: "Amount ($)",
+          data: last6Months.map((m) => m.amount),
+          borderColor: "#236571",
+          backgroundColor: "rgba(16, 185, 129, 0.1)",
           tension: 0.4,
-          yAxisID: 'y1',
+          yAxisID: "y1",
         },
       ],
     };
@@ -118,19 +136,19 @@ const PurchasingDashboard = () => {
   const prepareDeliveryPerformanceData = () => {
     // Sample data - you can replace with actual supplier performance data
     const performanceData = [
-      { status: 'On Time', count: 85, color: '#236571' },
-      { status: 'Delayed', count: 12, color: '#efc11a' },
-      { status: 'Early', count: 3, color: '#CEB8AD' },
+      { status: "On Time", count: 85, color: "#236571" },
+      { status: "Delayed", count: 12, color: "#efc11a" },
+      { status: "Early", count: 3, color: "#CEB8AD" },
     ];
 
     return {
-      labels: performanceData.map(d => d.status),
+      labels: performanceData.map((d) => d.status),
       datasets: [
         {
-          data: performanceData.map(d => d.count),
-          backgroundColor: performanceData.map(d => d.color),
+          data: performanceData.map((d) => d.count),
+          backgroundColor: performanceData.map((d) => d.color),
           borderWidth: 2,
-          borderColor: '#ffffff',
+          borderColor: "#ffffff",
         },
       ],
     };
@@ -141,7 +159,7 @@ const PurchasingDashboard = () => {
     maintainAspectRatio: false,
     plugins: {
       legend: {
-        position: 'top',
+        position: "top",
         labels: {
           usePointStyle: true,
           padding: 20,
@@ -163,11 +181,11 @@ const PurchasingDashboard = () => {
         },
       },
       y: {
-        type: 'linear',
+        type: "linear",
         display: true,
-        position: 'left',
+        position: "left",
         grid: {
-          color: 'rgba(0, 0, 0, 0.1)',
+          color: "rgba(0, 0, 0, 0.1)",
         },
         ticks: {
           font: {
@@ -176,16 +194,16 @@ const PurchasingDashboard = () => {
         },
         title: {
           display: true,
-          text: 'Orders',
+          text: "Orders",
           font: {
             size: 12,
           },
         },
       },
       y1: {
-        type: 'linear',
+        type: "linear",
         display: true,
-        position: 'right',
+        position: "right",
         grid: {
           drawOnChartArea: false,
         },
@@ -193,13 +211,13 @@ const PurchasingDashboard = () => {
           font: {
             size: 11,
           },
-          callback: function(value) {
-            return '$' + value.toLocaleString();
+          callback: function (value) {
+            return "$" + value.toLocaleString();
           },
         },
         title: {
           display: true,
-          text: 'Amount ($)',
+          text: "Amount ($)",
           font: {
             size: 12,
           },
@@ -213,7 +231,7 @@ const PurchasingDashboard = () => {
     maintainAspectRatio: false,
     plugins: {
       legend: {
-        position: 'bottom',
+        position: "bottom",
         labels: {
           usePointStyle: true,
           padding: 15,
@@ -224,7 +242,7 @@ const PurchasingDashboard = () => {
       },
       tooltip: {
         callbacks: {
-          label: function(context) {
+          label: function (context) {
             const total = context.dataset.data.reduce((a, b) => a + b, 0);
             const percentage = ((context.raw / total) * 100).toFixed(1);
             return `${context.label}: ${context.raw} (${percentage}%)`;
@@ -236,32 +254,44 @@ const PurchasingDashboard = () => {
 
   const getStatusColor = (status) => {
     switch (status?.toLowerCase()) {
-      case 'pending': return 'bg-yellow-100 text-yellow-800';
-      case 'approved': return 'bg-green-100 text-green-800';
-      case 'rejected': return 'bg-red-100 text-red-800';
-      case 'completed': return 'bg-blue-100 text-blue-800';
-      case 'delivered': return 'bg-light_brown text-main_dark';
-      case 'cancelled': return 'bg-gray-100 text-gray-800';
-      default: return 'bg-gray-100 text-gray-800';
+      case "pending":
+        return "bg-yellow-100 text-yellow-800";
+      case "approved":
+        return "bg-green-100 text-green-800";
+      case "rejected":
+        return "bg-red-100 text-red-800";
+      case "completed":
+        return "bg-blue-100 text-blue-800";
+      case "delivered":
+        return "bg-light_brown text-main_dark";
+      case "cancelled":
+        return "bg-gray-100 text-gray-800";
+      default:
+        return "bg-gray-100 text-gray-800";
     }
   };
 
   const getPaymentStatusColor = (status) => {
     switch (status?.toLowerCase()) {
-      case 'paid': return 'bg-green-100 text-green-800';
-      case 'pending': return 'bg-yellow-100 text-yellow-800';
-      case 'partial': return 'bg-orange-100 text-orange-800';
-      case 'overdue': return 'bg-red-100 text-red-800';
-      default: return 'bg-gray-100 text-gray-800';
+      case "paid":
+        return "bg-green-100 text-green-800";
+      case "pending":
+        return "bg-yellow-100 text-yellow-800";
+      case "partial":
+        return "bg-orange-100 text-orange-800";
+      case "overdue":
+        return "bg-red-100 text-red-800";
+      default:
+        return "bg-gray-100 text-gray-800";
     }
   };
 
   const formatDate = (dateString) => {
-    if (!dateString) return 'N/A';
-    return new Date(dateString).toLocaleDateString('en-US', {
-      year: 'numeric',
-      month: 'short',
-      day: 'numeric'
+    if (!dateString) return "N/A";
+    return new Date(dateString).toLocaleDateString("en-US", {
+      year: "numeric",
+      month: "short",
+      day: "numeric",
     });
   };
 
@@ -282,15 +312,41 @@ const PurchasingDashboard = () => {
   return (
     <div className="min-h-screen bg-purewhite font-poppins">
       {/* Header Navigation */}
-      <NavBar 
-      profileURL="/purchasing/profile"
-      links={[
-        { name: 'Dashboard', path: '/purchasing/dashboard' },
-        { name: 'Material Requests', path: '/purchasing/materialrequests/overview' },
-        { name: 'Suppliers', path: '/purchasing/supplier/dashboard' },
-        { name: 'Quotation Requests', path: '/purchasing/quotationrequest/overview' },
-        { name: 'Purchasing Orders', path: '/purchasing/orders/overview' },
-      ]} />
+      <NavBar
+        profileURL="/purchasing/profile"
+        links={[
+          { name: "Dashboard", path: "/purchasing/dashboard" },
+          {
+            name: "Requests",
+            megamenu: true, // tells NavBar this is a full-width mega menu
+            megaSections: [
+              {
+                title: "Requests",
+                description:
+                  "Create and manage your purchasing and inventory requests.",
+                items: [
+                  {
+                    name: "Material Requests",
+                    path: "/purchasing/materialrequests/overview",
+                    desc: "Raise new material requisitions and view approval status.",
+                  },
+                  {
+                    name: "Inventory Requests",
+                    path: "/purchasing/inventoryrequests/overview",
+                    desc: "Transfer, replenish, and audit inventory across locations.",
+                  },
+                ],
+              },
+            ],
+          },
+          { name: "Suppliers", path: "/purchasing/supplier/dashboard" },
+          {
+            name: "Quotation Requests",
+            path: "/purchasing/quotationrequest/overview",
+          },
+          { name: "Purchasing Orders", path: "/purchasing/orders/overview" },
+        ]}
+      />
 
       {/* Main Content */}
       <main className="py-6">
@@ -300,13 +356,15 @@ const PurchasingDashboard = () => {
             <h1 className="text-2xl sm:text-3xl font-semibold text-main_dark mb-1 tracking-tight">
               Purchasing Dashboard
             </h1>
-            {
-              authState?.user && (
-                <p className="text-slatebluegray text-base">
-                  Welcome back, <span className='font-semibold'>{authState.user.userName || 'User'}</span>. Here's your procurement overview.
-                </p>
-              )
-            }
+            {authState?.user && (
+              <p className="text-slatebluegray text-base">
+                Welcome back,{" "}
+                <span className="font-semibold">
+                  {authState.user.userName || "User"}
+                </span>
+                . Here's your procurement overview.
+              </p>
+            )}
           </div>
 
           {/* Urgent Actions Alert */}
@@ -322,15 +380,21 @@ const PurchasingDashboard = () => {
                 <div className="flex flex-wrap gap-3 text-sm">
                   <span className="flex items-center gap-2 bg-purewhite px-3 py-1.5 rounded-full shadow-md border border-web_yellow/20">
                     <div className="w-3 h-3 bg-gradient-to-r from-web_yellow to-web_yellow/70 rounded-full animate-pulse"></div>
-                    <span className="text-main_dark font-medium">3 delayed deliveries</span>
+                    <span className="text-main_dark font-medium">
+                      3 delayed deliveries
+                    </span>
                   </span>
                   <span className="flex items-center gap-2 bg-purewhite px-3 py-1.5 rounded-full shadow-md border border-deep_green/20">
                     <div className="w-3 h-3 bg-gradient-to-r from-deep_green to-deep_green/70 rounded-full animate-pulse"></div>
-                    <span className="text-main_dark font-medium">2 low stock alerts</span>
+                    <span className="text-main_dark font-medium">
+                      2 low stock alerts
+                    </span>
                   </span>
                   <span className="flex items-center gap-2 bg-purewhite px-3 py-1.5 rounded-full shadow-md border border-light_brown/30">
                     <div className="w-3 h-3 bg-gradient-to-r from-light_brown to-light_brown/70 rounded-full animate-pulse"></div>
-                    <span className="text-main_dark font-medium">1 pending approval</span>
+                    <span className="text-main_dark font-medium">
+                      1 pending approval
+                    </span>
                   </span>
                 </div>
               </div>
@@ -341,49 +405,74 @@ const PurchasingDashboard = () => {
           <div className="grid grid-cols-1 sm:grid-cols-2 lg:grid-cols-4 gap-3 sm:gap-4 mb-8">
             <div className="bg-purewhite border border-gray-200 rounded-xl p-4 sm:p-5 flex items-center gap-3 sm:gap-4 shadow-sm hover:shadow-md hover:-translate-y-0.5 transition-all duration-150">
               <div className="flex-1 min-w-0">
-                <p className="text-slatebluegray font-medium text-sm mb-0.5 truncate">Pending Requests</p>
+                <p className="text-slatebluegray font-medium text-sm mb-0.5 truncate">
+                  Pending Requests
+                </p>
                 <h3 className="text-xl sm:text-2xl font-bold text-main_dark leading-tight mb-0.5">
-                  {purchaseOrders.filter(order => order.status === 'Pending').length}
+                  {
+                    purchaseOrders.filter((order) => order.status === "Pending")
+                      .length
+                  }
                 </h3>
-                <span className="text-deep_green text-xs">+3 from yesterday</span>
+                <span className="text-deep_green text-xs">
+                  +3 from yesterday
+                </span>
               </div>
               <div className="w-12 h-12 bg-gradient-to-br from-web_yellow via-web_yellow to-web_yellow/80 rounded-xl flex items-center justify-center shadow-lg group-hover:scale-110 group-hover:rotate-3 transition-all duration-300">
-                <MdOutlinePendingActions className="text-purewhite text-lg"/>
+                <MdOutlinePendingActions className="text-purewhite text-lg" />
               </div>
             </div>
 
             <div className="bg-purewhite border border-gray-200 rounded-xl p-4 sm:p-5 flex items-center gap-3 sm:gap-4 shadow-sm hover:shadow-md hover:-translate-y-0.5 transition-all duration-150">
               <div className="flex-1 min-w-0">
-                <p className="text-slatebluegray font-medium text-sm mb-0.5 truncate">Approved Today</p>
+                <p className="text-slatebluegray font-medium text-sm mb-0.5 truncate">
+                  Approved Today
+                </p>
                 <h3 className="text-xl sm:text-2xl font-bold text-main_dark leading-tight mb-0.5">
-                  {purchaseOrders.filter(order => order.status === 'Approved').length}
+                  {
+                    purchaseOrders.filter(
+                      (order) => order.status === "Approved"
+                    ).length
+                  }
                 </h3>
-                <span className="text-deep_green text-xs">87% approval rate</span>
+                <span className="text-deep_green text-xs">
+                  87% approval rate
+                </span>
               </div>
               <div className="w-12 h-12 bg-gradient-to-br from-web_yellow via-web_yellow to-web_yellow/80 rounded-xl flex items-center justify-center shadow-lg group-hover:scale-110 group-hover:rotate-3 transition-all duration-300">
-                <IoMdCheckmark className="text-purewhite text-lg"/>
+                <IoMdCheckmark className="text-purewhite text-lg" />
               </div>
             </div>
 
             <div className="bg-purewhite border border-gray-200 rounded-xl p-4 sm:p-5 flex items-center gap-3 sm:gap-4 shadow-sm hover:shadow-md hover:-translate-y-0.5 transition-all duration-150">
               <div className="flex-1 min-w-0">
-                <p className="text-slatebluegray font-medium text-sm mb-0.5 truncate">Open Quotations</p>
-                <h3 className="text-xl sm:text-2xl font-bold text-main_dark leading-tight mb-0.5">12</h3>
+                <p className="text-slatebluegray font-medium text-sm mb-0.5 truncate">
+                  Open Quotations
+                </p>
+                <h3 className="text-xl sm:text-2xl font-bold text-main_dark leading-tight mb-0.5">
+                  12
+                </h3>
                 <span className="text-deep_green text-xs">5 expiring soon</span>
               </div>
               <div className="w-12 h-12 bg-gradient-to-br from-web_yellow via-web_yellow to-web_yellow/80 rounded-xl flex items-center justify-center shadow-lg group-hover:scale-110 group-hover:rotate-3 transition-all duration-300">
-                <LiaNotesMedicalSolid className="text-purewhite text-lg"/>
+                <LiaNotesMedicalSolid className="text-purewhite text-lg" />
               </div>
             </div>
 
             <div className="bg-purewhite border border-gray-200 rounded-xl p-4 sm:p-5 flex items-center gap-3 sm:gap-4 shadow-sm hover:shadow-md hover:-translate-y-0.5 transition-all duration-150">
               <div className="flex-1 min-w-0">
-                <p className="text-slatebluegray font-medium text-sm mb-0.5 truncate">Active Suppliers</p>
-                <h3 className="text-xl sm:text-2xl font-bold text-main_dark leading-tight mb-0.5">156</h3>
-                <span className="text-deep_green text-xs">92% performance avg</span>
+                <p className="text-slatebluegray font-medium text-sm mb-0.5 truncate">
+                  Active Suppliers
+                </p>
+                <h3 className="text-xl sm:text-2xl font-bold text-main_dark leading-tight mb-0.5">
+                  156
+                </h3>
+                <span className="text-deep_green text-xs">
+                  92% performance avg
+                </span>
               </div>
               <div className="w-12 h-12 bg-gradient-to-br from-web_yellow via-web_yellow to-web_yellow/80 rounded-xl flex items-center justify-center shadow-lg group-hover:scale-110 group-hover:rotate-3 transition-all duration-300">
-                <GrDeliver className="text-purewhite text-lg"/>
+                <GrDeliver className="text-purewhite text-lg" />
               </div>
             </div>
           </div>
@@ -394,24 +483,54 @@ const PurchasingDashboard = () => {
               Quick Actions
             </h2>
             <div className="grid grid-cols-2 lg:grid-cols-4 gap-3 sm:gap-4">
-              <div onClick={() => navigate('/purchasing/supplier/register')} className="bg-purewhite border-2 hover:border-web_yellow rounded-lg p-4 sm:p-5 text-center cursor-pointer hover:-translate-y-0.5 hover:shadow-md transition-all duration-150">
-                <div className="text-xl flex justify-center text-deep_green sm:text-2xl mb-2"><FaUser/></div>
-                <span className="font-medium text-main_dark text-xs sm:text-sm">Register Supplier</span>
+              <div
+                onClick={() => navigate("/purchasing/supplier/register")}
+                className="bg-purewhite border-2 hover:border-web_yellow rounded-lg p-4 sm:p-5 text-center cursor-pointer hover:-translate-y-0.5 hover:shadow-md transition-all duration-150"
+              >
+                <div className="text-xl flex justify-center text-deep_green sm:text-2xl mb-2">
+                  <FaUser />
+                </div>
+                <span className="font-medium text-main_dark text-xs sm:text-sm">
+                  Register Supplier
+                </span>
               </div>
 
-              <div onClick={() => navigate('/purchasing/materialrequests/create')} className="bg-purewhite border-2 hover:border-web_yellow rounded-lg p-4 sm:p-5 text-center cursor-pointer hover:-translate-y-0.5 hover:shadow-md transition-all duration-150">
-                <div className="text-xl flex justify-center text-deep_green sm:text-2xl mb-2"><TfiWrite/></div>
-                <span className="font-medium text-main_dark text-xs sm:text-sm">Create Request</span>
+              <div
+                onClick={() => navigate("/purchasing/materialrequests/create")}
+                className="bg-purewhite border-2 hover:border-web_yellow rounded-lg p-4 sm:p-5 text-center cursor-pointer hover:-translate-y-0.5 hover:shadow-md transition-all duration-150"
+              >
+                <div className="text-xl flex justify-center text-deep_green sm:text-2xl mb-2">
+                  <TfiWrite />
+                </div>
+                <span className="font-medium text-main_dark text-xs sm:text-sm">
+                  Create Request
+                </span>
               </div>
 
-              <div onClick={() => navigate('/purchasing/quotationrequest/overview')} className="bg-purewhite border-2 hover:border-web_yellow rounded-lg p-4 sm:p-5 text-center cursor-pointer hover:-translate-y-0.5 hover:shadow-md transition-all duration-150">
-                <div className="text-xl flex justify-center text-deep_green sm:text-2xl mb-2"><IoSearch/></div>
-                <span className="font-medium text-main_dark text-xs sm:text-sm">Review Quotes</span>
+              <div
+                onClick={() =>
+                  navigate("/purchasing/quotationrequest/overview")
+                }
+                className="bg-purewhite border-2 hover:border-web_yellow rounded-lg p-4 sm:p-5 text-center cursor-pointer hover:-translate-y-0.5 hover:shadow-md transition-all duration-150"
+              >
+                <div className="text-xl flex justify-center text-deep_green sm:text-2xl mb-2">
+                  <IoSearch />
+                </div>
+                <span className="font-medium text-main_dark text-xs sm:text-sm">
+                  Review Quotes
+                </span>
               </div>
 
-              <div onClick={() => navigate('/purchasing/orders/overview')} className="bg-purewhite border-2 hover:border-web_yellow rounded-lg p-4 sm:p-5 text-center cursor-pointer hover:-translate-y-0.5 hover:shadow-md transition-all duration-150">
-                <div className="text-xl flex justify-center text-deep_green sm:text-2xl mb-2"><SiGoogleanalytics/></div>
-                <span className="font-medium text-main_dark text-xs sm:text-sm">View POs</span>
+              <div
+                onClick={() => navigate("/purchasing/orders/overview")}
+                className="bg-purewhite border-2 hover:border-web_yellow rounded-lg p-4 sm:p-5 text-center cursor-pointer hover:-translate-y-0.5 hover:shadow-md transition-all duration-150"
+              >
+                <div className="text-xl flex justify-center text-deep_green sm:text-2xl mb-2">
+                  <SiGoogleanalytics />
+                </div>
+                <span className="font-medium text-main_dark text-xs sm:text-sm">
+                  View POs
+                </span>
               </div>
             </div>
           </div>
@@ -423,16 +542,22 @@ const PurchasingDashboard = () => {
                 Procurement Trends
               </h3>
               <div className="h-64 w-full">
-                <Line data={prepareProcurementTrendsData()} options={procurementTrendsOptions} />
+                <Line
+                  data={prepareProcurementTrendsData()}
+                  options={procurementTrendsOptions}
+                />
               </div>
             </div>
-            
+
             <div className="bg-purewhite border border-gray-200 rounded-lg p-4 sm:p-5">
               <h3 className="font-semibold text-main_dark mb-4 text-base">
                 Supplier Delivery Performance
               </h3>
               <div className="h-64 w-full">
-                <Doughnut data={prepareDeliveryPerformanceData()} options={deliveryPerformanceOptions} />
+                <Doughnut
+                  data={prepareDeliveryPerformanceData()}
+                  options={deliveryPerformanceOptions}
+                />
               </div>
             </div>
           </div>
@@ -443,11 +568,15 @@ const PurchasingDashboard = () => {
               <h2 className="text-lg font-semibold text-main_dark tracking-tight text-center sm:text-left">
                 Recent Purchase Orders
               </h2>
-              <a href="#" onClick={() => navigate('/purchasing/orders/overview')} className="text-deep_green hover:text-deep_green/80 font-medium text-sm transition-colors duration-150 text-center sm:text-right">
+              <a
+                href="#"
+                onClick={() => navigate("/purchasing/orders/overview")}
+                className="text-deep_green hover:text-deep_green/80 font-medium text-sm transition-colors duration-150 text-center sm:text-right"
+              >
                 View All
               </a>
             </div>
-            
+
             <div className="bg-purewhite border border-gray-200 rounded-lg overflow-hidden">
               {loading ? (
                 <div className="p-8 text-center">
@@ -467,53 +596,80 @@ const PurchasingDashboard = () => {
                         <div className="flex justify-between items-start mb-3">
                           <div className="flex-1">
                             <div className="flex items-center gap-2 mb-1">
-                              <h3 className="font-semibold text-main_dark text-sm">{order.ponumber}</h3>
+                              <h3 className="font-semibold text-main_dark text-sm">
+                                {order.ponumber}
+                              </h3>
                               <span className="text-xs text-gray-500">•</span>
-                              <span className="font-semibold text-main_dark text-sm">{order.supplier?.name || 'Unknown'}</span>
+                              <span className="font-semibold text-main_dark text-sm">
+                                {order.supplier?.name || "Unknown"}
+                              </span>
                             </div>
-                            <p className="text-xs text-gray-600 mb-1">{order.supplier?.company_name || 'No Company'}</p>
+                            <p className="text-xs text-gray-600 mb-1">
+                              {order.supplier?.company_name || "No Company"}
+                            </p>
                             <div className="flex items-center gap-2 text-xs text-gray-500">
                               <FaCalendarAlt className="w-3 h-3" />
                               {formatDate(order.createdDate)}
                             </div>
                           </div>
                           <div className="flex flex-col gap-1">
-                            <span className={`px-2 py-1 rounded-full text-xs font-medium ${getStatusColor(order.status)}`}>
+                            <span
+                              className={`px-2 py-1 rounded-full text-xs font-medium ${getStatusColor(
+                                order.status
+                              )}`}
+                            >
                               {order.status}
                             </span>
                             {order.orderPayment && (
-                              <span className={`px-2 py-1 rounded-full text-xs font-medium ${getPaymentStatusColor(order.orderPayment.status)}`}>
-                                {order.orderPayment.status || 'Pending'}
+                              <span
+                                className={`px-2 py-1 rounded-full text-xs font-medium ${getPaymentStatusColor(
+                                  order.orderPayment.status
+                                )}`}
+                              >
+                                {order.orderPayment.status || "Pending"}
                               </span>
                             )}
                           </div>
                         </div>
-                        
+
                         <div className="grid grid-cols-2 gap-4 mb-3 text-xs">
                           <div>
                             <span className="text-gray-500">Amount:</span>
                             <div className="font-semibold">
-                              ${order.subTotal ? order.subTotal.toLocaleString() : 'N/A'}
+                              $
+                              {order.subTotal
+                                ? order.subTotal.toLocaleString()
+                                : "N/A"}
                             </div>
                           </div>
                           <div>
                             <span className="text-gray-500">Materials:</span>
-                            <div className="font-semibold">{order.materials ? order.materials.length : 0}</div>
+                            <div className="font-semibold">
+                              {order.materials ? order.materials.length : 0}
+                            </div>
                           </div>
                         </div>
 
                         {/* Materials Preview */}
                         {order.materials && order.materials.length > 0 && (
                           <div className="mb-3">
-                            <span className="text-xs text-gray-500">Materials:</span>
+                            <span className="text-xs text-gray-500">
+                              Materials:
+                            </span>
                             <div className="text-xs text-gray-700 mt-1">
-                              {order.materials.slice(0, 2).map((material, index) => (
-                                <div key={index}>
-                                  {material.material.materialName} ({material.quantity} {material.material.unitOfMeasurement})
-                                </div>
-                              ))}
+                              {order.materials
+                                .slice(0, 2)
+                                .map((material, index) => (
+                                  <div key={index}>
+                                    {material.material.materialName} (
+                                    {material.quantity}{" "}
+                                    {material.material.unitOfMeasurement})
+                                  </div>
+                                ))}
                               {order.materials.length > 2 && (
-                                <div className="text-gray-400">+{order.materials.length - 2} more</div>
+                                <div className="text-gray-400">
+                                  +{order.materials.length - 2} more
+                                </div>
                               )}
                             </div>
                           </div>
@@ -524,23 +680,40 @@ const PurchasingDashboard = () => {
                           <div className="mb-3">
                             <div className="flex justify-between text-xs text-gray-500 mb-1">
                               <span>Payment Progress</span>
-                              <span>${order.orderPayment.paidAmount || 0} / ${order.orderPayment.amount || 0}</span>
+                              <span>
+                                ${order.orderPayment.paidAmount || 0} / $
+                                {order.orderPayment.amount || 0}
+                              </span>
                             </div>
                             <div className="w-full bg-gray-200 rounded-full h-2">
-                              <div 
-                                className="bg-green-500 h-2 rounded-full" 
-                                style={{ width: `${getPaymentProgress(order.orderPayment)}%` }}
+                              <div
+                                className="bg-green-500 h-2 rounded-full"
+                                style={{
+                                  width: `${getPaymentProgress(
+                                    order.orderPayment
+                                  )}%`,
+                                }}
                               ></div>
                             </div>
                           </div>
                         )}
-                        
+
                         <div className="flex justify-between items-center">
                           <div className="text-xs text-gray-600">
-                            {order.materials ? order.materials.length : 0} materials • {order.deliveries ? order.deliveries.length : 0} locations
+                            {order.materials ? order.materials.length : 0}{" "}
+                            materials •{" "}
+                            {order.deliveries ? order.deliveries.length : 0}{" "}
+                            locations
                           </div>
                           <div className="flex items-center gap-2">
-                            <button onClick={() => navigate(`/purchasing/orders/details/${order.ponumber}`)} className="text-deep_green hover:text-deep_green/80 transition-colors">
+                            <button
+                              onClick={() =>
+                                navigate(
+                                  `/purchasing/orders/details/${order.ponumber}`
+                                )
+                              }
+                              className="text-deep_green hover:text-deep_green/80 transition-colors"
+                            >
                               <FaEye className="w-4 h-4" />
                             </button>
                           </div>
@@ -569,47 +742,73 @@ const PurchasingDashboard = () => {
                               Order Date
                             </div>
                           </th>
-                          <th className="px-6 py-4 text-left text-sm font-semibold text-main_dark">Status</th>
-                          <th className="px-6 py-4 text-left text-sm font-semibold text-main_dark">Materials</th>
+                          <th className="px-6 py-4 text-left text-sm font-semibold text-main_dark">
+                            Status
+                          </th>
+                          <th className="px-6 py-4 text-left text-sm font-semibold text-main_dark">
+                            Materials
+                          </th>
                           <th className="px-6 py-4 text-left text-sm font-semibold text-main_dark">
                             <div className="flex items-center gap-2">
-                              <FaDollarSign className="w-4 h-4" />
                               Amount
                             </div>
                           </th>
-                          <th className="px-6 py-4 text-left text-sm font-semibold text-main_dark">Payment</th>
-                          <th className="px-6 py-4 text-left text-sm font-semibold text-main_dark">Delivery</th>
-                          <th className="px-6 py-4 text-left text-sm font-semibold text-main_dark">Actions</th>
+                          <th className="px-6 py-4 text-left text-sm font-semibold text-main_dark">
+                            <div className="flex items-center gap-2">
+                              Payment
+                            </div>
+                          </th>
+                          <th className="px-6 py-4 text-left text-sm font-semibold text-main_dark">
+                            Delivery
+                          </th>
+                          <th className="px-6 py-4 text-left text-sm font-semibold text-main_dark">
+                            Actions
+                          </th>
                         </tr>
                       </thead>
                       <tbody className="divide-y divide-gray-200">
                         {recentOrders.map((order) => (
-                          <tr key={order.poId} className="hover:bg-gray-50 transition-colors">
+                          <tr
+                            key={order.poId}
+                            className="hover:bg-gray-50 transition-colors"
+                          >
                             <td className="px-6 py-4 text-sm font-medium text-main_dark">
                               {order.ponumber}
                             </td>
                             <td className="px-6 py-4">
                               <div>
-                                <div className="font-semibold text-main_dark text-sm">{order.supplier?.name || 'Unknown Supplier'}</div>
-                                <div className="text-xs text-gray-500">{order.supplier?.company_name || 'No Company'}</div>
+                                <div className="font-semibold text-main_dark text-sm">
+                                  {order.supplier?.name || "Unknown Supplier"}
+                                </div>
+                                <div className="text-xs text-gray-500">
+                                  {order.supplier?.company_name || "No Company"}
+                                </div>
                               </div>
                             </td>
                             <td className="px-6 py-4 text-sm text-gray-600">
                               {formatDate(order.createdDate)}
                             </td>
                             <td className="px-6 py-4">
-                              <span className={`px-3 py-1 rounded-full text-xs font-medium ${getStatusColor(order.status)}`}>
+                              <span
+                                className={`px-3 py-1 rounded-full text-xs font-medium ${getStatusColor(
+                                  order.status
+                                )}`}
+                              >
                                 {order.status}
                               </span>
                             </td>
                             <td className="px-6 py-4 text-sm text-gray-600">
                               {order.materials && order.materials.length > 0 ? (
                                 <div className="space-y-1">
-                                  {order.materials.slice(0, 2).map((material, index) => (
-                                    <div key={index} className="text-xs">
-                                      {material.material.materialName} ({material.quantity} {material.material.unitOfMeasurement})
-                                    </div>
-                                  ))}
+                                  {order.materials
+                                    .slice(0, 2)
+                                    .map((material, index) => (
+                                      <div key={index} className="text-xs">
+                                        {material.material.materialName} (
+                                        {material.quantity}{" "}
+                                        {material.material.unitOfMeasurement})
+                                      </div>
+                                    ))}
                                   {order.materials.length > 2 && (
                                     <div className="text-xs text-gray-400">
                                       +{order.materials.length - 2} more
@@ -617,41 +816,62 @@ const PurchasingDashboard = () => {
                                   )}
                                 </div>
                               ) : (
-                                <span className="text-gray-400">No materials</span>
+                                <span className="text-gray-400">
+                                  No materials
+                                </span>
                               )}
                             </td>
                             <td className="px-6 py-4 text-sm font-semibold text-main_dark">
-                              ${order.subTotal ? order.subTotal.toLocaleString() : 'N/A'}
+                              <span>RS </span>
+                              {order.subTotal
+                                ? order.subTotal.toLocaleString()
+                                : "N/A"}
                             </td>
                             <td className="px-6 py-4">
                               {order.orderPayment ? (
                                 <div className="space-y-1">
-                                  <span className={`px-2 py-1 rounded-full text-xs font-medium ${getPaymentStatusColor(order.orderPayment.status)}`}>
-                                    {order.orderPayment.status || 'Pending'}
+                                  <span
+                                    className={`px-2 py-1 rounded-full text-xs font-medium ${getPaymentStatusColor(
+                                      order.orderPayment.status
+                                    )}`}
+                                  >
+                                    {order.orderPayment.status || "Pending"}
                                   </span>
                                   <div className="text-xs text-gray-500">
-                                    ${order.orderPayment.paidAmount || 0} / ${order.orderPayment.amount || 0}
+                                    RS {order.orderPayment.paidAmount || 0} / RS{" "}
+                                    {order.orderPayment.amount || 0}
                                   </div>
                                   <div className="w-full bg-gray-200 rounded-full h-1">
-                                    <div 
-                                      className="bg-green-500 h-1 rounded-full" 
-                                      style={{ width: `${getPaymentProgress(order.orderPayment)}%` }}
+                                    <div
+                                      className="bg-green-500 h-1 rounded-full"
+                                      style={{
+                                        width: `${getPaymentProgress(
+                                          order.orderPayment
+                                        )}%`,
+                                      }}
                                     ></div>
                                   </div>
                                 </div>
                               ) : (
-                                <span className="text-gray-400">No payment info</span>
+                                <span className="text-gray-400">
+                                  No payment info
+                                </span>
                               )}
                             </td>
                             <td className="px-6 py-4 text-sm text-gray-600">
-                              {order.deliveries && order.deliveries.length > 0 ? (
+                              {order.deliveries &&
+                              order.deliveries.length > 0 ? (
                                 <div className="space-y-1">
-                                  {order.deliveries.slice(0, 1).map((delivery, index) => (
-                                    <div key={index} className="text-xs">
-                                      <div>{delivery.location}</div>
-                                      <div className="text-gray-400">{formatDate(delivery.requiredDate)}</div>
-                                    </div>
-                                  ))}
+                                  {order.deliveries
+                                    .slice(0, 1)
+                                    .map((delivery, index) => (
+                                      <div key={index} className="text-xs">
+                                        <div>{delivery.location}</div>
+                                        <div className="text-gray-400">
+                                          {formatDate(delivery.requiredDate)}
+                                        </div>
+                                      </div>
+                                    ))}
                                   {order.deliveries.length > 1 && (
                                     <div className="text-xs text-gray-400">
                                       +{order.deliveries.length - 1} more
@@ -659,12 +879,21 @@ const PurchasingDashboard = () => {
                                   )}
                                 </div>
                               ) : (
-                                <span className="text-gray-400">No deliveries</span>
+                                <span className="text-gray-400">
+                                  No deliveries
+                                </span>
                               )}
                             </td>
                             <td className="px-6 py-4">
                               <div className="flex items-center gap-2">
-                                <button onClick={() => navigate(`/purchasing/orders/details/${order.ponumber}`)} className="text-deep_green hover:text-deep_green/80 transition-colors">
+                                <button
+                                  onClick={() =>
+                                    navigate(
+                                      `/purchasing/orders/details/${order.ponumber}`
+                                    )
+                                  }
+                                  className="text-deep_green hover:text-deep_green/80 transition-colors"
+                                >
                                   <FaEye className="w-4 h-4" />
                                 </button>
                               </div>

@@ -1,6 +1,6 @@
 import React from 'react';
 import { useNavigate } from 'react-router-dom';
-import { Plus, Package, Settings, Wrench, BarChart3, AlertTriangle, FileText, Calendar, Users, TrendingUp } from 'lucide-react';
+import { Plus, Package, Settings, RefreshCcw, BarChart3, AlertTriangle, FileText, Calendar, Users, TrendingUp } from 'lucide-react';
 
 const InventoryControlPanel = () => {
   const navigate = useNavigate();
@@ -21,7 +21,15 @@ const InventoryControlPanel = () => {
       iconBg: 'bg-gradient-to-br from-web_yellow to-web_yellow/80',
       route: '/add-material',
       hoverClass: 'hover:border-web_yellow/30'
-    }
+    },
+    {
+      title: 'Update and Delete Inventory',
+      description: 'Modify quantities, update stock levels, or remove items from your inventory system.',
+      icon: RefreshCcw,
+      iconBg: 'bg-gradient-to-br from-light_brown to-light_brown/80',
+      route: '/update-inventory',
+      hoverClass: 'hover:border-light_brown/30'
+    },
   ];
 
   const inventoryFeatures = [
@@ -71,8 +79,8 @@ const InventoryControlPanel = () => {
         <p className="text-slatebluegray text-base">Manage and add new items to your inventory system</p>
       </div>
 
-      {/* Main Control Options */}
-      <div className="grid grid-cols-1 md:grid-cols-2 gap-6 max-w-4xl mx-auto mb-12">
+      {/* Main Control Options - Centered with 3 options */}
+      <div className="grid grid-cols-1 md:grid-cols-3 gap-6 max-w-6xl mx-auto mb-12">
         {controlOptions.map((option, index) => {
           const IconComponent = option.icon;
           return (
@@ -81,20 +89,20 @@ const InventoryControlPanel = () => {
               onClick={() => navigate(option.route)}
               className={`cursor-pointer bg-purewhite border border-gray-200 rounded-xl p-6 sm:p-8 shadow-sm hover:shadow-md hover:-translate-y-0.5 transition-all duration-150 ${option.hoverClass} group`}
             >
-              <div className="flex items-start gap-4">
-                <div className={`w-12 h-12 ${option.iconBg} rounded-xl flex items-center justify-center shadow-lg group-hover:scale-110 transition-all duration-300`}>
-                  <IconComponent className="w-6 h-6 text-white" />
+              <div className="flex flex-col items-center text-center h-full">
+                <div className={`w-16 h-16 ${option.iconBg} rounded-xl flex items-center justify-center shadow-lg group-hover:scale-110 transition-all duration-300 mb-4`}>
+                  <IconComponent className="w-8 h-8 text-white" />
                 </div>
                 <div className="flex-1">
-                  <h2 className="text-lg font-semibold text-main_dark mb-2 group-hover:text-deep_green transition-colors duration-150">
+                  <h2 className="text-lg font-semibold text-main_dark mb-3 group-hover:text-deep_green transition-colors duration-150">
                     {option.title}
                   </h2>
-                  <p className="text-sm text-slatebluegray leading-relaxed">
+                  <p className="text-sm text-slatebluegray leading-relaxed mb-4">
                     {option.description}
                   </p>
                 </div>
-                <div className="opacity-0 group-hover:opacity-100 transition-opacity duration-150">
-                  <Plus className="w-5 h-5 text-deep_green" />
+                <div className="opacity-0 group-hover:opacity-100 transition-opacity duration-150 mt-auto">
+                  <Plus className="w-6 h-6 text-deep_green" />
                 </div>
               </div>
             </div>

@@ -10,7 +10,7 @@ import { FaEye } from "react-icons/fa";
 import NavBar from "../../../components/NavBar";
 import { useLocation, useNavigate } from "react-router-dom";
 import { toast } from "react-toastify";
-// http://localhost:8080/api/supplier/find/S007
+
 const ReviewQuotations = () => {
   const [selected, setSelected] = useState(1);
   const [searchTerm, setSearchTerm] = useState("");
@@ -19,7 +19,7 @@ const ReviewQuotations = () => {
   const reqId = location.state?.reqId || null;
   const [isLoading, setIsLoading] = useState(false);
   const [quotationList, setQuotationList] = useState([]);
-  const [supplierDetails, setSupplierDetails] = useState(null);
+  const [supplierDetails, setSupplierDetails] = useState([]);
 
   const fetchQuotations = async () => {
     if (!reqId) {
@@ -41,17 +41,7 @@ const ReviewQuotations = () => {
       if (!response.ok) {
         throw new Error(data.message || "Failed to fetch quotations");
       }
-      // const supplierResponse = await fetch(`http://localhost:8080/api/supplier/find/${data?.supplierId}`,{
-      //   method: "GET",
-      //   headers: {
-      //     "Content-Type": "application/json",
-      //   },
-      // });
-      // const supplierData = await supplierResponse.json();
-      // if (!supplierResponse.ok) {
-      //   throw new Error(supplierData.message || "Failed to fetch supplier");
-      // }
-      // setSupplierDetails(supplierData);
+
       setQuotationList(data);
     } catch (error) {
       toast.error("Error fetching quotations: " + error.message);
@@ -65,34 +55,234 @@ const ReviewQuotations = () => {
     fetchQuotations();
   }, [reqId]);
 
-  console.log(supplierDetails);
-  
-  // Add supplier information to each quotation
-  const suppliers = quotationList.map(quotation => ({
-    ...quotation,
-    // Use data from API response or fallback to defaults
-    name: quotation.name || "Global Office Solutions",
-    subtitle: quotation.subtitle || "Premium office supplies & equipment",
-    rating: quotation.rating || 4.9,
-    onTime: quotation.onTime || 98,
-    orders: quotation.orders || 247,
-    avgDelivery: quotation.avgDelivery || 2.1,
-    // Map the correct field names
-    price: quotation.totalAmount || 0,
-    delivery: quotation.deliveryInfos?.[0]?.estimatedDeliveryTime || "2-3 days",
-    warranty: quotation.warranty || "1 year",
-    paymentTerms: quotation.paymentTerms || "Net 30",
-    notes: quotation.notes || "-"
-  }));
+  // FIXED: Proper async/await with Promise.all
+  const fetchAllSupplierDetails = async () => {
+    if (!quotationList.length) return;
+    
+    try {
+      setIsLoading(true);
+      
+      // Create array of fetch promises
+      const supplierPromises = quotationList.map(async (quotation) => {
+        try {
+          const supplierResponse = await fetch(
+            `http://localhost:8080/api/supplier/find/${quotation.supplierId}`,
+            {
+              method: "GET",
+              headers: {
+                "Content-Type": "application/json",
+              },
+            }
+          );
 
-  console.log("Enriched Quotation List:", suppliers);
+          const supplierData = await supplierResponse.json();
 
-  const selectedSupplier = suppliers.find((s) => s.id === selected);
+          if (!supplierResponse.ok) {
+            throw new Error(
+              supplierData.message ||
+              `Failed to fetch supplier ${quotation.supplierId}`
+            );
+          }
+
+          // Return enriched quotation data
+          return {
+            ...quotation,
+            id: quotation.id,
+            name: supplierData?.data?.company_name || "Global Office Solutions",
+            subtitle: quotation.subtitle || "Premium office supplies & equipment",
+            rating: supplierData?.data?.rating_by_site_manager || 4.9,
+            onTime: supplierData?.data?.on_time_delivery_rate || 98,
+            orders: supplierData?.data?.past_orders_completed || 247,
+            avgDelivery: supplierData?.data?.avg_delay_days || 2.1,
+            price: quotation.totalAmount || 0,
+            delivery: quotation.deliveryInfos?.[0]?.estimatedDeliveryTime || "2-3 days",
+            warranty: quotation.warranty || "1 year",
+            paymentTerms: quotation.paymentTerms || "Net 30",
+            notes: quotation.notes || "-",
+          };
+        } catch (error) {
+          console.error(`Error fetching supplier ${quotation.supplierId}:`, error);
+          // Return quotation with default supplier data if fetch fails
+          return {
+            ...quotation,
+            id: quotation.id,
+            name: "Unknown Supplier",
+            subtitle: "Supplier information unavailable",
+            rating: 0,
+            onTime: 0,
+            orders: 0,
+            avgDelivery: 0,
+            price: quotation.totalAmount || 0,
+            delivery: quotation.deliveryInfos?.[0]?.estimatedDeliveryTime || "Unknown",
+            warranty: quotation.warranty || "Unknown",
+            paymentTerms: quotation.paymentTerms || "Unknown",
+            notes: quotation.notes || "-",
+          };
+        }
+      });
+
+      // Wait for all promises to resolve
+      const allSupplierDetails = await Promise.all(supplierPromises);
+      
+      // Set all supplier details at once
+      setSupplierDetails(allSupplierDetails);
+      
+      // Set default selection to first supplier if none selected
+      if (allSupplierDetails.length > 0 && !selected) {
+        setSelected(allSupplierDetails[0].id);
+      }
+      
+    } catch (error) {
+      console.error("Error fetching supplier details:", error);
+      toast.error("Error loading supplier information");
+    } finally {
+      setIsLoading(false);
+    }
+  };
+
+  // Call this function in useEffect when quotationList changes
+  useEffect(() => {
+    if (quotationList.length > 0) {
+      fetchAllSupplierDetails();
+    }
+  }, [quotationList]);
+
+  // BEST QUOTATION ALGORITHM
+  const calculateBestQuotation = (supplierDetails) => {
+    if (!supplierDetails || supplierDetails.length === 0) return null;
+
+    // Define weights for each criterion (totaling 100%)
+    const weights = {
+      onTime: 0.25,        // 25% - On-time delivery rate
+      rating: 0.20,        // 20% - Supplier rating
+      orders: 0.15,        // 15% - Past orders completed (experience)
+      avgDelivery: 0.10,   // 10% - Average delivery time (lower is better)
+      deliveryDate: 0.10,  // 10% - How soon delivery is promised
+      shippingCost: 0.08,  // 8% - Shipping cost (lower is better)
+      totalPrice: 0.07,    // 7% - Total price (lower is better)
+      unitPrice: 0.05      // 5% - Unit price efficiency
+    };
+
+    const scoredSuppliers = supplierDetails.map(supplier => {
+      // Extract values with fallbacks
+      const onTimeRate = parseFloat(supplier.onTime) || 0;
+      const rating = parseFloat(supplier.rating) || 0;
+      const pastOrders = parseInt(supplier.orders) || 0;
+      const avgDelivery = parseFloat(supplier.avgDelivery) || 999; // High default for penalty
+      const totalPrice = supplier.totalAmount || supplier.price || 0;
+      const shippingCost = supplier.deliveryInfos?.[0]?.shippingCost || 0;
+      const unitPrice = supplier.items?.[0]?.unitPrice || 0;
+      
+      // Calculate delivery date score (sooner is better)
+      const deliveryDate = new Date(supplier.deliveryInfos?.[0]?.deliveryDate || supplier.delivery);
+      const currentDate = new Date();
+      const daysUntilDelivery = Math.max(1, Math.ceil((deliveryDate - currentDate) / (1000 * 60 * 60 * 24)));
+
+      // Normalize scores (0-100 scale)
+      const scores = {
+        onTime: Math.min(100, onTimeRate), // Already percentage
+        rating: (rating / 5) * 100, // Convert 5-star to percentage
+        orders: Math.min(100, (pastOrders / 50) * 100), // Normalize based on reasonable max
+        avgDelivery: Math.max(0, 100 - (avgDelivery * 10)), // Lower delivery time = higher score
+        deliveryDate: Math.max(0, 100 - (daysUntilDelivery * 2)), // Sooner delivery = higher score
+        shippingCost: Math.max(0, 100 - (shippingCost / 1000) * 10), // Lower cost = higher score
+        totalPrice: 0, // Will be calculated relative to others
+        unitPrice: 0   // Will be calculated relative to others
+      };
+
+      return {
+        ...supplier,
+        rawScores: scores,
+        totalPrice,
+        shippingCost,
+        unitPrice,
+        daysUntilDelivery
+      };
+    });
+
+    // Calculate relative price scores (best price gets 100, others scaled down)
+    const prices = scoredSuppliers.map(s => s.totalPrice).filter(p => p > 0);
+    const minPrice = Math.min(...prices);
+    const maxPrice = Math.max(...prices);
+    
+    const shippingCosts = scoredSuppliers.map(s => s.shippingCost).filter(c => c > 0);
+    const minShipping = shippingCosts.length > 0 ? Math.min(...shippingCosts) : 0;
+    const maxShipping = shippingCosts.length > 0 ? Math.max(...shippingCosts) : 0;
+
+    const unitPrices = scoredSuppliers.map(s => s.unitPrice).filter(p => p > 0);
+    const minUnitPrice = unitPrices.length > 0 ? Math.min(...unitPrices) : 0;
+    const maxUnitPrice = unitPrices.length > 0 ? Math.max(...unitPrices) : 0;
+
+    // Calculate final weighted scores
+    const finalScores = scoredSuppliers.map(supplier => {
+      // Calculate relative price scores
+      const priceScore = minPrice > 0 && maxPrice > minPrice ? ((maxPrice - supplier.totalPrice) / (maxPrice - minPrice)) * 100 : 50;
+      const shippingScore = minShipping > 0 && maxShipping > minShipping ? ((maxShipping - supplier.shippingCost) / (maxShipping - minShipping)) * 100 : 50;
+      const unitPriceScore = minUnitPrice > 0 && maxUnitPrice > minUnitPrice ? ((maxUnitPrice - supplier.unitPrice) / (maxUnitPrice - minUnitPrice)) * 100 : 50;
+
+      supplier.rawScores.totalPrice = priceScore;
+      supplier.rawScores.shippingCost = shippingScore;
+      supplier.rawScores.unitPrice = unitPriceScore;
+
+      // Calculate weighted total score
+      const weightedScore = 
+        (supplier.rawScores.onTime * weights.onTime) +
+        (supplier.rawScores.rating * weights.rating) +
+        (supplier.rawScores.orders * weights.orders) +
+        (supplier.rawScores.avgDelivery * weights.avgDelivery) +
+        (supplier.rawScores.deliveryDate * weights.deliveryDate) +
+        (supplier.rawScores.shippingCost * weights.shippingCost) +
+        (supplier.rawScores.totalPrice * weights.totalPrice) +
+        (supplier.rawScores.unitPrice * weights.unitPrice);
+
+      return {
+        ...supplier,
+        finalScore: Math.round(weightedScore * 100) / 100,
+        breakdown: {
+          onTimeScore: Math.round(supplier.rawScores.onTime * weights.onTime * 100) / 100,
+          ratingScore: Math.round(supplier.rawScores.rating * weights.rating * 100) / 100,
+          ordersScore: Math.round(supplier.rawScores.orders * weights.orders * 100) / 100,
+          deliveryScore: Math.round(supplier.rawScores.avgDelivery * weights.avgDelivery * 100) / 100,
+          dateScore: Math.round(supplier.rawScores.deliveryDate * weights.deliveryDate * 100) / 100,
+          shippingScore: Math.round(supplier.rawScores.shippingCost * weights.shippingCost * 100) / 100,
+          priceScore: Math.round(supplier.rawScores.totalPrice * weights.totalPrice * 100) / 100,
+          unitPriceScore: Math.round(supplier.rawScores.unitPrice * weights.unitPrice * 100) / 100
+        }
+      };
+    });
+
+    // Sort by final score (highest first)
+    return finalScores.sort((a, b) => b.finalScore - a.finalScore);
+  };
+
+  // Add this function to handle the best quotation button
+  const handleViewBestQuotations = () => {
+    const rankedSuppliers = calculateBestQuotation(supplierDetails);
+    
+    // Navigate to best quotations page with data
+    navigate('/purchasing/quotations/best', { 
+      state: { 
+        rankedSuppliers,
+        originalData: supplierDetails,
+        reqId 
+      } 
+    });
+  };
+
+  // Add this function to show quick best recommendation
+  const getBestRecommendation = () => {
+    const rankedSuppliers = calculateBestQuotation(supplierDetails);
+    return rankedSuppliers?.[0] || null;
+  };
+
+  // FIXED: Use supplierDetails array instead of undefined suppliers
+  const selectedSupplier = supplierDetails.find((s) => s.id === selected);
 
   // Filter suppliers based on search term
-  const filteredSuppliers = suppliers.filter(supplier =>
-    supplier.name.toLowerCase().includes(searchTerm.toLowerCase()) ||
-    supplier.subtitle.toLowerCase().includes(searchTerm.toLowerCase())
+  const filteredSuppliers = supplierDetails.filter(
+    (supplier) =>
+      supplier.name.toLowerCase().includes(searchTerm.toLowerCase()) ||
+      supplier.subtitle.toLowerCase().includes(searchTerm.toLowerCase())
   );
 
   if (isLoading) {
@@ -110,7 +300,7 @@ const ReviewQuotations = () => {
     <div className="min-h-screen bg-purewhite font-poppins">
       {/* Header */}
       <NavBar
-      profileURL="/purchasing/profile"
+        profileURL="/purchasing/profile"
         links={[
           { name: "Dashboard", path: "/purchasing/dashboard" },
           {
@@ -145,9 +335,9 @@ const ReviewQuotations = () => {
                   Review Quotations
                 </h1>
                 <div className="text-slatebluegray">
-                  Purchase Order{" "}
+                  Request ID{" "}
                   <span className="font-semibold text-main_dark">
-                    #PO-2024-001
+                    #{reqId}
                   </span>
                 </div>
               </div>
@@ -204,7 +394,9 @@ const ReviewQuotations = () => {
                       <h3 className="font-semibold text-main_dark text-lg mb-1">
                         {supplier.name}
                       </h3>
-                      <p className="text-gray-600 text-sm">{supplier.subtitle}</p>
+                      <p className="text-gray-600 text-sm">
+                        {supplier.subtitle}
+                      </p>
                     </div>
 
                     {/* Metrics Row */}
@@ -258,7 +450,7 @@ const ReviewQuotations = () => {
                               Total Price
                             </span>
                             <span className="font-bold text-main_dark text-lg">
-                              ${supplier.price?.toLocaleString() || '0'}
+                              RS {supplier.price?.toLocaleString() || "0"}
                             </span>
                           </div>
                           <div className="mb-3">
@@ -302,7 +494,12 @@ const ReviewQuotations = () => {
                 ))
               ) : (
                 <div className="text-center py-8">
-                  <p className="text-gray-600">No quotations found matching your search.</p>
+                  <p className="text-gray-600">
+                    {quotationList.length === 0 
+                      ? "No quotations available for this request."
+                      : "No quotations found matching your search."
+                    }
+                  </p>
                 </div>
               )}
             </div>
@@ -311,15 +508,38 @@ const ReviewQuotations = () => {
           {/* Right Sidebar */}
           <div className="w-full lg:w-80 flex-shrink-0 space-y-6">
             <div className="sticky top-6">
-              {/* Quotation Comparison */}
-              <div className="mb-6">
-                <button
-                  onClick={() => navigate(`/purchasing/quotations/best`)}
-                  className="w-full px-4 py-2 bg-web_yellow text-main_dark font-medium rounded-md hover:bg-yellow-400 transition-colors flex items-center justify-center gap-2"
+              {/* Enhanced Best Quotations Button */}
+              <div className="mb-6 mt-4 space-y-3">
+                {/* <button
+                  onClick={handleViewBestQuotations}
+                  disabled={supplierDetails.length === 0}
+                  className="w-full px-4 py-2 bg-web_yellow text-main_dark font-medium rounded-md hover:bg-yellow-400 transition-colors flex items-center justify-center gap-2 disabled:opacity-50 disabled:cursor-not-allowed"
                 >
                   <FaEye className="w-4 h-4" />
-                  View Best Quotations
-                </button>
+                  View Best Quotations (AI Ranked)
+                </button> */}
+                
+                {/* Quick Best Recommendation */}
+                {(() => {
+                  const bestSupplier = getBestRecommendation();
+                  return bestSupplier && (
+                    <div className="bg-green-50 border border-green-200 rounded-lg p-4">
+                      <div className="flex items-center gap-2 mb-2">
+                        <FaStar className="w-4 h-4 text-green-600" />
+                        <span className="font-semibold text-green-800 text-sm">AI Recommendation</span>
+                      </div>
+                      <div className="text-sm text-green-700">
+                        <div className="font-medium">{bestSupplier.name}</div>
+                        <div className="text-xs">Score: {bestSupplier.finalScore}/100</div>
+                        <div className="text-xs">
+                          Best for: {bestSupplier.onTime > 90 ? 'Reliability' : ''} 
+                          {bestSupplier.rating > 4 ? ' • Quality' : ''} 
+                          {bestSupplier.daysUntilDelivery <= 3 ? ' • Fast Delivery' : ''}
+                        </div>
+                      </div>
+                    </div>
+                  );
+                })()}
               </div>
 
               {/* Selected Supplier */}
@@ -340,7 +560,7 @@ const ReviewQuotations = () => {
                     <div className="flex justify-between">
                       <span className="text-gray-600">Total Amount</span>
                       <span className="font-semibold text-main_dark">
-                        ${selectedSupplier.price?.toLocaleString() || '0'}
+                        RS {selectedSupplier.price?.toLocaleString() || "0"}
                       </span>
                     </div>
                     <div className="flex justify-between">
@@ -364,7 +584,11 @@ const ReviewQuotations = () => {
                   </div>
                   <div className="space-y-3">
                     <button
-                      onClick={() => navigate(`/purchasing/quotations/details/${selectedSupplier.id}`)}
+                      onClick={() =>
+                        navigate(
+                          `/purchasing/quotations/details/${selectedSupplier.id}`
+                        )
+                      }
                       className="w-full px-4 py-2 bg-web_yellow text-main_dark font-medium rounded-md hover:bg-yellow-400 transition-colors flex items-center justify-center gap-2"
                     >
                       <FaEye className="w-4 h-4" />

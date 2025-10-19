@@ -109,7 +109,11 @@ const MaintenanceRequestPage = () => {
           </div>
 
           {request ? (
-            <MaintenanceRequestDetails request={request} onUpdate={fetchRequestDetails} />
+            <MaintenanceRequestDetails 
+              request={request} 
+              onUpdate={fetchRequestDetails} 
+              equipmentId={equipmentId} 
+            />
           ) : (
             <div className="bg-gray-50 border border-gray-200 rounded-lg p-8 text-center">
               <div className="text-6xl mb-4">📋</div>

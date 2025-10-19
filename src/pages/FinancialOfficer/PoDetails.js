@@ -112,11 +112,11 @@ const PoDetails = () => {
 
   const getOrderStatusSteps = () => {
     const steps = [
-      { id: "placed", label: "Placed", icon: FaFileAlt },
+      { id: "pending", label: "Pending", icon: FaFileAlt },
       { id: "approved", label: "Approved", icon: FaCheck },
-      { id: "shipped", label: "Shipped", icon: FaTruck },
+      { id: "dispatch", label: "Dispatched", icon: FaTruck },
       { id: "delivered", label: "Delivered", icon: FaMapMarkerAlt },
-      { id: "completed", label: "Completed", icon: FaCheck },
+      { id: "delivered", label: "Completed", icon: FaCheck },
     ];
 
     const currentStatusIndex = steps.findIndex(
@@ -151,12 +151,12 @@ const PoDetails = () => {
       <div className="min-h-screen bg-purewhite font-poppins flex items-center justify-center">
         <NavBar
         profileURL="/financial/profile"
-          links={[
-            { name: 'Dashboard', path: '/financial/dashboard' },
+        links={[
+          { name: 'Dashboard', path: '/financial/dashboard' },
           { name: 'Payment Approvals', path: '/financial/payment-list' },
           { name: 'Purchase Orders', path: '/financial/purchase-order-list' },
           { name: 'Projects', path: '/financial/financial-projects' },
-          ]}
+        ]}
         />
         <div className="text-center">
           <FaExclamationTriangle className="w-16 h-16 text-gray-400 mx-auto mb-4" />
@@ -171,11 +171,12 @@ const PoDetails = () => {
   return (
     <div className="min-h-screen bg-purewhite font-poppins">
       <NavBar
+        profileURL="/financial/profile"
         links={[
           { name: 'Dashboard', path: '/financial/dashboard' },
           { name: 'Payment Approvals', path: '/financial/payment-list' },
           { name: 'Purchase Orders', path: '/financial/purchase-order-list' },
-          { name: 'Reports', path: '/financial/reports' },
+          { name: 'Projects', path: '/financial/financial-projects' },
         ]}
       />
 
@@ -185,7 +186,7 @@ const PoDetails = () => {
           <div className="flex items-center justify-between mb-6">
             <div className="flex items-center gap-4">
               <button
-                onClick={() => navigate("/purchasing/purchaseorders/overview")}
+                onClick={() => navigate("/financial/purchase-order-list")}
                 className="flex items-center gap-2 text-gray-600 hover:text-gray-900 transition-colors"
               >
                 <FaArrowLeft className="w-4 h-4" />
@@ -260,7 +261,7 @@ const PoDetails = () => {
                         Total Amount
                       </label>
                       <p className="text-2xl font-bold text-main_dark">
-                        ${orderData.subTotal?.toLocaleString() || "0"}
+                        RS {orderData.subTotal?.toLocaleString() || "0"}
                       </p>
                     </div>
                   </div>
@@ -295,7 +296,7 @@ const PoDetails = () => {
                         >
                           {step.label}
                         </span>
-                        {index < statusSteps.length - 1 && (
+                        {/* {index < statusSteps.length - 1 && (
                           <div
                             className={`absolute h-0.5 w-16 mt-6 ${
                               step.isCompleted ? "bg-web_yellow" : "bg-gray-200"
@@ -306,7 +307,7 @@ const PoDetails = () => {
                               }%`,
                             }}
                           />
-                        )}
+                        )} */}
                       </div>
                     );
                   })}
@@ -329,12 +330,11 @@ const PoDetails = () => {
                           {item.material.materialName}
                         </h3>
                         <p className="text-sm text-gray-600">
-                          {item.material.materialType} •{" "}
-                          {item.material.unitOfMeasurement}
+                          {item.material.materialType}
+                          
                         </p>
                         <p className="text-sm text-gray-600">
-                          Quantity: {item.quantity} • Unit Price: $
-                          {item.unitPrice?.toLocaleString()}
+                          Quantity: {item.quantity} {item.material.unitOfMeasurement} • Unit Price: RS {item.unitPrice?.toLocaleString()}
                         </p>
                       </div>
                       <div className="text-right">
@@ -342,7 +342,7 @@ const PoDetails = () => {
                           Direct Purchase
                         </span>
                         <p className="font-semibold text-main_dark mt-2">
-                          ${(item.quantity * item.unitPrice)?.toLocaleString()}
+                          RS {(item.quantity * item.unitPrice)?.toLocaleString()}
                         </p>
                       </div>
                     </div>
@@ -387,10 +387,7 @@ const PoDetails = () => {
                       </span>
                       <div className="text-right">
                         <p className="font-semibold text-main_dark">
-                          $
-                          {(
-                            orderData.orderPayment?.paidAmount || 0
-                          ).toLocaleString()}
+                          RS {(orderData.orderPayment?.paidAmount || 0).toLocaleString()}
                         </p>
                         <p className="text-xs text-green-600">Paid - May 15</p>
                       </div>
@@ -402,10 +399,7 @@ const PoDetails = () => {
                       </span>
                       <div className="text-right">
                         <p className="font-semibold text-main_dark">
-                          $
-                          {(
-                            (orderData.orderPayment?.amount || 0) * 0.5
-                          ).toLocaleString()}
+                          RS {(orderData.orderPayment?.amount || 0 * 0.5).toLocaleString()}
                         </p>
                         <p className="text-xs text-orange-600">Due</p>
                       </div>
@@ -417,10 +411,7 @@ const PoDetails = () => {
                       </span>
                       <div className="text-right">
                         <p className="font-semibold text-main_dark">
-                          $
-                          {(
-                            orderData.orderPayment?.remainingAmount || 0
-                          ).toLocaleString()}
+                          RS {(orderData.orderPayment?.remainingAmount || 0).toLocaleString()}
                         </p>
                         <p className="text-xs text-gray-500">Pending</p>
                       </div>

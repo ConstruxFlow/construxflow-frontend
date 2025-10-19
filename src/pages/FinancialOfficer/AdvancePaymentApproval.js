@@ -35,9 +35,8 @@ const AdvancePaymentApproval = () => {
   const [showApprovalModal, setShowApprovalModal] = useState(false);
   const [approvalAction, setApprovalAction] = useState("");
 
-  console.log("PO Data:", poId);
+  console.log("PO Data:", poData?.poId);
 
-  // Mock function to fetch PO data if not provided
   const fetchPOData = async (poId) => {
     setIsLoading(true);
     try {
@@ -77,27 +76,26 @@ const AdvancePaymentApproval = () => {
       });
     }, 200);
 
+    console.log(action);
+    
     try {
       setLoadingProgress(30);
 
       const updateData = {
-        status: action === "approve" ? "Approved" : "Rejected",
-        notes: approvalNotes,
-        approvedBy: "Financial Officer", // This should come from user context
-        approvedDate: new Date().toISOString(),
+        status1: action === "approve" ? "Partially Paid" : "Rejected",
+        status2: action === "approve" ? "Approved" : "Rejected",
       };
 
       setLoadingProgress(60);
 
-      // API call to update payment status
+      // API call to update payment status  http://localhost:8080/api/purchasingorder/52/update-status?orderStatus=Approved&paymentStatus=Approved
       const response = await fetch(
-        `http://localhost:8080/api/purchaseorder/payment/${poData.orderPayment.paymentId}`,
+        `http://localhost:8080/api/purchasingorder/${poData?.poId}/update-status?orderStatus=${updateData.status2}&paymentStatus=${updateData.status1}`,
         {
-          method: "PUT",
+          method: "PATCH",
           headers: {
             "Content-Type": "application/json",
           },
-          body: JSON.stringify(updateData),
         }
       );
 
@@ -108,7 +106,7 @@ const AdvancePaymentApproval = () => {
         setTimeout(() => {
           toast.success(
             `Payment ${
-              action === "approve" ? "approved" : "rejected"
+              action === "approve" ? "Partially Paid" : "Rejected"
             } successfully!`
           );
           setIsLoading(false);
@@ -138,6 +136,8 @@ const AdvancePaymentApproval = () => {
 
   const getStatusColor = (status) => {
     switch (status?.toLowerCase()) {
+      case "partially paid":
+        return "bg-green-100 text-green-800";
       case "approved":
         return "bg-green-100 text-green-800";
       case "rejected":
@@ -152,7 +152,7 @@ const AdvancePaymentApproval = () => {
   const formatCurrency = (amount) => {
     return new Intl.NumberFormat("en-US", {
       style: "currency",
-      currency: "USD",
+      currency: "LKR",
     }).format(amount);
   };
 

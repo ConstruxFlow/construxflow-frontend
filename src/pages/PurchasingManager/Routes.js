@@ -21,6 +21,7 @@ import EditQuotationRequest from "./Material_Requests/EditQuotationRequest";
 import EditPurchaseOrder from "./PurchasingOrder/EditPurchaseOrder";
 import ManagerProfileView from "./ManagerProfile";
 import PayRemainingBalance from "./PurchasingOrder/PayRemainingBalance";
+import ManualMaterialCheck from "./Material_Requests/ManualMaterialCheck";
 
 export const purchasingManagerRoutes = {
   path: '/purchasing',
@@ -37,6 +38,10 @@ export const purchasingManagerRoutes = {
     {
       path: 'materialrequests/details/pwise/:id',
       element: <MaterialReqDetails />,
+    },
+    {
+      path: 'materialrequests/details/mcheck/:id',
+      element: <ManualMaterialCheck />,
     },
     {
       path: 'materialrequests/details/mwise',
@@ -107,7 +112,7 @@ export const purchasingManagerRoutes = {
       element: <EditPurchaseOrder />,
     },
     {
-      path: 'orders/payment',
+      path: 'orders/payment/:id',
       element: <PayRemainingBalance />,
     },
     {

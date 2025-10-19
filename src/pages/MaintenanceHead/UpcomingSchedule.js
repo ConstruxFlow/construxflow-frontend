@@ -116,6 +116,8 @@ export default function NextScheduleContainer() {
       .catch(console.error);
   }, []);
 
+  console.log("Upcoming Maintenance Data:", upcomingMaintenance);
+
   // useEffect(() => {
   //   if (upcomingMaintenance.length > 0 && !selectedMaintenance) {
   //     setSelectedMaintenance(upcomingMaintenance[0]);
@@ -178,18 +180,26 @@ export default function NextScheduleContainer() {
   console.log("details of technician", technicianDetails);
 
   const handleChangeStatus = async () => {
-    if (!newStatus) {
-      alert("Please select a new status");
+    // ✅ Strict validation - only allow actual status values
+    if (
+      !newStatus ||
+      newStatus.trim() === "" ||
+      newStatus === "Select new status" ||
+      !["Completed", "On Hold", "Cancelled"].includes(newStatus)
+    ) {
+      toast.error(
+        "Please select a valid status (Completed, On Hold, or Cancelled)!"
+      );
       return;
     }
 
     if (!assignments || assignments.length === 0) {
-      alert("No assignments found");
+      toast.error("No assignments found to update!");
       return;
     }
 
     if (!selectedMaintenance?.id) {
-      alert("Missing equipment ID");
+      toast.error("Please select a maintenance request first!");
       return;
     }
 
@@ -246,7 +256,9 @@ export default function NextScheduleContainer() {
 
       const equipData = await equipRes.json();
       setLoadingProgress(100);
-      toast.success("Status updated successfully for all assignments!");
+      toast.success(
+        `Status updated successfully to "${newStatus}" for all assignments!`
+      );
       setUpdateStatus(equipData.newStatus);
 
       // Navigate with all assignment IDs
@@ -286,6 +298,17 @@ export default function NextScheduleContainer() {
   console.log("Team Members:", teamMembers);
 
   const handleScheduleSubmit = async () => {
+    // ✅ Enhanced validation for schedule submission
+    if (
+      !newStatus ||
+      newStatus.trim() === "" ||
+      newStatus === "Select new status" ||
+      !["Completed", "On Hold", "Cancelled"].includes(newStatus)
+    ) {
+      toast.error("Please select a valid status before scheduling!");
+      return;
+    }
+
     if (
       !assignments ||
       assignments.length === 0 ||
@@ -294,10 +317,10 @@ export default function NextScheduleContainer() {
       !maintenanceType ||
       !estimatedDuration ||
       !priorityLevel ||
-      selectedNextTechs.length === 0 // ✅ Check for multiple techs
+      selectedNextTechs.length === 0
     ) {
-      alert(
-        "Please fill in all required fields and select at least one technician."
+      toast.error(
+        "Please fill in all required fields and select at least one technician!"
       );
       return;
     }
@@ -318,16 +341,18 @@ export default function NextScheduleContainer() {
 
       setLoadingProgress(40);
 
-      // ✅ Create next schedule requests for each assignment with multiple technicians
+      // Create next schedule requests for each assignment with multiple technicians
       const schedulePromises = assignments.map((assignment) => {
         const requestBody = {
           assignId: assignment.assignId,
+          equipmentId: assignment.equipmentId,
           equipmentScheduleId: selectedMaintenance?.id,
           nextMaintenanceType: maintenanceType,
           nextDate: scheduledDate,
           estimateDuration: estimatedDuration,
           priority: priorityLevel,
-          technicianIds: selectedNextTechs, // ✅ Send array of technician IDs
+          technicianIds: selectedNextTechs,
+          lastMaintenanceDate: new Date().toISOString().split("T")[0],
         };
 
         return fetch("http://localhost:8080/api/nextschedule/setnextschedule", {
@@ -408,6 +433,7 @@ export default function NextScheduleContainer() {
   return (
     <>
       <NavBar
+        profileURL="/maintenance/profile"
         links={[
           {
             name: "Dashboard",
@@ -446,9 +472,6 @@ export default function NextScheduleContainer() {
             onClick: () => navigation("/maintenance/add-member"),
           },
         ]}
-        showButton={true}
-        buttonLabel={isLoggedIn ? "Logout" : "Get Started"}
-        onButtonClick={isLoggedIn ? handleLogout : handleLogin}
       />
       {isLoading && (
         <LoadingOverlay progress={loadingProgress} message="Processing..." />
@@ -595,21 +618,59 @@ export default function NextScheduleContainer() {
                   </div>
                   <div className="mt-2">
                     <label className="block text-sm font-medium text-gray-700 mb-1">
-                      Change Status
+                      Change Status <span className="text-red-500">*</span>
                     </label>
                     <div className="relative">
                       <select
-                        className="w-full border border-gray-300 rounded-md px-3 py-2 text-sm appearance-none bg-[#236571] text-white"
+                        className={`w-full border rounded-md px-3 py-2 text-sm appearance-none transition-colors ${
+                          !newStatus ||
+                          newStatus === "" ||
+                          newStatus === "Select new status"
+                            ? "border-red-300 bg-white text-gray-700 focus:border-red-500"
+                            : "border-gray-300 bg-[#236571] text-white focus:border-[#236571]"
+                        }`}
                         onChange={(e) => setNewStatus(e.target.value)}
-                        value={newStatus}
+                        value={newStatus || ""} // ✅ Add proper value binding
                       >
-                        <option value="">Select new status</option>
-                        <option>Completed</option>
-                        <option>On Hold</option>
-                        <option>Cancelled</option>
+                        <option value="" className="bg-white text-gray-700">
+                          Select new status
+                        </option>
+                        <option
+                          value="Completed"
+                          className="bg-white text-gray-700"
+                        >
+                          Completed
+                        </option>
+                        <option
+                          value="On Hold"
+                          className="bg-white text-gray-700"
+                        >
+                          On Hold
+                        </option>
+                        <option
+                          value="Cancelled"
+                          className="bg-white text-gray-700"
+                        >
+                          Cancelled
+                        </option>
                       </select>
-                      <ChevronDown className="absolute right-3 top-2.5 h-4 w-4 text-white pointer-events-none" />
+                      <ChevronDown
+                        className={`absolute right-3 top-2.5 h-4 w-4 pointer-events-none transition-colors ${
+                          !newStatus ||
+                          newStatus === "" ||
+                          newStatus === "Select new status"
+                            ? "text-gray-400"
+                            : "text-white"
+                        }`}
+                      />
                     </div>
+                    {(!newStatus ||
+                      newStatus === "" ||
+                      newStatus === "Select new status") && (
+                      <p className="text-red-500 text-xs mt-1">
+                        Please select a valid status to continue
+                      </p>
+                    )}
                   </div>
                 </div>
 
@@ -866,7 +927,7 @@ export default function NextScheduleContainer() {
                     </div>
 
                     {/* Assigned Technician */}
-                    <div>
+                    {/* <div>
                       <label className="block text-sm font-medium text-gray-700 mb-1">
                         Assigned Technician
                       </label>
@@ -886,7 +947,7 @@ export default function NextScheduleContainer() {
                         </select>
                         <ChevronDown className="absolute right-3 top-2.5 h-4 w-4 text-gray-400 pointer-events-none" />
                       </div>
-                    </div>
+                    </div> */}
 
                     {/* ✅ Multiple Technician Selection */}
                     <div>
@@ -1007,9 +1068,52 @@ export default function NextScheduleContainer() {
                   onClick={
                     showNextSchedule ? handleScheduleSubmit : handleChangeStatus
                   }
-                  className="flex-1 bg-[#EFC11A] hover:bg-yellow-400 text-yellow-900 font-medium py-2 rounded-md text-sm transition"
+                  disabled={
+                    !newStatus ||
+                    newStatus.trim() === "" ||
+                    newStatus === "Select new status" ||
+                    !["Completed", "On Hold", "Cancelled"].includes(
+                      newStatus
+                    ) ||
+                    isLoading ||
+                    !selectedMaintenance?.id ||
+                    assignments.length === 0 ||
+                    (showNextSchedule && selectedNextTechs.length === 0)
+                  }
+                  className={`flex-1 font-medium py-2 rounded-md text-sm transition ${
+                    !newStatus ||
+                    newStatus.trim() === "" ||
+                    newStatus === "Select new status" ||
+                    !["Completed", "On Hold", "Cancelled"].includes(
+                      newStatus
+                    ) ||
+                    isLoading ||
+                    !selectedMaintenance?.id ||
+                    assignments.length === 0 ||
+                    (showNextSchedule && selectedNextTechs.length === 0)
+                      ? "bg-gray-300 text-gray-500 cursor-not-allowed"
+                      : "bg-[#EFC11A] hover:bg-yellow-400 text-yellow-900"
+                  }`}
+                  title={
+                    !selectedMaintenance?.id
+                      ? "Please select a maintenance request first"
+                      : assignments.length === 0
+                      ? "No assignments found"
+                      : !newStatus ||
+                        newStatus === "" ||
+                        newStatus === "Select new status" ||
+                        !["Completed", "On Hold", "Cancelled"].includes(
+                          newStatus
+                        )
+                      ? "Please select a valid status (Completed, On Hold, or Cancelled)"
+                      : showNextSchedule && selectedNextTechs.length === 0
+                      ? "Please select at least one technician"
+                      : ""
+                  }
                 >
-                  {showNextSchedule
+                  {isLoading
+                    ? "Processing..."
+                    : showNextSchedule
                     ? "Schedule Maintenance"
                     : "Update Status Only"}
                 </button>
@@ -1017,6 +1121,7 @@ export default function NextScheduleContainer() {
                 <button
                   className="px-4 py-2 border border-gray-300 text-gray-700 rounded-md text-sm font-medium hover:bg-gray-50 transition"
                   onClick={resetFormFields}
+                  disabled={isLoading}
                 >
                   Cancel
                 </button>

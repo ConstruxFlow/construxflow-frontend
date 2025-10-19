@@ -107,7 +107,7 @@ const CreateMaterialRequest = () => {
         // 2) map top‐level fields into your form
         setRequestdata((prev) => ({
           ...prev,
-          requesterName: data.projectName || "",
+          requesterName: "Purchasing Manager",
           request_date: data.requestDate || "",
           priority_level: data.priority || "",
           additional_info: data.additionalInfo || "",
@@ -371,7 +371,8 @@ const CreateMaterialRequest = () => {
                     <input
                       type="date"
                       name="request_date"
-                      value={Requestdata.request_date}
+                      readOnly
+                      value={new Date().toISOString().split("T")[0]}
                       onChange={handleChange}
                       className="w-full px-3 py-2 border border-gray-300 rounded-md focus:outline-none focus:ring-2 focus:ring-web_yellow"
                     />
@@ -481,7 +482,7 @@ const CreateMaterialRequest = () => {
                       </div>
                       <div>
                         <label className="block text-sm font-medium text-gray-700 mb-2">
-                          Unit Price ($)
+                          Unit Price (RS)
                         </label>
                         <input
                           type="number"
@@ -501,7 +502,7 @@ const CreateMaterialRequest = () => {
                         <input
                           type="text"
                           readOnly
-                          value={`$${(m.estimatedCost || 0).toFixed(2)}`}
+                          value={`RS ${(m.estimatedCost || 0).toFixed(2)}`}
                           className="w-full px-3 py-2 border border-gray-300 bg-gray-50 rounded-md text-gray-600"
                         />
                       </div>
@@ -687,7 +688,7 @@ const CreateMaterialRequest = () => {
                   <div className="flex justify-between">
                     <span className="text-gray-600">Estimated Cost:</span>
                     <span className="font-bold text-main_dark text-lg">
-                      ${Requestdata.estimated_cost.toFixed(2)}
+                      RS {Requestdata.estimated_cost.toFixed(2)}
                     </span>
                   </div>
                   <hr className="border-gray-300" />

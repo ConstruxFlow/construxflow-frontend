@@ -293,7 +293,7 @@ const QuotationDetail = () => {
                           Unit Price
                         </label>
                         <p className="font-medium text-main_dark text-lg">
-                          LKR
+                          RS{" "}
                           {item.material ? item.unitPrice.toFixed(2) : "0.00"}
                         </p>
                       </div>
@@ -302,8 +302,7 @@ const QuotationDetail = () => {
                           Total Price
                         </label>
                         <p className="font-medium text-main_dark">
-                          $
-                          {item.totalPrice
+                          RS {item.totalPrice
                             ? item.totalPrice.toFixed(2)
                             : "0.00"}
                         </p>
@@ -324,7 +323,7 @@ const QuotationDetail = () => {
                     Advanced Payment
                   </label>
                   <p className="font-medium text-web_yellow">
-                    LKR
+                    RS{" "}
                     {quotationData1?.advancedPayment || "0.00"}
                   </p>
                 </div>
@@ -334,7 +333,7 @@ const QuotationDetail = () => {
                       Total Amount
                     </span>
                     <span className="text-xl sm:text-2xl font-bold text-main_dark">
-                      ${quotationData1?.totalAmount || "0.00"}
+                      RS {quotationData1?.totalAmount || "0.00"}
                     </span>
                   </div>
                 </div>
@@ -366,7 +365,7 @@ const QuotationDetail = () => {
                     <p className="font-medium text-main_dark flex items-center gap-2 text-sm sm:text-base">
                       <FaCalendarAlt className="text-web_yellow w-4 h-4" />
                       {new Date(
-                        quotationData?.deliveryInformation.requiredDate || ""
+                        quotationData1?.deliveryInfos[0]?.deliveryDate || ""
                       ).toLocaleDateString()}
                     </p>
                   </div>
@@ -375,7 +374,7 @@ const QuotationDetail = () => {
                       Shipping Cost
                     </label>
                     <p className="font-medium text-main_dark text-sm sm:text-base">
-                      LKR
+                      RS{" "}
                       {quotationData1?.deliveryInfos[0]?.shippingCost || "0.00"}
                     </p>
                   </div>
@@ -410,7 +409,7 @@ const QuotationDetail = () => {
                       Warranty Period
                     </label>
                     <p className="font-medium text-main_dark text-sm sm:text-base">
-                      {quotationData.termsAndConditions.warrantyPeriod || "N/A"}
+                      {quotationData1?.termsAndConditions?.warrantyPeriod || "N/A"}
                     </p>
                   </div>
                   <div className="sm:col-span-2 lg:col-span-1">
@@ -480,14 +479,13 @@ const QuotationDetail = () => {
                   <div className="flex justify-between text-sm sm:text-base">
                     <span className="text-gray-700">Subtotal:</span>
                     <span className="font-semibold text-main_dark">
-                      ${quotationData1?.totalAmount.toFixed(2) || "0.00"}
+                      RS {quotationData1?.totalAmount.toFixed(2) || "0.00"}
                     </span>
                   </div>
                   <div className="flex justify-between text-sm sm:text-base">
                     <span className="text-gray-700">Shipping:</span>
                     <span className="font-semibold text-main_dark">
-                      $
-                      {quotationData1?.deliveryInfos[0]?.shippingCost.toFixed(
+                      RS {quotationData1?.deliveryInfos[0]?.shippingCost.toFixed(
                         2
                       ) || "0.00"}
                     </span>
@@ -495,8 +493,7 @@ const QuotationDetail = () => {
                   <div className="flex justify-between text-web_yellow text-sm sm:text-base">
                     <span className="font-medium">Advanced Payment:</span>
                     <span className="font-semibold">
-                      -$
-                      {quotationData1?.advancedPayment.toFixed(2) || "0.00"}
+                      -RS {quotationData1?.advancedPayment.toFixed(2) || "0.00"}
                     </span>
                   </div>
                   {/* <hr className="border-gray-400" />

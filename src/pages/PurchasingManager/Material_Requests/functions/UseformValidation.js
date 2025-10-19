@@ -41,10 +41,10 @@ export const useFormValidation = () => {
         if (!value) {
           errors.push('Quotation deadline is required');
         } else if (additionalData.request_date) {
-          const requestDate = new Date(additionalData.request_date);
+          const requestDate = new Date();
           const deadlineDate = new Date(value);
-          if (deadlineDate <= requestDate) {
-            errors.push('Quotation deadline must be after request date');
+          if (deadlineDate < new Date()) {
+            errors.push('Quotation deadline must be After request date');
           }
         }
         break;
