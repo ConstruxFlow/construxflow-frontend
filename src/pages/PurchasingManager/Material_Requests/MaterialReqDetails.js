@@ -16,10 +16,13 @@ const MaterialReqDetails = () => {
   const [isLoading, setIsLoading] = useState(true);
   const [isLoadingStatus, setIsLoadingStatus] = useState(false);
   const [requestData, setRequestData] = useState(null);
+  const [projectData, setProjectData] = useState(null);
+  const [materialMatchMessage, setMaterialMatchMessage] = useState("");
   const [showApproveModal, setShowApproveModal] = useState(false);
   const [showRejectModal, setShowRejectModal] = useState(false);
   const navigate = useNavigate();
 
+  // Fetch material request details by id
   useEffect(() => {
     if (id) {
       RequestDate();
@@ -48,8 +51,74 @@ const MaterialReqDetails = () => {
     }
   };
 
-  console.log(requestData);
-  
+  // Fetch project details after requestData is loaded
+  useEffect(() => {
+    if (requestData?.projectId) {
+      fetchProjectDetails();
+    }
+  }, [requestData?.projectId]);
+
+  const fetchProjectDetails = async () => {
+    setIsLoading(true);
+    try {
+      const response = await fetch(
+        `http://localhost:8080/api/projects/${requestData?.projectId}`
+      );
+      const data = await response.json();
+
+      if (response.ok) {
+        console.log("Project", data);
+        setProjectData(data);
+        checkMaterialMatch(data);
+      } else {
+        toast.error("Failed to fetch project details");
+      }
+    } catch (error) {
+      toast.error("Network error: Failed to fetch project details");
+      console.error("Error fetching project details:", error);
+    } finally {
+      setIsLoading(false);
+    }
+  };
+
+  // Check if all requested materials match any phase materials
+  const checkMaterialMatch = (project) => {
+    if (
+      !project ||
+      !project.phases ||
+      !requestData?.requestedMaterials ||
+      requestData.requestedMaterials.length === 0
+    ) {
+      setMaterialMatchMessage("");
+      return;
+    }
+
+    const allWithinLimits = requestData.requestedMaterials.every(
+      (requestedMat) => {
+        return project.phases.some((phase) =>
+          phase.materials.some((phaseMat) => {
+            return (
+              phaseMat.materialName === requestedMat.materialName &&
+              (phaseMat.materialType ?? "") ===
+                (requestedMat.materialType ?? "") &&
+              requestedMat.unitPrice <= phaseMat.rate &&
+              requestedMat.quantity <= phaseMat.quantity
+            );
+          })
+        );
+      }
+    );
+
+    if (allWithinLimits) {
+      setMaterialMatchMessage(
+        "All requested materials are within the project phases material quantities and unit prices."
+      );
+    } else {
+      setMaterialMatchMessage(
+        "Some requested materials exceed the project phases material quantities or unit prices."
+      );
+    }
+  };
 
   const getStatusColor = (status) => {
     switch (status?.toLowerCase()) {
@@ -91,14 +160,13 @@ const MaterialReqDetails = () => {
   };
 
   const handleApproveRequest2 = (status) => () => {
-
-      if (requestData.status === "APPROVED") {
-        navigate("/purchasing/materialrequests/create", {
-            state: { id: requestData.requestId },
-          });
-      } else {
-        navigate("/purchasing/materialrequests/overview");
-      }
+    if (requestData.status === "APPROVED") {
+      navigate("/purchasing/materialrequests/create", {
+        state: { id: requestData.requestId },
+      });
+    } else {
+      navigate("/purchasing/materialrequests/overview");
+    }
   };
 
   const handleApproveRequest = (status) => async () => {
@@ -207,7 +275,7 @@ const MaterialReqDetails = () => {
     <div className="min-h-screen bg-purewhite font-poppins">
       {/* Header Navigation */}
       <NavBar
-      profileURL="/purchasing/profile"
+        profileURL="/purchasing/profile"
         links={[
           { name: "Dashboard", path: "/purchasing/dashboard" },
           {
@@ -410,7 +478,7 @@ const MaterialReqDetails = () => {
                   {requestData.requestedMaterials?.length || 0} items)
                 </h2>
                 <div className="space-y-4">
-                  {requestData.requestedMaterials?.map((material, index) => (
+                  {requestData.requestedMaterials?.map((material) => (
                     <div
                       key={material.requestedMaterialId}
                       className="flex items-center gap-4 p-4 bg-light_brown/20 rounded-lg"
@@ -569,10 +637,37 @@ const MaterialReqDetails = () => {
             {/* Right Column - Sidebar */}
             <div className="lg:col-span-1 space-y-3">
               {/* Quick Actions */}
+
               <div className="bg-purewhite border border-gray-200 rounded-lg p-6">
                 <h2 className="text-lg font-semibold text-main_dark mb-4">
                   Quick Actions
                 </h2>
+
+                {/* Material Match Message */}
+                {materialMatchMessage && (
+                  <div
+                    className={`mb-4 p-3 rounded-md text-sm font-medium ${
+                      materialMatchMessage.startsWith("All")
+                        ? "text-white bg-green-600"
+                        : "text-white bg-red-600"
+                    }`}
+                  >
+                    {materialMatchMessage}
+                  </div>
+                )}
+
+                <button
+                  onClick={() =>
+                    navigate(
+                      `/purchasing/materialrequests/details/mcheck/${requestData.requestId}`
+                    )
+                  }
+                  className="w-full mb-10 px-4 py-3 rounded-md transition-colors flex items-center justify-center gap-2 bg-web_yellow text-main_dark hover:bg-web_yellow/90"
+                >
+                  <IoMdCheckmark />
+                  Check Manually
+                </button>
+
                 {requestData.status?.toLowerCase() === "pending" ? (
                   <div className="space-y-3">
                     <button
@@ -621,47 +716,6 @@ const MaterialReqDetails = () => {
                     This request has been {requestData.status?.toLowerCase()}.
                   </p>
                 )}
-              </div>
-
-              {/* Request Summary */}
-              <div className="bg-purewhite border border-gray-200 rounded-lg p-6">
-                <h2 className="text-lg font-semibold text-main_dark mb-4">
-                  Request Summary
-                </h2>
-                <div className="space-y-3">
-                  <div className="flex justify-between items-center p-3 border border-gray-200 rounded-lg">
-                    <span className="text-sm font-medium text-gray-700">
-                      Total Materials
-                    </span>
-                    <span className="font-semibold text-main_dark">
-                      {requestData.requestedMaterials?.length || 0}
-                    </span>
-                  </div>
-                  <div className="flex justify-between items-center p-3 border border-gray-200 rounded-lg">
-                    <span className="text-sm font-medium text-gray-700">
-                      Status
-                    </span>
-                    <span
-                      className={`px-2 py-1 rounded-full text-xs font-medium ${getStatusColor(
-                        requestData.status
-                      )}`}
-                    >
-                      {requestData.status}
-                    </span>
-                  </div>
-                  <div className="flex justify-between items-center p-3 border border-gray-200 rounded-lg">
-                    <span className="text-sm font-medium text-gray-700">
-                      Priority
-                    </span>
-                    <span
-                      className={`px-2 py-1 rounded-full text-xs font-medium ${getPriorityColor(
-                        requestData.priority
-                      )}`}
-                    >
-                      {requestData.priority}
-                    </span>
-                  </div>
-                </div>
               </div>
             </div>
           </div>
