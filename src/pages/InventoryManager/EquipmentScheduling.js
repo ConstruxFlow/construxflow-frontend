@@ -14,7 +14,7 @@ const navLinks = [
   { name: 'Equipment Scheduling', href: '/equipment-scheduling' },
 ];
 
-// tiny debounce hook so we don’t hammer the API while typing
+// tiny debounce hook so we don't hammer the API while typing
 function useDebounce(value, delay = 350) {
   const [v, setV] = useState(value);
   useEffect(() => {
@@ -144,11 +144,12 @@ export default function EquipmentScheduling() {
     }
   };
 
+  // UPDATED: Fixed navigation to include equipment ID
   const handleButtonClick = (item) => {
     if (item.buttonText === 'Schedule') {
-      navigate(`/shedule-form`); // your existing route
+      navigate(`/schedule-form/${item.id}`); // Pass equipment ID to the form
     } else if (item.buttonText === 'View Schedule') {
-      navigate(`/view-schedule-page`);
+      navigate(`/view-schedule-page/${item.id}`);
     } else if (item.buttonText === 'View Details') {
       navigate(`/equipment-details/${item.id}`);
     }
