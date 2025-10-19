@@ -14,6 +14,7 @@ export default function ServiceHistoryContainer() {
   const [error, setError] = useState(null);
   const [equipmentInfo, setEquipmentInfo] = useState(null);
   const [openIndexes, setOpenIndexes] = useState([]);
+  const [isGeneratingPDF, setIsGeneratingPDF] = useState(false);
 
   // Fetch equipment maintenance history
   useEffect(() => {
@@ -54,6 +55,442 @@ export default function ServiceHistoryContainer() {
 
   const toggleOpen = (idx) => {
     setOpenIndexes((prev) => prev.map((open, i) => (i === idx ? !open : open)));
+  };
+
+  // PDF Export Functions
+  const generatePDF = async () => {
+    setIsGeneratingPDF(true);
+    
+    try {
+      console.log("🔄 Generating Maintenance History PDF...");
+      console.log("📊 Service history data:", serviceHistory.length, "records");
+      
+      const currentDate = new Date().toLocaleDateString("en-US", {
+        year: "numeric",
+        month: "long",
+        day: "numeric",
+      });
+
+      const fileName = `Maintenance_History_${equipmentInfo?.name?.replace(/\s/g, "_") || `Equipment_${equipmentId}`}_${currentDate.replace(/\s/g, "_")}.pdf`;
+      const title = `Maintenance History - ${equipmentInfo?.name || `Equipment ${equipmentId}`}`;
+
+      if (serviceHistory.length === 0) {
+        alert("No maintenance history available to export. Please ensure data has loaded properly.");
+        return;
+      }
+
+      // Generate PDF content
+      const pdfContent = generatePDFContent(serviceHistory, title, currentDate, equipmentInfo);
+      console.log("PDF content generated successfully");
+      
+      downloadPDF(pdfContent, fileName);
+    } catch (error) {
+      console.error("Error generating PDF:", error);
+      alert(`Failed to generate PDF: ${error.message}. Please try again.`);
+    } finally {
+      setIsGeneratingPDF(false);
+    }
+  };
+
+  const generatePDFContent = (data, title, date, equipment) => {
+    let htmlContent = `
+      <!DOCTYPE html>
+      <html>
+      <head>
+        <meta charset="utf-8">
+        <title>${title}</title>
+        <style>
+          body { 
+            font-family: Arial, sans-serif; 
+            margin: 20px;
+            color: #333;
+          }
+          .header { 
+            text-align: center; 
+            margin-bottom: 30px;
+            border-bottom: 2px solid #f59e0b;
+            padding-bottom: 15px;
+          }
+          .header h1 { 
+            color: #1f2937; 
+            margin: 0;
+            font-size: 24px;
+          }
+          .header p { 
+            color: #6b7280; 
+            margin: 5px 0 0 0;
+          }
+          .equipment-info {
+            background-color: #f9fafb;
+            padding: 15px;
+            border-radius: 8px;
+            margin-bottom: 20px;
+            border-left: 4px solid #f59e0b;
+          }
+          .equipment-info h3 {
+            margin: 0 0 10px 0;
+            color: #1f2937;
+          }
+          .info-grid {
+            display: grid;
+            grid-template-columns: 1fr 1fr 1fr;
+            gap: 15px;
+          }
+          .info-item {
+            color: #4b5563;
+            font-size: 14px;
+          }
+          .info-value {
+            font-weight: bold;
+            color: #1f2937;
+            display: block;
+            margin-top: 2px;
+          }
+          .summary {
+            background-color: #f0f9ff;
+            padding: 15px;
+            border-radius: 8px;
+            margin-bottom: 20px;
+            border-left: 4px solid #0ea5e9;
+          }
+          .maintenance-record { 
+            border: 1px solid #e5e7eb; 
+            border-radius: 8px;
+            padding: 20px;
+            margin-bottom: 20px;
+            background-color: #ffffff;
+            page-break-inside: avoid;
+            box-shadow: 0 1px 3px rgba(0, 0, 0, 0.1);
+          }
+          .record-header {
+            display: flex;
+            justify-content: space-between;
+            align-items: flex-start;
+            margin-bottom: 15px;
+            padding-bottom: 12px;
+            border-bottom: 2px solid #f59e0b;
+          }
+          .record-date {
+            font-weight: bold;
+            font-size: 18px;
+            color: #1f2937;
+          }
+          .record-badges {
+            display: flex;
+            gap: 8px;
+            flex-wrap: wrap;
+          }
+          .badge {
+            padding: 4px 8px;
+            border-radius: 12px;
+            font-size: 11px;
+            font-weight: 600;
+          }
+          .priority-high { background-color: #fee2e2; color: #dc2626; }
+          .priority-medium { background-color: #fed7aa; color: #ea580c; }
+          .priority-low { background-color: #fef3c7; color: #d97706; }
+          .priority-default { background-color: #f3f4f6; color: #6b7280; }
+          .type-badge { background-color: #dbeafe; color: #2563eb; }
+          .status-completed { background-color: #dcfce7; color: #16a34a; }
+          .status-pending { background-color: #fef3c7; color: #ca8a04; }
+          .record-details {
+            margin-top: 10px;
+          }
+          .detail-row {
+            display: flex;
+            justify-content: space-between;
+            padding: 4px 0;
+            border-bottom: 1px dotted #e5e7eb;
+          }
+          .detail-label {
+            font-weight: 600;
+            color: #4b5563;
+            width: 30%;
+          }
+          .detail-value {
+            color: #1f2937;
+            width: 70%;
+            text-align: right;
+          }
+          .materials-section {
+            margin-top: 15px;
+            padding: 10px;
+            background-color: #f9fafb;
+            border-radius: 6px;
+          }
+          .materials-title {
+            font-weight: 600;
+            color: #374151;
+            margin-bottom: 8px;
+          }
+          .material-item {
+            display: flex;
+            justify-content: space-between;
+            padding: 4px 0;
+            font-size: 12px;
+          }
+          .description-section {
+            margin-top: 15px;
+            padding: 10px;
+            background-color: #f8fafc;
+            border-radius: 6px;
+            border-left: 3px solid #0ea5e9;
+          }
+          .description-title {
+            font-weight: 600;
+            color: #374151;
+            margin-bottom: 5px;
+          }
+          .description-text {
+            color: #4b5563;
+            line-height: 1.4;
+          }
+          .footer {
+            margin-top: 30px;
+            padding-top: 15px;
+            border-top: 1px solid #e5e7eb;
+            text-align: center;
+            color: #6b7280;
+            font-size: 12px;
+          }
+        </style>
+      </head>
+      <body>
+        <div class="header">
+          <h1>${title}</h1>
+          <p>Generated on ${date}</p>
+        </div>
+        
+        ${equipment ? `
+        <div class="equipment-info">
+          <h3>Equipment Information</h3>
+          <div class="info-grid">
+            <div class="info-item">
+              Equipment Name
+              <span class="info-value">${equipment.name || 'N/A'}</span>
+            </div>
+            <div class="info-item">
+              Equipment Type
+              <span class="info-value">${equipment.type || 'N/A'}</span>
+            </div>
+            <div class="info-item">
+              Equipment ID
+              <span class="info-value">${equipment.id || 'N/A'}</span>
+            </div>
+          </div>
+        </div>
+        ` : ''}
+        
+        <div class="summary">
+          <h3>Maintenance Summary</h3>
+          <p><strong>Total Records:</strong> ${data.length}</p>
+          <p><strong>Completed Services:</strong> ${data.filter(item => item.status === "Completed").length}</p>
+          <p><strong>High Priority Services:</strong> ${data.filter(item => item.priority?.toLowerCase() === "high").length}</p>
+        </div>
+        
+        <div class="maintenance-records">
+    `;
+
+    data.forEach((item) => {
+      const formattedDate = new Date(item.date).toLocaleDateString("en-US", {
+        year: "numeric",
+        month: "long",
+        day: "numeric",
+      });
+
+      const getPriorityClass = (priority) => {
+        switch (priority?.toLowerCase()) {
+          case "high": return "priority-high";
+          case "medium": return "priority-medium";
+          case "low": return "priority-low";
+          default: return "priority-default";
+        }
+      };
+
+      const getStatusClass = (status) => {
+        return status === "Completed" ? "status-completed" : "status-pending";
+      };
+
+      htmlContent += `
+        <div class="maintenance-record">
+          <div class="record-header">
+            <div class="record-date">📅 ${formattedDate}</div>
+            <div class="record-badges">
+              <span class="badge ${getPriorityClass(item.priority)}">${item.priority || 'Normal'} Priority</span>
+              <span class="badge type-badge">${item.maintenanceType || 'General'}</span>
+              <span class="badge ${getStatusClass(item.status)}">${item.status || 'Unknown'}</span>
+            </div>
+          </div>
+          
+          <!-- Main Description (Always Visible) -->
+          <div class="description-section" style="margin-top: 0; margin-bottom: 15px;">
+            <div class="description-title">🔧 Maintenance Description</div>
+            <div class="description-text">${item.description || 'No description provided'}</div>
+          </div>
+          
+          <!-- Expanded Details Section (Like Opened Accordion) -->
+          <div style="background-color: #f8fafc; border-radius: 8px; padding: 15px; border-left: 4px solid #0ea5e9;">
+            <h4 style="margin: 0 0 12px 0; color: #1f2937; font-size: 14px; font-weight: 600;">📋 Detailed Information</h4>
+            
+            <div style="display: grid; grid-template-columns: 1fr 1fr; gap: 15px; margin-bottom: 15px;">
+              <div>
+                <div style="font-weight: 600; color: #374151; font-size: 12px; margin-bottom: 4px;">⏰ Status</div>
+                <div style="display: inline-block; padding: 4px 8px; border-radius: 12px; font-size: 11px; font-weight: 600; ${
+                  item.status === "Completed" 
+                    ? "background-color: #dcfce7; color: #16a34a;" 
+                    : "background-color: #fef3c7; color: #ca8a04;"
+                }">${item.status || 'Unknown'}</div>
+              </div>
+              <div>
+                <div style="font-weight: 600; color: #374151; font-size: 12px; margin-bottom: 4px;">🕒 Time</div>
+                <div style="font-weight: 600; color: #1f2937;">${item.time || 'Not specified'}</div>
+              </div>
+            </div>
+            
+            <!-- Materials Section (Always Expanded) -->
+            <div style="background-color: white; border-radius: 6px; padding: 12px; border: 1px solid #e5e7eb; margin-bottom: 15px;">
+              <div style="font-weight: 600; color: #374151; margin-bottom: 8px; display: flex; align-items: center;">
+                🔩 Materials/Parts Used
+              </div>
+              ${item.maintenanceRequests && item.maintenanceRequests.length > 0 ? 
+                item.maintenanceRequests.map((request, partIdx) => `
+                  <div style="display: flex; justify-content: space-between; align-items: center; padding: 8px 0; ${
+                    partIdx !== item.maintenanceRequests.length - 1 ? 'border-bottom: 1px solid #f3f4f6;' : ''
+                  }">
+                    <div>
+                      <span style="font-weight: 500; color: #1f2937;">${request.itemName || 'Unknown Item'}</span>
+                      <div style="font-size: 11px; color: #6b7280;">
+                        Urgency: <span style="font-weight: 500; color: ${
+                          request.urgency?.toLowerCase() === 'high' ? '#dc2626' : 
+                          request.urgency?.toLowerCase() === 'medium' ? '#ea580c' : '#059669'
+                        };">${request.urgency || 'Normal'}</span>
+                      </div>
+                    </div>
+                    <div style="text-align: right;">
+                      <span style="font-weight: 600; color: #374151;">
+                        Qty: ${request.quantity || 0} ${request.measurement || ''}
+                      </span>
+                    </div>
+                  </div>
+                `).join('') 
+                : 
+                '<div style="color: #6b7280; font-style: italic; text-align: center; padding: 10px;">No materials recorded for this maintenance</div>'
+              }
+            </div>
+            
+            <!-- Additional Technical Details -->
+            <div style="display: grid; grid-template-columns: 1fr 1fr 1fr; gap: 12px; font-size: 12px;">
+              <div>
+                <div style="color: #6b7280; font-weight: 500;">Maintenance Type</div>
+                <div style="font-weight: 600; color: #1f2937; margin-top: 2px;">${item.maintenanceType || 'General'}</div>
+              </div>
+              <div>
+                <div style="color: #6b7280; font-weight: 500;">Priority Level</div>
+                <div style="font-weight: 600; margin-top: 2px; color: ${
+                  item.priority?.toLowerCase() === 'high' ? '#dc2626' : 
+                  item.priority?.toLowerCase() === 'medium' ? '#ea580c' : '#059669'
+                };">${item.priority || 'Normal'}</div>
+              </div>
+              <div>
+                <div style="color: #6b7280; font-weight: 500;">Record ID</div>
+                <div style="font-weight: 600; color: #1f2937; margin-top: 2px;">#${item.id || 'N/A'}</div>
+              </div>
+            </div>
+          </div>
+        </div>
+      `;
+    });
+
+    htmlContent += `
+        </div>
+        <div class="footer">
+          <p>ConstruxFlow Equipment Management System</p>
+          <p>Maintenance History Report generated automatically on ${date}</p>
+        </div>
+      </body>
+      </html>
+    `;
+
+    return htmlContent;
+  };
+
+  const downloadPDF = (htmlContent, fileName) => {
+    console.log("🚀 Starting PDF download process...");
+    console.log("📄 HTML content length:", htmlContent.length);
+    
+    try {
+      // Create a clean HTML document for printing
+      const printableHTML = `
+        <!DOCTYPE html>
+        <html>
+        <head>
+          <meta charset="utf-8">
+          <title>${fileName}</title>
+          <style>
+            body { 
+              font-family: Arial, sans-serif; 
+              margin: 20px;
+              color: #333;
+            }
+            @media print {
+              body { margin: 10px; }
+              .no-print { display: none !important; }
+            }
+          </style>
+        </head>
+        <body>
+          <div class="no-print" style="position: fixed; top: 10px; right: 10px; background: white; padding: 10px; border: 1px solid #ccc; border-radius: 5px; z-index: 1000;">
+            <button onclick="window.print()" style="padding: 8px 16px; background: #f59e0b; color: white; border: none; border-radius: 4px; cursor: pointer; margin-right: 8px;">🖨️ Print PDF</button>
+            <button onclick="window.close()" style="padding: 8px 16px; background: #6b7280; color: white; border: none; border-radius: 4px; cursor: pointer;">✖️ Close</button>
+          </div>
+          ${htmlContent.replace(/<\/?(!DOCTYPE|html|head|body|title)[^>]*>/gi, '').replace(/<style>[\s\S]*?<\/style>/gi, '')}
+        </body>
+        </html>
+      `;
+
+      // Try to open new window
+      console.log("🔄 Opening new window...");
+      const newWindow = window.open("", "_blank", "width=900,height=700,scrollbars=yes,resizable=yes");
+      
+      if (!newWindow) {
+        console.log("⚠️ Popup blocked, using fallback method");
+        // Fallback: Create and download HTML file
+        const blob = new Blob([printableHTML], { type: 'text/html' });
+        const url = URL.createObjectURL(blob);
+        const a = document.createElement('a');
+        a.href = url;
+        a.download = fileName.replace('.pdf', '.html');
+        document.body.appendChild(a);
+        a.click();
+        document.body.removeChild(a);
+        URL.revokeObjectURL(url);
+        
+        alert("✅ Report downloaded as HTML file!\n\n📝 Instructions:\n1. Open the downloaded file\n2. Press Ctrl+P (or Cmd+P on Mac)\n3. Select 'Save as PDF' as destination\n4. Click Save");
+        return;
+      }
+      
+      console.log("✅ Window opened successfully");
+      
+      // Write content to new window
+      newWindow.document.open();
+      newWindow.document.write(printableHTML);
+      newWindow.document.close();
+      
+      console.log("📝 Content written to window");
+      
+      // Focus and print
+      newWindow.focus();
+      
+      // Wait a bit for content to render, then show print dialog
+      setTimeout(() => {
+        console.log("🖨️ Showing print dialog");
+        newWindow.print();
+      }, 1000);
+      
+    } catch (error) {
+      console.error("❌ Error in downloadPDF:", error);
+      alert(`Failed to generate PDF report: ${error.message}\n\nPlease try again or check your browser settings.`);
+    }
   };
 
   const [showTeam, setShowTeam] = useState(false);
@@ -150,9 +587,22 @@ export default function ServiceHistoryContainer() {
                       </div>
                     </div>
                   </div>
-                  <button className="flex items-center gap-2 bg-web_yellow hover:bg-web_yellow/80 text-main_dark text-sm font-semibold px-6 py-3 rounded-lg shadow-sm hover:shadow-md transition-all duration-150">
-                    <FaDownload className="w-4 h-4" />
-                    Download PDF
+                  <button 
+                    onClick={generatePDF}
+                    disabled={isGeneratingPDF || loading || serviceHistory.length === 0}
+                    className="flex items-center gap-2 bg-web_yellow hover:bg-web_yellow/80 text-main_dark text-sm font-semibold px-6 py-3 rounded-lg shadow-sm hover:shadow-md transition-all duration-150 disabled:opacity-50 disabled:cursor-not-allowed"
+                  >
+                    {isGeneratingPDF ? (
+                      <>
+                        <div className="animate-spin rounded-full h-4 w-4 border-b-2 border-main_dark"></div>
+                        Generating...
+                      </>
+                    ) : (
+                      <>
+                        <FaDownload className="w-4 h-4" />
+                        Download PDF
+                      </>
+                    )}
                   </button>
                 </div>
 
