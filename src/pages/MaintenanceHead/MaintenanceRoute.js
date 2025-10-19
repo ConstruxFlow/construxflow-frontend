@@ -15,6 +15,7 @@ import UpdateEquipmentMaintenance from "./UpdateEquipmentMaintenance";
 import ScheduleMaintenanceAndRequestMaterials from "./MaintenanceScheduling";
 import TeamMemberDetailsForm from "./TeamMemberDetailsForm";
 import ManagerProfileView from "./ManagerProfile";
+import MaintenanceRequestDashboard from "./InventoryManagerRequest";
 
 export const MaintenanceRoute = {
   path: "/maintenance",
@@ -76,5 +77,9 @@ export const MaintenanceRoute = {
       path: "add-member",
       element: <TeamMemberDetailsForm />,
     },
+    {
+      path: "inventory-request",
+      element: <MaintenanceRequestDashboard/>
+    }
   ],
 };
