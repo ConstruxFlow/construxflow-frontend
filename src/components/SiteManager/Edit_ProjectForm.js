@@ -108,6 +108,8 @@ const Edit_ProjectForm = () => {
     axios.get(`http://localhost:8080/api/projects/${projectId}`)
       .then(res => {
         const project = res.data;
+        console.log(project);
+        
         setFormData({
           projectName: project.projectName || '',
           location: project.location || '',

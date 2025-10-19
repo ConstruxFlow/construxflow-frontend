@@ -1,8 +1,9 @@
-import { Outlet } from "react-router-dom";
-import SiteManagerDashboard from "./SiteManagerDashboard";
-import Existing_Projects_List from "./Existing_Projects_List";
-import Create_Project from "./Create_Project";
-import Edit_Project from "./Edit_Project";
+import React from 'react';
+import { Outlet } from 'react-router-dom';
+import SiteManagerDashboard from './SiteManagerDashboard';
+import Existing_Projects_List from './Existing_Projects_List';
+import Create_Project from './Create_Project';
+import Edit_Project from './Edit_Project';
 import Project_Phase from "./Project_Phase";
 import Create_Material_Request from "./Create_Material_Request";
 import Material_Request from "./Material_Request";
@@ -16,6 +17,17 @@ import Purchase_Order from "./Purchase_Order";
 import SiteManager_Profile from "./SiteManager_Profile";
 import ManagerProfileView from "./ManagerProfile";
 import SiteInventory from "./Site_inventory";
+
+// Import new equipment management components
+import EquipmentSelection from '../../components/SiteManager/EquipmentSelection';
+import EquipmentRequestForm from '../../components/SiteManager/EquipmentRequestForm';
+import ProjectEquipmentDashboard from '../../components/SiteManager/ProjectEquipmentDashboard';
+import EquipmentUsageUpdate from '../../components/SiteManager/EquipmentUsageUpdate';
+import ProjectSelection from '../../components/SiteManager/ProjectSelection';
+import { elements } from 'chart.js';
+import SiteManagerOrdersOverview from './SiteManagerOrdersOverview';
+import SiteManagerOrderDetails from './SiteManagerOrderDetails';
+import ProjectView from './ProjectView';
 
 export const siteManagerRoutes = {
   path: '/site-manager',
@@ -40,6 +52,10 @@ export const siteManagerRoutes = {
     {
       path: 'projects-list/edit-project/:projectId',
       element: <Edit_Project />,
+    },
+    {
+      path: 'projects-list/view-project/:projectId',
+      element: <ProjectView />,
     },
     {
       path: 'projects-list/create-project/project-phase',
@@ -100,6 +116,35 @@ export const siteManagerRoutes = {
     {
       path: 'profile',
       element: <ManagerProfileView/>,
+    },
+    // New Equipment Management Routes
+    {
+      path: 'project-selection',
+      element: <ProjectSelection />,
+    },
+    {
+      path: 'equipment-selection/:projectId',
+      element: <EquipmentSelection />,
+    },
+    {
+      path: 'equipment-request/:projectId',
+      element: <EquipmentRequestForm />,
+    },
+    {
+      path: 'project-equipment/:projectId',
+      element: <ProjectEquipmentDashboard />,
+    },
+    {
+      path: 'equipment-usage/:equipmentId',
+      element: <EquipmentUsageUpdate />,
+    },
+    {
+      path: 'order-details',
+      element: <SiteManagerOrdersOverview />,
+    },
+    {
+      path: 'order-details/:id',
+      element: <SiteManagerOrderDetails />,
     }
   ]
 }; 

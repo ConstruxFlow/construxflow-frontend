@@ -25,7 +25,7 @@ export const validateRequestData = (requestData) => {
 
   // Date validation
   if (requestData.request_date && requestData.quotation_deadline) {
-    const requestDate = new Date(requestData.request_date);
+    const requestDate = new Date();
     const deadlineDate = new Date(requestData.quotation_deadline);
     
     if (deadlineDate <= requestDate) {

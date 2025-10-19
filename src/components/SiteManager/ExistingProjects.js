@@ -166,61 +166,61 @@ const ExistingProjects = () => {
 
       {/* Project Statistics */}
       <div className="grid grid-cols-1 md:grid-cols-5 gap-4 mb-6">
-        <div className="bg-gradient-to-br from-blue-500 to-blue-600 text-white p-4 rounded-xl shadow-sm">
+        <div className="bg-purewhite border border-gray-200 text-main_dark p-4 rounded-xl shadow-sm">
           <div className="flex items-center justify-between">
             <div>
-              <p className="text-blue-100 text-sm">Total Projects</p>
-              <p className="text-2xl font-bold">{projectStats.total}</p>
+              <p className="text-slatebluegray text-sm">Total Projects</p>
+              <p className="text-2xl font-bold text-main_dark">{projectStats.total}</p>
             </div>
-            <div className="w-12 h-12 bg-blue-400/20 rounded-lg flex items-center justify-center">
+            <div className="w-12 h-12 bg-purewhite rounded-lg flex items-center justify-center border border-gray-100">
               <span className="text-2xl">📋</span>
             </div>
           </div>
         </div>
         
-        <div className="bg-gradient-to-br from-purple-500 to-purple-600 text-white p-4 rounded-xl shadow-sm">
+        <div className="bg-purewhite border border-gray-200 text-main_dark p-4 rounded-xl shadow-sm">
           <div className="flex items-center justify-between">
             <div>
-              <p className="text-purple-100 text-sm">Planning</p>
-              <p className="text-2xl font-bold">{projectStats.planning}</p>
+              <p className="text-slatebluegray text-sm">Planning</p>
+              <p className="text-2xl font-bold text-main_dark">{projectStats.planning}</p>
             </div>
-            <div className="w-12 h-12 bg-purple-400/20 rounded-lg flex items-center justify-center">
+            <div className="w-12 h-12 bg-purewhite rounded-lg flex items-center justify-center border border-gray-100">
               <span className="text-2xl">📝</span>
             </div>
           </div>
         </div>
         
-        <div className="bg-gradient-to-br from-blue-500 to-blue-600 text-white p-4 rounded-xl shadow-sm">
+        <div className="bg-purewhite border border-gray-200 text-main_dark p-4 rounded-xl shadow-sm">
           <div className="flex items-center justify-between">
             <div>
-              <p className="text-blue-100 text-sm">In Progress</p>
-              <p className="text-2xl font-bold">{projectStats.inProgress}</p>
+              <p className="text-slatebluegray text-sm">In Progress</p>
+              <p className="text-2xl font-bold text-main_dark">{projectStats.inProgress}</p>
             </div>
-            <div className="w-12 h-12 bg-blue-400/20 rounded-lg flex items-center justify-center">
+            <div className="w-12 h-12 bg-purewhite rounded-lg flex items-center justify-center border border-gray-100">
               <span className="text-2xl">🚧</span>
             </div>
           </div>
         </div>
         
-        <div className="bg-gradient-to-br from-yellow-500 to-yellow-600 text-white p-4 rounded-xl shadow-sm">
+        <div className="bg-purewhite border border-gray-200 text-main_dark p-4 rounded-xl shadow-sm">
           <div className="flex items-center justify-between">
             <div>
-              <p className="text-yellow-100 text-sm">On Hold</p>
-              <p className="text-2xl font-bold">{projectStats.onHold}</p>
+              <p className="text-slatebluegray text-sm">On Hold</p>
+              <p className="text-2xl font-bold text-main_dark">{projectStats.onHold}</p>
             </div>
-            <div className="w-12 h-12 bg-yellow-400/20 rounded-lg flex items-center justify-center">
+            <div className="w-12 h-12 bg-purewhite rounded-lg flex items-center justify-center border border-gray-100">
               <span className="text-2xl">⏸️</span>
             </div>
           </div>
         </div>
         
-        <div className="bg-gradient-to-br from-green-500 to-green-600 text-white p-4 rounded-xl shadow-sm">
+        <div className="bg-purewhite border border-gray-200 text-main_dark p-4 rounded-xl shadow-sm">
           <div className="flex items-center justify-between">
             <div>
-              <p className="text-green-100 text-sm">Completed</p>
-              <p className="text-2xl font-bold">{projectStats.completed}</p>
+              <p className="text-slatebluegray text-sm">Completed</p>
+              <p className="text-2xl font-bold text-main_dark">{projectStats.completed}</p>
             </div>
-            <div className="w-12 h-12 bg-green-400/20 rounded-lg flex items-center justify-center">
+            <div className="w-12 h-12 bg-purewhite rounded-lg flex items-center justify-center border border-gray-100">
               <span className="text-2xl">✅</span>
             </div>
           </div>

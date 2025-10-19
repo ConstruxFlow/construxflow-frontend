@@ -1,6 +1,24 @@
 import React, { useState } from 'react';
 import { Calendar, Settings, DollarSign, MapPin, FileText, Package, Wrench } from 'lucide-react';
 
+// --- NEW: mappings between UI labels and enum strings ---
+const toEnum = (label) => {
+  if (!label) return null;
+  const l = label.toLowerCase();
+  if (l === 'available') return 'AVAILABLE';
+  if (l === 'under maintenance') return 'UNDER_MAINTENANCE';
+  if (l === 'on a site') return 'ON_A_SITE';
+  return null;
+};
+
+const fromEnum = (e) => {
+  if (!e) return '';
+  if (e === 'AVAILABLE') return 'Available';
+  if (e === 'UNDER_MAINTENANCE') return 'Under Maintenance';
+  if (e === 'ON_A_SITE') return 'On a Site';
+  return e;
+};
+
 const EquipmentForm = ({ onSubmit }) => {
   const [formData, setFormData] = useState({
     type: '',
@@ -9,32 +27,77 @@ const EquipmentForm = ({ onSubmit }) => {
     brand: '',
     model: '',
     serialNumber: '',
+    quantity: 1,
     condition: '',
     purchaseDate: '',
     purchaseSource: '',
     purchaseCost: '',
     location: '',
-    status: '',
+    // store the UI label here (easier for select)
+    statusLabel: '',          // <-- changed: keep label in state
     notes: '',
     nextMaintenance: '',
   });
   const [isSubmitting, setIsSubmitting] = useState(false);
 
+  // generic change handler; handles both inputs and selects
   const handleChange = (e) => {
     const { name, value } = e.target;
+
+    // special case: the select uses "statusLabel"
+    if (name === 'status') {
+      setFormData((prev) => ({ ...prev, statusLabel: value }));
+      return;
+    }
+
     setFormData({ ...formData, [name]: value });
   };
 
   const handleSubmit = async (e) => {
     e.preventDefault();
     setIsSubmitting(true);
-    
+
     try {
+      // Build the DTO payload expected by your backend
+      const payload = {
+        type: formData.type || null,
+        name: formData.name || null,
+        category: formData.category || null,
+        brand: formData.brand || null,
+        model: formData.model || null,
+        serialNumber: formData.serialNumber || null,
+        quantity: formData.quantity === '' ? 1 : Number(formData.quantity),
+        condition: formData.condition || null,
+        purchaseDate: formData.purchaseDate || null,
+        purchaseSource: formData.purchaseSource || null,
+        purchaseCost: formData.purchaseCost === '' ? null : Number(formData.purchaseCost),
+        location: formData.location || null,
+        status: toEnum(formData.statusLabel),     // <-- map label to enum for backend
+        nextMaintenance: formData.nextMaintenance || null,
+        lastMaintenance: null,                    // optional; you can add a field to the form if needed
+        notes: formData.notes || null,
+      };
+
       if (onSubmit) {
-        await onSubmit(formData);
+        await onSubmit(payload);
+      } else {
+        // Fallback: post directly to your backend if no onSubmit prop is passed
+        const res = await fetch('http://localhost:8080/api/equipment/add', {
+          method: 'POST',
+          headers: { 'Content-Type': 'application/json' },
+          body: JSON.stringify(payload),
+        });
+        if (!res.ok) {
+          const txt = await res.text();
+          throw new Error(`Server error: ${res.status} ${txt}`);
+        }
       }
+
+      // Reset after success
+      handleReset();
     } catch (error) {
       console.error('Error submitting form:', error);
+      // You can show a toast/snackbar here
     } finally {
       setIsSubmitting(false);
     }
@@ -48,12 +111,13 @@ const EquipmentForm = ({ onSubmit }) => {
       brand: '',
       model: '',
       serialNumber: '',
+      quantity: 1,
       condition: '',
       purchaseDate: '',
       purchaseSource: '',
       purchaseCost: '',
       location: '',
-      status: '',
+      statusLabel: '',   // <-- reset UI label
       notes: '',
       nextMaintenance: '',
     });
@@ -76,15 +140,15 @@ const EquipmentForm = ({ onSubmit }) => {
               <Settings className="w-5 h-5 text-web_yellow" />
               <h2 className="text-lg font-semibold text-main_dark">Basic Equipment Information</h2>
             </div>
-            
+
             <div className="grid grid-cols-1 md:grid-cols-2 gap-6">
               <div>
                 <label className="block text-sm font-medium text-slatebluegray mb-2">
                   Equipment Type
                 </label>
-                <select 
-                  name="type" 
-                  value={formData.type} 
+                <select
+                  name="type"
+                  value={formData.type}
                   onChange={handleChange}
                   className="w-full px-4 py-3 border border-gray-300 rounded-lg focus:outline-none focus:ring-2 focus:ring-web_yellow focus:border-transparent transition-all duration-150"
                   required
@@ -101,10 +165,10 @@ const EquipmentForm = ({ onSubmit }) => {
                 <label className="block text-sm font-medium text-slatebluegray mb-2">
                   Equipment Name
                 </label>
-                <input 
-                  type="text" 
-                  name="name" 
-                  value={formData.name} 
+                <input
+                  type="text"
+                  name="name"
+                  value={formData.name}
                   onChange={handleChange}
                   className="w-full px-4 py-3 border border-gray-300 rounded-lg focus:outline-none focus:ring-2 focus:ring-web_yellow focus:border-transparent transition-all duration-150"
                   placeholder="Enter equipment name"
@@ -114,12 +178,28 @@ const EquipmentForm = ({ onSubmit }) => {
 
               <div>
                 <label className="block text-sm font-medium text-slatebluegray mb-2">
+                  Quantity
+                </label>
+                <input
+                  type="number"
+                  name="quantity"
+                  value={formData.quantity}
+                  onChange={handleChange}
+                  className="w-full px-4 py-3 border border-gray-300 rounded-lg focus:outline-none focus:ring-2 focus:ring-web_yellow focus:border-transparent transition-all duration-150"
+                  placeholder="Enter quantity"
+                  min="1"
+                  required
+                />
+              </div>
+
+              <div>
+                <label className="block text-sm font-medium text-slatebluegray mb-2">
                   Category
                 </label>
-                <input 
-                  type="text" 
-                  name="category" 
-                  value={formData.category} 
+                <input
+                  type="text"
+                  name="category"
+                  value={formData.category}
                   onChange={handleChange}
                   className="w-full px-4 py-3 border border-gray-300 rounded-lg focus:outline-none focus:ring-2 focus:ring-web_yellow focus:border-transparent transition-all duration-150"
                   placeholder="Enter category"
@@ -130,10 +210,10 @@ const EquipmentForm = ({ onSubmit }) => {
                 <label className="block text-sm font-medium text-slatebluegray mb-2">
                   Brand
                 </label>
-                <input 
-                  type="text" 
-                  name="brand" 
-                  value={formData.brand} 
+                <input
+                  type="text"
+                  name="brand"
+                  value={formData.brand}
                   onChange={handleChange}
                   className="w-full px-4 py-3 border border-gray-300 rounded-lg focus:outline-none focus:ring-2 focus:ring-web_yellow focus:border-transparent transition-all duration-150"
                   placeholder="Enter brand name"
@@ -144,10 +224,10 @@ const EquipmentForm = ({ onSubmit }) => {
                 <label className="block text-sm font-medium text-slatebluegray mb-2">
                   Model
                 </label>
-                <input 
-                  type="text" 
-                  name="model" 
-                  value={formData.model} 
+                <input
+                  type="text"
+                  name="model"
+                  value={formData.model}
                   onChange={handleChange}
                   className="w-full px-4 py-3 border border-gray-300 rounded-lg focus:outline-none focus:ring-2 focus:ring-web_yellow focus:border-transparent transition-all duration-150"
                   placeholder="Enter model number"
@@ -158,10 +238,10 @@ const EquipmentForm = ({ onSubmit }) => {
                 <label className="block text-sm font-medium text-slatebluegray mb-2">
                   Serial Number / VIN
                 </label>
-                <input 
-                  type="text" 
-                  name="serialNumber" 
-                  value={formData.serialNumber} 
+                <input
+                  type="text"
+                  name="serialNumber"
+                  value={formData.serialNumber}
                   onChange={handleChange}
                   className="w-full px-4 py-3 border border-gray-300 rounded-lg focus:outline-none focus:ring-2 focus:ring-web_yellow focus:border-transparent transition-all duration-150"
                   placeholder="Enter serial number or VIN"
@@ -176,15 +256,15 @@ const EquipmentForm = ({ onSubmit }) => {
               <DollarSign className="w-5 h-5 text-web_yellow" />
               <h2 className="text-lg font-semibold text-main_dark">Purchase Information</h2>
             </div>
-            
+
             <div className="grid grid-cols-1 md:grid-cols-2 gap-6">
               <div>
                 <label className="block text-sm font-medium text-slatebluegray mb-2">
                   Condition
                 </label>
-                <select 
-                  name="condition" 
-                  value={formData.condition} 
+                <select
+                  name="condition"
+                  value={formData.condition}
                   onChange={handleChange}
                   className="w-full px-4 py-3 border border-gray-300 rounded-lg focus:outline-none focus:ring-2 focus:ring-web_yellow focus:border-transparent transition-all duration-150"
                 >
@@ -202,10 +282,10 @@ const EquipmentForm = ({ onSubmit }) => {
                   Purchase Date
                 </label>
                 <div className="relative">
-                  <input 
-                    type="date" 
-                    name="purchaseDate" 
-                    value={formData.purchaseDate} 
+                  <input
+                    type="date"
+                    name="purchaseDate"
+                    value={formData.purchaseDate}
                     onChange={handleChange}
                     className="w-full px-4 py-3 pl-12 border border-gray-300 rounded-lg focus:outline-none focus:ring-2 focus:ring-web_yellow focus:border-transparent transition-all duration-150"
                   />
@@ -217,10 +297,10 @@ const EquipmentForm = ({ onSubmit }) => {
                 <label className="block text-sm font-medium text-slatebluegray mb-2">
                   Purchase Source
                 </label>
-                <input 
-                  type="text" 
-                  name="purchaseSource" 
-                  value={formData.purchaseSource} 
+                <input
+                  type="text"
+                  name="purchaseSource"
+                  value={formData.purchaseSource}
                   onChange={handleChange}
                   className="w-full px-4 py-3 border border-gray-300 rounded-lg focus:outline-none focus:ring-2 focus:ring-web_yellow focus:border-transparent transition-all duration-150"
                   placeholder="Enter supplier or source"
@@ -231,10 +311,10 @@ const EquipmentForm = ({ onSubmit }) => {
                 <label className="block text-sm font-medium text-slatebluegray mb-2">
                   Purchase Cost (LKR)
                 </label>
-                <input 
-                  type="number" 
-                  name="purchaseCost" 
-                  value={formData.purchaseCost} 
+                <input
+                  type="number"
+                  name="purchaseCost"
+                  value={formData.purchaseCost}
                   onChange={handleChange}
                   className="w-full px-4 py-3 border border-gray-300 rounded-lg focus:outline-none focus:ring-2 focus:ring-web_yellow focus:border-transparent transition-all duration-150"
                   placeholder="Enter cost in LKR"
@@ -251,16 +331,16 @@ const EquipmentForm = ({ onSubmit }) => {
               <MapPin className="w-5 h-5 text-web_yellow" />
               <h2 className="text-lg font-semibold text-main_dark">Location & Status</h2>
             </div>
-            
+
             <div className="grid grid-cols-1 md:grid-cols-2 gap-6">
               <div>
                 <label className="block text-sm font-medium text-slatebluegray mb-2">
                   Current Location
                 </label>
-                <input 
-                  type="text" 
-                  name="location" 
-                  value={formData.location} 
+                <input
+                  type="text"
+                  name="location"
+                  value={formData.location}
                   onChange={handleChange}
                   className="w-full px-4 py-3 border border-gray-300 rounded-lg focus:outline-none focus:ring-2 focus:ring-web_yellow focus:border-transparent transition-all duration-150"
                   placeholder="Enter current location"
@@ -271,17 +351,17 @@ const EquipmentForm = ({ onSubmit }) => {
                 <label className="block text-sm font-medium text-slatebluegray mb-2">
                   Status
                 </label>
-                <select 
-                  name="status" 
-                  value={formData.status} 
+                {/* Notice the select uses name="status" but we store/read statusLabel */}
+                <select
+                  name="status"
+                  value={formData.statusLabel}
                   onChange={handleChange}
                   className="w-full px-4 py-3 border border-gray-300 rounded-lg focus:outline-none focus:ring-2 focus:ring-web_yellow focus:border-transparent transition-all duration-150"
                 >
                   <option value="">Select status</option>
-                  <option value="Operational">Operational</option>
+                  <option value="Available">Available</option>
                   <option value="Under Maintenance">Under Maintenance</option>
-                  <option value="Inactive">Inactive</option>
-                  <option value="Disposed">Disposed</option>
+                  <option value="On a Site">On a Site</option>
                 </select>
               </div>
 
@@ -290,10 +370,10 @@ const EquipmentForm = ({ onSubmit }) => {
                   Next Maintenance Due
                 </label>
                 <div className="relative">
-                  <input 
-                    type="date" 
-                    name="nextMaintenance" 
-                    value={formData.nextMaintenance} 
+                  <input
+                    type="date"
+                    name="nextMaintenance"
+                    value={formData.nextMaintenance}
                     onChange={handleChange}
                     className="w-full px-4 py-3 pl-12 border border-gray-300 rounded-lg focus:outline-none focus:ring-2 focus:ring-web_yellow focus:border-transparent transition-all duration-150"
                   />
@@ -309,14 +389,14 @@ const EquipmentForm = ({ onSubmit }) => {
               <FileText className="w-5 h-5 text-web_yellow" />
               <h2 className="text-lg font-semibold text-main_dark">Additional Information</h2>
             </div>
-            
+
             <div>
               <label className="block text-sm font-medium text-slatebluegray mb-2">
                 Notes
               </label>
-              <textarea 
-                name="notes" 
-                value={formData.notes} 
+              <textarea
+                name="notes"
+                value={formData.notes}
                 onChange={handleChange}
                 rows={4}
                 className="w-full px-4 py-3 border border-gray-300 rounded-lg resize-none focus:outline-none focus:ring-2 focus:ring-web_yellow focus:border-transparent transition-all duration-150"
@@ -328,7 +408,7 @@ const EquipmentForm = ({ onSubmit }) => {
           {/* Actions */}
           <div className="p-6 sm:p-8">
             <div className="flex flex-col sm:flex-row justify-end gap-4">
-              <button 
+              <button
                 type="button"
                 onClick={handleReset}
                 className="px-6 py-3 border border-gray-300 rounded-lg text-slatebluegray hover:text-main_dark font-semibold hover:bg-gray-50 transition-all duration-150"
