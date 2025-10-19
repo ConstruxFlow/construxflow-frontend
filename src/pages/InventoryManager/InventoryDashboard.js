@@ -7,7 +7,8 @@ const navLinks = [
   { name: 'Inventory Control', href: '/inventory-control' },
   { name: 'Inventory Monitoring', href: '/inventory-monitoring' },
   { name: 'Maintenance Requests', href: '/maintenance-requests-overview' },
-  { name: 'Equipment Scheduling', href: '/Inventory-requests' },
+  { name: 'Equipment Request', href: '/Inventory-requests' },
+  { name: 'Equipment Scheduling', href: '/equipment-scheduling' },
 ];
 
 const InventoryDashboard = () => {

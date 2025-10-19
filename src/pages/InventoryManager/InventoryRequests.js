@@ -5,14 +5,13 @@ import { FaSearch, FaCheck, FaTimes } from "react-icons/fa";
 import axios from "axios";
 
 const navLinks = [
-  { name: "Dashboard", href: "/inventory-dashboard" },
-  { name: "Inventory Control", href: "/inventory-control" },
-  { name: "Inventory Monitoring", href: "/inventory-monitoring" },
-  { name: "Inventory Requests", href: "/inventory-requests" },
-  { name: "Maintenance Requests", href: "/maintenance-requests-overview" },
-  { name: "Equipment Scheduling", href: "/Inventory-requests" },
+  { name: 'Dashboard', href: '/inventory-dashboard' },
+  { name: 'Inventory Control', href: '/inventory-control' },
+  { name: 'Inventory Monitoring', href: '/inventory-monitoring' },
+  { name: 'Maintenance Requests', href: '/maintenance-requests-overview' },
+  { name: 'Equipment Request', href: '/Inventory-requests' },
+  { name: 'Equipment Scheduling', href: '/equipment-scheduling' },
 ];
-
 const statusPill = (status) => {
   const map = {
     PENDING: "bg-web_yellow/10 text-web_yellow",

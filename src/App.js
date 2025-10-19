@@ -88,7 +88,7 @@ import ManagerReg from "./pages/Admin/ManagerReg";
 import InventoryProfile from "./pages/InventoryManager/ManagerProfile";
 import InventoryRequests from "./pages/InventoryManager/InventoryRequests";
 import UpdateInventory from "./pages/InventoryManager/UpdateInventory";
-
+import EquipmentDetails from "./pages/InventoryManager/EquipmentDetails";
 // ADD THE MISSING IMPORT
 import ScheduleEquipment from "./pages/InventoryManager/ScheduleEquipment";
 
@@ -321,10 +321,6 @@ export const routes = createBrowserRouter([
     element: <ScheduleForm />,
   },
   {
-    path: "/view-schedule-page",
-    element: <ViewSchedulePage />,
-  },
-  {
     path: "/reorder-material-page",
     element: <ReorderMaterialPage />,
   },
@@ -344,6 +340,13 @@ export const routes = createBrowserRouter([
   {
     path: "/schedule-form/:equipmentId",
     element: <ScheduleEquipment />,
+  },
+  {
+    path: "/equipment-details/:id",
+     element: <EquipmentDetails />,
+  },
+  {path: "/view-schedule-page/:id",
+    element:<ViewSchedulePage />
   }
   // REMOVED THE EXTRA "ReorderMaterialPage" text that was causing syntax error
 ]);
