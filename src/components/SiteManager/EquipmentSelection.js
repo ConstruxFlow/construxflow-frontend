@@ -1,4 +1,4 @@
-import React, { useState, useEffect } from 'react';
+import React, { useState, useEffect, useContext } from 'react';
 import { useNavigate, useParams } from 'react-router-dom';
 import { 
   Search, 
@@ -16,6 +16,10 @@ import {
   Check
 } from 'lucide-react';
 import NavBar from '../NavBar';
+import { AuthContext } from '../../Context/AuthContext';
+import { toast } from 'react-toastify';
+import LoadingOverlay from '../../components/LoadingOverlay';
+
 
 const EquipmentSelection = () => {
   const navigate = useNavigate();
@@ -25,99 +29,47 @@ const EquipmentSelection = () => {
   const [loading, setLoading] = useState(true);
   const [searchTerm, setSearchTerm] = useState('');
   const [categoryFilter, setCategoryFilter] = useState('All Categories');
-  const [statusFilter, setStatusFilter] = useState('Available');
+  const [statusFilter, setStatusFilter] = useState('AVAILABLE');
+  const [error, setError] = useState(null);
+  const [showRequestForm, setShowRequestForm] = useState(false);
+  const [submitting, setSubmitting] = useState(false);
+  const [requestData, setRequestData] = useState({
+    requestedStartDate: '',
+    requestedEndDate: '',
+    priority: 'High',
+    additionalNotes: '',
+    requestPurpose: '',
+    expectedLocation: ''
+  });
+   const { authState, logout } = useContext(AuthContext);
+   console.log("AuthState:", authState);
+     const [loadingProgress, setLoadingProgress] = useState(0);
+   
 
-  // Mock data for now - will be replaced with API calls
+  // Fetch equipment data from backend API
   useEffect(() => {
-    const fetchEquipment = async () => {
-      setLoading(true);
-      try {
-        // Mock data - replace with actual API call
-        const mockEquipment = [
-          {
-            id: 1,
-            name: 'Hydraulic Excavator CAT 320',
-            category: 'Heavy Machinery',
-            brand: 'Caterpillar',
-            model: 'CAT 320',
-            condition: 'Excellent',
-            location: 'Main Warehouse',
-            status: 'Available',
-            totalUsageHours: 1250.5,
-            totalKilometers: 0,
-            purchaseDate: '2022-03-15',
-            notes: 'Well maintained, ready for use'
-          },
-          {
-            id: 2,
-            name: 'Concrete Mixer Truck',
-            category: 'Transport Vehicle',
-            brand: 'Volvo',
-            model: 'FM 400',
-            condition: 'Good',
-            location: 'Main Warehouse',
-            status: 'Available',
-            totalUsageHours: 890.0,
-            totalKilometers: 45000,
-            purchaseDate: '2021-08-20',
-            notes: 'Recently serviced, good condition'
-          },
-          {
-            id: 3,
-            name: 'Pneumatic Drill Set',
-            category: 'Hand Tools',
-            brand: 'DeWalt',
-            model: 'D25133K',
-            condition: 'Excellent',
-            location: 'Tool Storage',
-            status: 'Available',
-            totalUsageHours: 45.5,
-            totalKilometers: 0,
-            purchaseDate: '2023-01-10',
-            notes: 'New equipment, minimal usage'
-          },
-          {
-            id: 4,
-            name: 'Tower Crane TC-5216',
-            category: 'Heavy Machinery',
-            brand: 'Liebherr',
-            model: 'TC-5216',
-            condition: 'Good',
-            location: 'Main Warehouse',
-            status: 'Available',
-            totalUsageHours: 2100.0,
-            totalKilometers: 0,
-            purchaseDate: '2020-11-05',
-            notes: 'Professional operator required'
-          },
-          {
-            id: 5,
-            name: 'Generator 50KW Diesel',
-            category: 'Power Equipment',
-            brand: 'Cummins',
-            model: 'C50D5',
-            condition: 'Good',
-            location: 'Power Equipment Bay',
-            status: 'Available',
-            totalUsageHours: 680.0,
-            totalKilometers: 0,
-            purchaseDate: '2021-06-12',
-            notes: 'Fuel efficient, reliable power source'
-          }
-        ];
-        setEquipment(mockEquipment);
-      } catch (error) {
-        console.error('Error fetching equipment:', error);
-      } finally {
+    setLoading(true);
+    fetch("http://localhost:8080/api/equipment/all")
+      .then((response) => {
+        if (!response.ok) {
+          throw new Error("Failed to fetch equipment data");
+        }
+        return response.json();
+      })
+      .then((data) => {
+        setEquipment(data);
         setLoading(false);
-      }
-    };
-
-    fetchEquipment();
+      })
+      .catch((err) => {
+        console.error("Error fetching data:", err);
+        setError(err.message);
+        setLoading(false);
+      });
   }, []);
 
-  const categories = ['All Categories', 'Heavy Machinery', 'Transport Vehicle', 'Hand Tools', 'Power Equipment', 'Safety Equipment'];
-  const statuses = ['Available', 'In Use', 'Maintenance', 'All'];
+  console.log("Equipment data:", equipment);
+  
+  const categories = ['All Categories', 'Heavy Equipment', 'Transport Vehicle', 'Hand Tools', 'Power Equipment', 'Safety Equipment'];
 
   const filteredEquipment = equipment.filter(item => {
     const matchesSearch = item.name.toLowerCase().includes(searchTerm.toLowerCase()) ||
@@ -128,6 +80,8 @@ const EquipmentSelection = () => {
     
     return matchesSearch && matchesCategory && matchesStatus;
   });
+
+  console.log("Filtered equipment:", filteredEquipment);
 
   const handleEquipmentSelect = (equipmentId) => {
     setSelectedEquipment(prev => {
@@ -145,14 +99,107 @@ const EquipmentSelection = () => {
       return;
     }
     
-    // Navigate to request form with selected equipment
-    navigate(`/site-manager/equipment-request/${projectId}`, {
-      state: { selectedEquipment: selectedEquipment }
-    });
+    // Show the request form
+    setShowRequestForm(true);
+  };
+
+  const handleFormSubmit = async (e) => {
+    e.preventDefault();
+    
+    if (!requestData.requestedStartDate || !requestData.requestedEndDate) {
+      alert('Please fill in all required fields');
+      return;
+    }
+
+    setSubmitting(true);
+    setError("");
+    setLoadingProgress(0);
+
+    const progressInterval = setInterval(() => {
+      setLoadingProgress((p) => (p >= 90 ? p : p + Math.random() * 5));
+    }, 200);
+
+    try {
+      setLoadingProgress(10);
+
+      const requestBody = {
+        projectId: projectId || "P1989",
+        siteManagerId: authState.user.managerId,
+        requestDate: new Date().toISOString(),
+        requestedStartDate: new Date(requestData.requestedStartDate).toISOString(),
+        requestedEndDate: new Date(requestData.requestedEndDate).toISOString(),
+        priority: requestData.priority,
+        status: "Pending",
+        additionalNotes: requestData.additionalNotes,
+        rejectionReason: null,
+        approvalDate: null,
+        approvedBy: null,
+        equipmentIds: selectedEquipment,
+        requestPurpose: requestData.requestPurpose,
+        expectedLocation: requestData.expectedLocation
+      };
+
+      console.log("Sending Request Body:", JSON.stringify(requestBody, null, 2));
+
+      setLoadingProgress(25);
+
+      const response = await fetch("http://localhost:8080/api/equipment-requests", {
+        method: "POST",
+        headers: {
+          "Content-Type": "application/json",
+        },
+        body: JSON.stringify(requestBody),
+      });
+
+      setLoadingProgress(50);
+
+      if (!response.ok) {
+        throw new Error("Failed to submit equipment request");
+      }
+
+      const result = await response.json();
+      
+      setLoadingProgress(90);
+      
+      console.log("Success Response:", result);
+      
+      // Reset form and selections
+      setSelectedEquipment([]);
+      setShowRequestForm(false);
+      setRequestData({
+        requestedStartDate: '',
+        requestedEndDate: '',
+        priority: 'High',
+        additionalNotes: '',
+        requestPurpose: '',
+        expectedLocation: ''
+      });
+      
+      setLoadingProgress(100);
+      toast.success("Equipment request submitted successfully!");
+      navigate(`/site-manager/project-equipment/${projectId}`);
+      
+    } catch (error) {
+      console.error("Error submitting request:", error);
+      setError(error.message);
+      toast.error("Failed to submit equipment request. Please try again.");
+    } finally {
+      setSubmitting(false);
+      clearInterval(progressInterval);
+      setLoadingProgress(0);
+    }
+  };
+
+  const handleInputChange = (field, value) => {
+    setRequestData(prev => ({
+      ...prev,
+      [field]: value
+    }));
   };
 
   const getCategoryIcon = (category) => {
     switch (category) {
+      case 'Heavy Equipment': return <Settings className="w-5 h-5" />;
       case 'Heavy Machinery': return <Settings className="w-5 h-5" />;
       case 'Transport Vehicle': return <Truck className="w-5 h-5" />;
       case 'Hand Tools': return <Wrench className="w-5 h-5" />;
@@ -163,9 +210,9 @@ const EquipmentSelection = () => {
 
   const getStatusColor = (status) => {
     switch (status) {
-      case 'Available': return 'bg-green-100 text-green-800';
-      case 'In Use': return 'bg-blue-100 text-blue-800';
-      case 'Maintenance': return 'bg-yellow-100 text-yellow-800';
+      case 'AVAILABLE': return 'bg-green-100 text-green-800';
+      case 'IN_USE': return 'bg-blue-100 text-blue-800';
+      case 'MAINTENANCE': return 'bg-yellow-100 text-yellow-800';
       default: return 'bg-gray-100 text-gray-800';
     }
   };
@@ -281,9 +328,10 @@ const EquipmentSelection = () => {
               onChange={(e) => setStatusFilter(e.target.value)}
               className="px-4 py-3 border border-gray-300 rounded-lg focus:outline-none focus:ring-2 focus:ring-web_yellow focus:border-transparent transition-all duration-150"
             >
-              {statuses.map(status => (
-                <option key={status} value={status}>{status}</option>
-              ))}
+              <option value="All">All</option>
+              <option value="AVAILABLE">Available</option>
+              <option value="IN_USE">In Use</option>
+              <option value="MAINTENANCE">Maintenance</option>
             </select>
           </div>
         </div>
@@ -338,15 +386,13 @@ const EquipmentSelection = () => {
                       <span className="font-medium text-main_dark">{item.condition}</span>
                     </div>
                     <div className="flex justify-between text-sm">
-                      <span className="text-slatebluegray">Total Hours:</span>
-                      <span className="font-medium text-main_dark">{item.totalUsageHours.toFixed(1)}h</span>
+                      <span className="text-slatebluegray">Serial Number:</span>
+                      <span className="font-medium text-main_dark">{item.serialNumber}</span>
                     </div>
-                    {item.totalKilometers > 0 && (
-                      <div className="flex justify-between text-sm">
-                        <span className="text-slatebluegray">Total KM:</span>
-                        <span className="font-medium text-main_dark">{item.totalKilometers.toLocaleString()}</span>
-                      </div>
-                    )}
+                    <div className="flex justify-between text-sm">
+                      <span className="text-slatebluegray">Purchase Date:</span>
+                      <span className="font-medium text-main_dark">{new Date(item.purchaseDate).toLocaleDateString()}</span>
+                    </div>
                     <div className="flex justify-between text-sm">
                       <span className="text-slatebluegray">Location:</span>
                       <span className="font-medium text-main_dark">{item.location}</span>
@@ -374,7 +420,7 @@ const EquipmentSelection = () => {
               onClick={() => {
                 setSearchTerm('');
                 setCategoryFilter('All Categories');
-                setStatusFilter('Available');
+                setStatusFilter('AVAILABLE');
               }}
               className="text-deep_green hover:text-deep_green/80 font-medium"
             >
@@ -403,8 +449,174 @@ const EquipmentSelection = () => {
             </div>
           </div>
         )}
+
+        {/* Equipment Request Form Modal */}
+        {showRequestForm && (
+          <div className="fixed inset-0 bg-black bg-opacity-50 flex items-center justify-center z-50 p-4">
+            <div className="bg-white rounded-xl shadow-2xl max-w-2xl w-full max-h-[90vh] overflow-y-auto">
+              <div className="sticky top-0 bg-white border-b border-gray-200 px-6 py-4 rounded-t-xl">
+                <div className="flex items-center justify-between">
+                  <h2 className="text-2xl font-bold text-main_dark">Equipment Request Details</h2>
+                  <button
+                    onClick={() => setShowRequestForm(false)}
+                    className="text-gray-400 hover:text-gray-600 transition-colors"
+                  >
+                    <div className="w-6 h-6">✕</div>
+                  </button>
+                </div>
+                <p className="text-slatebluegray mt-1">
+                  {selectedEquipment.length} equipment item{selectedEquipment.length !== 1 ? 's' : ''} selected
+                </p>
+              </div>
+
+              <form onSubmit={handleFormSubmit} className="p-6 space-y-6">
+                {/* Selected Equipment Preview */}
+                <div className="bg-gray-50 rounded-lg p-4">
+                  <h3 className="font-semibold text-main_dark mb-3">Selected Equipment:</h3>
+                  <div className="space-y-2">
+                    {selectedEquipment.map(equipmentId => {
+                      const item = equipment.find(eq => eq.id === equipmentId);
+                      return item ? (
+                        <div key={equipmentId} className="flex items-center gap-3 bg-white p-3 rounded-lg border">
+                          <div className="w-8 h-8 bg-gradient-to-br from-deep_green/20 to-web_yellow/20 rounded-lg flex items-center justify-center">
+                            {getCategoryIcon(item.category)}
+                          </div>
+                          <div>
+                            <p className="font-medium text-main_dark">{item.name}</p>
+                            <p className="text-sm text-slatebluegray">{item.brand} {item.model}</p>
+                          </div>
+                        </div>
+                      ) : null;
+                    })}
+                  </div>
+                </div>
+
+                {/* Form Fields */}
+                <div className="grid grid-cols-1 md:grid-cols-2 gap-4">
+                  <div>
+                    <label className="block text-sm font-medium text-main_dark mb-2">
+                      Requested Start Date *
+                    </label>
+                    <input
+                      type="datetime-local"
+                      value={requestData.requestedStartDate}
+                      onChange={(e) => handleInputChange('requestedStartDate', e.target.value)}
+                      className="w-full px-4 py-3 border border-gray-300 rounded-lg focus:outline-none focus:ring-2 focus:ring-web_yellow focus:border-transparent"
+                      required
+                    />
+                  </div>
+
+                  <div>
+                    <label className="block text-sm font-medium text-main_dark mb-2">
+                      Requested End Date *
+                    </label>
+                    <input
+                      type="datetime-local"
+                      value={requestData.requestedEndDate}
+                      onChange={(e) => handleInputChange('requestedEndDate', e.target.value)}
+                      className="w-full px-4 py-3 border border-gray-300 rounded-lg focus:outline-none focus:ring-2 focus:ring-web_yellow focus:border-transparent"
+                      required
+                    />
+                  </div>
+                </div>
+
+                <div className="grid grid-cols-1 md:grid-cols-2 gap-4">
+                  <div>
+                    <label className="block text-sm font-medium text-main_dark mb-2">
+                      Priority
+                    </label>
+                    <select
+                      value={requestData.priority}
+                      onChange={(e) => handleInputChange('priority', e.target.value)}
+                      className="w-full px-4 py-3 border border-gray-300 rounded-lg focus:outline-none focus:ring-2 focus:ring-web_yellow focus:border-transparent"
+                    >
+                      <option value="High">High</option>
+                      <option value="Medium">Medium</option>
+                      <option value="Low">Low</option>
+                    </select>
+                  </div>
+
+                  <div>
+                    <label className="block text-sm font-medium text-main_dark mb-2">
+                      Expected Location
+                    </label>
+                    <input
+                      type="text"
+                      value={requestData.expectedLocation}
+                      onChange={(e) => handleInputChange('expectedLocation', e.target.value)}
+                      placeholder="e.g., Colombo Main Site"
+                      className="w-full px-4 py-3 border border-gray-300 rounded-lg focus:outline-none focus:ring-2 focus:ring-web_yellow focus:border-transparent"
+                    />
+                  </div>
+                </div>
+
+                <div>
+                  <label className="block text-sm font-medium text-main_dark mb-2">
+                    Request Purpose
+                  </label>
+                  <input
+                    type="text"
+                    value={requestData.requestPurpose}
+                    onChange={(e) => handleInputChange('requestPurpose', e.target.value)}
+                    placeholder="e.g., Excavation and soil removal"
+                    className="w-full px-4 py-3 border border-gray-300 rounded-lg focus:outline-none focus:ring-2 focus:ring-web_yellow focus:border-transparent"
+                  />
+                </div>
+
+                <div>
+                  <label className="block text-sm font-medium text-main_dark mb-2">
+                    Additional Notes
+                  </label>
+                  <textarea
+                    value={requestData.additionalNotes}
+                    onChange={(e) => handleInputChange('additionalNotes', e.target.value)}
+                    placeholder="Any additional information or special requirements..."
+                    rows={4}
+                    className="w-full px-4 py-3 border border-gray-300 rounded-lg focus:outline-none focus:ring-2 focus:ring-web_yellow focus:border-transparent resize-none"
+                  />
+                </div>
+
+                {/* Form Actions */}
+                <div className="flex gap-4 pt-4 border-t border-gray-200">
+                  <button
+                    type="button"
+                    onClick={() => setShowRequestForm(false)}
+                    className="flex-1 px-6 py-3 border border-gray-300 text-gray-700 rounded-lg font-semibold hover:bg-gray-50 transition-colors duration-150"
+                  >
+                    Cancel
+                  </button>
+                  <button
+                    type="submit"
+                    disabled={submitting}
+                    className="flex-1 bg-deep_green text-white px-6 py-3 rounded-lg font-semibold hover:bg-deep_green/90 transition-colors duration-150 flex items-center justify-center gap-2 disabled:opacity-50 disabled:cursor-not-allowed"
+                  >
+                    {submitting ? (
+                      <>
+                        <div className="animate-spin rounded-full h-4 w-4 border-b-2 border-white"></div>
+                        Submitting...
+                      </>
+                    ) : (
+                      <>
+                        <Plus className="w-4 h-4" />
+                        Submit Request
+                      </>
+                    )}
+                  </button>
+                </div>
+              </form>
+            </div>
+          </div>
+        )}
       </div>
     </div>
+    
+    {/* Loading Overlay */}
+    {submitting && (
+      <LoadingOverlay 
+        message="Submitting Equipment Request..." 
+        progress={loadingProgress}
+      />
+    )}
     </>
   );
 };
