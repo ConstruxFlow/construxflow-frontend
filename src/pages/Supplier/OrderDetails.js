@@ -12,6 +12,7 @@ import {
   FaBoxOpen,
   FaCalendarAlt,
   FaPrint,
+  FaTimes,
 } from "react-icons/fa";
 import NavBar from "../../components/NavBar";
 
@@ -38,6 +39,7 @@ const OrderDetails = () => {
   const [error, setError] = useState(null);
   const [updating, setUpdating] = useState(false);
   const [projectName, setProjectName] = useState("N/A");
+  const [showDispatchModal, setShowDispatchModal] = useState(false);
 
   useEffect(() => {
     if (ponumber) {
@@ -304,39 +306,30 @@ const OrderDetails = () => {
     const statuses = [
       { label: "Ordered", icon: <FaCheckCircle />, status: "ordered" },
       { label: "Dispatched", icon: <FaTruck />, status: "dispatched" },
-      { label: "Delivered", icon: <FaRegCircle />, status: "delivered" },
+      { label: "Delivered", icon: <FaCheckCircle />, status: "delivered" },
     ];
 
     const currentStatus = orderData?.status?.toLowerCase() || "";
 
     return statuses.map((step) => {
       let completed = false;
-      let date = "Pending";
 
       if (step.status === "ordered") {
         completed = true;
-        date = formatDate(orderData?.orderDate);
       } else if (step.status === "dispatched") {
         completed = ["dispatched", "delivered", "completed"].includes(
           currentStatus
         );
-        date = completed ? formatDate(orderData?.orderDate) : "Pending";
       } else if (step.status === "delivered") {
         completed = ["delivered", "completed"].includes(currentStatus);
-        date = completed ? formatDate(orderData?.deliveryDate) : "Pending";
       }
 
-      return { ...step, completed, date };
+      return { ...step, completed };
     });
   };
 
   const handleMarkAsDispatched = async () => {
-    if (
-      !window.confirm("Are you sure you want to mark this order as dispatched?")
-    ) {
-      return;
-    }
-
+    setShowDispatchModal(false);
     setUpdating(true);
 
     try {
@@ -652,9 +645,6 @@ const OrderDetails = () => {
                     <span className="text-main_dark text-sm font-semibold">
                       {step.label}
                     </span>
-                    <span className="text-slatebluegray text-xs">
-                      {step.date}
-                    </span>
                   </div>
                   {idx < statusTimeline.length - 1 && (
                     <div
@@ -670,7 +660,7 @@ const OrderDetails = () => {
               orderData.status?.toLowerCase() === "approved") && (
               <div className="flex justify-center mt-6 no-print">
                 <button
-                  onClick={handleMarkAsDispatched}
+                  onClick={() => setShowDispatchModal(true)}
                   disabled={updating}
                   className={`bg-web_yellow text-main_dark font-semibold px-6 py-2 rounded hover:opacity-90 transition ${
                     updating ? "opacity-50 cursor-not-allowed" : ""
@@ -767,6 +757,59 @@ const OrderDetails = () => {
           </div>
         </div>
       </div>
+
+      {/* Dispatch Confirmation Modal */}
+      {showDispatchModal && (
+        <div className="fixed inset-0 z-50 flex items-center justify-center bg-black bg-opacity-50 no-print">
+          <div className="bg-white rounded-lg shadow-xl max-w-md w-full mx-4 animate-fade-in">
+            <div className="flex items-center justify-between p-5 border-b border-gray-200">
+              <h3 className="text-xl font-semibold text-gray-900">
+                Confirm Dispatch
+              </h3>
+              <button
+                onClick={() => setShowDispatchModal(false)}
+                className="text-gray-400 hover:text-gray-600 transition"
+              >
+                <FaTimes className="w-5 h-5" />
+              </button>
+            </div>
+            <div className="p-6">
+              <div className="flex items-start gap-4">
+                <div className="flex-shrink-0">
+                  <FaTruck className="w-12 h-12 text-web_yellow" />
+                </div>
+                <div>
+                  <p className="text-gray-700 mb-2">
+                    Are you sure you want to mark this order as{" "}
+                    <span className="font-semibold">dispatched</span>?
+                  </p>
+                  <p className="text-sm text-gray-500">
+                    Order: <span className="font-medium">{orderData.ponumber}</span>
+                  </p>
+                  <p className="text-sm text-gray-500">
+                    This action will update the order status and notify relevant parties.
+                  </p>
+                </div>
+              </div>
+            </div>
+            <div className="flex items-center justify-end gap-3 p-5 border-t border-gray-200">
+              <button
+                onClick={() => setShowDispatchModal(false)}
+                className="px-5 py-2.5 text-sm font-medium text-gray-700 bg-white border border-gray-300 rounded-lg hover:bg-gray-100 transition"
+              >
+                Cancel
+              </button>
+              <button
+                onClick={handleMarkAsDispatched}
+                disabled={updating}
+                className="px-5 py-2.5 text-sm font-medium text-main_dark bg-web_yellow rounded-lg hover:opacity-90 transition disabled:opacity-50"
+              >
+                {updating ? "Processing..." : "Confirm Dispatch"}
+              </button>
+            </div>
+          </div>
+        </div>
+      )}
     </div>
   );
 };
