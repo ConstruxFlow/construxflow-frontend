@@ -1,5 +1,5 @@
 import React, { useState, useEffect } from 'react';
-import { Calendar, MapPin, Settings, Save, X, Clock, Wrench, AlertTriangle } from 'lucide-react';
+import { Calendar, MapPin, Settings, Save, X, Clock, Wrench, AlertTriangle, Ban } from 'lucide-react';
 
 const API_BASE = import.meta?.env?.VITE_API_BASE ?? 'http://localhost:8080/api';
 
@@ -90,6 +90,13 @@ const ScheduleForm = ({ equipmentId }) => {
 
   const handleSubmit = async (e) => {
     e.preventDefault();
+    
+    // Check if equipment is under maintenance
+    if (equipmentInfo?.currentStatus === 'UNDER_MAINTENANCE') {
+      setError('This equipment is currently under maintenance and cannot be scheduled.');
+      return;
+    }
+
     setIsSubmitting(true);
     setError('');
     
@@ -116,6 +123,13 @@ const ScheduleForm = ({ equipmentId }) => {
           specialInstructions: ''
         });
         setHasMaintenanceConflict(false);
+        
+        // Refresh equipment data to get updated status
+        const refreshResponse = await fetch(`${API_BASE}/equipment-schedule/form-data/${equipmentId}`);
+        if (refreshResponse.ok) {
+          const refreshedData = await refreshResponse.json();
+          setEquipmentInfo(refreshedData);
+        }
       } else {
         const errorData = await response.text();
         throw new Error(errorData || 'Failed to schedule equipment');
@@ -147,8 +161,15 @@ const ScheduleForm = ({ equipmentId }) => {
       });
 
       if (response.ok) {
-        alert('Maintenance request sent successfully! The maintenance team has been notified.');
+        alert('Maintenance request sent successfully! The equipment status has been updated to UNDER MAINTENANCE.');
         setHasMaintenanceConflict(false);
+        
+        // Refresh equipment data to get updated status
+        const refreshResponse = await fetch(`${API_BASE}/equipment-schedule/form-data/${equipmentId}`);
+        if (refreshResponse.ok) {
+          const refreshedData = await refreshResponse.json();
+          setEquipmentInfo(refreshedData);
+        }
       } else {
         throw new Error('Failed to send maintenance request');
       }
@@ -179,6 +200,24 @@ const ScheduleForm = ({ equipmentId }) => {
       specialInstructions: ''
     });
     setHasMaintenanceConflict(false);
+  };
+
+  const getStatusColor = (status) => {
+    switch (status) {
+      case 'AVAILABLE': return 'bg-deep_green/10 text-deep_green';
+      case 'UNDER_MAINTENANCE': return 'bg-red-100 text-red-800';
+      case 'ON_A_SITE': return 'bg-web_yellow/10 text-web_yellow';
+      default: return 'bg-light_gray/40 text-slatebluegray';
+    }
+  };
+
+  const getStatusDisplay = (status) => {
+    switch (status) {
+      case 'AVAILABLE': return 'Available';
+      case 'UNDER_MAINTENANCE': return 'Under Maintenance';
+      case 'ON_A_SITE': return 'In Use';
+      default: return status;
+    }
   };
 
   const getPriorityColor = (priority) => {
@@ -215,6 +254,8 @@ const ScheduleForm = ({ equipmentId }) => {
     );
   }
 
+  const isEquipmentUnderMaintenance = equipmentInfo?.currentStatus === 'UNDER_MAINTENANCE';
+
   return (
     <div className="bg-purewhite border border-gray-200 rounded-xl shadow-sm overflow-hidden">
       {/* Form Header */}
@@ -232,8 +273,23 @@ const ScheduleForm = ({ equipmentId }) => {
         </div>
       )}
 
+      {/* Equipment Under Maintenance Warning */}
+      {isEquipmentUnderMaintenance && (
+        <div className="mx-6 mt-4 bg-red-50 border border-red-200 rounded-lg p-4">
+          <div className="flex items-start gap-3">
+            <Ban className="w-5 h-5 text-red-600 mt-0.5 flex-shrink-0" />
+            <div className="flex-1">
+              <h4 className="text-red-800 font-semibold text-sm mb-1">Equipment Under Maintenance</h4>
+              <p className="text-red-700 text-sm">
+                This equipment is currently under maintenance and cannot be scheduled until maintenance is completed.
+              </p>
+            </div>
+          </div>
+        </div>
+      )}
+
       {/* Maintenance Conflict Warning */}
-      {hasMaintenanceConflict && (
+      {hasMaintenanceConflict && !isEquipmentUnderMaintenance && (
         <div className="mx-6 mt-4 bg-orange-50 border border-orange-200 rounded-lg p-4">
           <div className="flex items-start gap-3">
             <AlertTriangle className="w-5 h-5 text-orange-600 mt-0.5 flex-shrink-0" />
@@ -306,26 +362,43 @@ const ScheduleForm = ({ equipmentId }) => {
             </div>
           </div>
           
-          {/* Next Maintenance Date */}
-          <div className="mt-4">
-            <label className="block text-sm font-medium text-slatebluegray mb-2">
-              Next Maintenance Date
-            </label>
-            <div className="relative">
-              <input
-                type="text"
-                value={equipmentInfo?.nextMaintenance || 'Not scheduled'}
-                readOnly
-                className="w-full px-4 py-3 pl-12 border border-gray-300 rounded-lg bg-gray-50 text-gray-600"
-              />
-              <Wrench className="absolute left-4 top-3.5 w-4 h-4 text-deep_green pointer-events-none" />
+          {/* Equipment Status and Next Maintenance Date */}
+          <div className="grid grid-cols-1 md:grid-cols-2 gap-6 mt-4">
+            <div>
+              <label className="block text-sm font-medium text-slatebluegray mb-2">
+                Current Status
+              </label>
+              <div className="relative">
+                <input
+                  type="text"
+                  value={getStatusDisplay(equipmentInfo?.currentStatus) || 'Unknown'}
+                  readOnly
+                  className={`w-full px-4 py-3 pl-12 border border-gray-300 rounded-lg bg-gray-50 font-medium ${getStatusColor(equipmentInfo?.currentStatus)}`}
+                />
+                <Wrench className="absolute left-4 top-3.5 w-4 h-4 text-deep_green pointer-events-none" />
+              </div>
             </div>
-            {checkingConflict && (
-              <p className="text-xs text-web_yellow mt-1 flex items-center gap-1">
-                <div className="animate-spin rounded-full h-3 w-3 border-b-2 border-web_yellow"></div>
-                Checking for maintenance conflicts...
-              </p>
-            )}
+
+            <div>
+              <label className="block text-sm font-medium text-slatebluegray mb-2">
+                Next Maintenance Date
+              </label>
+              <div className="relative">
+                <input
+                  type="text"
+                  value={equipmentInfo?.nextMaintenance || 'Not scheduled'}
+                  readOnly
+                  className="w-full px-4 py-3 pl-12 border border-gray-300 rounded-lg bg-gray-50 text-gray-600"
+                />
+                <Wrench className="absolute left-4 top-3.5 w-4 h-4 text-deep_green pointer-events-none" />
+              </div>
+              {checkingConflict && (
+                <p className="text-xs text-web_yellow mt-1 flex items-center gap-1">
+                  <div className="animate-spin rounded-full h-3 w-3 border-b-2 border-web_yellow"></div>
+                  Checking for maintenance conflicts...
+                </p>
+              )}
+            </div>
           </div>
         </div>
 
@@ -342,9 +415,12 @@ const ScheduleForm = ({ equipmentId }) => {
                   type="date"
                   value={formData.startDate}
                   onChange={(e) => handleInputChange('startDate', e.target.value)}
-                  className="w-full px-4 py-3 pl-12 border border-gray-300 rounded-lg focus:outline-none focus:ring-2 focus:ring-web_yellow focus:border-transparent transition-all duration-150"
+                  className={`w-full px-4 py-3 pl-12 border border-gray-300 rounded-lg focus:outline-none focus:ring-2 focus:ring-web_yellow focus:border-transparent transition-all duration-150 ${
+                    isEquipmentUnderMaintenance ? 'bg-gray-100 cursor-not-allowed' : ''
+                  }`}
                   required
                   min={new Date().toISOString().split('T')[0]}
+                  disabled={isEquipmentUnderMaintenance}
                 />
                 <Calendar className="absolute left-4 top-3.5 w-4 h-4 text-deep_green pointer-events-none" />
               </div>
@@ -359,9 +435,12 @@ const ScheduleForm = ({ equipmentId }) => {
                   type="date"
                   value={formData.endDate}
                   onChange={(e) => handleInputChange('endDate', e.target.value)}
-                  className="w-full px-4 py-3 pl-12 border border-gray-300 rounded-lg focus:outline-none focus:ring-2 focus:ring-web_yellow focus:border-transparent transition-all duration-150"
+                  className={`w-full px-4 py-3 pl-12 border border-gray-300 rounded-lg focus:outline-none focus:ring-2 focus:ring-web_yellow focus:border-transparent transition-all duration-150 ${
+                    isEquipmentUnderMaintenance ? 'bg-gray-100 cursor-not-allowed' : ''
+                  }`}
                   required
                   min={formData.startDate || new Date().toISOString().split('T')[0]}
+                  disabled={isEquipmentUnderMaintenance}
                 />
                 <Calendar className="absolute left-4 top-3.5 w-4 h-4 text-deep_green pointer-events-none" />
               </div>
@@ -375,8 +454,11 @@ const ScheduleForm = ({ equipmentId }) => {
                 <select
                   value={formData.siteName}
                   onChange={(e) => handleInputChange('siteName', e.target.value)}
-                  className="w-full px-4 py-3 pl-12 border border-gray-300 rounded-lg focus:outline-none focus:ring-2 focus:ring-web_yellow focus:border-transparent transition-all duration-150"
+                  className={`w-full px-4 py-3 pl-12 border border-gray-300 rounded-lg focus:outline-none focus:ring-2 focus:ring-web_yellow focus:border-transparent transition-all duration-150 ${
+                    isEquipmentUnderMaintenance ? 'bg-gray-100 cursor-not-allowed' : ''
+                  }`}
                   required
+                  disabled={isEquipmentUnderMaintenance}
                 >
                   <option value="">Select Site</option>
                   {siteOptions.map(site => (
@@ -395,7 +477,10 @@ const ScheduleForm = ({ equipmentId }) => {
                 <select
                   value={formData.shiftType}
                   onChange={(e) => handleInputChange('shiftType', e.target.value)}
-                  className="w-full px-4 py-3 pl-12 border border-gray-300 rounded-lg focus:outline-none focus:ring-2 focus:ring-web_yellow focus:border-transparent transition-all duration-150"
+                  className={`w-full px-4 py-3 pl-12 border border-gray-300 rounded-lg focus:outline-none focus:ring-2 focus:ring-web_yellow focus:border-transparent transition-all duration-150 ${
+                    isEquipmentUnderMaintenance ? 'bg-gray-100 cursor-not-allowed' : ''
+                  }`}
+                  disabled={isEquipmentUnderMaintenance}
                 >
                   <option value="Full Day">Full Day (8 hours)</option>
                   <option value="Half Day">Half Day (4 hours)</option>
@@ -419,7 +504,10 @@ const ScheduleForm = ({ equipmentId }) => {
               <select
                 value={formData.priority}
                 onChange={(e) => handleInputChange('priority', e.target.value)}
-                className="w-full px-4 py-3 border border-gray-300 rounded-lg focus:outline-none focus:ring-2 focus:ring-web_yellow focus:border-transparent transition-all duration-150"
+                className={`w-full px-4 py-3 border border-gray-300 rounded-lg focus:outline-none focus:ring-2 focus:ring-web_yellow focus:border-transparent transition-all duration-150 ${
+                  isEquipmentUnderMaintenance ? 'bg-gray-100 cursor-not-allowed' : ''
+                }`}
+                disabled={isEquipmentUnderMaintenance}
               >
                 <option value="Low">Low</option>
                 <option value="Medium">Medium</option>
@@ -437,14 +525,17 @@ const ScheduleForm = ({ equipmentId }) => {
               value={formData.specialInstructions}
               onChange={(e) => handleInputChange('specialInstructions', e.target.value)}
               rows={4}
-              className="w-full px-4 py-3 border border-gray-300 rounded-lg focus:outline-none focus:ring-2 focus:ring-web_yellow focus:border-transparent resize-none transition-all duration-150"
+              className={`w-full px-4 py-3 border border-gray-300 rounded-lg focus:outline-none focus:ring-2 focus:ring-web_yellow focus:border-transparent resize-none transition-all duration-150 ${
+                isEquipmentUnderMaintenance ? 'bg-gray-100 cursor-not-allowed' : ''
+              }`}
               placeholder="Enter any special instructions for equipment handling or usage..."
+              disabled={isEquipmentUnderMaintenance}
             />
           </div>
         </div>
 
         {/* Current Selection Summary */}
-        {(formData.siteName || formData.priority || formData.startDate) && (
+        {(formData.siteName || formData.priority || formData.startDate) && !isEquipmentUnderMaintenance && (
           <div className="bg-gray-50 border border-gray-200 rounded-lg p-4">
             <h4 className="text-sm font-semibold text-main_dark mb-3">Schedule Summary</h4>
             <div className="space-y-2 text-sm">
@@ -485,7 +576,10 @@ const ScheduleForm = ({ equipmentId }) => {
           <button
             type="button"
             onClick={handleReset}
-            className="px-6 py-3 border border-gray-300 rounded-lg text-slatebluegray hover:text-main_dark font-semibold hover:bg-gray-50 transition-all duration-150"
+            className={`px-6 py-3 border border-gray-300 rounded-lg text-slatebluegray hover:text-main_dark font-semibold hover:bg-gray-50 transition-all duration-150 ${
+              isEquipmentUnderMaintenance ? 'opacity-50 cursor-not-allowed' : ''
+            }`}
+            disabled={isEquipmentUnderMaintenance}
           >
             <X className="w-4 h-4 inline mr-2" />
             Reset
@@ -494,8 +588,10 @@ const ScheduleForm = ({ equipmentId }) => {
           <button
             type="button"
             onClick={handleSaveDraft}
-            disabled={isDraft}
-            className="px-6 py-3 border border-gray-300 rounded-lg text-slatebluegray hover:text-main_dark font-semibold hover:bg-gray-50 transition-all duration-150 flex items-center gap-2 disabled:opacity-50 disabled:cursor-not-allowed"
+            disabled={isDraft || isEquipmentUnderMaintenance}
+            className={`px-6 py-3 border border-gray-300 rounded-lg text-slatebluegray hover:text-main_dark font-semibold hover:bg-gray-50 transition-all duration-150 flex items-center gap-2 ${
+              isEquipmentUnderMaintenance ? 'opacity-50 cursor-not-allowed' : ''
+            }`}
           >
             {isDraft ? (
               <>
@@ -512,8 +608,10 @@ const ScheduleForm = ({ equipmentId }) => {
 
           <button
             type="submit"
-            disabled={isSubmitting || !formData.siteName || !formData.startDate || !formData.endDate}
-            className="bg-web_yellow hover:bg-web_yellow/80 text-main_dark font-semibold px-8 py-3 rounded-lg transition-all duration-150 shadow-sm hover:shadow-md flex items-center gap-2 disabled:opacity-50 disabled:cursor-not-allowed"
+            disabled={isSubmitting || !formData.siteName || !formData.startDate || !formData.endDate || isEquipmentUnderMaintenance}
+            className={`bg-web_yellow hover:bg-web_yellow/80 text-main_dark font-semibold px-8 py-3 rounded-lg transition-all duration-150 shadow-sm hover:shadow-md flex items-center gap-2 ${
+              isEquipmentUnderMaintenance ? 'opacity-50 cursor-not-allowed' : ''
+            }`}
           >
             {isSubmitting ? (
               <>
