@@ -1,8 +1,8 @@
-import React, { useState, useEffect } from 'react';
-import { 
-  FaSearch, 
-  FaFilter, 
-  FaEye, 
+import React, { useState, useEffect, useContext } from "react";
+import {
+  FaSearch,
+  FaFilter,
+  FaEye,
   FaCalendarAlt,
   FaClock,
   FaUser,
@@ -13,28 +13,64 @@ import {
   FaMapMarkerAlt,
   FaCheckCircle,
   FaExclamationTriangle,
-  FaBox
-} from 'react-icons/fa';
-import { toast } from 'react-toastify';
-import { useNavigate } from 'react-router-dom';
-import NavBar from '../../components/NavBar';
+  FaBox,
+} from "react-icons/fa";
+import { toast } from "react-toastify";
+import { useNavigate } from "react-router-dom";
+import NavBar from "../../components/NavBar";
+import axios from "axios";
+import { AuthContext } from "../../Context/AuthContext";
 
 const SiteManagerOrdersOverview = () => {
   const [loading, setLoading] = useState(true);
   const [purchaseOrders, setPurchaseOrders] = useState([]);
   const [filteredOrders, setFilteredOrders] = useState([]);
-  const [searchTerm, setSearchTerm] = useState('');
-  const [selectedStatus, setSelectedStatus] = useState('All Status');
-  const [selectedSupplier, setSelectedSupplier] = useState('All Suppliers');
-  const [selectedDeliveryStatus, setSelectedDeliveryStatus] = useState('All Delivery Status');
+  const [searchTerm, setSearchTerm] = useState("");
+  const [selectedStatus, setSelectedStatus] = useState("All Status");
+  const [selectedSupplier, setSelectedSupplier] = useState("All Suppliers");
+  const [selectedDeliveryStatus, setSelectedDeliveryStatus] = useState(
+    "All Delivery Status"
+  );
   const [currentPage, setCurrentPage] = useState(1);
-  const [sortBy, setSortBy] = useState('orderDate');
-  const [sortOrder, setSortOrder] = useState('desc');
-  const [projectId, setProjectId] = useState('PROJ-9C2264A5'); // This should come from user context or URL
+  const [sortBy, setSortBy] = useState("orderDate");
+  const [sortOrder, setSortOrder] = useState("desc");
+  const [projectId, setProjectId] = useState("");
+  const [projectIds, setProjectIds] = useState([]);
   const itemsPerPage = 10;
+  const { authState } = useContext(AuthContext);
+  // console.log(authState?.user?.managerId);
+  
 
   const navigate = useNavigate();
-//   setProjectId('PROJ-FCEDA5D9'); // Temporary hardcoded project ID for testing
+  // const user = authState?.user?.managerId;
+  const managerId = authState?.user?.managerId;
+  
+  // Fetch projects related to managerId
+  useEffect(() => {
+    if (!managerId) return;
+
+    axios
+      .get("http://localhost:8080/api/projects/all")
+      .then((response) => {
+        console.log("Projects fetched:", response.data);
+        const allProjects = response.data || [];
+        const managerProjects = allProjects.filter(
+          (p) => p.managerId === managerId
+        );
+        setProjectIds(managerProjects.map((p) => p.projectId));
+
+        if (managerProjects.length > 0) {
+          setProjectId(managerProjects[0].projectId);
+        } else {
+          setProjectId(""); // No projects available
+          setLoading(false); // No projects, stop loading
+        }
+      })
+      .catch((error) => {
+        console.error("Error fetching the projects!", error);
+        setLoading(false); // Stop loading on error
+      });
+  }, [managerId]);
 
   useEffect(() => {
     fetchProjectOrders();
@@ -42,66 +78,83 @@ const SiteManagerOrdersOverview = () => {
 
   useEffect(() => {
     filterOrders();
-  }, [purchaseOrders, searchTerm, selectedStatus, selectedSupplier, selectedDeliveryStatus]);
+  }, [
+    purchaseOrders,
+    searchTerm,
+    selectedStatus,
+    selectedSupplier,
+    selectedDeliveryStatus,
+  ]);
 
   const fetchProjectOrders = async () => {
-    if (!projectId) return;
-    
+    if (!projectId) {
+      setPurchaseOrders([]);
+      setLoading(false); // Fix: Stop loading when no projectId
+      return;
+    }
+
     setLoading(true);
     try {
-      const response = await fetch(`http://localhost:8080/api/purchasingorder/project/${projectId}`);
+      const response = await fetch(
+        `http://localhost:8080/api/purchasingorder/project/${projectId}`
+      );
       const data = await response.json();
-      
-      if (data.status === 'success') {
+
+      if (data.status === "success") {
         setPurchaseOrders(data.data || []);
-        console.log("orders", data.data);
       } else {
-        toast.error('Failed to fetch project orders');
+        toast.error("Failed to fetch project orders");
       }
     } catch (error) {
-      toast.error('Network error: Failed to fetch project orders');
-      console.error('Error fetching project orders:', error);
+      toast.error("Network error: Failed to fetch project orders");
+      console.error("Error fetching project orders:", error);
     } finally {
       setLoading(false);
     }
   };
-  
 
   const filterOrders = () => {
-    let filtered = purchaseOrders.filter(order => {
-      const matchesSearch = 
+    let filtered = purchaseOrders.filter((order) => {
+      const matchesSearch =
         order.ponumber.toLowerCase().includes(searchTerm.toLowerCase()) ||
         order.supplier.name.toLowerCase().includes(searchTerm.toLowerCase()) ||
-        order.supplier.company_name.toLowerCase().includes(searchTerm.toLowerCase());
-      
-      const matchesStatus = selectedStatus === 'All Status' || order.status === selectedStatus;
-      const matchesSupplier = selectedSupplier === 'All Suppliers' || order.supplier.name === selectedSupplier;
-      const matchesDeliveryStatus = selectedDeliveryStatus === 'All Delivery Status' || 
+        order.supplier.company_name
+          .toLowerCase()
+          .includes(searchTerm.toLowerCase());
+
+      const matchesStatus =
+        selectedStatus === "All Status" || order.status === selectedStatus;
+      const matchesSupplier =
+        selectedSupplier === "All Suppliers" ||
+        order.supplier.name === selectedSupplier;
+      const matchesDeliveryStatus =
+        selectedDeliveryStatus === "All Delivery Status" ||
         getDeliveryStatus(order) === selectedDeliveryStatus;
-      
-      return matchesSearch && matchesStatus && matchesSupplier && matchesDeliveryStatus;
+
+      return (
+        matchesSearch && matchesStatus && matchesSupplier && matchesDeliveryStatus
+      );
     });
 
-    // Sort filtered results
     filtered.sort((a, b) => {
       let aValue = a[sortBy];
       let bValue = b[sortBy];
-      
-      if (sortBy === 'subTotal') {
+
+      if (sortBy === "subTotal") {
         aValue = parseFloat(aValue) || 0;
         bValue = parseFloat(bValue) || 0;
-      } else if (sortBy === 'orderDate' || sortBy === 'createdDate') {
+      } else if (sortBy === "orderDate" || sortBy === "createdDate") {
         aValue = new Date(aValue);
         bValue = new Date(bValue);
-      } else if (sortBy === 'supplier') {
+      } else if (sortBy === "supplier") {
         aValue = a.supplier.name;
         bValue = b.supplier.name;
-      } else if (sortBy === 'deliveryDate') {
+      } else if (sortBy === "deliveryDate") {
         aValue = new Date(a.deliveries?.[0]?.requiredDate || 0);
         bValue = new Date(b.deliveries?.[0]?.requiredDate || 0);
       }
-      
-      if (sortOrder === 'asc') {
+
+      if (sortOrder === "asc") {
         return aValue > bValue ? 1 : -1;
       } else {
         return aValue < bValue ? 1 : -1;
@@ -114,34 +167,44 @@ const SiteManagerOrdersOverview = () => {
 
   const getStatusColor = (status) => {
     switch (status?.toLowerCase()) {
-      case 'approved': return 'bg-blue-100 text-blue-800';
-      case 'dispatch': return 'bg-yellow-100 text-yellow-800';
-      case 'delivered': return 'bg-green-100 text-green-800';
-      case 'pending': return 'bg-orange-100 text-orange-800';
-      default: return 'bg-gray-100 text-gray-800';
+      case "approved":
+        return "bg-blue-100 text-blue-800";
+      case "dispatched":
+        return "bg-yellow-100 text-yellow-800";
+      case "delivered":
+        return "bg-green-100 text-green-800";
+      case "pending":
+        return "bg-orange-100 text-orange-800";
+      default:
+        return "bg-gray-100 text-gray-800";
     }
   };
 
   const getDeliveryStatus = (order) => {
-    if (!order.deliveries || order.deliveries.length === 0) return 'No Delivery';
-    
-    if (order.status?.toLowerCase() === 'delivered') return 'Delivered';
-    if (order.status?.toLowerCase() === 'shipped') return 'In Transit';
-    
+    if (!order.deliveries || order.deliveries.length === 0) return "No Delivery";
+
+    if (order.status?.toLowerCase() === "delivered") return "Delivered";
+    if (order.status?.toLowerCase() === "shipped") return "In Transit";
+
     const deliveryDate = new Date(order.deliveries[0]?.requiredDate);
     const today = new Date();
-    
-    if (deliveryDate < today) return 'Overdue';
-    return 'Scheduled';
+
+    if (deliveryDate < today) return "Overdue";
+    return "Scheduled";
   };
 
   const getDeliveryStatusColor = (status) => {
     switch (status?.toLowerCase()) {
-      case 'delivered': return 'bg-green-100 text-green-800';
-      case 'in transit': return 'bg-blue-100 text-blue-800';
-      case 'scheduled': return 'bg-yellow-100 text-yellow-800';
-      case 'overdue': return 'bg-red-100 text-red-800';
-      default: return 'bg-gray-100 text-gray-800';
+      case "delivered":
+        return "bg-green-100 text-green-800";
+      case "in transit":
+        return "bg-blue-100 text-blue-800";
+      case "scheduled":
+        return "bg-yellow-100 text-yellow-800";
+      case "overdue":
+        return "bg-red-100 text-red-800";
+      default:
+        return "bg-gray-100 text-gray-800";
     }
   };
 
@@ -152,34 +215,52 @@ const SiteManagerOrdersOverview = () => {
 
   const handleSort = (field) => {
     if (sortBy === field) {
-      setSortOrder(sortOrder === 'asc' ? 'desc' : 'asc');
+      setSortOrder(sortOrder === "asc" ? "desc" : "asc");
     } else {
       setSortBy(field);
-      setSortOrder('asc');
+      setSortOrder("asc");
     }
   };
 
   const formatDate = (dateString) => {
-    if (!dateString) return 'N/A';
+    if (!dateString) return "N/A";
     return new Date(dateString).toLocaleDateString();
   };
 
   // Pagination
   const totalPages = Math.ceil(filteredOrders.length / itemsPerPage);
   const startIndex = (currentPage - 1) * itemsPerPage;
-  const paginatedOrders = filteredOrders.slice(startIndex, startIndex + itemsPerPage);
+  const paginatedOrders = filteredOrders.slice(
+    startIndex,
+    startIndex + itemsPerPage
+  );
 
-  const statuses = ['All Status', 'Approved', 'Shipped', 'Delivered', 'Pending'];
-  const deliveryStatuses = ['All Delivery Status', 'Scheduled', 'In Transit', 'Delivered', 'Overdue'];
-  const suppliers = ['All Suppliers', ...new Set(purchaseOrders.map(order => order.supplier.name))];
+  const statuses = [
+    "All Status",
+    "Approved",
+    "Shipped",
+    "Delivered",
+    "Pending",
+  ];
+  const deliveryStatuses = [
+    "All Delivery Status",
+    "Scheduled",
+    "In Transit",
+    "Delivered",
+    "Overdue",
+  ];
+  const suppliers = [
+    "All Suppliers",
+    ...new Set(purchaseOrders.map((order) => order.supplier.name)),
+  ];
 
   const navLinks = [
-  { name: "Dashboard", href: "/site-manager" },
-          { name: "Projects", href: "/site-manager/projects-list" },
-                     { name: "Materials", href: "/site-manager/materials" },
-          { name: "Inventory", href: "/site-manager/site-inventory" },
+    { name: "Dashboard", href: "/site-manager" },
+    { name: "Projects", href: "/site-manager/projects-list" },
+    { name: "Materials", href: "/site-manager/materials" },
+    { name: "Inventory", href: "/site-manager/site-inventory" },
     { name: "Purchase Orders", href: "/site-manager/order-details" },
-];
+  ];
 
   if (loading) {
     return (
@@ -194,7 +275,12 @@ const SiteManagerOrdersOverview = () => {
 
   return (
     <div className="min-h-screen bg-purewhite font-poppins">
-      <NavBar links={navLinks} showButton={true} logoSrc="/logo1.png" profileURL="profile" />
+      <NavBar
+        links={navLinks}
+        showButton={true}
+        logoSrc="/logo1.png"
+        profileURL="profile"
+      />
 
       <main className="py-4 sm:py-6">
         <div className="max-w-full mx-auto px-2 sm:px-3 lg:px-10">
@@ -205,38 +291,76 @@ const SiteManagerOrdersOverview = () => {
                 Project Orders Overview
               </h1>
               <p className="text-gray-600 text-sm sm:text-base">
-                Project ID: {projectId} • Manage deliveries and materials for your project
+                Manage deliveries and materials for your projects
               </p>
+            </div>
+
+            {/* Project Selection Dropdown */}
+            <div>
+              <label className="block text-sm font-medium text-gray-700 mb-1">
+                Select Project
+              </label>
+              <select
+                value={projectId}
+                onChange={(e) => setProjectId(e.target.value)}
+                className="w-full lg:w-60 px-3 py-2 border border-gray-300 rounded-md focus:outline-none focus:ring-2 focus:ring-web_yellow focus:border-transparent text-sm"
+              >
+                {projectIds.length === 0 ? (
+                  <option value="">No Projects Assigned</option>
+                ) : (
+                  projectIds.map((pid) => (
+                    <option key={pid} value={pid}>
+                      {pid}
+                    </option>
+                  ))
+                )}
+              </select>
             </div>
           </div>
 
           {/* Stats Cards */}
           <div className="grid grid-cols-2 lg:grid-cols-5 gap-4 mb-6">
             <div className="bg-purewhite border border-gray-200 rounded-lg p-4">
-              <div className="text-2xl font-bold text-main_dark">{purchaseOrders.length}</div>
+              <div className="text-2xl font-bold text-main_dark">
+                {purchaseOrders.length}
+              </div>
               <div className="text-sm text-gray-600">Total Orders</div>
             </div>
             <div className="bg-purewhite border border-gray-200 rounded-lg p-4">
               <div className="text-2xl font-bold text-blue-600">
-                {purchaseOrders.filter(order => order.status === 'Approved').length}
+                {
+                  purchaseOrders.filter((order) => order.status === "Approved")
+                    .length
+                }
               </div>
               <div className="text-sm text-gray-600">Approved</div>
             </div>
             <div className="bg-purewhite border border-gray-200 rounded-lg p-4">
               <div className="text-2xl font-bold text-yellow-600">
-                {purchaseOrders.filter(order => order.status === 'Dispatch').length}
+                {
+                  purchaseOrders.filter(
+                    (order) => order.status === "Dispatched"
+                  ).length
+                }
               </div>
               <div className="text-sm text-gray-600">In Transit</div>
             </div>
             <div className="bg-purewhite border border-gray-200 rounded-lg p-4">
               <div className="text-2xl font-bold text-green-600">
-                {purchaseOrders.filter(order => order.status === 'Delivered').length}
+                {
+                  purchaseOrders.filter((order) => order.status === "Delivered")
+                    .length
+                }
               </div>
               <div className="text-sm text-gray-600">Delivered</div>
             </div>
             <div className="bg-purewhite border border-gray-200 rounded-lg p-4">
               <div className="text-2xl font-bold text-red-600">
-                {purchaseOrders.filter(order => getDeliveryStatus(order) === 'Overdue').length}
+                {
+                  purchaseOrders.filter(
+                    (order) => getDeliveryStatus(order) === "Overdue"
+                  ).length
+                }
               </div>
               <div className="text-sm text-gray-600">Overdue</div>
             </div>
@@ -247,7 +371,9 @@ const SiteManagerOrdersOverview = () => {
             <div className="flex flex-col lg:flex-row gap-4 items-start lg:items-end">
               {/* Search Bar */}
               <div className="flex-1 w-full lg:max-w-md">
-                <label className="block text-sm font-medium text-gray-700 mb-2">Search Orders</label>
+                <label className="block text-sm font-medium text-gray-700 mb-2">
+                  Search Orders
+                </label>
                 <div className="relative">
                   <FaSearch className="absolute left-3 top-3 h-4 w-4 text-gray-400" />
                   <input
@@ -262,42 +388,54 @@ const SiteManagerOrdersOverview = () => {
 
               {/* Status Filter */}
               <div className="w-full lg:w-auto">
-                <label className="block text-sm font-medium text-gray-700 mb-2">Order Status</label>
+                <label className="block text-sm font-medium text-gray-700 mb-2">
+                  Order Status
+                </label>
                 <select
                   value={selectedStatus}
                   onChange={(e) => setSelectedStatus(e.target.value)}
                   className="w-full lg:w-40 px-3 py-2 border border-gray-300 rounded-md focus:outline-none focus:ring-2 focus:ring-web_yellow focus:border-transparent text-sm"
                 >
-                  {statuses.map(status => (
-                    <option key={status} value={status}>{status}</option>
+                  {statuses.map((status) => (
+                    <option key={status} value={status}>
+                      {status}
+                    </option>
                   ))}
                 </select>
               </div>
 
               {/* Delivery Status Filter */}
               <div className="w-full lg:w-auto">
-                <label className="block text-sm font-medium text-gray-700 mb-2">Delivery Status</label>
+                <label className="block text-sm font-medium text-gray-700 mb-2">
+                  Delivery Status
+                </label>
                 <select
                   value={selectedDeliveryStatus}
                   onChange={(e) => setSelectedDeliveryStatus(e.target.value)}
                   className="w-full lg:w-40 px-3 py-2 border border-gray-300 rounded-md focus:outline-none focus:ring-2 focus:ring-web_yellow focus:border-transparent text-sm"
                 >
-                  {deliveryStatuses.map(status => (
-                    <option key={status} value={status}>{status}</option>
+                  {deliveryStatuses.map((status) => (
+                    <option key={status} value={status}>
+                      {status}
+                    </option>
                   ))}
                 </select>
               </div>
 
               {/* Supplier Filter */}
               <div className="w-full lg:w-auto">
-                <label className="block text-sm font-medium text-gray-700 mb-2">Supplier</label>
+                <label className="block text-sm font-medium text-gray-700 mb-2">
+                  Supplier
+                </label>
                 <select
                   value={selectedSupplier}
                   onChange={(e) => setSelectedSupplier(e.target.value)}
                   className="w-full lg:w-40 px-3 py-2 border border-gray-300 rounded-md focus:outline-none focus:ring-2 focus:ring-web_yellow focus:border-transparent text-sm"
                 >
-                  {suppliers.map(supplier => (
-                    <option key={supplier} value={supplier}>{supplier}</option>
+                  {suppliers.map((supplier) => (
+                    <option key={supplier} value={supplier}>
+                      {supplier}
+                    </option>
                   ))}
                 </select>
               </div>
@@ -307,7 +445,9 @@ const SiteManagerOrdersOverview = () => {
           {/* Results Summary */}
           <div className="flex flex-col sm:flex-row sm:items-center sm:justify-between mb-4 gap-2">
             <p className="text-sm text-gray-600">
-              Showing {startIndex + 1} to {Math.min(startIndex + itemsPerPage, filteredOrders.length)} of {filteredOrders.length} orders
+              Showing {startIndex + 1} to{" "}
+              {Math.min(startIndex + itemsPerPage, filteredOrders.length)} of{" "}
+              {filteredOrders.length} orders
             </p>
           </div>
 
@@ -321,15 +461,17 @@ const SiteManagerOrdersOverview = () => {
                     <th className="px-6 py-4 text-left text-sm font-semibold text-main_dark">
                       PO Number
                     </th>
-                    <th 
+                    <th
                       className="px-6 py-4 text-left text-sm font-semibold text-main_dark cursor-pointer hover:bg-light_brown/50"
-                      onClick={() => handleSort('supplier')}
+                      onClick={() => handleSort("supplier")}
                     >
                       <div className="flex items-center gap-2">
                         <FaBuilding className="w-4 h-4" />
                         Supplier
-                        {sortBy === 'supplier' && (
-                          <span className="text-xs">{sortOrder === 'asc' ? '↑' : '↓'}</span>
+                        {sortBy === "supplier" && (
+                          <span className="text-xs">
+                            {sortOrder === "asc" ? "↑" : "↓"}
+                          </span>
                         )}
                       </div>
                     </th>
@@ -339,54 +481,73 @@ const SiteManagerOrdersOverview = () => {
                         Materials
                       </div>
                     </th>
-                    <th 
+                    <th
                       className="px-6 py-4 text-left text-sm font-semibold text-main_dark cursor-pointer hover:bg-light_brown/50"
-                      onClick={() => handleSort('deliveryDate')}
+                      onClick={() => handleSort("deliveryDate")}
                     >
                       <div className="flex items-center gap-2">
                         <FaTruck className="w-4 h-4" />
                         Delivery
-                        {sortBy === 'deliveryDate' && (
-                          <span className="text-xs">{sortOrder === 'asc' ? '↑' : '↓'}</span>
+                        {sortBy === "deliveryDate" && (
+                          <span className="text-xs">
+                            {sortOrder === "asc" ? "↑" : "↓"}
+                          </span>
                         )}
                       </div>
                     </th>
-                    <th className="px-6 py-4 text-left text-sm font-semibold text-main_dark">Order Status</th>
-                    <th 
+                    <th className="px-6 py-4 text-left text-sm font-semibold text-main_dark">
+                      Order Status
+                    </th>
+                    <th
                       className="px-6 py-4 text-left text-sm font-semibold text-main_dark cursor-pointer hover:bg-light_brown/50"
-                      onClick={() => handleSort('subTotal')}
+                      onClick={() => handleSort("subTotal")}
                     >
                       <div className="flex items-center gap-2">
                         <FaDollarSign className="w-4 h-4" />
                         Amount
-                        {sortBy === 'subTotal' && (
-                          <span className="text-xs">{sortOrder === 'asc' ? '↑' : '↓'}</span>
+                        {sortBy === "subTotal" && (
+                          <span className="text-xs">
+                            {sortOrder === "asc" ? "↑" : "↓"}
+                          </span>
                         )}
                       </div>
                     </th>
-                    <th className="px-6 py-4 text-left text-sm font-semibold text-main_dark">Actions</th>
+                    <th className="px-6 py-4 text-left text-sm font-semibold text-main_dark">
+                      Actions
+                    </th>
                   </tr>
                 </thead>
                 <tbody className="divide-y divide-gray-200">
                   {paginatedOrders.map((order) => (
-                    <tr key={order.poId} className="hover:bg-gray-50 transition-colors">
+                    <tr
+                      key={order.poId}
+                      className="hover:bg-gray-50 transition-colors"
+                    >
                       <td className="px-6 py-4 text-sm font-medium text-main_dark">
                         {order.ponumber}
                       </td>
                       <td className="px-6 py-4">
                         <div>
-                          <div className="font-semibold text-main_dark text-sm">{order.supplier.name}</div>
-                          <div className="text-xs text-gray-500">{order.supplier.company_name}</div>
+                          <div className="font-semibold text-main_dark text-sm">
+                            {order.supplier.name}
+                          </div>
+                          <div className="text-xs text-gray-500">
+                            {order.supplier.company_name}
+                          </div>
                         </div>
                       </td>
                       <td className="px-6 py-4 text-sm text-gray-600">
                         {order.materials && order.materials.length > 0 ? (
                           <div className="space-y-1">
-                            {order.materials.slice(0, 2).map((material, index) => (
-                              <div key={index} className="text-xs">
-                                {material.material.materialName} ({material.quantity} {material.material.unitOfMeasurement})
-                              </div>
-                            ))}
+                            {order.materials
+                              .slice(0, 2)
+                              .map((material, index) => (
+                                <div key={index} className="text-xs">
+                                  {material.material.materialName} (
+                                  {material.quantity}{" "}
+                                  {material.material.unitOfMeasurement})
+                                </div>
+                              ))}
                             {order.materials.length > 2 && (
                               <div className="text-xs text-gray-400">
                                 +{order.materials.length - 2} more
@@ -402,11 +563,18 @@ const SiteManagerOrdersOverview = () => {
                           <div className="space-y-1">
                             <div className="flex items-center gap-1">
                               <FaMapMarkerAlt className="w-3 h-3 text-gray-400" />
-                              <span className="text-xs">{order.deliveries[0].location.substring(0, 20)}...</span>
+                              <span className="text-xs">
+                                {order.deliveries[0].location.substring(0, 20)}
+                                ...
+                              </span>
                             </div>
-                            <div className={`flex items-center gap-1 text-xs ${
-                              isDeliveryOverdue(order.deliveries[0].requiredDate) ? 'text-red-600' : 'text-gray-600'
-                            }`}>
+                            <div
+                              className={`flex items-center gap-1 text-xs ${
+                                isDeliveryOverdue(order.deliveries[0].requiredDate)
+                                  ? "text-red-600"
+                                  : "text-gray-600"
+                              }`}
+                            >
                               <FaCalendarAlt className="w-3 h-3" />
                               {formatDate(order.deliveries[0].requiredDate)}
                               {isDeliveryOverdue(order.deliveries[0].requiredDate) && (
@@ -419,17 +587,28 @@ const SiteManagerOrdersOverview = () => {
                         )}
                       </td>
                       <td className="px-6 py-4">
-                        <span className={`px-3 py-1 rounded-full text-xs font-medium ${getStatusColor(order.status)}`}>
+                        <span
+                          className={`px-3 py-1 rounded-full text-xs font-medium ${getStatusColor(
+                            order.status
+                          )}`}
+                        >
                           {order.status}
                         </span>
                       </td>
                       <td className="px-6 py-4 text-sm font-semibold text-main_dark">
-                        RS {order.subTotal ? order.subTotal.toLocaleString() : 'N/A'}
+                        RS{" "}
+                        {order.subTotal
+                          ? order.subTotal.toLocaleString()
+                          : "N/A"}
                       </td>
                       <td className="px-6 py-4">
                         <div className="flex items-center gap-2">
-                          <button 
-                            onClick={() => navigate(`/site-manager/order-details/${order.ponumber}`)} 
+                          <button
+                            onClick={() =>
+                              navigate(
+                                `/site-manager/order-details/${order.ponumber}`
+                              )
+                            }
                             className="text-deep_green hover:text-deep_green/80 transition-colors"
                             title="View Details"
                           >
@@ -450,34 +629,51 @@ const SiteManagerOrdersOverview = () => {
                   <div className="flex justify-between items-start mb-3">
                     <div className="flex-1">
                       <div className="flex items-center gap-2 mb-1">
-                        <h3 className="font-semibold text-main_dark text-sm">{order.ponumber}</h3>
+                        <h3 className="font-semibold text-main_dark text-sm">
+                          {order.ponumber}
+                        </h3>
                       </div>
-                      <p className="text-xs text-gray-600 mb-1">{order.supplier.company_name}</p>
+                      <p className="text-xs text-gray-600 mb-1">
+                        {order.supplier.company_name}
+                      </p>
                       <div className="flex items-center gap-2 text-xs text-gray-500">
                         <FaBuilding className="w-3 h-3" />
                         {order.supplier.name}
                       </div>
                     </div>
                     <div className="flex flex-col gap-1">
-                      <span className={`px-2 py-1 rounded-full text-xs font-medium ${getStatusColor(order.status)}`}>
+                      <span
+                        className={`px-2 py-1 rounded-full text-xs font-medium ${getStatusColor(
+                          order.status
+                        )}`}
+                      >
                         {order.status}
                       </span>
-                      <span className={`px-2 py-1 rounded-full text-xs font-medium ${getDeliveryStatusColor(getDeliveryStatus(order))}`}>
+                      <span
+                        className={`px-2 py-1 rounded-full text-xs font-medium ${getDeliveryStatusColor(
+                          getDeliveryStatus(order)
+                        )}`}
+                      >
                         {getDeliveryStatus(order)}
                       </span>
                     </div>
                   </div>
-                  
+
                   <div className="grid grid-cols-2 gap-4 mb-3 text-xs">
                     <div>
                       <span className="text-gray-500">Amount:</span>
                       <div className="font-semibold">
-                        RS {order.subTotal ? order.subTotal.toLocaleString() : 'N/A'}
+                        RS{" "}
+                        {order.subTotal
+                          ? order.subTotal.toLocaleString()
+                          : "N/A"}
                       </div>
                     </div>
                     <div>
                       <span className="text-gray-500">Materials:</span>
-                      <div className="font-semibold">{order.materials?.length || 0} items</div>
+                      <div className="font-semibold">
+                        {order.materials?.length || 0} items
+                      </div>
                     </div>
                   </div>
 
@@ -487,27 +683,37 @@ const SiteManagerOrdersOverview = () => {
                       <div className="text-xs text-gray-500 mb-1">Delivery:</div>
                       <div className="flex items-center gap-1 text-xs">
                         <FaMapMarkerAlt className="w-3 h-3 text-gray-400" />
-                        <span>{order.deliveries[0].location.substring(0, 30)}...</span>
+                        <span>
+                          {order.deliveries[0].location.substring(0, 30)}...
+                        </span>
                       </div>
-                      <div className={`flex items-center gap-1 text-xs mt-1 ${
-                        isDeliveryOverdue(order.deliveries[0].requiredDate) ? 'text-red-600' : 'text-gray-600'
-                      }`}>
+                      <div
+                        className={`flex items-center gap-1 text-xs mt-1 ${
+                          isDeliveryOverdue(order.deliveries[0].requiredDate)
+                            ? "text-red-600"
+                            : "text-gray-600"
+                        }`}
+                      >
                         <FaCalendarAlt className="w-3 h-3" />
                         {formatDate(order.deliveries[0].requiredDate)}
                         {isDeliveryOverdue(order.deliveries[0].requiredDate) && (
-                          <span className="ml-1 px-1 bg-red-100 text-red-800 rounded text-xs">Overdue</span>
+                          <span className="ml-1 px-1 bg-red-100 text-red-800 rounded text-xs">
+                            Overdue
+                          </span>
                         )}
                       </div>
                     </div>
                   )}
-                  
+
                   <div className="flex justify-between items-center">
                     <div className="text-xs text-gray-600">
                       Project: {order.projectId}
                     </div>
                     <div className="flex items-center gap-3">
-                      <button 
-                        onClick={() => navigate(`/sitemanager/orders/details/${order.ponumber}`)} 
+                      <button
+                        onClick={() =>
+                          navigate(`/sitemanager/orders/details/${order.ponumber}`)
+                        }
                         className="text-deep_green hover:text-deep_green/80 transition-colors"
                       >
                         <FaEye className="w-4 h-4" />
@@ -522,10 +728,12 @@ const SiteManagerOrdersOverview = () => {
           {/* Pagination */}
           <div className="flex flex-col sm:flex-row sm:items-center sm:justify-between gap-4">
             <div className="text-sm text-gray-600">
-              Showing {startIndex + 1} to {Math.min(startIndex + itemsPerPage, filteredOrders.length)} of {filteredOrders.length} results
+              Showing {startIndex + 1} to{" "}
+              {Math.min(startIndex + itemsPerPage, filteredOrders.length)} of{" "}
+              {filteredOrders.length} results
             </div>
             <div className="flex items-center gap-2">
-              <button 
+              <button
                 onClick={() => setCurrentPage(Math.max(1, currentPage - 1))}
                 disabled={currentPage === 1}
                 className="px-3 py-1 text-sm text-gray-600 hover:text-gray-900 transition-colors disabled:opacity-50 disabled:cursor-not-allowed"
@@ -538,15 +746,17 @@ const SiteManagerOrdersOverview = () => {
                   onClick={() => setCurrentPage(index + 1)}
                   className={`px-3 py-1 text-sm rounded font-medium transition-colors ${
                     currentPage === index + 1
-                      ? 'bg-web_yellow text-main_dark'
-                      : 'text-gray-600 hover:text-gray-900'
+                      ? "bg-web_yellow text-main_dark"
+                      : "text-gray-600 hover:text-gray-900"
                   }`}
                 >
                   {index + 1}
                 </button>
               ))}
-              <button 
-                onClick={() => setCurrentPage(Math.min(totalPages, currentPage + 1))}
+              <button
+                onClick={() =>
+                  setCurrentPage(Math.min(totalPages, currentPage + 1))
+                }
                 disabled={currentPage === totalPages}
                 className="px-3 py-1 text-sm text-gray-600 hover:text-gray-900 transition-colors disabled:opacity-50 disabled:cursor-not-allowed"
               >
