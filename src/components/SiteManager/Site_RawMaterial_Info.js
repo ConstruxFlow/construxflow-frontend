@@ -704,16 +704,8 @@ export default function Site_RawMaterial_Info() {
                         <td className="px-6 py-4 text-sm text-gray-600">
                           <div className="space-y-1">
                             <div className="flex items-center gap-2">
-                              <FaExclamationTriangle className="w-3 h-3 text-yellow-500" />
-                              <span>Warning: {material.warningLevel}</span>
-                            </div>
-                            <div className="flex items-center gap-2">
-                              <FaExclamationCircle className="w-3 h-3 text-orange-500" />
-                              <span>Critical: {material.criticalLevel}</span>
-                            </div>
-                            <div className="flex items-center gap-2">
-                              <FaTimesCircle className="w-3 h-3 text-red-500" />
-                              <span>Urgent: {material.urgentLevel}</span>
+                              <FaExclamationTriangle className="w-3 h-3 text-gray-400" />
+                              <span>Reorder Level: {material.reorderLevel ?? material.warningLevel ?? 'N/A'} {material.unitOfMeasurement}</span>
                             </div>
                           </div>
                         </td>
@@ -772,13 +764,10 @@ export default function Site_RawMaterial_Info() {
                     </div>
                     
                     <div className="space-y-1 text-xs text-gray-600 mb-3">
-                      <p><span className="font-medium">Current Stock:</span> 
+                      <p><span className="font-medium">Current Stock:</span>
                         <span className={getStockColor(material.stockStatus)}> {material.currentQuantity} {material.unitOfMeasurement}</span>
                       </p>
-                      <p><span className="font-medium">Reorder Levels:</span></p>
-                      <div className="ml-2 space-y-1">
-                        <p>Warning: {material.warningLevel} | Critical: {material.criticalLevel} | Urgent: {material.urgentLevel}</p>
-                      </div>
+                      <p><span className="font-medium">Reorder Level:</span> {material.reorderLevel ?? material.warningLevel ?? 'N/A'} {material.unitOfMeasurement}</p>
                     </div>
 
                     <div className="flex items-center gap-2">
@@ -943,10 +932,9 @@ function UsageHistoryModal({ material, onClose }) {
 
 // Edit Reorder Levels Modal Component
 function EditReorderLevelsModal({ material, onClose, onSave }) {
+  // Use a single reorderLevel field instead of warning/critical/urgent
   const [formData, setFormData] = useState({
-    warningLevel: material.warningLevel || 0,
-    criticalLevel: material.criticalLevel || 0,
-    urgentLevel: material.urgentLevel || 0
+    reorderLevel: material.reorderLevel ?? material.warningLevel ?? 0
   });
   const [saving, setSaving] = useState(false);
 
@@ -958,7 +946,9 @@ function EditReorderLevelsModal({ material, onClose, onSave }) {
     try {
       setSaving(true);
       // For now, just show success message since backend API is not ready
-      alert('Reorder levels updated successfully! (Backend API not implemented yet)');
+      // In future, send `formData.reorderLevel` to backend to persist
+      alert('Reorder level updated successfully! (Backend API not implemented yet)');
+      // Optionally update parent by calling onSave so delivered materials are refreshed
       onSave();
       onClose();
     } catch (error) {
@@ -984,38 +974,15 @@ function EditReorderLevelsModal({ material, onClose, onSave }) {
         <div className="p-6 space-y-4">
           <div>
             <label className="block text-sm font-medium text-gray-700 mb-2">
-              Warning Level ({material.unitOfMeasurement})
+              Reorder Level ({material.unitOfMeasurement})
             </label>
             <input
               type="number"
-              value={formData.warningLevel}
-              onChange={(e) => handleInputChange('warningLevel', e.target.value)}
+              value={formData.reorderLevel}
+              onChange={(e) => handleInputChange('reorderLevel', e.target.value)}
               className="w-full px-3 py-2 border border-gray-300 rounded-md focus:outline-none focus:ring-2 focus:ring-web_yellow focus:border-transparent"
             />
-          </div>
-
-          <div>
-            <label className="block text-sm font-medium text-gray-700 mb-2">
-              Critical Level ({material.unitOfMeasurement})
-            </label>
-            <input
-              type="number"
-              value={formData.criticalLevel}
-              onChange={(e) => handleInputChange('criticalLevel', e.target.value)}
-              className="w-full px-3 py-2 border border-gray-300 rounded-md focus:outline-none focus:ring-2 focus:ring-web_yellow focus:border-transparent"
-            />
-          </div>
-
-          <div>
-            <label className="block text-sm font-medium text-gray-700 mb-2">
-              Urgent Level ({material.unitOfMeasurement})
-            </label>
-            <input
-              type="number"
-              value={formData.urgentLevel}
-              onChange={(e) => handleInputChange('urgentLevel', e.target.value)}
-              className="w-full px-3 py-2 border border-gray-300 rounded-md focus:outline-none focus:ring-2 focus:ring-web_yellow focus:border-transparent"
-            />
+            <p className="text-xs text-gray-500 mt-2">This single value will be used as the reorder threshold for the material.</p>
           </div>
         </div>
 
