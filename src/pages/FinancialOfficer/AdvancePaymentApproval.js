@@ -5,7 +5,6 @@ import {
   FaTimes,
   FaEye,
   FaDownload,
-  FaEdit,
   FaCreditCard,
   FaBuilding,
   FaCalendarAlt,
@@ -14,9 +13,7 @@ import {
   FaBox,
   FaTruck,
 } from "react-icons/fa";
-// import NavBar from "../../../components/NavBar";
 import { toast } from "react-toastify";
-// import LoadingOverlay from "../../../components/LoadingOverlay";
 import { useLocation, useNavigate, useParams } from "react-router-dom";
 import LoadingOverlay from "../../components/LoadingOverlay";
 import NavBar from "../../components/NavBar";
@@ -27,13 +24,19 @@ const AdvancePaymentApproval = () => {
   const navigate = useNavigate();
   const location = useLocation();
   const { orderData } = location.state || {};
-//   const poId = "PO-2025-0001";
-    const poId=useParams().poId;
+  const poId = useParams().poId;
 
   const [poData, setPoData] = useState(orderData || null);
   const [approvalNotes, setApprovalNotes] = useState("");
   const [showApprovalModal, setShowApprovalModal] = useState(false);
   const [approvalAction, setApprovalAction] = useState("");
+
+  // Payment Gateway modal states
+  const [showPaymentModal, setShowPaymentModal] = useState(false);
+  const [accountNumber, setAccountNumber] = useState("1234567890"); // autofill value
+  const [bankName, setBankName] = useState("ABC Bank"); // autofill value
+  const [accountName, setAccountName] = useState(poData?.supplier?.company_name || "Company Name"); // autofill from company
+  const [paymentError, setPaymentError] = useState(null);
 
   console.log("PO Data:", poData?.poId);
 
@@ -46,6 +49,8 @@ const AdvancePaymentApproval = () => {
       const data = await response.json();
       if (response.ok) {
         setPoData(data.data);
+        // Update autofill accountName if poData updated
+        setAccountName(data.data.supplier.company_name || "Company Name");
         console.log(data);
       } else {
         toast.error("Failed to fetch purchase order details");
@@ -59,11 +64,11 @@ const AdvancePaymentApproval = () => {
   };
 
   useEffect(() => {
-  if (poId) {
-    fetchPOData(poId);
-  }
-}, [poId]); 
-
+    if (poId) {
+      fetchPOData(poId);
+    }
+    // eslint-disable-next-line react-hooks/exhaustive-deps
+  }, [poId]);
 
   const handleApprovalAction = async (action) => {
     setIsLoading(true);
@@ -76,8 +81,6 @@ const AdvancePaymentApproval = () => {
       });
     }, 200);
 
-    console.log(action);
-    
     try {
       setLoadingProgress(30);
 
@@ -88,7 +91,6 @@ const AdvancePaymentApproval = () => {
 
       setLoadingProgress(60);
 
-      // API call to update payment status  http://localhost:8080/api/purchasingorder/52/update-status?orderStatus=Approved&paymentStatus=Approved
       const response = await fetch(
         `http://localhost:8080/api/purchasingorder/${poData?.poId}/update-status?orderStatus=${updateData.status2}&paymentStatus=${updateData.status1}`,
         {
@@ -103,6 +105,7 @@ const AdvancePaymentApproval = () => {
 
       if (response.ok) {
         setLoadingProgress(100);
+        setShowPaymentModal(false);
         setTimeout(() => {
           toast.success(
             `Payment ${
@@ -112,13 +115,15 @@ const AdvancePaymentApproval = () => {
           setIsLoading(false);
           setLoadingProgress(0);
           setShowApprovalModal(false);
+          setApprovalNotes("");
           // Update local state
           setPoData((prev) => ({
             ...prev,
             orderPayment: {
               ...prev.orderPayment,
-              status: updateData.status,
-              notes: updateData.notes,
+              status: updateData.status2,
+              // Notes updated with approvalNotes from modal
+              notes: approvalNotes,
             },
           }));
         }, 800);
@@ -126,6 +131,7 @@ const AdvancePaymentApproval = () => {
         throw new Error(`Failed to ${action} payment`);
       }
     } catch (error) {
+      setShowPaymentModal(true);
       toast.error(`Failed to ${action} payment: ` + error.message);
       setIsLoading(false);
       setLoadingProgress(0);
@@ -189,7 +195,7 @@ const AdvancePaymentApproval = () => {
       {isLoading && <LoadingOverlay progress={loadingProgress} />}
 
       <NavBar
-      profileURL="/financial/profile"
+        profileURL="/financial/profile"
         links={[
           { name: 'Dashboard', path: '/financial/dashboard' },
           { name: 'Payment Approvals', path: '/financial/payment-list' },
@@ -213,8 +219,7 @@ const AdvancePaymentApproval = () => {
                 Advance Payment Approval
               </h1>
               <p className="text-gray-600 text-sm">
-                Review and approve advance payment for Purchase Order{" "}
-                {poData.ponumber}
+                Review and approve advance payment for Purchase Order {poData.ponumber}
               </p>
             </div>
           </div>
@@ -377,7 +382,14 @@ const AdvancePaymentApproval = () => {
                         <FaUser className="text-gray-400" />
                         Supplier Information
                       </div>
-                      <div onClick={() => navigate('/financial/supplier-details', { state: { id: poData.supplier.supplier_id } })} className="text-sm cursor-pointer bg-gray-300 hover:bg-gray-400 text-white px-2 py-1 rounded transition-all duration-500">
+                      <div
+                        onClick={() =>
+                          navigate("/financial/supplier-details", {
+                            state: { id: poData.supplier.supplier_id },
+                          })
+                        }
+                        className="text-sm cursor-pointer bg-gray-300 hover:bg-gray-400 text-white px-2 py-1 rounded transition-all duration-500"
+                      >
                         <p className="text-sm text-black cursor-pointer">View all</p>
                       </div>
                     </div>
@@ -395,9 +407,7 @@ const AdvancePaymentApproval = () => {
                       <label className="block text-sm font-medium text-gray-700 mb-1">
                         Contact Person
                       </label>
-                      <p className="text-sm text-gray-900">
-                        {poData.supplier.name}
-                      </p>
+                      <p className="text-sm text-gray-900">{poData.supplier.name}</p>
                     </div>
                     <div>
                       <label className="block text-sm font-medium text-gray-700 mb-1">
@@ -446,9 +456,7 @@ const AdvancePaymentApproval = () => {
                                 </p>
                               </div>
                             </td>
-                            <td className="px-4 py-2 text-center">
-                              {material.quantity}
-                            </td>
+                            <td className="px-4 py-2 text-center">{material.quantity}</td>
                             <td className="px-4 py-2 text-center">
                               {formatCurrency(material.unitPrice)}
                             </td>
@@ -475,18 +483,14 @@ const AdvancePaymentApproval = () => {
                           <label className="block text-sm font-medium text-gray-700 mb-1">
                             Location
                           </label>
-                          <p className="text-sm text-gray-900">
-                            {delivery.location}
-                          </p>
+                          <p className="text-sm text-gray-900">{delivery.location}</p>
                         </div>
                         <div>
                           <label className="block text-sm font-medium text-gray-700 mb-1">
                             Required Date
                           </label>
                           <p className="text-sm text-gray-900">
-                            {new Date(
-                              delivery.requiredDate
-                            ).toLocaleDateString()}
+                            {new Date(delivery.requiredDate).toLocaleDateString()}
                           </p>
                         </div>
                         <div>
@@ -525,15 +529,11 @@ const AdvancePaymentApproval = () => {
 
                   {/* Payment Summary */}
                   <div className="bg-gray-50 p-4 rounded-lg mb-6">
-                    <h3 className="font-medium text-gray-700 mb-3">
-                      Payment Summary
-                    </h3>
+                    <h3 className="font-medium text-gray-700 mb-3">Payment Summary</h3>
                     <div className="space-y-2 text-sm">
                       <div className="flex justify-between">
                         <span>Subtotal:</span>
-                        <span className="font-medium">
-                          {formatCurrency(poData.subTotal)}
-                        </span>
+                        <span className="font-medium">{formatCurrency(poData.subTotal)}</span>
                       </div>
                       <div className="flex justify-between">
                         <span>Advance Payment:</span>
@@ -561,6 +561,18 @@ const AdvancePaymentApproval = () => {
                   {poData.orderPayment.status === "Pending" && (
                     <div className="space-y-3">
                       <button
+                        onClick={() => setShowPaymentModal(true)}
+                        className="w-full px-4 py-3 bg-blue-600 text-purewhite rounded-md hover:bg-blue-700 transition-colors font-semibold flex items-center justify-center gap-2"
+                      >
+                        <FaCreditCard className="w-4 h-4" />
+                        Make Payment
+                      </button>
+                    </div>
+                  )}
+
+                  {poData.orderPayment.status === "Pending" && (
+                    <div className="space-y-3 mt-3">
+                      {/* <button
                         onClick={() => {
                           setApprovalAction("approve");
                           setShowApprovalModal(true);
@@ -569,7 +581,7 @@ const AdvancePaymentApproval = () => {
                       >
                         <FaCheck className="w-4 h-4" />
                         Approve Payment
-                      </button>
+                      </button> */}
                       <button
                         onClick={() => {
                           setApprovalAction("reject");
@@ -596,9 +608,7 @@ const AdvancePaymentApproval = () => {
 
                   {/* Status History */}
                   <div className="mt-6 pt-4 border-t border-gray-200">
-                    <h3 className="font-medium text-gray-700 mb-3">
-                      Status History
-                    </h3>
+                    <h3 className="font-medium text-gray-700 mb-3">Status History</h3>
                     <div className="space-y-2 text-xs">
                       <div className="flex justify-between items-center">
                         <span className="text-gray-600">Created</span>
@@ -630,9 +640,7 @@ const AdvancePaymentApproval = () => {
         <div className="fixed inset-0 bg-black bg-opacity-50 flex items-center justify-center z-50">
           <div className="bg-white rounded-lg p-6 max-w-md w-full mx-4">
             <h3 className="text-lg font-semibold text-main_dark mb-4">
-              {approvalAction === "approve"
-                ? "Approve Payment"
-                : "Reject Payment"}
+              {approvalAction === "approve" ? "Approve Payment" : "Reject Payment"}
             </h3>
             <p className="text-gray-600 mb-4">
               Are you sure you want to {approvalAction} this advance payment of{" "}
@@ -665,6 +673,71 @@ const AdvancePaymentApproval = () => {
                 onClick={() => {
                   setShowApprovalModal(false);
                   setApprovalNotes("");
+                }}
+                className="flex-1 px-4 py-2 border border-gray-300 text-gray-700 rounded-md hover:bg-gray-50 transition-colors"
+              >
+                Cancel
+              </button>
+            </div>
+          </div>
+        </div>
+      )}
+
+      {/* Payment Gateway Modal */}
+      {showPaymentModal && (
+        <div className="fixed inset-0 bg-black bg-opacity-50 flex items-center justify-center z-50">
+          <div className="bg-white rounded-lg p-6 max-w-md w-full mx-4">
+            <h3 className="text-lg font-semibold text-main_dark mb-4">Make Payment</h3>
+
+            <div className="mb-4">
+              <label className="block text-sm font-medium text-gray-700 mb-1">Account Number</label>
+              <input
+                type="text"
+                value={accountNumber}
+                onChange={(e) => setAccountNumber(e.target.value)}
+                className="w-full px-3 py-2 border border-gray-300 rounded-md focus:outline-none focus:ring-2 focus:ring-web_yellow focus:border-transparent"
+                placeholder="1234567890"
+              />
+            </div>
+
+            <div className="mb-4">
+              <label className="block text-sm font-medium text-gray-700 mb-1">Bank Name</label>
+              <input
+                type="text"
+                value={bankName}
+                onChange={(e) => setBankName(e.target.value)}
+                className="w-full px-3 py-2 border border-gray-300 rounded-md focus:outline-none focus:ring-2 focus:ring-web_yellow focus:border-transparent"
+                placeholder="ABC Bank"
+              />
+            </div>
+
+            <div className="mb-4">
+              <label className="block text-sm font-medium text-gray-700 mb-1">Account Name</label>
+              <input
+                type="text"
+                value={accountName}
+                onChange={(e) => setAccountName(e.target.value)}
+                className="w-full px-3 py-2 border border-gray-300 rounded-md focus:outline-none focus:ring-2 focus:ring-web_yellow focus:border-transparent"
+                placeholder="Company Name"
+              />
+            </div>
+
+            {paymentError && (
+              <p className="text-red-600 mb-3">{paymentError}</p>
+            )}
+
+            <div className="flex gap-3">
+              <button
+                onClick={() => handleApprovalAction("approve")}
+                className="flex-1 px-4 py-2 rounded-md bg-green-600 text-white hover:bg-green-700 transition-colors font-medium"
+              >
+                Pay Now
+              </button>
+
+              <button
+                onClick={() => {
+                  setShowPaymentModal(false);
+                  setPaymentError(null);
                 }}
                 className="flex-1 px-4 py-2 border border-gray-300 text-gray-700 rounded-md hover:bg-gray-50 transition-colors"
               >
