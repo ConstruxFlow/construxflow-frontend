@@ -97,6 +97,51 @@ const UserDashboard = () => {
     fetchAndCalculateStats();
   }, []);
 
+  // Fetch Site Manager Overview (manager name + projects)
+  useEffect(() => {
+    const fetchSiteManagerOverview = async () => {
+      try {
+        const res = await fetch(`${API_BASE_URL}/api/projects/site-manager-overview`);
+        if (!res.ok) throw new Error(`Overview API error: ${res.status}`);
+        const data = await res.json(); // [{ managerId, managerName, projectId, projectName, progressStatus }]
+
+        // Group by managerId to fit UI shape
+        const groupedMap = new Map();
+        data.forEach(row => {
+          const mId = row.managerId || 'unknown';
+          if (!groupedMap.has(mId)) {
+            groupedMap.set(mId, {
+              id: mId,
+              name: row.managerName || 'Unknown Manager',
+              visits: 0,     // UI expects visits; derivation: number of projects
+              notes: '',     // UI expects notes; not provided, keep blank or derive simple message
+              sites: []
+            });
+          }
+          const manager = groupedMap.get(mId);
+          manager.sites.push({
+            name: row.projectName,
+            status: row.progressStatus || 'Unknown'
+          });
+        });
+
+        const grouped = Array.from(groupedMap.values()).map(m => ({
+          ...m,
+          visits: m.sites.length,
+          notes: m.sites.some(s => (s.status || '').toLowerCase().includes('hold')) 
+            ? 'Some projects on hold'
+            : ''
+        }));
+
+        setSiteManagers(grouped);
+      } catch (err) {
+        console.error('Error fetching Site Manager Overview:', err);
+        setError((prev) => prev || 'Failed to load site manager overview');
+      }
+    };
+    fetchSiteManagerOverview();
+  }, []);
+
   const handleAddUser = () => {
     if (newUser.name && newUser.email) {
       const user = {
