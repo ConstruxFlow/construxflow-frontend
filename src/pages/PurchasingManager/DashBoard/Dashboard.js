@@ -1,4 +1,4 @@
-import React, { useState, useEffect, useContext, useRef } from "react";
+import React, { useState, useEffect, useContext } from "react";
 import NavBar from "../../../components/NavBar";
 import { MdOutlinePendingActions } from "react-icons/md";
 import { LiaNotesMedicalSolid } from "react-icons/lia";
@@ -17,7 +17,6 @@ import { SiGoogleanalytics } from "react-icons/si";
 import { useNavigate } from "react-router-dom";
 import { toast } from "react-toastify";
 import { AuthContext } from "../../../Context/AuthContext";
-import { Space } from "lucide-react";
 import {
   Chart as ChartJS,
   CategoryScale,
@@ -48,10 +47,16 @@ const PurchasingDashboard = () => {
   const navigate = useNavigate();
   const [purchaseOrders, setPurchaseOrders] = useState([]);
   const [loading, setLoading] = useState(true);
+  const [suppliers, setSuppliers] = useState([]);
+  const [quotations, setQuotations] = useState([]);
+  const [materialRequests, setMaterialRequests] = useState([]);
   const { authState } = useContext(AuthContext);
 
   useEffect(() => {
     fetchPurchaseOrders();
+    fetchSuppliers();
+    fetchQuotations();
+    fetchMaterialRequests();
   }, []);
 
   const fetchPurchaseOrders = async () => {
@@ -60,7 +65,6 @@ const PurchasingDashboard = () => {
         "http://localhost:8080/api/purchasingorder/all"
       );
       const data = await response.json();
-
       if (data.status === "success") {
         setPurchaseOrders(data.data || []);
       } else {
@@ -74,11 +78,44 @@ const PurchasingDashboard = () => {
     }
   };
 
+  const fetchSuppliers = async () => {
+    try {
+      const response = await fetch("http://localhost:8080/api/supplier/all");
+      const data = await response.json();
+      setSuppliers(data.data || []);
+    } catch (error) {
+      console.error("Error fetching suppliers:", error);
+    }
+  };
+
+  const fetchQuotations = async () => {
+    try {
+      const response = await fetch(
+        "http://localhost:8080/api/quotationrequest/all"
+      );
+      const data = await response.json();
+      setQuotations(data.data || []);
+    } catch (error) {
+      console.error("Error fetching quotations:", error);
+    }
+  };
+
+  const fetchMaterialRequests = async () => {
+    try {
+      const response = await fetch(
+        "http://localhost:8080/api/material-requests/all"
+      );
+      const data = await response.json();
+      setMaterialRequests(data || []);
+    } catch (error) {
+      console.error("Error fetching material requests:", error);
+    }
+  };
+
   // Chart data preparation
   const prepareProcurementTrendsData = () => {
     const last6Months = [];
     const currentDate = new Date();
-
     for (let i = 5; i >= 0; i--) {
       const date = new Date(
         currentDate.getFullYear(),
@@ -94,22 +131,18 @@ const PurchasingDashboard = () => {
         amount: 0,
       });
     }
-
-    // Process purchase orders data
     purchaseOrders.forEach((order) => {
       const orderDate = new Date(order.createdDate);
       const monthKey = orderDate.toLocaleDateString("en-US", {
         month: "short",
         year: "numeric",
       });
-
       const monthData = last6Months.find((m) => m.month === monthKey);
       if (monthData) {
         monthData.orders += 1;
         monthData.amount += order.subTotal || 0;
       }
     });
-
     return {
       labels: last6Months.map((m) => m.month),
       datasets: [
@@ -134,13 +167,11 @@ const PurchasingDashboard = () => {
   };
 
   const prepareDeliveryPerformanceData = () => {
-    // Sample data - you can replace with actual supplier performance data
     const performanceData = [
       { status: "On Time", count: 85, color: "#236571" },
       { status: "Delayed", count: 12, color: "#efc11a" },
       { status: "Early", count: 3, color: "#CEB8AD" },
     ];
-
     return {
       labels: performanceData.map((d) => d.status),
       datasets: [
@@ -300,7 +331,6 @@ const PurchasingDashboard = () => {
     return ((orderPayment.paidAmount || 0) / orderPayment.amount) * 100;
   };
 
-  // Get the 3 most recent purchase orders based on createdDate
   const getRecentOrders = () => {
     return purchaseOrders
       .sort((a, b) => new Date(b.createdDate) - new Date(a.createdDate))
@@ -308,6 +338,26 @@ const PurchasingDashboard = () => {
   };
 
   const recentOrders = getRecentOrders();
+
+  // Dynamic counts
+  const pendingRequestsCount = purchaseOrders.filter(
+    (order) => order.status === "Pending"
+  ).length;
+
+  const approvedTodayCount = purchaseOrders.filter(
+    (order) => order.status === "Approved"
+  ).length;
+
+  const openQuotationsCount = quotations.filter(
+    (q) => q.status === "OPEN"
+  ).length;
+
+  const activeSuppliersCount = suppliers.length;
+
+  // Urgent Actions: count pending material requests
+  const pendingMaterialRequestsCount = materialRequests.filter(
+    (req) => req.status === "Pending"
+  ).length;
 
   return (
     <div className="min-h-screen bg-purewhite font-poppins">
@@ -317,27 +367,8 @@ const PurchasingDashboard = () => {
         links={[
           { name: "Dashboard", path: "/purchasing/dashboard" },
           {
-            name: "Requests",
-            megamenu: true, // tells NavBar this is a full-width mega menu
-            megaSections: [
-              {
-                title: "Requests",
-                description:
-                  "Create and manage your purchasing and inventory requests.",
-                items: [
-                  {
-                    name: "Material Requests",
-                    path: "/purchasing/materialrequests/overview",
-                    desc: "Raise new material requisitions and view approval status.",
-                  },
-                  {
-                    name: "Inventory Requests",
-                    path: "/purchasing/inventoryrequests/overview",
-                    desc: "Transfer, replenish, and audit inventory across locations.",
-                  },
-                ],
-              },
-            ],
+            name: "Material Requests",
+            path: "/purchasing/materialrequests/overview",
           },
           { name: "Suppliers", path: "/purchasing/supplier/dashboard" },
           {
@@ -368,38 +399,28 @@ const PurchasingDashboard = () => {
           </div>
 
           {/* Urgent Actions Alert */}
-          <div className="bg-gradient-to-r from-web_yellow/15 via-web_yellow/8 to-transparent border-l-4 border-web_yellow rounded-lg p-4 mb-5 shadow-lg">
-            <div className="flex items-start gap-4">
-              <div className="w-10 h-10 bg-gradient-to-br from-web_yellow to-web_yellow/80 rounded-full flex items-center justify-center text-main_dark text-lg font-bold shadow-lg animate-pulse">
-                ⚠
-              </div>
-              <div className="flex-1">
-                <h3 className="font-bold text-base text-main_dark mb-2">
-                  Urgent Actions Required
-                </h3>
-                <div className="flex flex-wrap gap-3 text-sm">
-                  <span className="flex items-center gap-2 bg-purewhite px-3 py-1.5 rounded-full shadow-md border border-web_yellow/20">
-                    <div className="w-3 h-3 bg-gradient-to-r from-web_yellow to-web_yellow/70 rounded-full animate-pulse"></div>
-                    <span className="text-main_dark font-medium">
-                      3 delayed deliveries
+          {pendingMaterialRequestsCount > 0 && (
+            <div className="bg-gradient-to-r from-web_yellow/15 via-web_yellow/8 to-transparent border-l-4 border-web_yellow rounded-lg p-4 mb-5 shadow-lg">
+              <div className="flex items-start gap-4">
+                <div className="w-10 h-10 bg-gradient-to-br from-web_yellow to-web_yellow/80 rounded-full flex items-center justify-center text-main_dark text-lg font-bold shadow-lg animate-pulse">
+                  ⚠
+                </div>
+                <div className="flex-1">
+                  <h3 className="font-bold text-base text-main_dark mb-2">
+                    Urgent Actions Required
+                  </h3>
+                  <div className="flex flex-wrap gap-3 text-sm">
+                    <span className="flex items-center gap-2 bg-purewhite px-3 py-1.5 rounded-full shadow-md border border-web_yellow/20">
+                      <div className="w-3 h-3 bg-gradient-to-r from-web_yellow to-web_yellow/70 rounded-full animate-pulse"></div>
+                      <span className="text-main_dark font-medium">
+                        {pendingMaterialRequestsCount} material requests pending
+                      </span>
                     </span>
-                  </span>
-                  <span className="flex items-center gap-2 bg-purewhite px-3 py-1.5 rounded-full shadow-md border border-deep_green/20">
-                    <div className="w-3 h-3 bg-gradient-to-r from-deep_green to-deep_green/70 rounded-full animate-pulse"></div>
-                    <span className="text-main_dark font-medium">
-                      2 low stock alerts
-                    </span>
-                  </span>
-                  <span className="flex items-center gap-2 bg-purewhite px-3 py-1.5 rounded-full shadow-md border border-light_brown/30">
-                    <div className="w-3 h-3 bg-gradient-to-r from-light_brown to-light_brown/70 rounded-full animate-pulse"></div>
-                    <span className="text-main_dark font-medium">
-                      1 pending approval
-                    </span>
-                  </span>
+                  </div>
                 </div>
               </div>
             </div>
-          </div>
+          )}
 
           {/* Stats Cards */}
           <div className="grid grid-cols-1 sm:grid-cols-2 lg:grid-cols-4 gap-3 sm:gap-4 mb-8">
@@ -409,10 +430,7 @@ const PurchasingDashboard = () => {
                   Pending Requests
                 </p>
                 <h3 className="text-xl sm:text-2xl font-bold text-main_dark leading-tight mb-0.5">
-                  {
-                    purchaseOrders.filter((order) => order.status === "Pending")
-                      .length
-                  }
+                  {pendingRequestsCount}
                 </h3>
                 <span className="text-deep_green text-xs">
                   +3 from yesterday
@@ -429,11 +447,7 @@ const PurchasingDashboard = () => {
                   Approved Today
                 </p>
                 <h3 className="text-xl sm:text-2xl font-bold text-main_dark leading-tight mb-0.5">
-                  {
-                    purchaseOrders.filter(
-                      (order) => order.status === "Approved"
-                    ).length
-                  }
+                  {approvedTodayCount}
                 </h3>
                 <span className="text-deep_green text-xs">
                   87% approval rate
@@ -450,7 +464,7 @@ const PurchasingDashboard = () => {
                   Open Quotations
                 </p>
                 <h3 className="text-xl sm:text-2xl font-bold text-main_dark leading-tight mb-0.5">
-                  12
+                  {openQuotationsCount}
                 </h3>
                 <span className="text-deep_green text-xs">5 expiring soon</span>
               </div>
@@ -465,7 +479,7 @@ const PurchasingDashboard = () => {
                   Active Suppliers
                 </p>
                 <h3 className="text-xl sm:text-2xl font-bold text-main_dark leading-tight mb-0.5">
-                  156
+                  {activeSuppliersCount}
                 </h3>
                 <span className="text-deep_green text-xs">
                   92% performance avg
