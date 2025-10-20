@@ -503,7 +503,7 @@ const SiteManagerOrdersOverview = () => {
                       onClick={() => handleSort("subTotal")}
                     >
                       <div className="flex items-center gap-2">
-                        <FaDollarSign className="w-4 h-4" />
+                        
                         Amount
                         {sortBy === "subTotal" && (
                           <span className="text-xs">
