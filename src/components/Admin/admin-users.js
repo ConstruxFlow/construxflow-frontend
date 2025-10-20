@@ -25,10 +25,10 @@ const UserDashboard = () => {
   const [loading, setLoading] = useState(true);
   const [error, setError] = useState(null);
 
-  // Users are loaded from backend (managers)
+  // Managers list (from backend)
   const [users, setUsers] = useState([]);
 
-  // Stats placeholders
+  // Dashboard stats
   const [stats, setStats] = useState([
     { title: 'Total Users', value: '-', icon: Users, color: 'bg-light_brown' },
     { title: 'Active Users', value: '-', icon: CheckCircle, color: 'bg-deep_green' },
@@ -36,19 +36,18 @@ const UserDashboard = () => {
     { title: 'Pending Approval', value: '23', icon: Clock, color: 'bg-light_gray' }
   ]);
 
+  // Site Manager Overview (grouped for UI)
+  const [siteManagers, setSiteManagers] = useState([]);
+
   // Fetch dashboard stats
   useEffect(() => {
     const fetchDashboardStats = async () => {
       try {
         setLoading(true);
         const response = await fetch(`${API_BASE_URL}/api/admin/dashboard-stats`);
-
-        if (!response.ok) {
-          throw new Error(`Error: ${response.status}`);
-        }
+        if (!response.ok) throw new Error(`Error: ${response.status}`);
 
         const data = await response.json();
-
         setStats([
           { title: 'Total Users', value: data.totalUsers.toString(), icon: Users, color: 'bg-light_brown' },
           { title: 'Active Users', value: data.activeUsers.toString(), icon: CheckCircle, color: 'bg-deep_green' },
@@ -64,7 +63,6 @@ const UserDashboard = () => {
         setLoading(false);
       }
     };
-
     fetchDashboardStats();
   }, []);
 
@@ -76,7 +74,6 @@ const UserDashboard = () => {
         if (!res.ok) throw new Error(`Managers API error: ${res.status}`);
         const managers = await res.json();
 
-        // Map backend DTO -> UI structure
         const mapped = managers.map((u) => ({
           id: u.managerId,
           name: u.userName,
@@ -93,8 +90,52 @@ const UserDashboard = () => {
         setError((prev) => prev || 'Failed to load manager details');
       }
     };
-
     fetchManagers();
+  }, []);
+
+  // Fetch Site Manager Overview (manager name + projects)
+  useEffect(() => {
+    const fetchSiteManagerOverview = async () => {
+      try {
+        const res = await fetch(`${API_BASE_URL}/api/projects/site-manager-overview`);
+        if (!res.ok) throw new Error(`Overview API error: ${res.status}`);
+        const data = await res.json(); // [{ managerId, managerName, projectId, projectName, progressStatus }]
+
+        // Group by managerId to fit UI shape
+        const groupedMap = new Map();
+        data.forEach(row => {
+          const mId = row.managerId || 'unknown';
+          if (!groupedMap.has(mId)) {
+            groupedMap.set(mId, {
+              id: mId,
+              name: row.managerName || 'Unknown Manager',
+              visits: 0,     // UI expects visits; derivation: number of projects
+              notes: '',     // UI expects notes; not provided, keep blank or derive simple message
+              sites: []
+            });
+          }
+          const manager = groupedMap.get(mId);
+          manager.sites.push({
+            name: row.projectName,
+            status: row.progressStatus || 'Unknown'
+          });
+        });
+
+        const grouped = Array.from(groupedMap.values()).map(m => ({
+          ...m,
+          visits: m.sites.length,
+          notes: m.sites.some(s => (s.status || '').toLowerCase().includes('hold')) 
+            ? 'Some projects on hold'
+            : ''
+        }));
+
+        setSiteManagers(grouped);
+      } catch (err) {
+        console.error('Error fetching Site Manager Overview:', err);
+        setError((prev) => prev || 'Failed to load site manager overview');
+      }
+    };
+    fetchSiteManagerOverview();
   }, []);
 
   const handleAddUser = () => {
@@ -114,24 +155,6 @@ const UserDashboard = () => {
   const handleBulkAction = (action) => {
     alert(`Performing bulk action: ${action}`);
   };
-
-  // Existing dummy Site Manager Overview data
-  const siteManagers = [
-    {
-      id: 1,
-      name: 'John Smith',
-      visits: 12,
-      notes: 'Updated safety protocols',
-      sites: [{ name: 'Downtown Bridge', status: 'Active' }, { name: 'Highway Expansion', status: 'Needs Attention' }]
-    },
-    {
-      id: 2,
-      name: 'Sarah Johnson',
-      visits: 8,
-      notes: 'Reviewed material delivery schedule',
-      sites: [{ name: 'Commercial Complex', status: 'Active' }]
-    }
-  ];
 
   return (
     <div className="min-h-screen bg-purewhite font-sans">
@@ -284,26 +307,11 @@ const UserDashboard = () => {
             </div>
           </div>
 
-          {/* Site Manager Overview (unchanged) */}
+          {/* Site Manager Overview (now backed by API) */}
           <div className="bg-white rounded-xl shadow-md p-6">
             <h3 className="text-xl font-semibold text-gray-900 mb-6">Site Manager Overview</h3>
             <div className="space-y-4">
-              {[
-                {
-                  id: 1,
-                  name: 'John Smith',
-                  visits: 12,
-                  notes: 'Updated safety protocols',
-                  sites: [{ name: 'Downtown Bridge', status: 'Active' }, { name: 'Highway Expansion', status: 'Needs Attention' }]
-                },
-                {
-                  id: 2,
-                  name: 'Sarah Johnson',
-                  visits: 8,
-                  notes: 'Reviewed material delivery schedule',
-                  sites: [{ name: 'Commercial Complex', status: 'Active' }]
-                }
-              ].map((manager) => (
+              {siteManagers.map((manager) => (
                 <div
                   key={manager.id}
                   className="p-4 rounded-lg hover:bg-gray-50 transition-colors duration-150"
@@ -335,9 +343,15 @@ const UserDashboard = () => {
                         </span>
                       </div>
                     ))}
+                    {manager.sites.length === 0 && (
+                      <div className="text-sm text-gray-500">No projects assigned.</div>
+                    )}
                   </div>
                 </div>
               ))}
+              {siteManagers.length === 0 && (
+                <div className="text-sm text-gray-500">No site manager overview to display.</div>
+              )}
             </div>
           </div>
 
