@@ -166,6 +166,123 @@ function TaskCompleteModal({ open, onClose, equipment }) {
   const [teamMembers, setTeamMembers] = useState([]);
   const [completionTime, setCompletionTime] = useState(null);
 
+  const handleDownload = () => {
+    // Add print styles to current page temporarily
+    const printStyle = document.createElement('style');
+    printStyle.id = 'temp-print-style';
+    printStyle.textContent = `
+      @media print {
+        * {
+          -webkit-print-color-adjust: exact !important;
+          color-adjust: exact !important;
+          print-color-adjust: exact !important;
+        }
+        body * {
+          visibility: hidden;
+        }
+        .print-modal-content, .print-modal-content * {
+          visibility: visible;
+        }
+        .print-modal-content {
+          position: absolute !important;
+          left: 0 !important;
+          top: 0 !important;
+          width: 100% !important;
+          background: white !important;
+          padding: 20px !important;
+          box-shadow: none !important;
+          border-radius: 12px !important;
+          border: 1px solid #e5e7eb !important;
+        }
+        .print-modal-content button {
+          display: none !important;
+        }
+        .fixed, .bg-black\\/40 {
+          position: static !important;
+          background: transparent !important;
+        }
+        /* Preserve all background colors */
+        .bg-gray-50, .bg-slate-50 {
+          background-color: #f9fafb !important;
+        }
+        .bg-green-50 {
+          background-color: #f0fdf4 !important;
+        }
+        .bg-blue-50 {
+          background-color: #eff6ff !important;
+        }
+        .bg-yellow-50 {
+          background-color: #fefce8 !important;
+        }
+        .bg-red-50 {
+          background-color: #fef2f2 !important;
+        }
+        /* Preserve text colors */
+        .text-main_dark {
+          color: #1f2937 !important;
+        }
+        .text-gray-600 {
+          color: #4b5563 !important;
+        }
+        .text-gray-700 {
+          color: #374151 !important;
+        }
+        .text-gray-900 {
+          color: #111827 !important;
+        }
+        .text-green-600 {
+          color: #059669 !important;
+        }
+        .text-blue-600 {
+          color: #2563eb !important;
+        }
+        .text-yellow-600 {
+          color: #d97706 !important;
+        }
+        .text-red-600 {
+          color: #dc2626 !important;
+        }
+        /* Preserve badge colors */
+        .bg-green-100 {
+          background-color: #dcfce7 !important;
+        }
+        .bg-blue-100 {
+          background-color: #dbeafe !important;
+        }
+        .bg-yellow-100 {
+          background-color: #fef3c7 !important;
+        }
+        .bg-red-100 {
+          background-color: #fee2e2 !important;
+        }
+        /* Preserve borders */
+        .border-gray-200 {
+          border-color: #e5e7eb !important;
+        }
+        .border-green-200 {
+          border-color: #bbf7d0 !important;
+        }
+        .border-blue-200 {
+          border-color: #bfdbfe !important;
+        }
+      }
+    `;
+    
+    // Add the print style to current page
+    document.head.appendChild(printStyle);
+    
+    // Trigger print on current page
+    window.print();
+    
+    // Remove the temporary print style after printing
+    setTimeout(() => {
+      const tempStyle = document.getElementById('temp-print-style');
+      if (tempStyle) {
+        tempStyle.remove();
+      }
+    }, 1000);
+  };
+
   useEffect(() => {
     if (!open || !equipment) return;
 
@@ -305,17 +422,28 @@ function TaskCompleteModal({ open, onClose, equipment }) {
   return (
     <div className="fixed inset-0 z-50 bg-black/40 flex items-center justify-center p-4">
       <div className="bg-white rounded-xl shadow-lg max-w-6xl w-full max-h-[90vh] overflow-y-auto">
-        <div className="p-6">
+        <div className="p-6 print-modal-content">
           <div className="flex items-center justify-between mb-6">
             <h3 className="text-xl font-bold text-main_dark">
               Task Completion Details
             </h3>
-            <button
-              className="p-2 hover:bg-gray-100 rounded-lg transition-colors"
-              onClick={onClose}
-            >
-              <X className="w-5 h-5 text-slatebluegray" />
-            </button>
+            <div className="flex items-center gap-2">
+              <button
+                className="px-4 py-2 bg-[#236571] text-white rounded-lg hover:bg-[#236571]/80 transition-colors flex items-center gap-2 font-medium"
+                onClick={handleDownload}
+              >
+                <svg className="w-4 h-4" fill="none" stroke="currentColor" viewBox="0 0 24 24">
+                  <path strokeLinecap="round" strokeLinejoin="round" strokeWidth={2} d="M12 10v6m0 0l-3-3m3 3l3-3m2 8H7a2 2 0 01-2-2V5a2 2 0 012-2h5.586a1 1 0 01.707.293l5.414 5.414a1 1 0 01.293.707V19a2 2 0 01-2 2z" />
+                </svg>
+                Download
+              </button>
+              <button
+                className="p-2 hover:bg-gray-100 rounded-lg transition-colors"
+                onClick={onClose}
+              >
+                <X className="w-5 h-5 text-slatebluegray" />
+              </button>
+            </div>
           </div>
 
           {/* Success Banner */}
