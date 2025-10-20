@@ -283,7 +283,7 @@ const ProjectSelection = () => {
                   </div>
 
                   {/* Progress Bar */}
-                  <div className="pt-2">
+                  {/* <div className="pt-2">
                     <div className="flex justify-between text-sm mb-1">
                       <span className="text-slatebluegray">Progress</span>
                       <span className="font-medium text-main_dark">{project.progress}%</span>
@@ -294,7 +294,7 @@ const ProjectSelection = () => {
                         style={{ width: `${project.progress}%` }}
                       ></div>
                     </div>
-                  </div>
+                  </div> */}
 
                   {/* Action Button */}
                   <div className="pt-4 border-t border-gray-100">

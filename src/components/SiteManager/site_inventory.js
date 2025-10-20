@@ -158,7 +158,7 @@ const SiteInventory = () => {
         </div>
 
         {/* Call to Action */}
-        <div className="mt-16 text-center">
+        {/* <div className="mt-16 text-center">
           <div className="bg-gradient-to-r from-deep_green to-web_yellow rounded-2xl p-8 text-white">
             <h3 className="text-2xl font-bold mb-4">Ready to Optimize Your Inventory?</h3>
             <p className="text-white/90 mb-6 max-w-2xl mx-auto">
@@ -171,7 +171,7 @@ const SiteInventory = () => {
               Start Managing Today
             </button>
           </div>
-        </div>
+        </div> */}
       </div>
     </div>
   );
