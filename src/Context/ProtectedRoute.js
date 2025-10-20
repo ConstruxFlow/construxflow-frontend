@@ -29,7 +29,7 @@ const ProtectedRoute = ({ allowedRoles }) => {
   }, [isLoading, isLoggedIn, isAuthorized, logout]);
 
   if (isLoading) {
-    return <div>Loading...</div>;
+    return <div></div>;
   }
 
   if (!isLoggedIn) {
