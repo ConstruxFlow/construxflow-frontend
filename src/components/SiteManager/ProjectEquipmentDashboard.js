@@ -455,7 +455,7 @@ const ProjectEquipmentDashboard = () => {
           </div>
 
           {/* Project Info */}
-          <div className="bg-gradient-to-r from-deep_green/10 to-web_yellow/10 border border-deep_green/20 rounded-xl p-6">
+          {/* <div className="bg-gradient-to-r from-deep_green/10 to-web_yellow/10 border border-deep_green/20 rounded-xl p-6">
             <div className="flex items-center gap-3 mb-4">
               <div className="w-10 h-10 bg-gradient-to-br from-deep_green to-deep_green/80 rounded-xl flex items-center justify-center">
                 <Settings className="w-5 h-5 text-white" />
@@ -465,7 +465,7 @@ const ProjectEquipmentDashboard = () => {
                 <p className="text-slatebluegray">Project ID: {projectId}</p>
               </div>
             </div>
-          </div>
+          </div> */}
         </div>
 
         {/* Statistics Cards */}

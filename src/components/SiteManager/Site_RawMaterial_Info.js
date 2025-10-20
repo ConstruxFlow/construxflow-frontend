@@ -623,7 +623,7 @@ export default function Site_RawMaterial_Info() {
               </div>
 
               {/* Type Filter */}
-              <div className="w-full lg:w-auto">
+              {/* <div className="w-full lg:w-auto">
                 <label className="block text-sm font-medium text-gray-700 mb-2">Type</label>
                 <select
                   value={selectedType}
@@ -634,7 +634,7 @@ export default function Site_RawMaterial_Info() {
                     <option key={type} value={type}>{type}</option>
                   ))}
                 </select>
-              </div>
+              </div> */}
 
               {/* Status Filter */}
               <div className="w-full lg:w-auto">
