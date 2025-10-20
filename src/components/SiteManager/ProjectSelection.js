@@ -23,65 +23,43 @@ const ProjectSelection = () => {
 
   // Mock data for projects - will be replaced with API calls
   useEffect(() => {
+    const controller = new AbortController();
     const fetchProjects = async () => {
       setLoading(true);
       try {
-        // Mock data - replace with actual API call
-        const mockProjects = [
-          {
-            id: 'PROJ-001',
-            name: 'Residential Complex A',
-            location: 'Downtown District',
-            startDate: '2024-10-01',
-            endDate: '2025-06-30',
-            status: 'In Progress',
-            manager: 'John Smith',
-            progress: 65,
-            description: 'Multi-story residential complex with 120 units'
-          },
-          {
-            id: 'PROJ-002',
-            name: 'Commercial Plaza B',
-            location: 'Business District',
-            startDate: '2024-11-15',
-            endDate: '2025-08-15',
-            status: 'Planning',
-            manager: 'Sarah Johnson',
-            progress: 15,
-            description: 'Modern commercial plaza with retail and office spaces'
-          },
-          {
-            id: 'PROJ-003',
-            name: 'Highway Bridge Extension',
-            location: 'Northern Expressway',
-            startDate: '2024-09-01',
-            endDate: '2025-03-31',
-            status: 'In Progress',
-            manager: 'Mike Chen',
-            progress: 80,
-            description: 'Extension of existing highway bridge structure'
-          },
-          {
-            id: 'PROJ-004',
-            name: 'Industrial Warehouse C',
-            location: 'Industrial Zone',
-            startDate: '2024-12-01',
-            endDate: '2025-05-31',
-            status: 'Planning',
-            manager: 'Lisa Wang',
-            progress: 25,
-            description: 'Large-scale industrial warehouse facility'
-          }
-        ];
-        setProjects(mockProjects);
+        const res = await fetch('http://localhost:8080/api/projects/all', { signal: controller.signal });
+        if (!res.ok) {
+          throw new Error(`Failed to fetch projects: ${res.status} ${res.statusText}`);
+        }
+        const data = await res.json();
+        // Normalize the API response to the shape used by this component
+        const normalized = Array.isArray(data)
+          ? data.map(p => ({
+              id: p.id ?? p.projectId ?? p._id ?? '',
+              name: p.name ?? p.projectName ?? 'Untitled Project',
+              location: p.location ?? p.siteLocation ?? 'Unknown',
+              startDate: p.startDate ?? p.start_date ?? p.start ?? null,
+              endDate: p.endDate ?? p.end_date ?? p.end ?? null,
+              status: p.status ?? p.projectStatus ?? 'Planning',
+              manager: p.manager ?? p.projectManager ?? p.managerName ?? 'N/A',
+              progress: typeof p.progress === 'number' ? p.progress : Number(p.progress) || 0,
+              description: p.description ?? p.desc ?? ''
+            }))
+          : [];
+
+        setProjects(normalized);
       } catch (error) {
-        console.error('Error fetching projects:', error);
+        if (error.name !== 'AbortError') {
+          console.error('Error fetching projects:', error);
+        }
       } finally {
         setLoading(false);
       }
     };
 
     fetchProjects();
+
+    return () => controller.abort();
   }, []);
 
   const statuses = ['All Status', 'Planning', 'In Progress', 'Completed', 'On Hold'];

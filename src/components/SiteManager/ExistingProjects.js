@@ -1,11 +1,12 @@
 // ExistingProjects.jsx
-import React, { useEffect, useState } from 'react';
+import React, { useContext, useEffect, useState } from 'react';
 import axios from 'axios';
 import { useNavigate } from 'react-router-dom';
 import { FaPlus, FaEdit, FaSearch, FaTrash, FaEye } from 'react-icons/fa';
 import { IoFilter } from 'react-icons/io5';
 import ProjectProgressCard from './ProjectProgressCard';
 import ProjectStatusManager from './ProjectStatusManager';
+import { AuthContext } from '../../Context/AuthContext';
 
 const ExistingProjects = () => {
   const [projects, setProjects] = useState([]);
@@ -16,6 +17,7 @@ const ExistingProjects = () => {
   const [searchTerm, setSearchTerm] = useState('');
   const [selectedProject, setSelectedProject] = useState(null);
   const [showStatusManager, setShowStatusManager] = useState(false);
+  const { authState } = useContext(AuthContext);
   
   const statusOptions = [
     'All Status',
@@ -26,8 +28,7 @@ const ExistingProjects = () => {
     'Completed'
   ];
 
-  const user = JSON.parse(localStorage.getItem('user'));
-  const managerId = user?.id;
+  const managerId = authState?.user?.managerId;
 
   const navigate = useNavigate();
 

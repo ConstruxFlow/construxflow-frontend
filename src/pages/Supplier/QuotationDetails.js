@@ -230,30 +230,6 @@ const QuotationDetails = () => {
             <SectionTitle>Additional Notes</SectionTitle>
             <div className="text-main_dark text-sm mt-2">{quotation.notes || "—"}</div>
           </section>
-
-          <section>
-            <SectionTitle>Attachments</SectionTitle>
-            {attachments.length === 0 ? (
-              <div className="text-slatebluegray py-2">No attachments.</div>
-            ) : (
-              <ul className="divide-y divide-light_gray mt-2">
-                {attachments.map((att, idx) => (
-                  <li key={idx} className="flex flex-col sm:flex-row items-start sm:items-center gap-2 sm:gap-4 py-3">
-                    {/* <div className="w-8 h-8 flex items-center justify-center bg-gray-100 rounded text-xl">
-                      {att.fileType?.includes("pdf") ? "" : ""}
-                    </div> */}
-                    <div className="flex-1 min-w-0">
-                      <div className="font-medium truncate text-main_dark">{att.fileName}</div>
-                      <div className="text-xs text-gray-500 truncate">{att.fileUrl}</div>
-                    </div>
-                    <a href={att.fileUrl} download className="p-2 rounded hover:bg-light_gray transition" title="Download">
-                      <FiDownload className="text-lg text-deep_green" />
-                    </a>
-                  </li>
-                ))}
-              </ul>
-            )}
-          </section>
         </main>
 
         {/* Right sidebar summary */}
