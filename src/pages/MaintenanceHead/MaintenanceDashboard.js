@@ -1,4 +1,4 @@
-import React, { useEffect, useState } from "react";
+import React, { useContext, useEffect, useState } from "react";
 import {
   Calendar,
   AlertTriangle,
@@ -14,6 +14,7 @@ import NavBar from "../../components/NavBar";
 import TeamSection from "../../components/MaintenanceHead/TeamSection";
 import { useNavigate } from "react-router-dom";
 import { format, isToday, isTomorrow, parseISO } from "date-fns";
+import { AuthContext } from "../../Context/AuthContext";
 
 const navLinks = [
   { name: "Dashboard", href: "/maintenance/dashboard" },
@@ -46,6 +47,9 @@ const MaintenanceDashboard = () => {
   const [equipmentData, setEquipmentData] = useState([]);
   const [priorityTasks, setPriorityTasks] = useState([]);
   const [equipmentList, setEquipmentList] = useState([]);
+  const [equipmentRequests, setEquipmentRequests] = useState([]);
+  const [pendingRequestsCount, setPendingRequestsCount] = useState(0);
+  const { authState, logout } = useContext(AuthContext);
   // Count all tasks for stat card
   const totalTasksCount = equipmentList.length;
   const completedTasksCount = equipmentList.filter(
@@ -156,6 +160,39 @@ const MaintenanceDashboard = () => {
       });
   }, []);
 
+  // Fetch equipment requests and count pending ones
+  useEffect(() => {
+    const fetchEquipmentRequests = async () => {
+      try {
+        const response = await fetch("http://localhost:8080/api/maintenance-schedule-requests/all");
+        
+        if (!response.ok) {
+          throw new Error("Failed to fetch equipment requests");
+        }
+        
+        const requests = await response.json();
+        console.log("Equipment requests:", requests);
+        
+        setEquipmentRequests(requests);
+        
+        // Count pending requests
+        const pendingCount = requests.filter(
+          request => request.status?.toLowerCase() === "pending"
+        ).length;
+        
+        setPendingRequestsCount(pendingCount);
+        console.log("Pending equipment requests count:", pendingCount);
+        
+      } catch (error) {
+        console.error("Error fetching equipment requests:", error);
+        setPendingRequestsCount(0);
+      }
+    };
+
+    fetchEquipmentRequests();
+  }, []);
+ console.log(authState);
+ 
 
 //   const res = await fetch('http://localhost:8080/api/send-sms', {
 //   method: 'POST',
@@ -216,7 +253,7 @@ const MaintenanceDashboard = () => {
                 Maintenance Dashboard
               </h1>
               <p className="text-slatebluegray text-base">
-                Welcome back, John. Here's your maintenance overview.
+                Welcome back, {authState.user?.userName}. Here's your maintenance overview.
               </p>
             </div>
             
@@ -229,29 +266,34 @@ const MaintenanceDashboard = () => {
               >
                 <Bell className="w-6 h-6 text-slatebluegray group-hover:text-main_dark transition-colors" />
                 {/* Notification Badge */}
-                <span className="absolute -top-1 -right-1 bg-red-500 text-white text-xs rounded-full h-5 w-5 flex items-center justify-center font-medium">
+                {/* <span className="absolute -top-1 -right-1 bg-red-500 text-white text-xs rounded-full h-5 w-5 flex items-center justify-center font-medium">
                   3
-                </span>
+                </span> */}
               </button>
             </div>
           </div>
 
-          {/* Alert Banner */}
-          <div className="bg-gradient-to-r from-web_yellow/15 via-web_yellow/8 to-transparent border-l-4 border-web_yellow rounded-lg p-4 mb-8 flex items-start gap-4 shadow-md">
-            <div className="text-yellow-600 text-2xl mt-1">⚠</div>
-            <div>
-              <h3 className="font-semibold text-base text-gray-800 mb-1 tracking-wide">
-                Maintenance Alert
-              </h3>
-              <p className="text-gray-500 text-sm font-medium">
-                3 new maintenance requests require your immediate attention.
-                Please review them to prevent equipment downtime.
-              </p>
+          {/* Alert Banner - Show only when there are pending requests */}
+          {pendingRequestsCount > 0 && (
+            <div className="bg-gradient-to-r from-web_yellow/15 via-web_yellow/8 to-transparent border-l-4 border-web_yellow rounded-lg p-4 mb-8 flex items-start gap-4 shadow-md">
+              <div className="text-yellow-600 text-2xl mt-1">⚠</div>
+              <div>
+                <h3 className="font-semibold text-base text-gray-800 mb-1 tracking-wide">
+                  Equipment Request Alert
+                </h3>
+                <p className="text-gray-500 text-sm font-medium">
+                  {pendingRequestsCount} new equipment request{pendingRequestsCount > 1 ? 's' : ''} require{pendingRequestsCount === 1 ? 's' : ''} your immediate attention.
+                  Please review them to prevent equipment downtime.
+                </p>
+              </div>
+              <button 
+                className="ml-auto bg-main_dark text-white px-4 py-2 rounded-lg hover:bg-slatebluegray text-sm transition-colors"
+                onClick={() => navigation("/maintenance/inventory-request")}
+              >
+                View All
+              </button>
             </div>
-            <button className="ml-auto bg-main_dark text-white px-4 py-2 rounded-lg hover:bg-slatebluegray text-sm transition-colors">
-              View All
-            </button>
-          </div>
+          )}
 
           {/* Stats Cards */}
           <div className="grid grid-cols-1 sm:grid-cols-2 lg:grid-cols-4 gap-3 sm:gap-4 mb-8">

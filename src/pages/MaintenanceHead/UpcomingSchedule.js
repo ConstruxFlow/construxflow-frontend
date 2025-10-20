@@ -1,4 +1,4 @@
-import { use, useEffect, useState } from "react";
+import { use, useEffect, useState, useCallback } from "react";
 import { Filter, Plus, Calendar, ChevronDown, User } from "lucide-react";
 import NavBar from "../../components/NavBar";
 import { useNavigate } from "react-router-dom";
@@ -85,6 +85,16 @@ export default function NextScheduleContainer() {
 
   // Add this missing state for multiple technician selection
   const [selectedNextTechs, setSelectedNextTechs] = useState([]);
+
+  // Equipment usage tracking states
+  const [equipmentUsageSummary, setEquipmentUsageSummary] = useState(null);
+  const [equipmentUsageAverage, setEquipmentUsageAverage] = useState(null);
+  const [maintenanceThresholds, setMaintenanceThresholds] = useState({
+    hoursThreshold: 100, // Default maintenance every 100 hours
+    kilometersThreshold: 1000, // Default maintenance every 1000 km
+  });
+  const [loadingUsageData, setLoadingUsageData] = useState(false);
+  const [autoCalculatedDate, setAutoCalculatedDate] = useState("");
 
   const navigation = useNavigate();
 
@@ -178,6 +188,91 @@ export default function NextScheduleContainer() {
   console.log("Upcoming Maintenance Data:", upcomingMaintenance);
   console.log("Assignments Data:", assignments);
   console.log("details of technician", technicianDetails);
+
+  // Fetch equipment usage data
+  const fetchEquipmentUsageData = async (equipmentId) => {
+    if (!equipmentId) return;
+    
+    setLoadingUsageData(true);
+    try {
+      // Fetch both summary and average data
+      const [summaryRes, averageRes] = await Promise.all([
+        fetch(`http://localhost:8080/api/equipment-usage/summary/${equipmentId}`),
+        fetch(`http://localhost:8080/api/equipment-usage/average/${equipmentId}`)
+      ]);
+
+      if (summaryRes.ok) {
+        const summaryData = await summaryRes.json();
+        setEquipmentUsageSummary(summaryData);
+      }
+
+      if (averageRes.ok) {
+        const averageData = await averageRes.json();
+        setEquipmentUsageAverage(averageData);
+      }
+
+      console.log('Equipment usage data fetched successfully');
+    } catch (error) {
+      console.error('Error fetching equipment usage data:', error);
+    } finally {
+      setLoadingUsageData(false);
+    }
+  };
+
+  // Calculate next maintenance date based on usage
+  const calculateNextMaintenanceDate = useCallback(() => {
+    if (!equipmentUsageSummary || !equipmentUsageAverage) return "";
+
+    const { totalHoursUsed, totalKilometersTraveled } = equipmentUsageSummary;
+    const { averageHoursUsed, averageKilometersTraveled } = equipmentUsageAverage;
+    const { hoursThreshold, kilometersThreshold } = maintenanceThresholds;
+
+    let daysUntilMaintenance = 0;
+
+    // Calculate based on hours if we have hour data
+    if (totalHoursUsed > 0 && averageHoursUsed > 0) {
+      const hoursRemaining = hoursThreshold - (totalHoursUsed % hoursThreshold);
+      const daysBasedOnHours = Math.ceil(hoursRemaining / averageHoursUsed);
+      daysUntilMaintenance = Math.max(daysUntilMaintenance, daysBasedOnHours);
+    }
+
+    // Calculate based on kilometers if we have kilometer data
+    if (totalKilometersTraveled > 0 && averageKilometersTraveled > 0) {
+      const kmRemaining = kilometersThreshold - (totalKilometersTraveled % kilometersThreshold);
+      const daysBasedOnKm = Math.ceil(kmRemaining / averageKilometersTraveled);
+      daysUntilMaintenance = daysUntilMaintenance > 0 
+        ? Math.min(daysUntilMaintenance, daysBasedOnKm) 
+        : daysBasedOnKm;
+    }
+
+    // If no usage data, default to 30 days
+    if (daysUntilMaintenance <= 0) {
+      daysUntilMaintenance = 30;
+    }
+
+    // Calculate the actual date
+    const nextDate = new Date();
+    nextDate.setDate(nextDate.getDate() + daysUntilMaintenance);
+    
+    const formattedDate = nextDate.toISOString().split('T')[0];
+    setNextScheduledDate(formattedDate);
+    
+    return formattedDate;
+  }, [equipmentUsageSummary, equipmentUsageAverage, maintenanceThresholds]);
+
+  // Fetch usage data when selected maintenance changes
+  useEffect(() => {
+    if (selectedMaintenance?.equipmentId) {
+      fetchEquipmentUsageData(selectedMaintenance.equipmentId);
+    }
+  }, [selectedMaintenance]);
+
+  // Calculate next maintenance date when usage data changes
+  useEffect(() => {
+    if (equipmentUsageSummary && equipmentUsageAverage) {
+      calculateNextMaintenanceDate();
+    }
+  }, [equipmentUsageSummary, equipmentUsageAverage, maintenanceThresholds, calculateNextMaintenanceDate]);
 
   const handleChangeStatus = async () => {
     // ✅ Strict validation - only allow actual status values
@@ -287,6 +382,7 @@ export default function NextScheduleContainer() {
         return res.json();
       })
       .then((data) => {
+        console.log("Raw team data received:", data);
         setTeamMembers(data);
       })
       .catch((err) => {
@@ -313,12 +409,21 @@ export default function NextScheduleContainer() {
       !assignments ||
       assignments.length === 0 ||
       !selectedMaintenance?.id ||
-      !scheduledDate ||
+      !nextscheduledDate ||
       !maintenanceType ||
       !estimatedDuration ||
       !priorityLevel ||
       selectedNextTechs.length === 0
     ) {
+      console.log("Validation failed - checking fields:");
+      console.log("assignments:", assignments);
+      console.log("selectedMaintenance?.id:", selectedMaintenance?.id);
+      console.log("nextscheduledDate:", nextscheduledDate);
+      console.log("maintenanceType:", maintenanceType);
+      console.log("estimatedDuration:", estimatedDuration);
+      console.log("priorityLevel:", priorityLevel);
+      console.log("selectedNextTechs:", selectedNextTechs);
+      
       toast.error(
         "Please fill in all required fields and select at least one technician!"
       );
@@ -348,7 +453,7 @@ export default function NextScheduleContainer() {
           equipmentId: assignment.equipmentId,
           equipmentScheduleId: selectedMaintenance?.id,
           nextMaintenanceType: maintenanceType,
-          nextDate: scheduledDate,
+          nextDate: nextscheduledDate,
           estimateDuration: estimatedDuration,
           priority: priorityLevel,
           technicianIds: selectedNextTechs,
@@ -852,6 +957,96 @@ export default function NextScheduleContainer() {
                   </div>
 
                   <div className="space-y-4">
+                    {/* Equipment Usage Summary */}
+                    {equipmentUsageSummary && (
+                      <div className="bg-blue-50 rounded-lg p-4 border border-blue-200">
+                        <h3 className="text-sm font-semibold text-blue-900 mb-3">Equipment Usage Summary</h3>
+                        <div className="grid grid-cols-2 gap-4">
+                          <div>
+                            <label className="text-xs text-blue-700">Total Hours Used</label>
+                            <p className="text-sm font-semibold text-blue-900">
+                              {equipmentUsageSummary.totalHoursUsed?.toFixed(1) || 0}h
+                            </p>
+                          </div>
+                          <div>
+                            <label className="text-xs text-blue-700">Total Kilometers</label>
+                            <p className="text-sm font-semibold text-blue-900">
+                              {equipmentUsageSummary.totalKilometersTraveled?.toFixed(1) || 0}km
+                            </p>
+                          </div>
+                          <div>
+                            <label className="text-xs text-blue-700">Total Fuel Used</label>
+                            <p className="text-sm font-semibold text-blue-900">
+                              {equipmentUsageSummary.totalFuelConsumption?.toFixed(1) || 0}L
+                            </p>
+                          </div>
+                          <div>
+                            <label className="text-xs text-blue-700">Usage Records</label>
+                            <p className="text-sm font-semibold text-blue-900">
+                              {equipmentUsageSummary.totalUsageRecords || 0}
+                            </p>
+                          </div>
+                        </div>
+                      </div>
+                    )}
+
+                    {/* Average Usage Information */}
+                    {equipmentUsageAverage && (
+                      <div className="bg-green-50 rounded-lg p-4 border border-green-200">
+                        <h3 className="text-sm font-semibold text-green-900 mb-3">Average Usage per Day</h3>
+                        <div className="grid grid-cols-2 gap-4">
+                          <div>
+                            <label className="text-xs text-green-700">Avg Hours/Day</label>
+                            <p className="text-sm font-semibold text-green-900">
+                              {equipmentUsageAverage.averageHoursUsed?.toFixed(2) || 0}h
+                            </p>
+                          </div>
+                          <div>
+                            <label className="text-xs text-green-700">Avg Kilometers/Day</label>
+                            <p className="text-sm font-semibold text-green-900">
+                              {equipmentUsageAverage.averageKilometersTraveled?.toFixed(2) || 0}km
+                            </p>
+                          </div>
+                          <div>
+                            <label className="text-xs text-green-700">Avg Fuel/Day</label>
+                            <p className="text-sm font-semibold text-green-900">
+                              {equipmentUsageAverage.averageFuelConsumption?.toFixed(2) || 0}L
+                            </p>
+                          </div>
+                        </div>
+                      </div>
+                    )}
+
+                    {/* Maintenance Thresholds */}
+                    <div className="bg-yellow-50 rounded-lg p-4 border border-yellow-200">
+                      <h3 className="text-sm font-semibold text-yellow-900 mb-3">Maintenance Thresholds</h3>
+                      <div className="grid grid-cols-2 gap-4">
+                        <div>
+                          <label className="block text-xs font-medium text-yellow-700 mb-1">
+                            Hours Threshold
+                          </label>
+                          <div className="w-full border border-yellow-300 rounded-md px-2 py-1 text-xs bg-yellow-100 text-yellow-800">
+                            {maintenanceThresholds.hoursThreshold} hours
+                          </div>
+                        </div>
+                        <div>
+                          <label className="block text-xs font-medium text-yellow-700 mb-1">
+                            Kilometers Threshold
+                          </label>
+                          <div className="w-full border border-yellow-300 rounded-md px-2 py-1 text-xs bg-yellow-100 text-yellow-800">
+                            {maintenanceThresholds.kilometersThreshold} km
+                          </div>
+                        </div>
+                      </div>
+                    </div>
+
+                    {loadingUsageData && (
+                      <div className="bg-gray-50 rounded-lg p-4 border border-gray-200 text-center">
+                        <div className="animate-spin rounded-full h-6 w-6 border-b-2 border-[#236571] mx-auto mb-2"></div>
+                        <p className="text-sm text-gray-600">Loading equipment usage data...</p>
+                      </div>
+                    )}
+
                     {/* Maintenance Type */}
                     <div>
                       <label className="block text-sm font-medium text-gray-700 mb-1">
@@ -879,8 +1074,8 @@ export default function NextScheduleContainer() {
                       <div className="relative">
                         <input
                           type="date"
-                          value={scheduledDate}
-                          onChange={(e) => setScheduledDate(e.target.value)}
+                          value={nextscheduledDate}
+                          onChange={(e) => setNextScheduledDate(e.target.value)}
                           className="w-full border border-gray-300 rounded-md px-3 py-2 text-sm"
                         />
                         <Calendar className="absolute right-3 top-2.5 h-4 w-4 text-gray-400 pointer-events-none" />
@@ -970,20 +1165,44 @@ export default function NextScheduleContainer() {
                           className="w-full border border-gray-300 rounded-md px-3 py-2 text-sm appearance-none"
                         >
                           <option value="" disabled>
-                            Select technicians...
+                            Select technicians... ({teamMembers.length} available)
                           </option>
-                          {teamMembers
-                            .filter(
-                              (tech) =>
-                                tech.availabilityStatus === "AVAILABLE" &&
-                                !selectedNextTechs.includes(tech.empId)
-                            )
-                            .map((member) => (
-                              <option key={member.empId} value={member.empId}>
-                                {member.name} (
-                                {member.specializations?.join(", ")})
-                              </option>
-                            ))}
+                          {teamMembers.length === 0 ? (
+                            <option value="" disabled>
+                              No team members loaded
+                            </option>
+                          ) : (
+                            (() => {
+                              // First try to filter by availability
+                              const availableTechs = teamMembers
+                                .filter((tech) => {
+                                  const isAvailable = 
+                                    !tech.availabilityStatus || 
+                                    tech.availabilityStatus === "AVAILABLE" || 
+                                    tech.availabilityStatus === "Available" ||
+                                    tech.availabilityStatus === "available";
+                                  const notAlreadySelected = !selectedNextTechs.includes(tech.empId);
+                                  
+                                  console.log(`Technician ${tech.name}: status=${tech.availabilityStatus}, available=${isAvailable}, notSelected=${notAlreadySelected}`);
+                                  
+                                  return isAvailable && notAlreadySelected;
+                                });
+
+                              // If no available techs, show all techs (fallback)
+                              const techsToShow = availableTechs.length > 0 ? availableTechs : 
+                                teamMembers.filter((tech) => !selectedNextTechs.includes(tech.empId));
+
+                              console.log("Available techs count:", availableTechs.length);
+                              console.log("Techs to show count:", techsToShow.length);
+
+                              return techsToShow.map((member) => (
+                                <option key={member.empId} value={member.empId}>
+                                  {member.name} ({member.specializations?.join(", ") || "No specialization"})
+                                  {availableTechs.length === 0 ? " - All techs shown" : ""}
+                                </option>
+                              ));
+                            })()
+                          )}
                         </select>
                         <ChevronDown className="absolute right-3 top-2.5 h-4 w-4 text-gray-400 pointer-events-none" />
                       </div>
@@ -1034,7 +1253,7 @@ export default function NextScheduleContainer() {
                             </p>
                             <p>
                               <span className="font-medium">Date:</span>{" "}
-                              {scheduledDate}
+                              {nextscheduledDate}
                             </p>
                             <p>
                               <span className="font-medium">Technicians:</span>{" "}

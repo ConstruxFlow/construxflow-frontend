@@ -8,9 +8,9 @@ export default function TechnicianCard({
   // Color logic for status badge
   let badgeClass = "";
   let badgeText = "";
-  if (status === "Active") {
+  if (status === "Available") {
     badgeClass = "bg-[#236571] text-white";
-    badgeText = "Active";
+    badgeText = "Available";
   } else if (status === "On Task") {
     badgeClass = "bg-yellow-400 text-yellow-900";
     badgeText = "On Task";

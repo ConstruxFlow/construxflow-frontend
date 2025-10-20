@@ -327,7 +327,12 @@ const EquipmentUsageUpdate = () => {
             </div>
 
             {/* Previous Usage Summary */}
-            {previousUsage && previousUsage.hasUsageHistory && (
+            {loading && (
+              <div className="mt-4 pt-4 border-t border-deep_green/20 text-center">
+                <div className="text-slatebluegray text-sm">Loading previous usage data...</div>
+              </div>
+            )}
+            {!loading && previousUsage && previousUsage.hasUsageHistory && (
               <div className="grid grid-cols-1 md:grid-cols-3 gap-4 mt-4 pt-4 border-t border-deep_green/20">
                 <div className="text-center">
                   <div className="text-2xl font-bold text-main_dark">{previousUsage.lastUsageHours.toFixed(1)}h</div>
@@ -343,7 +348,7 @@ const EquipmentUsageUpdate = () => {
                 </div>
               </div>
             )}
-            {previousUsage && !previousUsage.hasUsageHistory && (
+            {!loading && previousUsage && !previousUsage.hasUsageHistory && (
               <div className="mt-4 pt-4 border-t border-deep_green/20 text-center">
                 <div className="text-slatebluegray text-sm">No previous usage recorded for this equipment</div>
               </div>
