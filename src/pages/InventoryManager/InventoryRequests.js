@@ -47,50 +47,75 @@ export default function InventoryRequests() {
           return;
         }
 
-        // Map the response data properly
+        // Map the response data with proper field mapping
         const mappedRequests = response.data.map((request, index) => {
           console.log(`Request ${index}:`, request);
           
-          // Extract equipment information from the response
-          // Based on your API response, it seems equipment info might be in different fields
-          let equipmentDetails = [];
-          if (request.equipmentDetails && Array.isArray(request.equipmentDetails)) {
-            equipmentDetails = request.equipmentDetails;
-          } else {
-            // If equipmentDetails is not an array, create a basic equipment object from available fields
-            equipmentDetails = [{
-              name: request.itemName || 'Equipment',
-              category: request.itemCategory || 'General',
-              quantity: request.quantity || 1
-            }];
-          }
+          // Extract data from the backend response
+          // Based on your API response, it seems the data might be in different fields
+          const projectName = request.projectName || 
+                            request.siteName || 
+                            `Project ${request.id}`;
+          
+          const siteManager = request.siteManagerId || 
+                            request.requestedBy || 
+                            'Unknown Manager';
+          
+          const equipmentName = request.itemName || 
+                              (request.equipmentDetails && request.equipmentDetails[0]?.name) || 
+                              'Equipment';
+          
+          const purpose = request.requestPurpose || 
+                         request.additionalNotes || 
+                         'No purpose specified';
+          
+          const location = request.expectedLocation || 
+                          request.siteName || 
+                          'No location specified';
 
           return {
+            // Core identification
             id: request.id || index + 1,
+            
+            // Project information
             projectId: request.projectId,
-            projectName: request.projectName || `Site ${String.fromCharCode(65 + index)}`, // Fallback to Site A, B, C
-            siteManagerId: request.siteManagerId || 'Unknown Manager',
+            projectName: projectName,
+            
+            // Manager information
+            siteManagerId: siteManager,
+            
+            // Date information
             requestDate: request.requestDate,
-            requestedStartDate: request.requestedStartDate,
-            requestedEndDate: request.requestedEndDate,
+            requestedStartDate: request.requestedStartDate || request.needFrom,
+            requestedEndDate: request.requestedEndDate || request.needTo,
+            
+            // Status and priority
             priority: request.priority,
             status: request.status,
+            
+            // Additional information
             additionalNotes: request.additionalNotes,
             rejectionReason: request.rejectionReason,
             approvalDate: request.approvalDate,
             approvedBy: request.approvedBy,
-            requestPurpose: request.requestPurpose,
-            expectedLocation: request.expectedLocation,
-            equipmentDetails: equipmentDetails,
+            requestPurpose: purpose,
+            expectedLocation: location,
+            
+            // Equipment information
+            equipmentDetails: request.equipmentDetails || [{
+              name: equipmentName,
+              category: request.itemCategory || 'General',
+              quantity: request.quantity || 1
+            }],
             
             // Legacy fields for compatibility
-            siteName: request.projectName || `Site ${String.fromCharCode(65 + index)}`,
-            requestedBy: request.siteManagerId || 'Unknown Manager',
-            itemName: equipmentDetails[0]?.name || 'Equipment',
-            itemCategory: equipmentDetails[0]?.category || 'General',
-            quantity: equipmentDetails[0]?.quantity || 1,
-            needFrom: request.requestedStartDate,
-            needTo: request.requestedEndDate
+            siteName: projectName,
+            requestedBy: siteManager,
+            itemName: equipmentName,
+            itemCategory: request.itemCategory || 'General',
+            quantity: request.quantity || 1,
+            needFrom: request.requestedStartDate || request.needFrom,
+            needTo: request.requestedEndDate || request.needTo
           };
         });
         
@@ -146,7 +171,7 @@ export default function InventoryRequests() {
     }
   };
 
-  // SIMPLIFIED Filtering logic
+  // Filtering logic
   const filtered = requests.filter((r) => {
     if (!r) return false;
 
@@ -172,7 +197,6 @@ export default function InventoryRequests() {
   });
 
   console.log("🎯 FILTERED RESULTS:", filtered);
-  console.log("🔍 FILTER CRITERIA - Search:", search, "Status:", statusFilter, "Priority:", priorityFilter);
 
   // Pagination
   const totalPages = Math.ceil(filtered.length / itemsPerPage);
@@ -183,7 +207,16 @@ export default function InventoryRequests() {
   const formatDate = (dateString) => {
     if (!dateString) return 'Not set';
     try {
-      const date = new Date(dateString);
+      // Handle different date formats
+      let date;
+      if (typeof dateString === 'string' && dateString.includes('T')) {
+        date = new Date(dateString);
+      } else if (typeof dateString === 'string') {
+        // Try to parse as local date
+        date = new Date(dateString.replace(' ', 'T'));
+      } else {
+        date = new Date(dateString);
+      }
       return isNaN(date.getTime()) ? 'Invalid Date' : date.toLocaleDateString();
     } catch {
       return 'Invalid Date';
@@ -375,13 +408,13 @@ export default function InventoryRequests() {
                           Req ID
                         </th>
                         <th className="px-6 py-4 text-left text-sm font-semibold text-main_dark">
-                          Project
+                          Project & Location
                         </th>
                         <th className="px-6 py-4 text-left text-sm font-semibold text-main_dark">
                           Site Manager
                         </th>
                         <th className="px-6 py-4 text-left text-sm font-semibold text-main_dark">
-                          Equipment
+                          Equipment & Purpose
                         </th>
                         <th className="px-6 py-4 text-left text-sm font-semibold text-main_dark">
                           Request Dates
@@ -411,7 +444,7 @@ export default function InventoryRequests() {
                               {r.projectName}
                             </div>
                             <div className="text-xs text-gray-500">
-                              {r.expectedLocation || 'No location specified'}
+                              {r.expectedLocation}
                             </div>
                           </td>
                           <td className="px-6 py-4 text-sm text-gray-700">
@@ -422,7 +455,7 @@ export default function InventoryRequests() {
                               {getEquipmentNames(r.equipmentDetails)}
                             </div>
                             <div className="text-xs text-gray-500">
-                              {r.requestPurpose || 'No purpose specified'}
+                              {r.requestPurpose}
                             </div>
                             {r.additionalNotes && (
                               <div className="text-xs text-gray-400 mt-1">
@@ -508,12 +541,12 @@ export default function InventoryRequests() {
                       <div className="space-y-2">
                         <div>
                           <div className="text-sm font-medium text-main_dark">{r.projectName}</div>
-                          <div className="text-xs text-gray-500">Location: {r.expectedLocation || 'Not specified'}</div>
+                          <div className="text-xs text-gray-500">Location: {r.expectedLocation}</div>
                         </div>
                         
                         <div>
                           <div className="text-sm">Manager: {r.siteManagerId}</div>
-                          <div className="text-xs text-gray-500">Purpose: {r.requestPurpose || 'Not specified'}</div>
+                          <div className="text-xs text-gray-500">Purpose: {r.requestPurpose}</div>
                         </div>
                         
                         <div className="text-sm">
