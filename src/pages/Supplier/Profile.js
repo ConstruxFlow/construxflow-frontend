@@ -362,47 +362,6 @@ const Profile = () => {
             </div>
           </div>
 
-          {/* Documents & Certifications - Full Width */}
-          <div className="md:col-span-2 bg-purewhite rounded-lg shadow-sm border border-light_gray p-5">
-            <div className="flex items-center justify-between mb-4">
-              <h2 className="text-lg font-semibold text-deep_green">
-                Documents & Certifications
-              </h2>
-              <button className="bg-deep_green text-purewhite px-4 py-2 rounded-lg hover:opacity-90 transition flex items-center gap-2 font-medium text-sm">
-                <FaPaperclip /> Upload Document
-              </button>
-            </div>
-            <div className="space-y-2">
-              {supplierData?.documents && supplierData.documents.length > 0 ? (
-                supplierData.documents.map((doc, idx) => (
-                  <div
-                    key={idx}
-                    className="flex items-center justify-between p-3 bg-light_gray rounded-lg hover:bg-gray-200 transition"
-                  >
-                    <div className="flex items-center gap-3">
-                      <FaPaperclip className="text-deep_green" />
-                      <span className="text-main_dark font-medium text-sm">
-                        {doc.document_name}
-                      </span>
-                    </div>
-                    <div className="flex items-center gap-2">
-                      <button className="text-deep_green hover:text-green-700 p-1.5">
-                        <FaDownload />
-                      </button>
-                      <button className="text-red-500 hover:text-red-700 p-1.5">
-                        <FaTrash />
-                      </button>
-                    </div>
-                  </div>
-                ))
-              ) : (
-                <div className="text-center py-6 text-slatebluegray">
-                  <FaFileAlt className="mx-auto text-3xl mb-2 opacity-30" />
-                  <p className="text-sm">No documents uploaded yet</p>
-                </div>
-              )}
-            </div>
-          </div>
         </div>
       </div>
     </div>
