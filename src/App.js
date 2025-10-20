@@ -198,57 +198,57 @@ export const routes = createBrowserRouter([
   },
   {
     path: "/reorder-material-page",
-    element: <ProtectedRoute allowedRoles={["InventoryManager"]} />,
+    element: <ProtectedRoute allowedRoles={["Inventory_Manager"]} />,
     children: [{ path: "", element: <ReorderMaterialPage /> }],
   },
   {
     path: "/Inventory/profile",
-    element: <ProtectedRoute allowedRoles={["InventoryManager"]} />,
+    element: <ProtectedRoute allowedRoles={["Inventory_Manager"]} />,
     children: [{ path: "", element: <InventoryProfile /> }],
   },
   {
     path: "/Inventory-requests",
-    element: <ProtectedRoute allowedRoles={["InventoryManager"]} />,
+    element: <ProtectedRoute allowedRoles={["Inventory_Manager"]} />,
     children: [{ path: "", element: <InventoryRequests /> }],
   },
   {
     path: "/update-inventory",
-    element: <ProtectedRoute allowedRoles={["InventoryManager"]} />,
+    element: <ProtectedRoute allowedRoles={["Inventory_Manager"]} />,
     children: [{ path: "", element: <UpdateInventory /> }],
   },
   {
     path: "/schedule-form/:equipmentId",
-    element: <ProtectedRoute allowedRoles={["InventoryManager"]} />,
+    element: <ProtectedRoute allowedRoles={["Inventory_Manager"]} />,
     children: [{ path: "", element: <ScheduleEquipment /> }],
   },
   {
     path: "/equipment-details/:id",
-    element: <ProtectedRoute allowedRoles={["InventoryManager"]} />,
+    element: <ProtectedRoute allowedRoles={["Inventory_Manager"]} />,
     children: [{ path: "", element: <EquipmentDetails /> }],
   },
   {
     path: "/view-schedule-page/:id",
-    element: <ProtectedRoute allowedRoles={["InventoryManager"]} />,
+    element: <ProtectedRoute allowedRoles={["Inventory_Manager"]} />,
     children: [{ path: "", element: <ViewSchedulePage /> }],
   },
   {
     path: "/inventory-dashboard",
-    element: <ProtectedRoute allowedRoles={["InventoryManager"]} />,
+    element: <ProtectedRoute allowedRoles={"Inventory_Manager"} />,
     children: [{ path: "", element: <InventoryDashboard /> }],
   },
   {
     path: "/inventory-monitoring",
-    element: <ProtectedRoute allowedRoles={["InventoryManager"]} />,
+    element: <ProtectedRoute allowedRoles={"Inventory_Manager"} />,
     children: [{ path: "", element: <InventoryMonitoring /> }],
   },
   {
     path: "/add-equipment",
-    element: <ProtectedRoute allowedRoles={["InventoryManager"]} />,
+    element: <ProtectedRoute allowedRoles={"Inventory_Manager"} />,
     children: [{ path: "", element: <AddEquipment /> }],
   },
   {
     path: "/add-material",
-    element: <ProtectedRoute allowedRoles={["InventoryManager"]} />,
+    element: <ProtectedRoute allowedRoles={"Inventory_Manager"} />,
     children: [{ path: "", element: <AddMaterial /> }],
   },
   {
