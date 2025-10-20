@@ -592,10 +592,10 @@ const UpdateQuotation = () => {
                     />
                   </div>
                   <div className="relative">
-                    <label className="block text-sm text-slatebluegray mb-1">Shipping Cost</label>
-                    <span className="absolute left-1 top-2 text-slatebluegray">
+                    <label className="block text-sm text-slatebluegray mb-1">Shipping Cost: RS</label>
+                    {/* <span className="absolute left-1 top-2 text-slatebluegray">
                       RS
-                    </span>
+                    </span> */}
                     <input
                       type="number"
                       name="shippingCost"
