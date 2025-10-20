@@ -1,5 +1,5 @@
 import React, { useState, useEffect } from 'react';
-import { FaSearch, FaEye, FaEdit, FaHistory, FaExclamationTriangle, FaExclamationCircle, FaTimesCircle } from 'react-icons/fa';
+import { FaSearch, FaEye, FaEdit, FaHistory, FaExclamationTriangle, FaExclamationCircle, FaTimesCircle, FaPlus } from 'react-icons/fa';
 import { useNavigate } from 'react-router-dom';
 import axios from 'axios';
 
@@ -18,6 +18,7 @@ export default function Site_RawMaterial_Info() {
   const [showUsageModal, setShowUsageModal] = useState(false);
   const [selectedMaterial, setSelectedMaterial] = useState(null);
   const [showReorderModal, setShowReorderModal] = useState(false);
+  const [showAddUsageModal, setShowAddUsageModal] = useState(false);
   const [projects, setProjects] = useState([]);
   const [selectedProject, setSelectedProject] = useState(null);
   const [projectsLoading, setProjectsLoading] = useState(true);
@@ -101,7 +102,11 @@ export default function Site_RawMaterial_Info() {
                     : item.quantity <= item.criticalLevel ? 'CRITICAL'
                     : item.quantity <= item.warningLevel ? 'WARNING'
                     : 'NORMAL',
-          projectName: project.projectName || ''
+          projectName: project.projectName || '',
+          // Add reorderLevel field for frontend management
+          reorderLevel: item.reorderLevel || item.warningLevel || 0,
+          // Add usage logs array for frontend management
+          usageLogs: item.usageLogs || []
         }));
 
         console.log('Mapped materials:', mapped);
@@ -131,7 +136,9 @@ export default function Site_RawMaterial_Info() {
                         : item.quantity <= item.criticalLevel ? 'CRITICAL'
                         : item.quantity <= item.warningLevel ? 'WARNING'
                         : 'NORMAL',
-              projectName: project.projectName || ''
+              projectName: project.projectName || '',
+              reorderLevel: item.reorderLevel || item.warningLevel || 0,
+              usageLogs: item.usageLogs || []
             }));
             console.log('Mapped fallback materials:', mapped);
             setMaterials(mapped);
@@ -164,70 +171,48 @@ export default function Site_RawMaterial_Info() {
     }
   };
 
-  // Mock data for development (remove when backend is ready)
-  const getMockMaterials = () => [
-    {
-      rawMaterialId: 1,
-      materialName: 'Concrete Mix',
-      materialType: 'Building Material',
-      currentQuantity: 850,
-      warningLevel: 300,
-      criticalLevel: 200,
-      urgentLevel: 100,
-      unitOfMeasurement: 'bags',
-      stockStatus: 'NORMAL',
-      projectName: 'Residential Complex A'
-    },
-    {
-      rawMaterialId: 2,
-      materialName: 'Steel Rebar',
-      materialType: 'Structural',
-      currentQuantity: 45,
-      warningLevel: 80,
-      criticalLevel: 60,
-      urgentLevel: 40,
-      unitOfMeasurement: 'tons',
-      stockStatus: 'WARNING',
-      projectName: 'Residential Complex A'
-    },
-    {
-      rawMaterialId: 3,
-      materialName: 'Ceramic Tiles',
-      materialType: 'Finishing',
-      currentQuantity: 2540,
-      warningLevel: 800,
-      criticalLevel: 600,
-      urgentLevel: 400,
-      unitOfMeasurement: 'sqft',
-      stockStatus: 'NORMAL',
-      projectName: 'Residential Complex A'
-    },
-    {
-      rawMaterialId: 4,
-      materialName: 'Exterior Paint',
-      materialType: 'Coating',
-      currentQuantity: 125,
-      warningLevel: 100,
-      criticalLevel: 75,
-      urgentLevel: 50,
-      unitOfMeasurement: 'gallons',
-      stockStatus: 'NORMAL',
-      projectName: 'Residential Complex A'
-    },
-    {
-      rawMaterialId: 5,
-      materialName: 'Lumber 2x4',
-      materialType: 'Wood',
-      currentQuantity: 15,
-      warningLevel: 50,
-      criticalLevel: 30,
-      urgentLevel: 20,
-      unitOfMeasurement: 'pieces',
-      stockStatus: 'URGENT',
-      projectName: 'Residential Complex A'
-    }
-  ];
+  // Update reorder level in frontend state
+  const updateReorderLevel = (materialId, newReorderLevel) => {
+    setMaterials(prevMaterials => 
+      prevMaterials.map(material => 
+        material.rawMaterialId === materialId 
+          ? { 
+              ...material, 
+              reorderLevel: newReorderLevel,
+              // Update stock status based on new reorder level
+              stockStatus: material.currentQuantity <= newReorderLevel ? 'WARNING' : 'NORMAL'
+            } 
+          : material
+      )
+    );
+  };
 
+  // Add usage log to material in frontend state
+  const addUsageLog = (materialId, newUsageLog) => {
+    setMaterials(prevMaterials => 
+      prevMaterials.map(material => {
+        if (material.rawMaterialId === materialId) {
+          const updatedLogs = [newUsageLog, ...(material.usageLogs || [])];
+          const quantityChange = (newUsageLog.quantityReceived || 0) - (newUsageLog.quantityUsed || 0);
+          const newQuantity = material.currentQuantity + quantityChange;
+          
+          return {
+            ...material,
+            currentQuantity: newQuantity,
+            usageLogs: updatedLogs,
+            // Update stock status based on new quantity
+            stockStatus: newQuantity <= material.urgentLevel ? 'URGENT' 
+                       : newQuantity <= material.criticalLevel ? 'CRITICAL'
+                       : newQuantity <= material.reorderLevel ? 'WARNING'
+                       : 'NORMAL'
+          };
+        }
+        return material;
+      })
+    );
+  };
+
+  // Mock data for development (remove when backend is ready)
   const getMockMaterialsForProject = (projectId) => {
     switch (projectId) {
       case 1:
@@ -242,7 +227,28 @@ export default function Site_RawMaterial_Info() {
             urgentLevel: 100,
             unitOfMeasurement: 'bags',
             stockStatus: 'NORMAL',
-            projectName: 'Residential Complex A'
+            projectName: 'Residential Complex A',
+            reorderLevel: 300,
+            usageLogs: [
+              {
+                logId: 1,
+                usageDate: '2024-01-15',
+                quantityUsed: 50,
+                quantityReceived: 0,
+                quantityAdjusted: 0,
+                remarks: 'Daily construction usage',
+                loggedBy: 'Site Manager'
+              },
+              {
+                logId: 2,
+                usageDate: '2024-01-14',
+                quantityUsed: 45,
+                quantityReceived: 0,
+                quantityAdjusted: 0,
+                remarks: 'Daily construction usage',
+                loggedBy: 'Site Manager'
+              }
+            ]
           },
           {
             rawMaterialId: 2,
@@ -254,7 +260,9 @@ export default function Site_RawMaterial_Info() {
             urgentLevel: 40,
             unitOfMeasurement: 'tons',
             stockStatus: 'WARNING',
-            projectName: 'Residential Complex A'
+            projectName: 'Residential Complex A',
+            reorderLevel: 80,
+            usageLogs: []
           },
           {
             rawMaterialId: 3,
@@ -266,7 +274,9 @@ export default function Site_RawMaterial_Info() {
             urgentLevel: 400,
             unitOfMeasurement: 'sqft',
             stockStatus: 'NORMAL',
-            projectName: 'Residential Complex A'
+            projectName: 'Residential Complex A',
+            reorderLevel: 800,
+            usageLogs: []
           }
         ];
       case 2:
@@ -281,7 +291,9 @@ export default function Site_RawMaterial_Info() {
             urgentLevel: 50,
             unitOfMeasurement: 'gallons',
             stockStatus: 'NORMAL',
-            projectName: 'Office Tower B'
+            projectName: 'Office Tower B',
+            reorderLevel: 100,
+            usageLogs: []
           },
           {
             rawMaterialId: 5,
@@ -293,7 +305,9 @@ export default function Site_RawMaterial_Info() {
             urgentLevel: 20,
             unitOfMeasurement: 'pieces',
             stockStatus: 'URGENT',
-            projectName: 'Office Tower B'
+            projectName: 'Office Tower B',
+            reorderLevel: 50,
+            usageLogs: []
           }
         ];
       case 3:
@@ -308,7 +322,9 @@ export default function Site_RawMaterial_Info() {
             urgentLevel: 100,
             unitOfMeasurement: 'bags',
             stockStatus: 'NORMAL',
-            projectName: 'Shopping Mall C'
+            projectName: 'Shopping Mall C',
+            reorderLevel: 300,
+            usageLogs: []
           },
           {
             rawMaterialId: 2,
@@ -320,7 +336,9 @@ export default function Site_RawMaterial_Info() {
             urgentLevel: 40,
             unitOfMeasurement: 'tons',
             stockStatus: 'WARNING',
-            projectName: 'Shopping Mall C'
+            projectName: 'Shopping Mall C',
+            reorderLevel: 80,
+            usageLogs: []
           }
         ];
       case 4:
@@ -335,7 +353,9 @@ export default function Site_RawMaterial_Info() {
             urgentLevel: 400,
             unitOfMeasurement: 'sqft',
             stockStatus: 'NORMAL',
-            projectName: 'Hospital Extension'
+            projectName: 'Hospital Extension',
+            reorderLevel: 800,
+            usageLogs: []
           },
           {
             rawMaterialId: 4,
@@ -347,7 +367,9 @@ export default function Site_RawMaterial_Info() {
             urgentLevel: 50,
             unitOfMeasurement: 'gallons',
             stockStatus: 'NORMAL',
-            projectName: 'Hospital Extension'
+            projectName: 'Hospital Extension',
+            reorderLevel: 100,
+            usageLogs: []
           }
         ];
       default:
@@ -416,6 +438,11 @@ export default function Site_RawMaterial_Info() {
   const handleEditReorderLevels = (material) => {
     setSelectedMaterial(material);
     setShowReorderModal(true);
+  };
+
+  const handleAddUsageLog = (material) => {
+    setSelectedMaterial(material);
+    setShowAddUsageModal(true);
   };
 
   // Get unique values for filters
@@ -676,7 +703,7 @@ export default function Site_RawMaterial_Info() {
                         </div>
                       </th>
                       <th className="px-6 py-4 text-left text-sm font-semibold text-main_dark">Current Stock</th>
-                      <th className="px-6 py-4 text-left text-sm font-semibold text-main_dark">Reorder Levels</th>
+                      <th className="px-6 py-4 text-left text-sm font-semibold text-main_dark">Reorder Level</th>
                       <th className="px-6 py-4 text-left text-sm font-semibold text-main_dark">Status</th>
                       <th className="px-6 py-4 text-left text-sm font-semibold text-main_dark">Actions</th>
                     </tr>
@@ -705,7 +732,7 @@ export default function Site_RawMaterial_Info() {
                           <div className="space-y-1">
                             <div className="flex items-center gap-2">
                               <FaExclamationTriangle className="w-3 h-3 text-gray-400" />
-                              <span>Reorder Level: {material.reorderLevel ?? material.warningLevel ?? 'N/A'} {material.unitOfMeasurement}</span>
+                              <span>{material.reorderLevel} {material.unitOfMeasurement}</span>
                             </div>
                           </div>
                         </td>
@@ -729,6 +756,13 @@ export default function Site_RawMaterial_Info() {
                               title="Edit Reorder Levels"
                             >
                               <FaEdit className="w-4 h-4" />
+                            </button>
+                            <button
+                              onClick={() => handleAddUsageLog(material)}
+                              className="text-web_yellow hover:text-web_yellow/80 transition-colors p-1"
+                              title="Add Usage Log"
+                            >
+                              <FaPlus className="w-4 h-4" />
                             </button>
                           </div>
                         </td>
@@ -767,7 +801,7 @@ export default function Site_RawMaterial_Info() {
                       <p><span className="font-medium">Current Stock:</span>
                         <span className={getStockColor(material.stockStatus)}> {material.currentQuantity} {material.unitOfMeasurement}</span>
                       </p>
-                      <p><span className="font-medium">Reorder Level:</span> {material.reorderLevel ?? material.warningLevel ?? 'N/A'} {material.unitOfMeasurement}</p>
+                      <p><span className="font-medium">Reorder Level:</span> {material.reorderLevel} {material.unitOfMeasurement}</p>
                     </div>
 
                     <div className="flex items-center gap-2">
@@ -785,17 +819,40 @@ export default function Site_RawMaterial_Info() {
                         <FaEdit className="w-4 h-4 inline mr-1" />
                         Edit Levels
                       </button>
+                      <button
+                        onClick={() => handleAddUsageLog(material)}
+                        className="text-web_yellow hover:text-web_yellow/80 transition-colors p-2 text-xs"
+                      >
+                        <FaPlus className="w-4 h-4 inline mr-1" />
+                        Add Usage
+                      </button>
                     </div>
                   </div>
                 ))}
-                <button 
-                  onClick={() => setCurrentPage(Math.min(totalPages, currentPage + 1))}
-                  disabled={currentPage === totalPages}
-                  className="px-3 py-1 text-sm text-gray-600 hover:text-gray-900 transition-colors disabled:opacity-50 disabled:cursor-not-allowed"
-                >
-                  Next
-                </button>
               </div>
+
+              {/* Pagination */}
+              {totalPages > 1 && (
+                <div className="px-6 py-4 border-t border-gray-200 flex items-center justify-between">
+                  <button
+                    onClick={() => setCurrentPage(Math.max(1, currentPage - 1))}
+                    disabled={currentPage === 1}
+                    className="px-3 py-1 text-sm text-gray-600 hover:text-gray-900 transition-colors disabled:opacity-50 disabled:cursor-not-allowed"
+                  >
+                    Previous
+                  </button>
+                  <span className="text-sm text-gray-600">
+                    Page {currentPage} of {totalPages}
+                  </span>
+                  <button
+                    onClick={() => setCurrentPage(Math.min(totalPages, currentPage + 1))}
+                    disabled={currentPage === totalPages}
+                    className="px-3 py-1 text-sm text-gray-600 hover:text-gray-900 transition-colors disabled:opacity-50 disabled:cursor-not-allowed"
+                  >
+                    Next
+                  </button>
+                </div>
+              )}
             </div>
           )}
         </div>
@@ -814,7 +871,16 @@ export default function Site_RawMaterial_Info() {
         <EditReorderLevelsModal 
           material={selectedMaterial} 
           onClose={() => setShowReorderModal(false)}
-          onSave={fetchDeliveredMaterials}
+          onSave={updateReorderLevel}
+        />
+      )}
+
+      {/* Add Usage Log Modal */}
+      {showAddUsageModal && selectedMaterial && (
+        <AddUsageLogModal 
+          material={selectedMaterial} 
+          onClose={() => setShowAddUsageModal(false)}
+          onSave={addUsageLog}
         />
       )}
     </div>
@@ -823,44 +889,7 @@ export default function Site_RawMaterial_Info() {
 
 // Usage History Modal Component
 function UsageHistoryModal({ material, onClose }) {
-  const [usageLogs, setUsageLogs] = useState([]);
-  const [loading, setLoading] = useState(true);
-
-  useEffect(() => {
-    fetchUsageHistory();
-  }, [material.rawMaterialId]);
-
-  const fetchUsageHistory = async () => {
-    try {
-      setLoading(true);
-      // For now, use mock data. Replace with actual API call when ready
-      const mockLogs = [
-        {
-          logId: 1,
-          usageDate: '2024-01-15',
-          quantityUsed: 50,
-          quantityReceived: 0,
-          quantityAdjusted: 0,
-          remarks: 'Daily construction usage',
-          loggedBy: 'Site Manager'
-        },
-        {
-          logId: 2,
-          usageDate: '2024-01-14',
-          quantityUsed: 45,
-          quantityReceived: 0,
-          quantityAdjusted: 0,
-          remarks: 'Daily construction usage',
-          loggedBy: 'Site Manager'
-        }
-      ];
-      setUsageLogs(mockLogs);
-    } catch (error) {
-      console.error('Error fetching usage history:', error);
-    } finally {
-      setLoading(false);
-    }
-  };
+  const [usageLogs, setUsageLogs] = useState(material.usageLogs || []);
 
   return (
     <div className="fixed inset-0 bg-black bg-opacity-50 flex items-center justify-center z-50 p-4">
@@ -883,47 +912,49 @@ function UsageHistoryModal({ material, onClose }) {
         </div>
 
         <div className="p-6">
-          {loading ? (
-            <div className="text-center py-8">
-              <div className="animate-spin rounded-full h-8 w-8 border-b-2 border-web_yellow mx-auto mb-4"></div>
-              <p className="text-gray-600">Loading usage history...</p>
-            </div>
-          ) : (
-            <div className="space-y-4">
-              {/* Add New Usage Log Button */}
-              <button className="bg-web_yellow hover:bg-web_yellow/80 text-white font-semibold px-4 py-2 rounded-lg transition-all duration-150">
-                + Add Usage Log
-              </button>
-
-              {/* Usage Logs Table */}
-              <div className="overflow-x-auto">
-                <table className="w-full">
-                  <thead className="bg-gray-50">
+          <div className="space-y-4">
+            {/* Usage Logs Table */}
+            <div className="overflow-x-auto">
+              <table className="w-full">
+                <thead className="bg-gray-50">
+                  <tr>
+                    <th className="px-4 py-3 text-left text-sm font-semibold text-gray-700">Date</th>
+                    <th className="px-4 py-3 text-left text-sm font-semibold text-gray-700">Used</th>
+                    <th className="px-4 py-3 text-left text-sm font-semibold text-gray-700">Received</th>
+                    <th className="px-4 py-3 text-left text-sm font-semibold text-gray-700">Adjusted</th>
+                    <th className="px-4 py-3 text-left text-sm font-semibold text-gray-700">Remarks</th>
+                    <th className="px-4 py-3 text-left text-sm font-semibold text-gray-700">Logged By</th>
+                  </tr>
+                </thead>
+                <tbody className="divide-y divide-gray-200">
+                  {usageLogs.length === 0 ? (
                     <tr>
-                      <th className="px-4 py-3 text-left text-sm font-semibold text-gray-700">Date</th>
-                      <th className="px-4 py-3 text-left text-sm font-semibold text-gray-700">Used</th>
-                      <th className="px-4 py-3 text-left text-sm font-semibold text-gray-700">Received</th>
-                      <th className="px-4 py-3 text-left text-sm font-semibold text-gray-700">Adjusted</th>
-                      <th className="px-4 py-3 text-left text-sm font-semibold text-gray-700">Remarks</th>
-                      <th className="px-4 py-3 text-left text-sm font-semibold text-gray-700">Logged By</th>
+                      <td colSpan="6" className="px-4 py-8 text-center text-gray-500">
+                        No usage logs found for this material
+                      </td>
                     </tr>
-                  </thead>
-                  <tbody className="divide-y divide-gray-200">
-                    {usageLogs.map((log) => (
+                  ) : (
+                    usageLogs.map((log) => (
                       <tr key={log.logId} className="hover:bg-gray-50">
                         <td className="px-4 py-3 text-sm text-gray-900">{log.usageDate}</td>
-                        <td className="px-4 py-3 text-sm text-red-600">{log.quantityUsed}</td>
-                        <td className="px-4 py-3 text-sm text-green-600">{log.quantityReceived}</td>
-                        <td className="px-4 py-3 text-sm text-blue-600">{log.quantityAdjusted}</td>
+                        <td className="px-4 py-3 text-sm text-red-600 font-medium">
+                          {log.quantityUsed > 0 ? `-${log.quantityUsed}` : '-'}
+                        </td>
+                        <td className="px-4 py-3 text-sm text-green-600 font-medium">
+                          {log.quantityReceived > 0 ? `+${log.quantityReceived}` : '+'}
+                        </td>
+                        <td className="px-4 py-3 text-sm text-blue-600 font-medium">
+                          {log.quantityAdjusted !== 0 ? (log.quantityAdjusted > 0 ? `+${log.quantityAdjusted}` : log.quantityAdjusted) : '-'}
+                        </td>
                         <td className="px-4 py-3 text-sm text-gray-700">{log.remarks}</td>
                         <td className="px-4 py-3 text-sm text-gray-700">{log.loggedBy}</td>
                       </tr>
-                    ))}
-                  </tbody>
-                </table>
-              </div>
+                    ))
+                  )}
+                </tbody>
+              </table>
             </div>
-          )}
+          </div>
         </div>
       </div>
     </div>
@@ -932,9 +963,8 @@ function UsageHistoryModal({ material, onClose }) {
 
 // Edit Reorder Levels Modal Component
 function EditReorderLevelsModal({ material, onClose, onSave }) {
-  // Use a single reorderLevel field instead of warning/critical/urgent
   const [formData, setFormData] = useState({
-    reorderLevel: material.reorderLevel ?? material.warningLevel ?? 0
+    reorderLevel: material.reorderLevel || 0
   });
   const [saving, setSaving] = useState(false);
 
@@ -945,11 +975,8 @@ function EditReorderLevelsModal({ material, onClose, onSave }) {
   const handleSave = async () => {
     try {
       setSaving(true);
-      // For now, just show success message since backend API is not ready
-      // In future, send `formData.reorderLevel` to backend to persist
-      alert('Reorder level updated successfully! (Backend API not implemented yet)');
-      // Optionally update parent by calling onSave so delivered materials are refreshed
-      onSave();
+      // Update in frontend state
+      onSave(material.rawMaterialId, formData.reorderLevel);
       onClose();
     } catch (error) {
       console.error('Error updating reorder levels:', error);
@@ -964,10 +991,10 @@ function EditReorderLevelsModal({ material, onClose, onSave }) {
       <div className="bg-white rounded-lg max-w-md w-full">
         <div className="p-6 border-b border-gray-200">
           <h2 className="text-xl font-semibold text-main_dark">
-            Edit Reorder Levels
+            Edit Reorder Level
           </h2>
           <p className="text-gray-600 mt-2">
-            Update reorder levels for {material.materialName}
+            Update reorder level for {material.materialName}
           </p>
         </div>
 
@@ -981,8 +1008,12 @@ function EditReorderLevelsModal({ material, onClose, onSave }) {
               value={formData.reorderLevel}
               onChange={(e) => handleInputChange('reorderLevel', e.target.value)}
               className="w-full px-3 py-2 border border-gray-300 rounded-md focus:outline-none focus:ring-2 focus:ring-web_yellow focus:border-transparent"
+              min="0"
+              step="1"
             />
-            <p className="text-xs text-gray-500 mt-2">This single value will be used as the reorder threshold for the material.</p>
+            <p className="text-xs text-gray-500 mt-2">
+              When stock falls below this level, the status will change to "Warning"
+            </p>
           </div>
         </div>
 
@@ -999,6 +1030,224 @@ function EditReorderLevelsModal({ material, onClose, onSave }) {
             className="flex-1 bg-web_yellow hover:bg-web_yellow/80 text-white font-semibold px-4 py-2 rounded-md transition-colors disabled:opacity-50"
           >
             {saving ? 'Saving...' : 'Save Changes'}
+          </button>
+        </div>
+      </div>
+    </div>
+  );
+}
+
+// Add Usage Log Modal Component
+function AddUsageLogModal({ material, onClose, onSave }) {
+  const [formData, setFormData] = useState({
+    usageDate: new Date().toISOString().split('T')[0],
+    quantityUsed: 0,
+    quantityReceived: 0,
+    quantityAdjusted: 0,
+    remarks: '',
+    loggedBy: 'Site Manager'
+  });
+  const [saving, setSaving] = useState(false);
+
+  const handleInputChange = (field, value) => {
+    setFormData(prev => ({ 
+      ...prev, 
+      [field]: field === 'remarks' || field === 'loggedBy' ? value : (parseFloat(value) || 0)
+    }));
+  };
+
+  const handleSave = async () => {
+    try {
+      setSaving(true);
+      
+      // Create new usage log
+      const newUsageLog = {
+        logId: Date.now(), // Generate unique ID
+        usageDate: formData.usageDate,
+        quantityUsed: formData.quantityUsed,
+        quantityReceived: formData.quantityReceived,
+        quantityAdjusted: formData.quantityAdjusted,
+        remarks: formData.remarks || 'No remarks provided',
+        loggedBy: formData.loggedBy
+      };
+
+      // Update in frontend state
+      onSave(material.rawMaterialId, newUsageLog);
+      onClose();
+    } catch (error) {
+      console.error('Error adding usage log:', error);
+      alert('Failed to add usage log. Please try again.');
+    } finally {
+      setSaving(false);
+    }
+  };
+
+  const getNetChange = () => {
+    return (formData.quantityReceived - formData.quantityUsed + formData.quantityAdjusted);
+  };
+
+  const getNewStock = () => {
+    return material.currentQuantity + getNetChange();
+  };
+
+  return (
+    <div className="fixed inset-0 bg-black bg-opacity-50 flex items-center justify-center z-50 p-4">
+      <div className="bg-white rounded-lg max-w-md w-full max-h-[90vh] overflow-y-auto">
+        <div className="p-6 border-b border-gray-200">
+          <h2 className="text-xl font-semibold text-main_dark">
+            Add Usage Log - {material.materialName}
+          </h2>
+          <p className="text-gray-600 mt-2">
+            Record material usage, receipts, or adjustments
+          </p>
+        </div>
+
+        <div className="p-6 space-y-4">
+          {/* Current Stock Info */}
+          <div className="bg-gray-50 p-4 rounded-lg">
+            <h3 className="font-semibold text-gray-700 mb-2">Current Stock Information</h3>
+            <div className="grid grid-cols-2 gap-2 text-sm">
+              <div>
+                <span className="text-gray-600">Current Quantity:</span>
+                <span className="font-semibold ml-2">{material.currentQuantity} {material.unitOfMeasurement}</span>
+              </div>
+              <div>
+                <span className="text-gray-600">Reorder Level:</span>
+                <span className="font-semibold ml-2">{material.reorderLevel} {material.unitOfMeasurement}</span>
+              </div>
+            </div>
+          </div>
+
+          {/* Form Fields */}
+          <div>
+            <label className="block text-sm font-medium text-gray-700 mb-2">
+              Date
+            </label>
+            <input
+              type="date"
+              value={formData.usageDate}
+              onChange={(e) => handleInputChange('usageDate', e.target.value)}
+              className="w-full px-3 py-2 border border-gray-300 rounded-md focus:outline-none focus:ring-2 focus:ring-web_yellow focus:border-transparent"
+            />
+          </div>
+
+          <div className="grid grid-cols-2 gap-4">
+            <div>
+              <label className="block text-sm font-medium text-gray-700 mb-2">
+                Quantity Used
+              </label>
+              <input
+                type="number"
+                value={formData.quantityUsed}
+                onChange={(e) => handleInputChange('quantityUsed', e.target.value)}
+                className="w-full px-3 py-2 border border-gray-300 rounded-md focus:outline-none focus:ring-2 focus:ring-web_yellow focus:border-transparent"
+                min="0"
+                step="1"
+              />
+            </div>
+            <div>
+              <label className="block text-sm font-medium text-gray-700 mb-2">
+                Quantity Received
+              </label>
+              <input
+                type="number"
+                value={formData.quantityReceived}
+                onChange={(e) => handleInputChange('quantityReceived', e.target.value)}
+                className="w-full px-3 py-2 border border-gray-300 rounded-md focus:outline-none focus:ring-2 focus:ring-web_yellow focus:border-transparent"
+                min="0"
+                step="1"
+              />
+            </div>
+          </div>
+
+          <div>
+            <label className="block text-sm font-medium text-gray-700 mb-2">
+              Quantity Adjusted
+            </label>
+            <input
+              type="number"
+              value={formData.quantityAdjusted}
+              onChange={(e) => handleInputChange('quantityAdjusted', e.target.value)}
+              className="w-full px-3 py-2 border border-gray-300 rounded-md focus:outline-none focus:ring-2 focus:ring-web_yellow focus:border-transparent"
+              step="1"
+              placeholder="Positive for gain, negative for loss"
+            />
+            <p className="text-xs text-gray-500 mt-1">
+              Use positive numbers for inventory gains, negative for losses
+            </p>
+          </div>
+
+          <div>
+            <label className="block text-sm font-medium text-gray-700 mb-2">
+              Remarks
+            </label>
+            <textarea
+              value={formData.remarks}
+              onChange={(e) => handleInputChange('remarks', e.target.value)}
+              className="w-full px-3 py-2 border border-gray-300 rounded-md focus:outline-none focus:ring-2 focus:ring-web_yellow focus:border-transparent"
+              rows="3"
+              placeholder="Enter remarks about this transaction..."
+            />
+          </div>
+
+          <div>
+            <label className="block text-sm font-medium text-gray-700 mb-2">
+              Logged By
+            </label>
+            <input
+              type="text"
+              value={formData.loggedBy}
+              onChange={(e) => handleInputChange('loggedBy', e.target.value)}
+              className="w-full px-3 py-2 border border-gray-300 rounded-md focus:outline-none focus:ring-2 focus:ring-web_yellow focus:border-transparent"
+              placeholder="Enter your name"
+            />
+          </div>
+
+          {/* Summary */}
+          <div className="bg-blue-50 p-4 rounded-lg">
+            <h3 className="font-semibold text-blue-700 mb-2">Transaction Summary</h3>
+            <div className="space-y-1 text-sm">
+              <div className="flex justify-between">
+                <span>Net Change:</span>
+                <span className={`font-semibold ${getNetChange() >= 0 ? 'text-green-600' : 'text-red-600'}`}>
+                  {getNetChange() >= 0 ? '+' : ''}{getNetChange()} {material.unitOfMeasurement}
+                </span>
+              </div>
+              <div className="flex justify-between">
+                <span>New Stock Level:</span>
+                <span className="font-semibold text-main_dark">
+                  {getNewStock()} {material.unitOfMeasurement}
+                </span>
+              </div>
+              <div className="flex justify-between">
+                <span>New Status:</span>
+                <span className={`font-semibold ${
+                  getNewStock() <= material.urgentLevel ? 'text-red-600' :
+                  getNewStock() <= material.criticalLevel ? 'text-orange-600' :
+                  getNewStock() <= material.reorderLevel ? 'text-yellow-600' : 'text-green-600'
+                }`}>
+                  {getNewStock() <= material.urgentLevel ? 'URGENT' :
+                   getNewStock() <= material.criticalLevel ? 'CRITICAL' :
+                   getNewStock() <= material.reorderLevel ? 'WARNING' : 'NORMAL'}
+                </span>
+              </div>
+            </div>
+          </div>
+        </div>
+
+        <div className="p-6 border-t border-gray-200 flex gap-3">
+          <button
+            onClick={onClose}
+            className="flex-1 px-4 py-2 border border-gray-300 text-gray-700 rounded-md hover:bg-gray-50 transition-colors"
+          >
+            Cancel
+          </button>
+          <button
+            onClick={handleSave}
+            disabled={saving || (formData.quantityUsed === 0 && formData.quantityReceived === 0 && formData.quantityAdjusted === 0)}
+            className="flex-1 bg-web_yellow hover:bg-web_yellow/80 text-white font-semibold px-4 py-2 rounded-md transition-colors disabled:opacity-50"
+          >
+            {saving ? 'Saving...' : 'Save Log'}
           </button>
         </div>
       </div>
