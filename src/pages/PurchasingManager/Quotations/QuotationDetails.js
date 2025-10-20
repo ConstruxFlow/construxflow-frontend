@@ -365,7 +365,7 @@ const QuotationDetail = () => {
                     <p className="font-medium text-main_dark flex items-center gap-2 text-sm sm:text-base">
                       <FaCalendarAlt className="text-web_yellow w-4 h-4" />
                       {new Date(
-                        quotationData?.deliveryInformation.requiredDate || ""
+                        quotationData1?.deliveryInfos[0]?.deliveryDate || ""
                       ).toLocaleDateString()}
                     </p>
                   </div>
@@ -409,7 +409,7 @@ const QuotationDetail = () => {
                       Warranty Period
                     </label>
                     <p className="font-medium text-main_dark text-sm sm:text-base">
-                      {quotationData.termsAndConditions.warrantyPeriod || "N/A"}
+                      {quotationData1?.termsAndConditions?.warrantyPeriod || "N/A"}
                     </p>
                   </div>
                   <div className="sm:col-span-2 lg:col-span-1">
@@ -434,36 +434,6 @@ const QuotationDetail = () => {
                   <p className="text-main_dark text-sm sm:text-base">
                     {quotationData1?.notes || ""}
                   </p>
-                </div>
-              </div>
-
-              {/* Attachments */}
-              <div className="bg-purewhite border border-gray-200 rounded-lg p-4 sm:p-6">
-                <h3 className="text-lg font-semibold text-main_dark mb-4">
-                  Attachments
-                </h3>
-                <div className="space-y-3">
-                  {quotationData.attachments.map((file, index) => (
-                    <div
-                      key={index}
-                      className="flex items-center justify-between p-3 border border-gray-200 rounded-lg"
-                    >
-                      <div className="flex items-center gap-3 flex-1 min-w-0">
-                        <div className="w-8 h-8 bg-red-100 rounded flex items-center justify-center flex-shrink-0">
-                          <FaFileAlt className="w-4 h-4 text-red-600" />
-                        </div>
-                        <div className="min-w-0 flex-1">
-                          <p className="font-medium text-main_dark text-sm truncate">
-                            {file.name}
-                          </p>
-                          <p className="text-xs text-gray-500">{file.size}</p>
-                        </div>
-                      </div>
-                      <button className="text-deep_green hover:text-deep_green/80 transition-colors flex-shrink-0 ml-2">
-                        <FaDownload className="w-4 h-4" />
-                      </button>
-                    </div>
-                  ))}
                 </div>
               </div>
             </div>

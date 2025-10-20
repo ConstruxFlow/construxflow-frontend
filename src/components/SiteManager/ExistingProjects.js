@@ -1,9 +1,12 @@
 // ExistingProjects.jsx
-import React, { useEffect, useState } from 'react';
+import React, { useContext, useEffect, useState } from 'react';
 import axios from 'axios';
 import { useNavigate } from 'react-router-dom';
 import { FaPlus, FaEdit, FaSearch, FaTrash, FaEye } from 'react-icons/fa';
 import { IoFilter } from 'react-icons/io5';
+import ProjectProgressCard from './ProjectProgressCard';
+import ProjectStatusManager from './ProjectStatusManager';
+import { AuthContext } from '../../Context/AuthContext';
 
 const ExistingProjects = () => {
   const [projects, setProjects] = useState([]);
@@ -12,6 +15,9 @@ const ExistingProjects = () => {
   const [deletingId, setDeletingId] = useState(null);
   const [statusFilter, setStatusFilter] = useState('All Status');
   const [searchTerm, setSearchTerm] = useState('');
+  const [selectedProject, setSelectedProject] = useState(null);
+  const [showStatusManager, setShowStatusManager] = useState(false);
+  const { authState } = useContext(AuthContext);
   
   const statusOptions = [
     'All Status',
@@ -22,8 +28,7 @@ const ExistingProjects = () => {
     'Completed'
   ];
 
-  const user = JSON.parse(localStorage.getItem('user'));
-  const managerId = user?.id;
+  const managerId = authState?.user?.managerId;
 
   const navigate = useNavigate();
 
@@ -50,6 +55,24 @@ const ExistingProjects = () => {
     } finally {
       setDeletingId(null);
     }
+  };
+
+  const handleStatusUpdate = async (projectId, newStatus) => {
+    try {
+      // Update the project in the local state
+      setProjects(prev => prev.map(project => 
+        (project.projectId || project.id) === projectId 
+          ? { ...project, progressStatus: newStatus, status: newStatus }
+          : project
+      ));
+    } catch (error) {
+      console.error('Error updating project status:', error);
+    }
+  };
+
+  const openStatusManager = (project) => {
+    setSelectedProject(project);
+    setShowStatusManager(true);
   };
 
   const getStatusStyles = (status) => {
@@ -110,6 +133,15 @@ const ExistingProjects = () => {
     return true;
   });
 
+  // Calculate project statistics
+  const projectStats = {
+    total: filteredProjects.length,
+    planning: filteredProjects.filter(p => (p.progressStatus || p.status || '').toLowerCase() === 'planning').length,
+    inProgress: filteredProjects.filter(p => (p.progressStatus || p.status || '').toLowerCase().includes('progress')).length,
+    onHold: filteredProjects.filter(p => (p.progressStatus || p.status || '').toLowerCase().includes('hold')).length,
+    completed: filteredProjects.filter(p => (p.progressStatus || p.status || '').toLowerCase() === 'completed').length
+  };
+
   return (
     <div className="max-w-full mx-auto px-6 sm:px-8 lg:px-16 py-6">
       {/* Header */}
@@ -130,6 +162,69 @@ const ExistingProjects = () => {
             <FaPlus className="text-sm" />
             New Project
           </button>
+        </div>
+      </div>
+
+      {/* Project Statistics */}
+      <div className="grid grid-cols-1 md:grid-cols-5 gap-4 mb-6">
+        <div className="bg-purewhite border border-gray-200 text-main_dark p-4 rounded-xl shadow-sm">
+          <div className="flex items-center justify-between">
+            <div>
+              <p className="text-slatebluegray text-sm">Total Projects</p>
+              <p className="text-2xl font-bold text-main_dark">{projectStats.total}</p>
+            </div>
+            <div className="w-12 h-12 bg-purewhite rounded-lg flex items-center justify-center border border-gray-100">
+              <span className="text-2xl">📋</span>
+            </div>
+          </div>
+        </div>
+        
+        <div className="bg-purewhite border border-gray-200 text-main_dark p-4 rounded-xl shadow-sm">
+          <div className="flex items-center justify-between">
+            <div>
+              <p className="text-slatebluegray text-sm">Planning</p>
+              <p className="text-2xl font-bold text-main_dark">{projectStats.planning}</p>
+            </div>
+            <div className="w-12 h-12 bg-purewhite rounded-lg flex items-center justify-center border border-gray-100">
+              <span className="text-2xl">📝</span>
+            </div>
+          </div>
+        </div>
+        
+        <div className="bg-purewhite border border-gray-200 text-main_dark p-4 rounded-xl shadow-sm">
+          <div className="flex items-center justify-between">
+            <div>
+              <p className="text-slatebluegray text-sm">In Progress</p>
+              <p className="text-2xl font-bold text-main_dark">{projectStats.inProgress}</p>
+            </div>
+            <div className="w-12 h-12 bg-purewhite rounded-lg flex items-center justify-center border border-gray-100">
+              <span className="text-2xl">🚧</span>
+            </div>
+          </div>
+        </div>
+        
+        <div className="bg-purewhite border border-gray-200 text-main_dark p-4 rounded-xl shadow-sm">
+          <div className="flex items-center justify-between">
+            <div>
+              <p className="text-slatebluegray text-sm">On Hold</p>
+              <p className="text-2xl font-bold text-main_dark">{projectStats.onHold}</p>
+            </div>
+            <div className="w-12 h-12 bg-purewhite rounded-lg flex items-center justify-center border border-gray-100">
+              <span className="text-2xl">⏸️</span>
+            </div>
+          </div>
+        </div>
+        
+        <div className="bg-purewhite border border-gray-200 text-main_dark p-4 rounded-xl shadow-sm">
+          <div className="flex items-center justify-between">
+            <div>
+              <p className="text-slatebluegray text-sm">Completed</p>
+              <p className="text-2xl font-bold text-main_dark">{projectStats.completed}</p>
+            </div>
+            <div className="w-12 h-12 bg-purewhite rounded-lg flex items-center justify-center border border-gray-100">
+              <span className="text-2xl">✅</span>
+            </div>
+          </div>
         </div>
       </div>
 
@@ -164,81 +259,37 @@ const ExistingProjects = () => {
       </div>
 
       {/* Project Cards */}
-      <div className="space-y-4">
+      <div className="grid grid-cols-1 lg:grid-cols-2 gap-6">
         {filteredProjects.length === 0 ? (
-          <div className="bg-purewhite border border-gray-200 rounded-xl p-8 text-center">
+          <div className="lg:col-span-2 bg-purewhite border border-gray-200 rounded-xl p-8 text-center">
             <div className="text-6xl mb-4">📋</div>
             <h3 className="text-lg font-semibold text-main_dark mb-2">No Projects Found</h3>
             <p className="text-slatebluegray">Try adjusting your filters or create a new project to get started.</p>
           </div>
         ) : (
-          filteredProjects.map((project) => {
-            const name = project.projectName || project.name || 'Unnamed Project';
-            const status = project.progressStatus || project.status || 'Unknown';
-            const startDate = project.startDate || '-';
-            const endDate = project.endDate || '-';
-            const { statusColor, statusBg } = getStatusStyles(status);
-            
-            return (
-              <div 
-                key={project.projectId || project.id} 
-                className="bg-purewhite border border-gray-200 rounded-xl p-6 shadow-sm hover:shadow-md hover:-translate-y-0.5 transition-all duration-150"
-              >
-                <div className="flex justify-between items-start mb-4">
-                  <h3 className="text-lg font-semibold text-main_dark">{name}</h3>
-                  <button 
-                    className="bg-deep_green hover:bg-deep_green/80 text-white px-4 py-2 rounded-lg text-sm flex items-center gap-2 transition-all duration-150 shadow-sm hover:shadow-md"
-                    onClick={() => navigate(`/site-manager/projects-list/edit-project/${project.projectId || project.id}`)}
-                  >
-                    <FaEdit className="text-xs" />
-                    Edit
-                  </button>
-                </div>
-                
-                <div className="grid grid-cols-1 sm:grid-cols-3 gap-6 mb-6">
-                  <div>
-                    <label className="text-slatebluegray text-sm font-medium block mb-2">Status</label>
-                    <div className="flex items-center gap-2">
-                      <span className={`w-3 h-3 rounded-full ${statusBg.replace('/10', '')}`}></span>
-                      <span className={`px-3 py-1 rounded-full text-xs font-medium ${statusColor} ${statusBg}`}>
-                        {status}
-                      </span>
-                    </div>
-                  </div>
-                  
-                  <div>
-                    <label className="text-slatebluegray text-sm font-medium block mb-2">Start Date</label>
-                    <p className="text-main_dark font-medium">{startDate}</p>
-                  </div>
-                  
-                  <div>
-                    <label className="text-slatebluegray text-sm font-medium block mb-2">End Date</label>
-                    <p className="text-main_dark font-medium">{endDate}</p>
-                  </div>
-                </div>
-                
-                <div className="flex flex-wrap gap-3">
-                  <button 
-                    className="bg-web_yellow hover:bg-web_yellow/80 text-main_dark font-semibold px-4 py-2 rounded-lg text-sm flex items-center gap-2 transition-all duration-150 shadow-sm hover:shadow-md"
-                    onClick={() => navigate('/site-manager/material-request-list')}
-                  >
-                    <FaEye className="text-xs" />
-                    View Materials
-                  </button>
-                  <button
-                    className="text-red-600 font-semibold px-4 py-2 rounded-lg text-sm flex items-center gap-2 border border-red-200 bg-red-50 hover:bg-red-100 transition-all duration-150"
-                    onClick={() => handleDelete(project.projectId || project.id)}
-                    disabled={deletingId === (project.projectId || project.id)}
-                  >
-                    <FaTrash className="text-xs" />
-                    {deletingId === (project.projectId || project.id) ? 'Deleting...' : 'Delete'}
-                  </button>
-                </div>
-              </div>
-            );
-          })
+          filteredProjects.map((project) => (
+            <ProjectProgressCard
+              key={project.projectId || project.id}
+              project={project}
+              onStatusUpdate={handleStatusUpdate}
+              onDelete={handleDelete}
+              onEdit={() => navigate(`/site-manager/projects-list/edit-project/${project.projectId || project.id}`)}
+            />
+          ))
         )}
       </div>
+
+      {/* Status Manager Modal */}
+      {showStatusManager && selectedProject && (
+        <ProjectStatusManager
+          project={selectedProject}
+          onStatusUpdate={handleStatusUpdate}
+          onClose={() => {
+            setShowStatusManager(false);
+            setSelectedProject(null);
+          }}
+        />
+      )}
     </div>
   );
 };

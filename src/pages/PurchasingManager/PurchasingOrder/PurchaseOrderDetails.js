@@ -101,11 +101,11 @@ const PurchaseOrderDetails = () => {
 
   const getOrderStatusSteps = () => {
     const steps = [
-      { id: 'placed', label: 'Placed', icon: FaFileAlt },
+      { id: 'pending', label: 'Pending', icon: FaFileAlt },
       { id: 'approved', label: 'Approved', icon: FaCheck },
-      { id: 'shipped', label: 'Shipped', icon: FaTruck },
+      { id: 'dispatched', label: 'Dispatched', icon: FaTruck },
       { id: 'delivered', label: 'Delivered', icon: FaMapMarkerAlt },
-      { id: 'completed', label: 'Completed', icon: FaCheck }
+      { id: 'delivered', label: 'Completed', icon: FaCheck }
     ];
 
     const currentStatusIndex = steps.findIndex(step => 
@@ -187,10 +187,6 @@ const PurchaseOrderDetails = () => {
               <h1 className="text-xl sm:text-2xl font-bold text-main_dark">Order Details</h1>
             </div>
             <div className="flex flex-col sm:flex-row items-start sm:items-center gap-3 w-full sm:w-auto mt-4 sm:mt-0">
-              <button className="w-full sm:w-auto px-4 py-2 bg-deep_green text-purewhite rounded-md hover:bg-deep_green/90 transition-colors flex items-center justify-center gap-2">
-                <FaDownload className="w-4 h-4" />
-                Download Invoice
-              </button>
               <button onClick={() => navigate(`/purchasing/orders/edit/${orderData.ponumber}`)} className="w-full sm:w-auto px-4 py-2 bg-web_yellow text-main_dark rounded-md hover:bg-web_yellow/90 transition-colors flex items-center justify-center gap-2">
                 <FaEdit className="w-4 h-4" />
                 Edit Order
@@ -269,11 +265,11 @@ const PurchaseOrderDetails = () => {
                         }`}>
                           {step.label}
                         </span>
-                        {index < statusSteps.length - 1 && (
+                        {/* {index < statusSteps.length - 1 && (
                           <div className={`absolute h-0.5 w-16 mt-6 ${
                             step.isCompleted ? 'bg-web_yellow' : 'bg-gray-200'
-                          } hidden sm:block`} style={{ left: `${(index * 100) / (statusSteps.length - 1)}%` }} />
-                        )}
+                          } hidden sm:block`} style={{ left: `${(index * 100) / (statusSteps.length)}%` }} />
+                        )} */}
                       </div>
                     );
                   })}
@@ -332,34 +328,32 @@ const PurchaseOrderDetails = () => {
                   
                   <div className="space-y-3">
                     <div className="flex justify-between items-center">
-                      <span className="text-sm text-gray-600">Deposit (30%)</span>
+                      <span className="text-sm text-gray-600">Advance Payment ({(orderData.orderPayment?.paidAmount / orderData.orderPayment?.amount * 100).toFixed(1)}%)</span>
                       <div className="text-right">
                         <p className="font-semibold text-main_dark">
                           RS {(orderData.orderPayment?.paidAmount || 0).toLocaleString()}
                         </p>
-                        <p className="text-xs text-green-600">Paid - May 15</p>
                       </div>
                     </div>
                     
                     <div className="flex justify-between items-center">
-                      <span className="text-sm text-gray-600">Progress Payment (50%)</span>
-                      <div className="text-right">
-                        <p className="font-semibold text-main_dark">
-                          RS {((orderData.orderPayment?.amount || 0) * 0.5).toLocaleString()}
-                        </p>
-                        <p className="text-xs text-orange-600">Due</p>
-                      </div>
-                    </div>
-                    
-                    <div className="flex justify-between items-center">
-                      <span className="text-sm text-gray-600">Final Payment (20%)</span>
+                      <span className="text-sm text-gray-600">Remaining Payment ({(orderData.orderPayment?.remainingAmount / orderData.orderPayment?.amount * 100).toFixed(1)}%)</span>
                       <div className="text-right">
                         <p className="font-semibold text-main_dark">
                           RS {(orderData.orderPayment?.remainingAmount || 0).toLocaleString()}
                         </p>
-                        <p className="text-xs text-gray-500">Pending</p>
                       </div>
                     </div>
+
+                    <div className="flex justify-between items-center">
+                      <span className="text-sm text-gray-600">Sub Total</span>
+                      <div className="text-right">
+                        <p className="font-semibold text-main_dark">
+                          RS {((orderData?.orderPayment.amount || 0)).toLocaleString()}
+                        </p>
+                      </div>
+                    </div>
+                    
                   </div>
 
                   <div className="pt-4 border-t">
@@ -381,7 +375,7 @@ const PurchaseOrderDetails = () => {
                     <button className="flex-1 px-4 py-2 bg-deep_green text-purewhite rounded-md hover:bg-deep_green/90 transition-colors">
                       Download Invoice
                     </button>
-                    <button onClick={() => navigate('/purchasing/orders/payment')} className="flex-1 px-4 py-2 bg-web_yellow text-main_dark rounded-md hover:bg-web_yellow/90 transition-colors">
+                    <button onClick={() => navigate(`/purchasing/orders/payment/${orderData.ponumber}`)} className="flex-1 px-4 py-2 bg-web_yellow text-main_dark rounded-md hover:bg-web_yellow/90 transition-colors">
                       Payment
                     </button>
                   </div>

@@ -2,6 +2,7 @@ import React, { useState, useEffect } from 'react';
 import axios from 'axios';
 import NavBar from '../../components/NavBar';
 import { FaSearch, FaFilter, FaEye, FaCalendarAlt, FaUser, FaTools, FaCog } from 'react-icons/fa';
+import { useNavigate }  from 'react-router-dom';
 
 const MaintenanceRequestsOverview = () => {
   const [data, setData] = useState([]);
@@ -13,6 +14,7 @@ const MaintenanceRequestsOverview = () => {
   const [sortBy, setSortBy] = useState('date');
   const [sortOrder, setSortOrder] = useState('desc');
   const itemsPerPage = 10;
+  const navigate = useNavigate();
 
   useEffect(() => {
     fetchMaintenanceRequests();
@@ -131,6 +133,7 @@ const MaintenanceRequestsOverview = () => {
             {name: 'Inventory Control', path: '/inventory-control'},
             {name: 'Inventory Monitoring', path: '/inventory-monitoring'},
             {name: 'Maintenance Requests', path: '/maintenance-requests-overview'},
+            { name: 'Equipment Request', path: '/Inventory-requests' },
             {name: 'Equipment Scheduling', path: '/equipment-scheduling'},
           ]}
         />
@@ -153,6 +156,7 @@ const MaintenanceRequestsOverview = () => {
             {name: 'Inventory Control', path: '/inventory-control'},
             {name: 'Inventory Monitoring', path: '/inventory-monitoring'},
             {name: 'Maintenance Requests', path: '/maintenance-requests-overview'},
+            { name: 'Equipment Request', path: '/Inventory-requests' },
             {name: 'Equipment Scheduling', path: '/equipment-scheduling'},
           ]}
         />
@@ -173,6 +177,7 @@ const MaintenanceRequestsOverview = () => {
           {name: 'Inventory Control', path: '/inventory-control'},
           {name: 'Inventory Monitoring', path: '/inventory-monitoring'},
           {name: 'Maintenance Requests', path: '/maintenance-requests-overview'},
+          { name: 'Equipment Request', path: '/Inventory-requests' },
           {name: 'Equipment Scheduling', path: '/equipment-scheduling'},
         ]}
       />
@@ -343,7 +348,7 @@ const MaintenanceRequestsOverview = () => {
                             </span>
                           </td>
                           <td className="px-6 py-4">
-                            <button className="text-deep_green hover:text-deep_green/80 transition-colors">
+                            <button className="text-deep_green hover:text-deep_green/80 transition-colors" onClick={() => navigate(`/maintenance-request-page/${request.id}`)}>
                               <FaEye className="w-4 h-4" />
                             </button>
                           </td>
@@ -389,7 +394,7 @@ const MaintenanceRequestsOverview = () => {
                       </div>
                       
                       <div className="flex justify-end">
-                        <button className="text-deep_green hover:text-deep_green/80 transition-colors">
+                        <button className="text-deep_green hover:text-deep_green/80 transition-colors" onClick={() => navigate(`/maintenance-requests/${request.id}`)}>
                           <FaEye className="w-4 h-4" />
                         </button>
                       </div>

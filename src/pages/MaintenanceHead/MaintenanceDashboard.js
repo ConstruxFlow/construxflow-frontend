@@ -1,4 +1,4 @@
-import React, { useEffect, useState } from "react";
+import React, { useContext, useEffect, useState } from "react";
 import {
   Calendar,
   AlertTriangle,
@@ -7,12 +7,14 @@ import {
   Eye,
   Plus,
   FileText,
+  Bell,
 } from "lucide-react";
 import ScheduleOverview from "../../components/MaintenanceHead/ScheduleOverview";
 import NavBar from "../../components/NavBar";
 import TeamSection from "../../components/MaintenanceHead/TeamSection";
 import { useNavigate } from "react-router-dom";
 import { format, isToday, isTomorrow, parseISO } from "date-fns";
+import { AuthContext } from "../../Context/AuthContext";
 
 const navLinks = [
   { name: "Dashboard", href: "/maintenance/dashboard" },
@@ -44,6 +46,31 @@ const MaintenanceDashboard = () => {
   const [error, setError] = useState(null);
   const [equipmentData, setEquipmentData] = useState([]);
   const [priorityTasks, setPriorityTasks] = useState([]);
+  const [equipmentList, setEquipmentList] = useState([]);
+  const [equipmentRequests, setEquipmentRequests] = useState([]);
+  const [pendingRequestsCount, setPendingRequestsCount] = useState(0);
+  const { authState, logout } = useContext(AuthContext);
+  // Count all tasks for stat card
+  const totalTasksCount = equipmentList.length;
+  const completedTasksCount = equipmentList.filter(
+    (task) => task.status?.toLowerCase() === "completed"
+  ).length;
+  const upcomingTasksCount = equipmentList.filter(
+    (task) => task.status?.toLowerCase() === "pending"
+  ).length;
+  // Overdue logic: current date > task.date (not dueDate)
+  const today = new Date();
+  today.setHours(23, 59, 59, 999); // Set to end of today for accurate comparison
+  
+  const overdueTasksCount = equipmentList.filter((task) => {
+    if (!task.date) return false;
+    
+    const taskDate = new Date(task.date);
+    const isOverdue = today > taskDate;
+    const isNotCompleted = task.status?.toLowerCase() !== "completed";
+    return isOverdue && isNotCompleted;
+  }).length;
+
 
   // Check login state on mount
   useEffect(() => {
@@ -84,6 +111,26 @@ const MaintenanceDashboard = () => {
     fetchTeamMembers();
   }, []);
 
+  useEffect(() => {
+    fetch("http://localhost:8080/api/equipment-scheduling")
+      .then((response) => {
+        if (!response.ok) {
+          throw new Error("Network response was not ok");
+        }
+        return response.json();
+      })
+      .then((data) => {
+        setEquipmentList(data);
+        setLoading(false);
+      })
+      .catch((error) => {
+        setError(error.message);
+        setLoading(false);
+      });
+  }, []);
+
+  console.log(equipmentList);
+
   const getStatusBadgeClass = (status) => {
     switch (status) {
       case "AVAILABLE":
@@ -112,6 +159,46 @@ const MaintenanceDashboard = () => {
         console.error("Error fetching priority tasks:", err);
       });
   }, []);
+
+  // Fetch equipment requests and count pending ones
+  useEffect(() => {
+    const fetchEquipmentRequests = async () => {
+      try {
+        const response = await fetch("http://localhost:8080/api/maintenance-schedule-requests/all");
+        
+        if (!response.ok) {
+          throw new Error("Failed to fetch equipment requests");
+        }
+        
+        const requests = await response.json();
+        console.log("Equipment requests:", requests);
+        
+        setEquipmentRequests(requests);
+        
+        // Count pending requests
+        const pendingCount = requests.filter(
+          request => request.status?.toLowerCase() === "pending"
+        ).length;
+        
+        setPendingRequestsCount(pendingCount);
+        console.log("Pending equipment requests count:", pendingCount);
+        
+      } catch (error) {
+        console.error("Error fetching equipment requests:", error);
+        setPendingRequestsCount(0);
+      }
+    };
+
+    fetchEquipmentRequests();
+  }, []);
+ console.log(authState);
+ 
+
+//   const res = await fetch('http://localhost:8080/api/send-sms', {
+//   method: 'POST',
+//   headers: { 'Content-Type': 'application/json' },
+//   body: JSON.stringify({ phoneNumber, message }),
+// });
 
   return (
     <>
@@ -155,80 +242,122 @@ const MaintenanceDashboard = () => {
             onClick: () => navigation("/maintenance/add-member"),
           },
         ]}
-
       />
-      
+
       <div className="bg-purewhite min-h-screen">
         <div className="max-w-full mx-auto px-6 sm:px-8 lg:px-16 py-6">
           {/* Header */}
-          <div className="mb-6">
-            <h1 className="text-2xl font-bold text-main_dark mb-2">
-              Maintenance Dashboard
-            </h1>
-            <p className="text-slatebluegray text-base">
-              Welcome back, John. Here's your maintenance overview.
-            </p>
-          </div>
-
-          {/* Alert Banner */}
-          <div className="bg-gradient-to-r from-web_yellow/15 via-web_yellow/8 to-transparent border-l-4 border-web_yellow rounded-lg p-4 mb-8 flex items-start gap-4 shadow-md">
-            <div className="text-yellow-600 text-2xl mt-1">⚠</div>
+          <div className="flex items-center justify-between mb-6">
             <div>
-              <h3 className="font-semibold text-base text-gray-800 mb-1 tracking-wide">
-                Maintenance Alert
-              </h3>
-              <p className="text-gray-500 text-sm font-medium">
-                3 new maintenance requests require your immediate attention. Please review them to prevent equipment downtime.
+              <h1 className="text-2xl font-bold text-main_dark mb-2">
+                Maintenance Dashboard
+              </h1>
+              <p className="text-slatebluegray text-base">
+                Welcome back, {authState.user?.userName}. Here's your maintenance overview.
               </p>
             </div>
-            <button className="ml-auto bg-main_dark text-white px-4 py-2 rounded-lg hover:bg-slatebluegray text-sm transition-colors">
-              View All
-            </button>
+            
+            {/* Notification Icon */}
+            <div className="flex items-center">
+              <button
+                onClick={() => navigation("/maintenance/inventory-request")}
+                className="relative p-3 hover:bg-gray-100 rounded-lg transition-colors group"
+                title="View Inventory Requests"
+              >
+                <Bell className="w-6 h-6 text-slatebluegray group-hover:text-main_dark transition-colors" />
+                {/* Notification Badge */}
+                {/* <span className="absolute -top-1 -right-1 bg-red-500 text-white text-xs rounded-full h-5 w-5 flex items-center justify-center font-medium">
+                  3
+                </span> */}
+              </button>
+            </div>
           </div>
+
+          {/* Alert Banner - Show only when there are pending requests */}
+          {pendingRequestsCount > 0 && (
+            <div className="bg-gradient-to-r from-web_yellow/15 via-web_yellow/8 to-transparent border-l-4 border-web_yellow rounded-lg p-4 mb-8 flex items-start gap-4 shadow-md">
+              <div className="text-yellow-600 text-2xl mt-1">⚠</div>
+              <div>
+                <h3 className="font-semibold text-base text-gray-800 mb-1 tracking-wide">
+                  Equipment Request Alert
+                </h3>
+                <p className="text-gray-500 text-sm font-medium">
+                  {pendingRequestsCount} new equipment request{pendingRequestsCount > 1 ? 's' : ''} require{pendingRequestsCount === 1 ? 's' : ''} your immediate attention.
+                  Please review them to prevent equipment downtime.
+                </p>
+              </div>
+              <button 
+                className="ml-auto bg-main_dark text-white px-4 py-2 rounded-lg hover:bg-slatebluegray text-sm transition-colors"
+                onClick={() => navigation("/maintenance/inventory-request")}
+              >
+                View All
+              </button>
+            </div>
+          )}
 
           {/* Stats Cards */}
           <div className="grid grid-cols-1 sm:grid-cols-2 lg:grid-cols-4 gap-3 sm:gap-4 mb-8">
             <div className="bg-purewhite border border-gray-200 rounded-xl p-4 sm:p-5 flex items-center gap-3 sm:gap-4 shadow-sm hover:shadow-md hover:-translate-y-0.5 transition-all duration-150">
               <div className="flex-1 min-w-0">
-                <p className="text-slatebluegray font-medium text-sm mb-0.5 truncate">Total Tasks</p>
-                <h3 className="text-xl sm:text-2xl font-bold text-main_dark leading-tight mb-0.5">142</h3>
-                <span className="text-deep_green text-xs">+12% from last month</span>
+                <p className="text-slatebluegray font-medium text-sm mb-0.5 truncate">
+                  Total Tasks
+                </p>
+                <h3 className="text-xl sm:text-2xl font-bold text-main_dark leading-tight mb-0.5">
+                  {totalTasksCount}
+                </h3>
+                <span className="text-deep_green text-xs">
+                  +12% from last month
+                </span>
               </div>
               <div className="w-12 h-12 bg-gradient-to-br from-main_dark via-main_dark to-main_dark/80 rounded-xl flex items-center justify-center shadow-lg transition-all duration-300">
-                <FileText className="text-purewhite text-lg"/>
+                <FileText className="text-purewhite text-lg" />
               </div>
             </div>
 
             <div className="bg-purewhite border border-gray-200 rounded-xl p-4 sm:p-5 flex items-center gap-3 sm:gap-4 shadow-sm hover:shadow-md hover:-translate-y-0.5 transition-all duration-150">
               <div className="flex-1 min-w-0">
-                <p className="text-slatebluegray font-medium text-sm mb-0.5 truncate">Completed</p>
-                <h3 className="text-xl sm:text-2xl font-bold text-main_dark leading-tight mb-0.5">89</h3>
-                <span className="text-deep_green text-xs">+8% completion rate</span>
+                <p className="text-slatebluegray font-medium text-sm mb-0.5 truncate">
+                  Completed
+                </p>
+                <h3 className="text-xl sm:text-2xl font-bold text-main_dark leading-tight mb-0.5">
+                  {completedTasksCount}
+                </h3>
+                <span className="text-deep_green text-xs">
+                  +8% completion rate
+                </span>
               </div>
               <div className="w-12 h-12 bg-gradient-to-br from-deep_green via-deep_green to-deep_green/80 rounded-xl flex items-center justify-center shadow-lg transition-all duration-300">
-                <CheckCircle className="text-purewhite text-lg"/>
+                <CheckCircle className="text-purewhite text-lg" />
               </div>
             </div>
 
             <div className="bg-purewhite border border-gray-200 rounded-xl p-4 sm:p-5 flex items-center gap-3 sm:gap-4 shadow-sm hover:shadow-md hover:-translate-y-0.5 transition-all duration-150">
               <div className="flex-1 min-w-0">
-                <p className="text-slatebluegray font-medium text-sm mb-0.5 truncate">Upcoming</p>
-                <h3 className="text-xl sm:text-2xl font-bold text-main_dark leading-tight mb-0.5">23</h3>
+                <p className="text-slatebluegray font-medium text-sm mb-0.5 truncate">
+                  Upcoming
+                </p>
+                <h3 className="text-xl sm:text-2xl font-bold text-main_dark leading-tight mb-0.5">
+                  {upcomingTasksCount}
+                </h3>
                 <span className="text-slatebluegray text-xs">Next 7 days</span>
               </div>
               <div className="w-12 h-12 bg-gradient-to-br from-web_yellow via-web_yellow to-web_yellow/80 rounded-xl flex items-center justify-center shadow-lg transition-all duration-300">
-                <Clock className="text-purewhite text-lg"/>
+                <Clock className="text-purewhite text-lg" />
               </div>
             </div>
 
             <div className="bg-purewhite border border-gray-200 rounded-xl p-4 sm:p-5 flex items-center gap-3 sm:gap-4 shadow-sm hover:shadow-md hover:-translate-y-0.5 transition-all duration-150">
               <div className="flex-1 min-w-0">
-                <p className="text-slatebluegray font-medium text-sm mb-0.5 truncate">Overdue</p>
-                <h3 className="text-xl sm:text-2xl font-bold text-main_dark leading-tight mb-0.5">7</h3>
+                <p className="text-slatebluegray font-medium text-sm mb-0.5 truncate">
+                  Overdue
+                </p>
+                <h3 className="text-xl sm:text-2xl font-bold text-main_dark leading-tight mb-0.5">
+                  {overdueTasksCount}
+                </h3>
                 <span className="text-red-600 text-xs">Needs attention</span>
               </div>
               <div className="w-12 h-12 bg-gradient-to-br from-red-500 via-red-500 to-red-500/80 rounded-xl flex items-center justify-center shadow-lg transition-all duration-300">
-                <AlertTriangle className="text-purewhite text-lg"/>
+                <AlertTriangle className="text-purewhite text-lg" />
               </div>
             </div>
           </div>
@@ -237,7 +366,7 @@ const MaintenanceDashboard = () => {
           <div className="grid grid-cols-1 lg:grid-cols-3 gap-4 sm:gap-6">
             {/* Schedule Overview */}
             <div className="lg:col-span-2 bg-purewhite border border-gray-200 rounded-xl shadow-sm">
-              <ScheduleOverview />
+              <ScheduleOverview equipmentList={equipmentList} />
             </div>
 
             {/* Right Sidebar */}
@@ -272,7 +401,9 @@ const MaintenanceDashboard = () => {
                             <p className="text-sm font-medium text-main_dark">
                               {task.equipmentName}
                             </p>
-                            <p className="text-xs text-slatebluegray">{dueLabel}</p>
+                            <p className="text-xs text-slatebluegray">
+                              {dueLabel}
+                            </p>
                           </div>
                         </div>
                       );
@@ -351,9 +482,9 @@ const MaintenanceDashboard = () => {
                   hoverColor="hover:bg-deep_green/80"
                 />
                 <ActionTile
-                  onClick={() => {}} // Add your navigation here
-                  icon={<Plus className="h-5 w-5" />}
-                  label="Request Material"
+                  onClick={() => navigation("/maintenance/inventory-request")} // Add your navigation here
+                  icon={<Bell className="h-5 w-5" />}
+                  label="Notification"
                   bgColor="bg-web_yellow"
                   hoverColor="hover:bg-web_yellow/80"
                 />

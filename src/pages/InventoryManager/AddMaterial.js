@@ -7,18 +7,19 @@ const navLinks = [
   { name: 'Inventory Control', href: '/inventory-control' },
   { name: 'Inventory Monitoring', href: '/inventory-monitoring' },
   { name: 'Maintenance Requests', href: '/maintenance-requests-overview' },
+  { name: 'Equipment Request', href: '/Inventory-requests' },
   { name: 'Equipment Scheduling', href: '/equipment-scheduling' },
 ];
 
 const AddMaterial = () => {
   const handleAddMaterial = async (formData) => {
     try {
-      const response = await fetch("http://localhost:8080/api/inventory/add", {
+      const response = await fetch("http://localhost:8080/api/materials/add", {
         method: "POST",
         headers: { "Content-Type": "application/json" },
         body: JSON.stringify(formData),
       });
-
+      
       if (!response.ok) {
         throw new Error(`HTTP error! Status: ${response.status}`);
       }

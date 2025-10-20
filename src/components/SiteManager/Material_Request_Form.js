@@ -2,6 +2,7 @@ import React, { useState, useEffect } from 'react';
 import { Calendar, Send, Clock, Phone, CheckCircle, FileText, AlertCircle, Package } from 'lucide-react';
 import { useLocation, useNavigate } from 'react-router-dom';
 import axios from 'axios';
+import { toast } from 'react-toastify';
 
 export default function Material_Request_Form({ project: propProject, phase: propPhase, materials: propMaterials }) {
   const location = useLocation();
@@ -129,11 +130,11 @@ export default function Material_Request_Form({ project: propProject, phase: pro
 
     try {
       await axios.post('http://localhost:8080/api/material-requests/create', requestData);
-      alert('Material request submitted successfully!');
+      toast.success('Material request submitted successfully!');
       // Redirect back to the Material Request List page
       navigate('/material-request-list');
     } catch (error) {
-      alert('Failed to submit material request.');
+      toast.error('Failed to submit material request.');
       console.error(error);
     } finally {
       setIsSubmitting(false);
