@@ -24,6 +24,7 @@ const UserDashboard = () => {
   const [loading, setLoading] = useState(true);
   const [error, setError] = useState(null);
   const [users, setUsers] = useState([]);
+  const [siteManagers, setSiteManagers] = useState([]);
 
   const roleMap = {
     'Purchasing_Manager': "Purchasing Manager",
@@ -101,7 +102,7 @@ const UserDashboard = () => {
   useEffect(() => {
     const fetchSiteManagerOverview = async () => {
       try {
-        const res = await fetch(`${API_BASE_URL}/api/projects/site-manager-overview`);
+        const res = await fetch(`http://localhost:8080/api/projects/site-manager-overview`);
         if (!res.ok) throw new Error(`Overview API error: ${res.status}`);
         const data = await res.json(); // [{ managerId, managerName, projectId, projectName, progressStatus }]
 
