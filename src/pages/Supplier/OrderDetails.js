@@ -40,6 +40,7 @@ const OrderDetails = () => {
   const [updating, setUpdating] = useState(false);
   const [projectName, setProjectName] = useState("N/A");
   const [showDispatchModal, setShowDispatchModal] = useState(false);
+  const [managerId, setManagerId] = useState("N/A");
 
   useEffect(() => {
     if (ponumber) {
@@ -119,6 +120,7 @@ const OrderDetails = () => {
         `http://localhost:8080/api/projects/${projectId}`
       );
       const data = await response.json();
+      setManagerId(data.managerId || "N/A");
       return data.projectName || data.project_name || "N/A";
     } catch (error) {
       console.error(`Error fetching project ${projectId}:`, error);
@@ -343,13 +345,80 @@ const OrderDetails = () => {
       );
 
       if (response.ok) {
-        toast.success("Order marked as dispatched!");
+        // Fetch user by managerId to get their email before sending email
+        const userResponse = await fetch(
+          `http://localhost:8080/api/user/by-manager/${managerId}`
+        );
+
+        if (!userResponse.ok) {
+          throw new Error("Failed to fetch user by manager");
+        }
+
+        const userData = await userResponse.json();
+        const recipientEmail = userData.email;
+
+        // Compose professional email content with all order details
+        const emailContent = `
+Purchase Order Dispatched Notification
+
+Order Number: ${orderData.ponumber || "N/A"}
+Project Name: ${projectName || "N/A"}
+Supplier: ${
+          orderData.supplier?.company_name || orderData.supplier?.name || "N/A"
+        }
+Delivery Location: ${orderData.deliveries?.[0]?.location || "N/A"}
+Order Date: ${formatDate(orderData.orderDate || orderData.order_date)}
+Delivery Date: ${formatDate(
+          orderData.deliveries?.[0]?.required_date ||
+            orderData.deliveries?.[0]?.requiredDate
+        )}
+
+Order Items:
+${
+  orderData.materials && orderData.materials.length > 0
+    ? orderData.materials
+        .map(
+          (item, idx) =>
+            `${idx + 1}. ${item.material?.materialName || "N/A"} - ${
+              item.material?.materialType || "N/A"
+            } - Quantity: ${item.quantity} ${
+              item.material?.unitOfMeasurement || ""
+            } - Unit Price: RS ${(item.unitPrice || 0).toFixed(
+              2
+            )} - Total: RS ${(
+              (item.quantity || 0) * (item.unitPrice || 0)
+            ).toFixed(2)}`
+        )
+        .join("\n")
+    : "No items found"
+}
+
+Total Amount: RS ${(orderData.subTotal || 0).toFixed(2)}
+Current Status: ${orderData.status || "N/A"}
+
+This is to inform you that the above purchase order has been marked as dispatched. Please track the delivery accordingly.
+
+Thank you,
+ConstruxFlow Team
+      `;
+
+        await fetch("http://localhost:8080/api/email/send", {
+          method: "POST",
+          headers: { "Content-Type": "application/x-www-form-urlencoded" },
+          body: new URLSearchParams({
+            to: recipientEmail,
+            subject: `Purchase Order ${orderData.ponumber} Dispatched`,
+            content: emailContent,
+          }),
+        });
+
+        toast.success("Order marked as dispatched and email sent!");
         await fetchOrderDetails();
       } else {
         toast.error("Failed to update order status");
       }
     } catch (error) {
-      toast.error("Network error: Failed to update status");
+      toast.error("Network error: " + error.message);
     } finally {
       setUpdating(false);
     }
@@ -471,9 +540,7 @@ const OrderDetails = () => {
                   <span className="text-main_dark text-sm font-medium">
                     {formatDate(orderData.orderDate || orderData.order_date)}
                   </span>
-                  <span className="text-slatebluegray text-xs">
-                    Order Date
-                  </span>
+                  <span className="text-slatebluegray text-xs">Order Date</span>
                 </div>
                 <div className="flex items-center gap-2">
                   <FaTruck className="text-web_yellow" />
@@ -557,9 +624,7 @@ const OrderDetails = () => {
                     <th className="px-6 py-4 text-left font-semibold">
                       Unit Price
                     </th>
-                    <th className="px-6 py-4 text-left font-semibold">
-                      Total
-                    </th>
+                    <th className="px-6 py-4 text-left font-semibold">Total</th>
                   </tr>
                 </thead>
                 <tbody>
@@ -684,9 +749,7 @@ const OrderDetails = () => {
                   <div key={idx} className="p-3 bg-gray-50 rounded-lg">
                     <div className="flex items-center gap-2 text-main_dark mb-1">
                       <FaMapMarkerAlt className="text-deep_green" />
-                      <span className="font-semibold">
-                        {delivery.location}
-                      </span>
+                      <span className="font-semibold">{delivery.location}</span>
                     </div>
                     <div className="flex items-center gap-2 text-sm text-gray-600">
                       <FaCalendarAlt className="text-deep_green w-3 h-3" />
@@ -784,10 +847,12 @@ const OrderDetails = () => {
                     <span className="font-semibold">dispatched</span>?
                   </p>
                   <p className="text-sm text-gray-500">
-                    Order: <span className="font-medium">{orderData.ponumber}</span>
+                    Order:{" "}
+                    <span className="font-medium">{orderData.ponumber}</span>
                   </p>
                   <p className="text-sm text-gray-500">
-                    This action will update the order status and notify relevant parties.
+                    This action will update the order status and notify relevant
+                    parties.
                   </p>
                 </div>
               </div>

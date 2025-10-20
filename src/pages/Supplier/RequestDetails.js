@@ -91,7 +91,7 @@ const RequestDetails = () => {
               Material Request #{request.id}
             </h2>
             <p className="text-gray-600 text-base font-medium mb-6">
-              Review all request information, materials and attachments. <span className="text-web_yellow font-semibold">Send quotations</span> or return to Requests anytime.
+              Review all request information, materials. <span className="text-web_yellow font-semibold">Send quotations</span> or return to Requests anytime.
             </p>
             <div className="flex flex-wrap items-center gap-2 mb-5">
               <span className="inline-block bg-deep_green text-purewhite px-4 py-1 rounded-full text-sm font-medium ">{request.status}</span>
@@ -186,32 +186,6 @@ const RequestDetails = () => {
               {request.additionalInfo || "No additional information provided."}
             </div>
 
-            {/* Attachments */}
-            <SectionHeading>Attachments</SectionHeading>
-            <div className="bg-purewhite border border-light_gray rounded-lg px-0 sm:px-4 py-2 sm:py-4 text-main_dark text-sm flex flex-col gap-3 mb-7">
-              {request.quotationReqDocs?.length > 0 ? (
-                request.quotationReqDocs.map((file, idx) => (
-                  <div key={idx} className="flex flex-col sm:flex-row items-start sm:items-center gap-4 group rounded hover:bg-light_gray/50 p-2 transition">
-                    <div className={`min-w-[38px] min-h-[38px] flex items-center justify-center rounded-md ${file.documentName.endsWith('.pdf') ? 'bg-red-100' : 'bg-blue-100'}`}>
-                      {file.documentName.endsWith('.pdf') ? (
-                        <span className="text-red-600 text-xl">📄</span>
-                      ) : (
-                        <span className="text-blue-600 text-xl">🖼️</span>
-                      )}
-                    </div>
-                    <div className="flex-1 min-w-0 mb-2 sm:mb-0">
-                      <div className="font-bold truncate">{file.documentName}</div>
-                      <div className="text-xs text-slatebluegray">{file.documentSize || ""}</div>
-                    </div>
-                    <button className="p-2 rounded hover:bg-deep_green/10 transition" tabIndex={0} title="Download" onClick={() => handleFileDownload(file)}>
-                      <FiDownload className="text-xl text-deep_green group-hover:text-main_dark" />
-                    </button>
-                  </div>
-                ))
-              ) : (
-                <div className="text-slatebluegray px-3 py-3">No documents attached to this request</div>
-              )}
-            </div>
 
             {/* Action Buttons */}
             <div className="flex flex-col md:flex-row gap-4 pt-1 pb-8">

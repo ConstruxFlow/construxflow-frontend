@@ -1,5 +1,5 @@
 import React, { useState, useEffect } from 'react';
-import { Users, UserPlus, Clock, CheckCircle, Plus, X, Mail, Lock, Download, Clipboard } from 'lucide-react';
+import { Users, UserPlus, Clock, CheckCircle, Plus } from 'lucide-react';
 import { useNavigate } from "react-router-dom";
 
 function ActionTile({ onClick, icon, label, iconColorClass, hoverClass }) {
@@ -24,64 +24,79 @@ const UserDashboard = () => {
   const [loading, setLoading] = useState(true);
   const [error, setError] = useState(null);
   
-  const [users, setUsers] = useState([
-    {
-      id: 1,
-      name: 'John Smith',
-      email: 'john@example.com',
-      status: 'Active',
-      role: 'Inventory Manager',
-      avatar: 'https://api.dicebear.com/9.x/initials/svg?seed=John%20Smith&backgroundColor=236571'
-    },
-    {
-      id: 2,
-      name: 'Sarah Johnson',
-      email: 'sarah@example.com',
-      status: 'Pending',
-      role: 'Supply Chain Coordinator',
-      avatar: 'https://api.dicebear.com/9.x/initials/svg?seed=Sarah%20Johnson&backgroundColor=EFC11A'
-    }
-  ]);
+  const [users, setUsers] = useState([]);
 
-  // Initialize stats with loading placeholders
+  const roleMap = {
+    'Purchasing_Manager': "Purchasing Manager",
+    'Inventory_Manager': "Inventory Manager",
+    'Site_Manager': "Site Manager",
+    'Maintenance_Head': "Maintenance Head",
+    'Finance_Officer': "Finance Officer"
+  };
+
   const [stats, setStats] = useState([
     { title: 'Total Users', value: '-', icon: Users, color: 'bg-light_brown' },
     { title: 'Active Users', value: '-', icon: CheckCircle, color: 'bg-deep_green' },
-    { title: 'New This Month', value: '156', icon: UserPlus, color: 'bg-web_yellow' },
-    { title: 'Pending Approval', value: '23', icon: Clock, color: 'bg-light_gray' }
+    { title: 'New This Month', value: '-', icon: UserPlus, color: 'bg-web_yellow' },
+    { title: 'Pending Approval', value: '-', icon: Clock, color: 'bg-light_gray' }
   ]);
 
-  // Fetch dashboard stats from backend when component mounts
   useEffect(() => {
-    const fetchDashboardStats = async () => {
+    const fetchAndCalculateStats = async () => {
+      setLoading(true);
       try {
-        setLoading(true);
-        const response = await fetch('http://localhost:8080/api/admin/dashboard-stats');
-        
-        if (!response.ok) {
-          throw new Error(`Error: ${response.status}`);
-        }
-        
+        const response = await fetch("http://localhost:8080/api/user/all-users");
+        if (!response.ok) throw new Error("Failed to fetch users");
         const data = await response.json();
-        
-        // Update stats with real data
+
+        const totalUsers = data.length;
+        const activeUsers = data.filter(user => user.status === 'Active' || !user.status).length || totalUsers;
+
+        const now = new Date();
+        const currentMonth = now.getMonth();
+        const currentYear = now.getFullYear();
+
+        const newThisMonth = data.filter(user => {
+          if (!user.created_at) return false;
+          const created = new Date(user.created_at);
+          return created.getMonth() === currentMonth && created.getFullYear() === currentYear;
+        }).length;
+
+        // Count users not verified or pending approval based on status 'Pending'
+        const pendingApproval = data.filter(user => user.status === 'Pending').length;
+
+        const managers = data.filter(user =>
+          ['Purchasing_Manager', 'Inventory_Manager', 'Site_Manager', 'Maintenance_Head', 'Finance_Officer'].includes(user.userRole)
+        );
+
+        const usersFormatted = managers.map(user => ({
+          id: user.userId,
+          name: user.userName,
+          email: user.email,
+          role: roleMap[user.userRole] || user.userRole,
+          status: user.status || 'Active',
+          avatar: `https://api.dicebear.com/9.x/initials/svg?seed=${encodeURIComponent(user.userName)}&backgroundColor=236571`
+        }));
+
+        setUsers(usersFormatted);
+
         setStats([
-          { title: 'Total Users', value: data.totalUsers.toString(), icon: Users, color: 'bg-light_brown' },
-          { title: 'Active Users', value: data.activeUsers.toString(), icon: CheckCircle, color: 'bg-deep_green' },
-          { title: 'New This Month', value: '156', icon: UserPlus, color: 'bg-web_yellow' },
-          { title: 'Pending Approval', value: '23', icon: Clock, color: 'bg-light_gray' }
+          { title: 'Total Users', value: totalUsers.toString(), icon: Users, color: 'bg-light_brown' },
+          { title: 'Active Users', value: activeUsers.toString(), icon: CheckCircle, color: 'bg-deep_green' },
+          { title: 'New This Month', value: newThisMonth.toString(), icon: UserPlus, color: 'bg-web_yellow' },
+          { title: 'Pending Approval', value: pendingApproval.toString(), icon: Clock, color: 'bg-light_gray' }
         ]);
-        
+
         setError(null);
       } catch (err) {
-        console.error('Error fetching dashboard stats:', err);
-        setError('Failed to load dashboard statistics');
+        console.error('Error fetching users and stats:', err);
+        setError('Failed to load users and stats');
       } finally {
         setLoading(false);
       }
     };
 
-    fetchDashboardStats();
+    fetchAndCalculateStats();
   }, []);
 
   const handleAddUser = () => {
@@ -89,8 +104,7 @@ const UserDashboard = () => {
       const user = {
         id: users.length + 1,
         ...newUser,
-        role: newUser.role || 'Team Member',
-        avatar: `https://api.dicebear.com/9.x/initials/svg?seed=${newUser.name}`
+        avatar: `https://api.dicebear.com/9.x/initials/svg?seed=${encodeURIComponent(newUser.name)}&backgroundColor=236571`
       };
       setUsers([...users, user]);
       setNewUser({ name: '', email: '', status: 'Active', role: 'Team Member' });
@@ -100,45 +114,22 @@ const UserDashboard = () => {
 
   const handleBulkAction = (action) => {
     alert(`Performing bulk action: ${action}`);
-    // Placeholder for actual bulk action logic (e.g., API calls)
   };
 
-  const siteManagers = [
-    {
-      id: 1,
-      name: 'John Smith',
-      visits: 12,
-      notes: 'Updated safety protocols',
-      sites: [{ name: 'Downtown Bridge', status: 'Active' }, { name: 'Highway Expansion', status: 'Needs Attention' }]
-    },
-    {
-      id: 2,
-      name: 'Sarah Johnson',
-      visits: 8,
-      notes: 'Reviewed material delivery schedule',
-      sites: [{ name: 'Commercial Complex', status: 'Active' }]
-    }
-  ];
 
   return (
     <div className="min-h-screen bg-purewhite font-sans">
-      {/* Header */}
-      {/* Main Content */}
       <main className="max-w-full mx-auto px-4 sm:px-14 lg:px-16 py-8">
         <h2 className="text-2xl font-bold mb-2 text-gray-800">User details</h2>
         <p className="text-gray-600 mb-8 text-base">
           Manage your team members, track their activities, and perform bulk actions to streamline operations.
         </p>
-        
-        {/* Error Message */}
         {error && (
           <div className="bg-red-100 border border-red-400 text-red-700 px-4 py-3 rounded mb-6" role="alert">
             <strong className="font-bold">Error: </strong>
             <span className="block sm:inline">{error}</span>
           </div>
         )}
-        
-        {/* Stats Cards */}
         <div className="grid grid-cols-1 sm:grid-cols-2 lg:grid-cols-4 gap-3 mb-8">
           {stats.map((stat, index) => (
             <div
@@ -163,15 +154,12 @@ const UserDashboard = () => {
             </div>
           ))}
         </div>
-
-        {/* Content Grid */}
-        <div className="grid grid-cols-1 lg:grid-cols-3 gap-6">
-          {/* Recent Users */}
+        <div>
           <div className="lg:col-span-2 bg-white rounded-xl shadow-md p-6">
             <div className="flex items-center justify-between mb-6">
               <h3 className="text-xl font-semibold text-gray-900">Manager Details</h3>
               <button
-                onClick={() => navigate('/admin-managers') }
+                onClick={() => navigate('/admin-managers')}
                 className="flex items-center space-x-2 bg-web_yellow text-main_dark px-3 py-2 rounded-lg font-medium"
               >
                 <Plus className="w-4 h-4" />
@@ -209,193 +197,8 @@ const UserDashboard = () => {
               ))}
             </div>
           </div>
-
-          {/* Recent Activity */}
-          <div className="bg-white rounded-xl shadow-md p-6">
-            <h3 className="text-xl font-semibold text-gray-900 mb-6">Recent Activity</h3>
-            <div className="space-y-6">
-              {[
-                { action: 'New user registered', time: '2 minutes ago', color: 'bg-light_brown' },
-                { action: 'Site visit logged', time: '30 minutes ago', color: 'bg-deep_green' },
-                { action: 'User profile updated', time: '1 hour ago', color: 'bg-green-500' },
-                { action: 'Bulk email sent', time: '2 hours ago', color: 'bg-web_yellow' },
-                { action: 'Password reset initiated', time: '3 hours ago', color: 'bg-light_gray' }
-              ].map((activity, index) => (
-                <div key={index} className="flex items-start space-x-3">
-                  <div className={`w-3 h-3 ${activity.color} rounded-full mt-1.5`}></div>
-                  <div>
-                    <p className="text-sm font-medium text-gray-900">{activity.action}</p>
-                    <p className="text-xs text-gray-500">{activity.time}</p>
-                  </div>
-                </div>
-              ))}
-            </div>
-          </div>
-
-          {/* Bulk Actions Panel - Styled Like ActionTile Buttons */}
-          <div className="lg:col-span-2 bg-purewhite border border-gray-200 rounded-xl p-5 shadow mb-6">
-            <div className="font-semibold text-main_dark text-lg mb-4 border-b border-light_gray/60 pb-1">
-              Bulk Actions
-            </div>
-            <div className="grid grid-cols-1 sm:grid-cols-2 gap-4 mt-4">
-              <ActionTile
-                onClick={() => handleBulkAction('Send Emails')}
-                icon={<Mail className="text-xl" />}
-                iconColorClass="text-deep_green"
-                label="Send Emails"
-                hoverClass="hover:bg-deep_green/10"
-              />
-              <ActionTile
-                onClick={() => handleBulkAction('Suspend/Activate Accounts')}
-                icon={<Users className="text-xl" />}
-                iconColorClass="text-light_brown"
-                label="Suspend/Activate"
-                hoverClass="hover:bg-light_brown/15"
-              />
-              <ActionTile
-                onClick={() => handleBulkAction('Reset Passwords')}
-                icon={<Lock className="text-xl" />}
-                iconColorClass="text-main_dark"
-                label="Reset Passwords"
-                hoverClass="hover:bg-light_gray/70"
-              />
-              <ActionTile
-                onClick={() => handleBulkAction('Export User List')}
-                icon={<Download className="text-xl" />}
-                iconColorClass="text-web_yellow"
-                label="Export User List"
-                hoverClass="hover:bg-web_yellow/15"
-              />
-            </div>
-          </div>
-
-          {/* Site Manager Overview */}
-          <div className="bg-white rounded-xl shadow-md p-6">
-            <h3 className="text-xl font-semibold text-gray-900 mb-6">Site Manager Overview</h3>
-            <div className="space-y-4">
-              {siteManagers.map((manager) => (
-                <div
-                  key={manager.id}
-                  className="p-4 rounded-lg hover:bg-gray-50 transition-colors duration-150"
-                >
-                  <div className="flex items-center space-x-4 mb-2">
-                    <img
-                      src={`https://api.dicebear.com/9.x/initials/svg?seed=${manager.name}&backgroundColor=236571`}
-                      alt={manager.name}
-                      className="w-12 h-12 rounded-full object-cover"
-                    />
-                    <div>
-                      <p className="font-semibold text-gray-900">{manager.name}</p>
-                      <p className="text-sm text-gray-600">Visits: {manager.visits}</p>
-                      <p className="text-sm text-gray-600">Notes: {manager.notes}</p>
-                    </div>
-                  </div>
-                  <div className="space-y-2">
-                    {manager.sites.map((site, index) => (
-                      <div key={index} className="flex items-center justify-between">
-                        <p className="text-sm text-gray-600">{site.name}</p>
-                        <span
-                          className={`px-3 py-1 rounded-full text-xs font-medium ${
-                            site.status === 'Active'
-                              ? 'bg-green-100 text-green-800'
-                              : 'bg-red-100 text-red-800'
-                          }`}
-                        >
-                          {site.status}
-                        </span>
-                      </div>
-                    ))}
-                  </div>
-                </div>
-              ))}
-            </div>
-          </div>
         </div>
       </main>
-
-      {/* Add User Modal */}
-      {showAddUser && (
-        <div className="fixed inset-0 bg-black bg-opacity-60 flex items-center justify-center p-4 z-50">
-          <div className="bg-white rounded-xl p-8 w-full max-w-lg shadow-xl">
-            <div className="flex items-center justify-between mb-6">
-              <h3 className="text-xl font-semibold text-gray-900">Add New Team Member</h3>
-              <button
-                onClick={() => setShowAddUser(false)}
-                className="text-gray-500 hover:text-gray-700 transition-colors duration-150"
-              >
-                <X className="w-6 h-6" />
-              </button>
-            </div>
-
-            <div className="space-y-6">
-              <div>
-                <label className="block text-sm font-medium text-gray-700 mb-1.5">Name</label>
-                <input
-                  type="text"
-                  value={newUser.name}
-                  onChange={(e) => setNewUser({ ...newUser, name: e.target.value })}
-                  className="w-full px-4 py-2 border border-gray-300 rounded-lg focus:outline-none focus:ring-2 focus:ring-blue-500 transition-colors duration-150"
-                  placeholder="Enter name"
-                />
-              </div>
-
-              <div>
-                <label className="block text-sm font-medium text-gray-700 mb-1.5">Email</label>
-                <input
-                  type="email"
-                  value={newUser.email}
-                  onChange={(e) => setNewUser({ ...newUser, email: e.target.value })}
-                  className="w-full px-4 py-2 border border-gray-300 rounded-lg focus:outline-none focus:ring-2 focus:ring-blue-500 transition-colors duration-150"
-                  placeholder="Enter email"
-                />
-              </div>
-
-              <div>
-                <label className="block text-sm font-medium text-gray-700 mb-1.5">Role</label>
-                <select
-                  value={newUser.role}
-                  onChange={(e) => setNewUser({ ...newUser, role: e.target.value })}
-                  className="w-full px-4 py-2 border border-gray-300 rounded-lg focus:outline-none focus:ring-2 focus:ring-blue-500 transition-colors duration-150"
-                >
-                  <option value="Inventory Manager">Inventory Manager</option>
-                  <option value="Supply Chain Coordinator">Supply Chain Coordinator</option>
-                  <option value="Team Member">Team Member</option>
-                  <option value="Admin">Admin</option>
-                </select>
-              </div>
-
-              <div>
-                <label className="block text-sm font-medium text-gray-700 mb-1.5">Status</label>
-                <select
-                  value={newUser.status}
-                  onChange={(e) => setNewUser({ ...newUser, status: e.target.value })}
-                  className="w-full px-4 py-2 border border-gray-300 rounded-lg focus:outline-none focus:ring-2 focus:ring-blue-500 transition-colors duration-150"
-                >
-                  <option value="Active">Active</option>
-                  <option value="Pending">Pending</option>
-                </select>
-              </div>
-
-              <div className="flex space-x-4 pt-6">
-                <button
-                  type="button"
-                  onClick={() => setShowAddUser(false)}
-                  className="flex-1 px-4 py-2 border border-gray-300 rounded-lg text-gray-700 hover:bg-gray-100 transition-colors duration-150"
-                >
-                  Cancel
-                </button>
-                <button
-                  type="button"
-                  onClick={handleAddUser}
-                  className="flex-1 px-4 py-2 bg-blue-600 text-white rounded-lg hover:bg-blue-700 transition-colors duration-150"
-                >
-                  Add User
-                </button>
-              </div>
-            </div>
-          </div>
-        </div>
-      )}
     </div>
   );
 };
