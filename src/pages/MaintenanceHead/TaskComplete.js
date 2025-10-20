@@ -157,6 +157,127 @@ export default function TaskCompleteContainer() {
     hour12: true,
   })}`;
 
+  const handleGenerateWorkReport = () => {
+    // Add print styles to current page temporarily
+    const printStyle = document.createElement('style');
+    printStyle.id = 'temp-work-report-print-style';
+    printStyle.textContent = `
+      @media print {
+        * {
+          -webkit-print-color-adjust: exact !important;
+          color-adjust: exact !important;
+          print-color-adjust: exact !important;
+        }
+        body * {
+          visibility: hidden;
+        }
+        .print-work-report-content, .print-work-report-content * {
+          visibility: visible;
+        }
+        .print-work-report-content {
+          position: absolute !important;
+          left: 0 !important;
+          top: 0 !important;
+          width: 100% !important;
+          background: white !important;
+          padding: 20px !important;
+          box-shadow: none !important;
+        }
+        /* Preserve all background colors */
+        .bg-gray-50, .bg-slate-50 {
+          background-color: #f9fafb !important;
+        }
+        .bg-white {
+          background-color: white !important;
+        }
+        .bg-green-50 {
+          background-color: #f0fdf4 !important;
+        }
+        .bg-blue-50 {
+          background-color: #eff6ff !important;
+        }
+        .bg-yellow-50, .bg-\\[\\#EFC11A\\] {
+          background-color: #fefce8 !important;
+        }
+        .bg-gray-100 {
+          background-color: #f3f4f6 !important;
+        }
+        /* Preserve text colors */
+        .text-\\[\\#236571\\] {
+          color: #236571 !important;
+        }
+        .text-gray-600 {
+          color: #4b5563 !important;
+        }
+        .text-gray-700 {
+          color: #374151 !important;
+        }
+        .text-gray-900 {
+          color: #111827 !important;
+        }
+        .text-gray-800 {
+          color: #1f2937 !important;
+        }
+        .text-green-600 {
+          color: #059669 !important;
+        }
+        .text-yellow-900 {
+          color: #713f12 !important;
+        }
+        /* Preserve borders */
+        .border-gray-200 {
+          border-color: #e5e7eb !important;
+        }
+        .border-gray-400 {
+          border-color: #9ca3af !important;
+        }
+        /* Hide buttons in print */
+        button {
+          display: none !important;
+        }
+        /* Preserve shadows and rounded corners */
+        .shadow-sm {
+          box-shadow: 0 1px 2px 0 rgba(0, 0, 0, 0.05) !important;
+        }
+        .rounded-lg {
+          border-radius: 8px !important;
+        }
+        .rounded-full {
+          border-radius: 9999px !important;
+        }
+        /* Page break controls */
+        .technicians-section {
+          page-break-before: always !important;
+          break-before: page !important;
+          margin-top: 0 !important;
+          padding-top: 20px !important;
+        }
+        .technicians-section .text-sm {
+          margin-top: 0 !important;
+        }
+        /* Prevent page breaks within sections */
+        .bg-white {
+          page-break-inside: avoid !important;
+          break-inside: avoid !important;
+        }
+      }
+    `;
+    
+    // Add the print style to current page
+    document.head.appendChild(printStyle);
+    
+    // Trigger print on current page
+    window.print();
+    
+    // Remove the temporary print style after printing
+    setTimeout(() => {
+      const tempStyle = document.getElementById('temp-work-report-print-style');
+      if (tempStyle) {
+        tempStyle.remove();
+      }
+    }, 1000);
+  };
+
   return (
     <>
       <NavBar
@@ -203,7 +324,7 @@ export default function TaskCompleteContainer() {
       />
 
       <div className="min-h-screen bg-gray-50 px-4 py-8 flex flex-col items-center">
-        <div className="w-full max-w-6xl">
+        <div className="w-full max-w-6xl print-work-report-content">
           {/* Success Banner */}
           <div className="bg-[#EFC11A] rounded-lg flex flex-col items-center justify-center py-8 mb-8">
             <CheckCircle className="w-10 h-10 text-[#236571] mb-2" />
@@ -294,7 +415,7 @@ export default function TaskCompleteContainer() {
                   </div>
                 )}
                 {/* ✅ Show technician list */}
-                <div className="mt-4">
+                <div className="mt-4 technicians-section">
                   <div className="text-sm font-medium text-gray-700 mb-2">
                     Technicians:
                   </div>
@@ -384,13 +505,16 @@ export default function TaskCompleteContainer() {
 
               {/* Actions */}
               <div className="flex flex-col gap-2">
-                <button className="w-full bg-[#EFC11A] hover:bg-yellow-400 text-[#236571] font-semibold rounded-md py-2 transition">
+                <button 
+                  className="w-full bg-[#EFC11A] hover:bg-yellow-400 text-[#236571] font-semibold rounded-md py-2 transition"
+                  onClick={handleGenerateWorkReport}
+                >
                   Generate Work Report
                 </button>
                 <button
                   className="w-full bg-[#236571] hover:bg-[#17484b] text-white font-semibold rounded-md py-2 transition"
                   onClick={() => {
-                    navigate("/maintenance/log");
+                    navigate(`/maintenance/log?equipmentId=${equipment?.equipmentId || id}`);
                   }}
                 >
                   Equipment Log

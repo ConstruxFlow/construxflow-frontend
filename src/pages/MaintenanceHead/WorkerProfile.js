@@ -1,5 +1,6 @@
 import { useEffect, useState } from "react";
 import { Plus, FileText, Phone, User, Badge } from "lucide-react";
+import { FaDownload } from "react-icons/fa";
 import NavBar from "../../components/NavBar";
 import { useNavigate, useParams, useLocation } from "react-router-dom";
 import TeamSection from "../../components/MaintenanceHead/TeamSection";
@@ -14,6 +15,7 @@ export default function WorkerProfile() {
   const [error, setError] = useState(null);
   const [selectedStatus, setSelectedStatus] = useState("");
   const [statusUpdateMessage, setStatusUpdateMessage] = useState("");
+  const [isGeneratingPDF, setIsGeneratingPDF] = useState(false);
   const navigation = useNavigate();
   const { id } = useParams();
   const location = useLocation();
@@ -115,6 +117,8 @@ export default function WorkerProfile() {
 
         if (response.ok) {
           const tasksData = await response.json();
+          console.log("🔍 Raw tasks data from API:", tasksData);
+          console.log("🔍 First task structure:", tasksData[0]);
           setAssignedTasks(tasksData);
 
           // Check if technician should be automatically set to ON_DUTY
@@ -135,17 +139,19 @@ export default function WorkerProfile() {
     const checkAndUpdateTechnicianStatus = async (tasks) => {
       if (!technicianData?.empId || !tasks) return;
 
-      const activeTasks = tasks.filter(
-        (task) => task.status === "IN_PROGRESS" || task.status === "ASSIGNED"
-      );
+      const activeTasks = tasks.filter((task) => {
+        const cleanStatus = task.status?.replace(/"/g, '');
+        return cleanStatus === "In Progress" || cleanStatus === "Assigned" || cleanStatus === "ASSIGNED";
+      });
 
       const hasTasksToday = tasks.some((task) => {
         if (!task.startDate) return false;
         const taskDate = new Date(task.startDate);
         const today = new Date();
+        const cleanStatus = task.status?.replace(/"/g, '');
         return (
           taskDate.toDateString() === today.toDateString() &&
-          (task.status === "IN_PROGRESS" || task.status === "ASSIGNED")
+          (cleanStatus === "In Progress" || cleanStatus === "Assigned" || cleanStatus === "ASSIGNED")
         );
       });
 
@@ -180,15 +186,17 @@ export default function WorkerProfile() {
     }));
   };
 
-  // Helper functions for styling
+  // Helper functions for styling - handle extra quotes in status
   const getTaskPriority = (status) => {
-    switch (status?.toUpperCase()) {
+    const cleanStatus = status?.replace(/"/g, '');
+    switch (cleanStatus) {
+      case "Assigned":
       case "ASSIGNED":
-      case "IN_PROGRESS":
+      case "In Progress":
         return "High Priority";
-      case "PENDING":
+      case "Pending":
         return "Normal Priority";
-      case "COMPLETED":
+      case "Completed":
         return "Low Priority";
       default:
         return "Normal Priority";
@@ -196,13 +204,15 @@ export default function WorkerProfile() {
   };
 
   const getPriorityColor = (status) => {
-    switch (status?.toUpperCase()) {
+    const cleanStatus = status?.replace(/"/g, '');
+    switch (cleanStatus) {
+      case "Assigned":
       case "ASSIGNED":
-      case "IN_PROGRESS":
+      case "In Progress":
         return "bg-red-100 text-red-800";
-      case "PENDING":
+      case "Pending":
         return "bg-deep_green/10 text-deep_green";
-      case "COMPLETED":
+      case "Completed":
         return "bg-gray-100 text-gray-600";
       default:
         return "bg-deep_green/10 text-deep_green";
@@ -210,14 +220,16 @@ export default function WorkerProfile() {
   };
 
   const getStatusColor = (status) => {
-    switch (status?.toUpperCase()) {
+    const cleanStatus = status?.replace(/"/g, '');
+    switch (cleanStatus) {
+      case "Assigned":
       case "ASSIGNED":
         return "bg-blue-100 text-blue-800";
-      case "IN_PROGRESS":
+      case "In Progress":
         return "bg-web_yellow/20 text-web_yellow";
-      case "PENDING":
+      case "Pending":
         return "bg-light_gray/40 text-slatebluegray";
-      case "COMPLETED":
+      case "Completed":
         return "bg-green-100 text-green-800";
       default:
         return "bg-light_gray/40 text-slatebluegray";
@@ -270,16 +282,12 @@ const handleGetEquipment = async () => {
       if (!response.ok) {
         throw new Error("Network response was not ok");
       }
-
       const data = await response.json();
-      
       // Filter only accepted scheduling data
       const acceptedData = data.filter(item => 
         item.status === "Accept" ||
         item.status === "Pending"
-        
       );
-      
       setAcceptedSchedulingData(acceptedData);
       console.log("Accepted scheduling data:", acceptedData);
     } catch (err) {
@@ -299,11 +307,469 @@ const handleGetEquipment = async () => {
     });
   };
 
+  // PDF Export Functions
+  const generatePDF = async () => {
+    setIsGeneratingPDF(true);
+    
+    try {
+      const displayTasks = mapAssignedTasksToDisplay(assignedTasks);
+      const title = `${technicianData.name} - Task Assignment Report`;
+      const date = new Date().toLocaleDateString();
+      
+      const htmlContent = generatePDFContent(displayTasks, title, date, technicianData);
+      const fileName = `technician-report-${technicianData.name?.replace(/\s+/g, '-')}-${new Date().toISOString().split('T')[0]}.pdf`;
+      
+      await downloadPDF(htmlContent, fileName);
+    } catch (error) {
+      console.error('Error generating PDF:', error);
+      alert('Error generating PDF report. Please try again.');
+    } finally {
+      setIsGeneratingPDF(false);
+    }
+  };
+
+  const generatePDFContent = (tasks, title, date, technician) => {
+    // Calculate task statistics
+    const totalTasks = assignedTasks.length;
+    
+    // Debug: Log all status values to identify the issue
+    console.log("🔍 Debugging task statuses:");
+    console.log("🔍 Total assignedTasks:", assignedTasks);
+    assignedTasks.forEach((task, index) => {
+      console.log(`Task ${index + 1}: Status = "${task.status}" (Type: ${typeof task.status})`);
+      console.log(`Task ${index + 1}: Full task object:`, task);
+    });
+    
+    // Status filtering - handle extra quotes in status values
+    const completedTasksArray = assignedTasks.filter(task => {
+      const cleanStatus = task.status?.replace(/"/g, ''); // Remove extra quotes
+      console.log(`🔍 Checking task status: "${task.status}" cleaned to "${cleanStatus}" === "Completed"? ${cleanStatus === "Completed"}`);
+      return cleanStatus === "Completed";
+    });
+    
+    console.log("🔍 Completed tasks found:", completedTasksArray);
+    console.log("🔍 Completed tasks count:", completedTasksArray.length);
+    
+    const completedTasks = completedTasksArray.length;
+    
+    const inProgressTasks = assignedTasks.filter(task => {
+      const cleanStatus = task.status?.replace(/"/g, '');
+      return cleanStatus === "In Progress" || cleanStatus === "IN_PROGRESS";
+    }).length;
+    
+    const assignedTasksCount = assignedTasks.filter(task => {
+      const cleanStatus = task.status?.replace(/"/g, '');
+      return cleanStatus === "Assigned" || cleanStatus === "ASSIGNED";
+    }).length;
+    
+    const pendingTasks = assignedTasks.filter(task => {
+      const cleanStatus = task.status?.replace(/"/g, '');
+      return cleanStatus === "Pending" || cleanStatus === "PENDING";
+    }).length;
+    
+    console.log(`📊 Task Statistics:
+    - Total: ${totalTasks}
+    - Completed: ${completedTasks}
+    - In Progress: ${inProgressTasks}
+    - Assigned: ${assignedTasksCount}
+    - Pending: ${pendingTasks}`);
+    
+    const completionRate = totalTasks > 0 ? Math.round((completedTasks / totalTasks) * 100) : 0;
+
+    let htmlContent = `
+      <!DOCTYPE html>
+      <html>
+      <head>
+        <meta charset="utf-8">
+        <title>${title}</title>
+        <style>
+          body { 
+            font-family: Arial, sans-serif; 
+            margin: 20px;
+            color: #333;
+          }
+          .header { 
+            text-align: center; 
+            margin-bottom: 30px;
+            border-bottom: 2px solid #f59e0b;
+            padding-bottom: 15px;
+          }
+          .header h1 { 
+            color: #1f2937; 
+            margin: 0;
+            font-size: 24px;
+          }
+          .header p { 
+            color: #6b7280; 
+            margin: 5px 0 0 0;
+          }
+          .technician-info {
+            background-color: #f9fafb;
+            padding: 15px;
+            border-radius: 8px;
+            margin-bottom: 20px;
+            border-left: 4px solid #f59e0b;
+          }
+          .technician-info h3 {
+            margin: 0 0 10px 0;
+            color: #1f2937;
+          }
+          .info-grid {
+            display: grid;
+            grid-template-columns: 1fr 1fr 1fr;
+            gap: 15px;
+          }
+          .info-item {
+            color: #4b5563;
+            font-size: 14px;
+          }
+          .info-value {
+            font-weight: bold;
+            color: #1f2937;
+            display: block;
+            margin-top: 2px;
+          }
+          .summary {
+            background-color: #f0f9ff;
+            padding: 15px;
+            border-radius: 8px;
+            margin-bottom: 20px;
+            border-left: 4px solid #0ea5e9;
+          }
+          .summary h3 {
+            margin: 0 0 10px 0;
+            color: #1f2937;
+          }
+          .summary-grid {
+            display: grid;
+            grid-template-columns: repeat(auto-fit, minmax(150px, 1fr));
+            gap: 10px;
+            margin-top: 10px;
+          }
+          .summary-item {
+            background: white;
+            padding: 10px;
+            border-radius: 6px;
+            text-align: center;
+            border: 1px solid #e5e7eb;
+          }
+          .summary-number {
+            font-size: 20px;
+            font-weight: bold;
+            color: #1f2937;
+          }
+          .summary-label {
+            font-size: 11px;
+            color: #6b7280;
+            text-transform: uppercase;
+          }
+          .task-record { 
+            border: 1px solid #e5e7eb; 
+            border-radius: 8px;
+            padding: 20px;
+            margin-bottom: 20px;
+            background-color: #ffffff;
+            page-break-inside: avoid;
+            box-shadow: 0 1px 3px rgba(0, 0, 0, 0.1);
+          }
+          .record-header {
+            display: flex;
+            justify-content: space-between;
+            align-items: flex-start;
+            margin-bottom: 15px;
+            padding-bottom: 12px;
+            border-bottom: 2px solid #f59e0b;
+          }
+          .task-title {
+            font-weight: bold;
+            font-size: 16px;
+            color: #1f2937;
+          }
+          .task-badges {
+            display: flex;
+            gap: 8px;
+            flex-wrap: wrap;
+          }
+          .badge {
+            padding: 4px 8px;
+            border-radius: 12px;
+            font-size: 11px;
+            font-weight: 600;
+          }
+          .priority-high { background-color: #fee2e2; color: #dc2626; }
+          .priority-normal { background-color: #fef3c7; color: #d97706; }
+          .priority-low { background-color: #f3f4f6; color: #6b7280; }
+          .status-completed { background-color: #dcfce7; color: #16a34a; }
+          .status-in-progress { background-color: #fed7aa; color: #ea580c; }
+          .status-assigned { background-color: #dbeafe; color: #2563eb; }
+          .status-pending { background-color: #fef3c7; color: #ca8a04; }
+          .task-details {
+            margin-top: 10px;
+          }
+          .detail-row {
+            display: flex;
+            justify-content: space-between;
+            padding: 4px 0;
+            border-bottom: 1px dotted #e5e7eb;
+          }
+          .detail-label {
+            font-weight: 600;
+            color: #4b5563;
+            width: 30%;
+          }
+          .detail-value {
+            color: #1f2937;
+            width: 70%;
+            text-align: right;
+          }
+          .notes-section {
+            margin-top: 15px;
+            padding: 10px;
+            background-color: #f8fafc;
+            border-radius: 6px;
+            border-left: 3px solid #0ea5e9;
+          }
+          .notes-title {
+            font-weight: 600;
+            color: #374151;
+            margin-bottom: 5px;
+          }
+          .notes-text {
+            color: #4b5563;
+            line-height: 1.4;
+          }
+          .footer {
+            margin-top: 30px;
+            padding-top: 15px;
+            border-top: 1px solid #e5e7eb;
+            text-align: center;
+            color: #6b7280;
+            font-size: 12px;
+          }
+          @media print {
+            body { background: white; }
+            .no-print { display: none; }
+          }
+        </style>
+      </head>
+      <body>
+        <div class="header">
+          <h1>${title}</h1>
+          <p>Generated on ${date}</p>
+        </div>
+        
+        <div class="technician-info">
+          <h3>Technician Information</h3>
+          <div class="info-grid">
+            <div class="info-item">
+              Name
+              <span class="info-value">${technician.name || 'N/A'}</span>
+            </div>
+            <div class="info-item">
+              Employee ID
+              <span class="info-value">${technician.empId || 'N/A'}</span>
+            </div>
+            <div class="info-item">
+              Department
+              <span class="info-value">${technician.department || 'N/A'}</span>
+            </div>
+            <div class="info-item">
+              Phone
+              <span class="info-value">${technician.phone || 'N/A'}</span>
+            </div>
+            <div class="info-item">
+              Email
+              <span class="info-value">${technician.email || 'N/A'}</span>
+            </div>
+            <div class="info-item">
+              Status
+              <span class="info-value">${technician.availabilityStatus || 'N/A'}</span>
+            </div>
+          </div>
+        </div>
+        
+        <div class="summary">
+          <h3>Task Assignment Summary</h3>
+          <div class="summary-grid">
+            <div class="summary-item">
+              <div class="summary-number">${totalTasks}</div>
+              <div class="summary-label">Total Tasks</div>
+            </div>
+            <div class="summary-item">
+              <div class="summary-number">${completedTasks}</div>
+              <div class="summary-label">Completed</div>
+            </div>
+            <div class="summary-item">
+              <div class="summary-number">${inProgressTasks}</div>
+              <div class="summary-label">In Progress</div>
+            </div>
+            <div class="summary-item">
+              <div class="summary-number">${assignedTasksCount}</div>
+              <div class="summary-label">Assigned</div>
+            </div>
+            <div class="summary-item">
+              <div class="summary-number">${pendingTasks}</div>
+              <div class="summary-label">Pending</div>
+            </div>
+            <div class="summary-item">
+              <div class="summary-number">${completionRate}%</div>
+              <div class="summary-label">Completion Rate</div>
+            </div>
+          </div>
+        </div>
+        
+        <div class="task-records">
+    `;
+
+    tasks.forEach((task) => {
+      const getStatusClass = (status) => {
+        switch (status?.toUpperCase()) {
+          case 'COMPLETED': return 'status-completed';
+          case 'IN_PROGRESS': return 'status-in-progress';
+          case 'ASSIGNED': return 'status-assigned';
+          case 'PENDING': return 'status-pending';
+          default: return 'status-pending';
+        }
+      };
+
+      const getPriorityClass = (priority) => {
+        if (priority?.includes('High')) return 'priority-high';
+        if (priority?.includes('Low')) return 'priority-low';
+        return 'priority-normal';
+      };
+
+      const originalTask = assignedTasks.find(t => t.assignId === task.id);
+
+      htmlContent += `
+        <div class="task-record">
+          <div class="record-header">
+            <div class="task-title">${task.title}</div>
+            <div class="task-badges">
+              <span class="badge ${getPriorityClass(task.priority)}">${task.priority}</span>
+              <span class="badge ${getStatusClass(task.status)}">${task.status?.replace('_', ' ')}</span>
+            </div>
+          </div>
+          
+          <div class="task-details">
+            <div class="detail-row">
+              <span class="detail-label">Task ID:</span>
+              <span class="detail-value">${task.id || 'N/A'}</span>
+            </div>
+            <div class="detail-row">
+              <span class="detail-label">Equipment ID:</span>
+              <span class="detail-value">${task.equipmentId || 'N/A'}</span>
+            </div>
+            <div class="detail-row">
+              <span class="detail-label">Start Date:</span>
+              <span class="detail-value">${task.due !== 'Not scheduled' ? new Date(task.due).toLocaleDateString() : 'Not scheduled'}</span>
+            </div>
+            <div class="detail-row">
+              <span class="detail-label">Duration:</span>
+              <span class="detail-value">${task.duration || 'Not specified'}</span>
+            </div>
+            <div class="detail-row">
+              <span class="detail-label">Time Schedule:</span>
+              <span class="detail-value">${task.startTime ? `${task.startTime} - ${task.endTime || 'TBD'}` : 'Not specified'}</span>
+            </div>
+          </div>
+          
+          ${originalTask?.notes ? `
+          <div class="notes-section">
+            <div class="notes-title">Task Notes</div>
+            <div class="notes-text">${originalTask.notes}</div>
+          </div>
+          ` : ''}
+        </div>
+      `;
+    });
+
+    htmlContent += `
+        </div>
+        <div class="footer">
+          <p>ConstruxFlow Maintenance Management System</p>
+          <p>Technician Task Report generated automatically on ${date}</p>
+        </div>
+        
+        <div class="no-print" style="position: fixed; top: 10px; right: 10px; background: white; padding: 10px; border: 1px solid #ccc; border-radius: 5px;">
+          <button onclick="window.print()" style="margin-right: 10px; padding: 5px 10px; background: #10b981; color: white; border: none; border-radius: 4px; cursor: pointer;">Print Report</button>
+          <button onclick="window.close()" style="padding: 5px 10px; background: #6b7280; color: white; border: none; border-radius: 4px; cursor: pointer;">Close</button>
+        </div>
+      </body>
+      </html>
+    `;
+
+    return htmlContent;
+  };
+
+  const downloadPDF = (htmlContent, fileName) => {
+    console.log("🚀 Starting PDF download process...");
+    console.log("📄 HTML content length:", htmlContent.length);
+    
+    try {
+      // Create a new window for PDF generation
+      const printWindow = window.open('', '_blank', 'width=1200,height=800');
+      
+      if (!printWindow) {
+        throw new Error('Pop-up blocked. Please allow pop-ups for this site.');
+      }
+
+      // Write the HTML content to the new window
+      printWindow.document.open();
+      printWindow.document.write(htmlContent);
+      printWindow.document.close();
+
+      // Wait for content to load then trigger print
+      printWindow.onload = () => {
+        setTimeout(() => {
+          try {
+            printWindow.focus();
+            printWindow.print();
+            
+            // Close the window after a delay (optional)
+            setTimeout(() => {
+              printWindow.close();
+            }, 1000);
+          } catch (printError) {
+            console.error('Print error:', printError);
+            alert('Error occurred while printing. Please try again.');
+          }
+        }, 500);
+      };
+
+      // Handle potential errors
+      printWindow.onerror = (error) => {
+        console.error('Window error:', error);
+        alert('Error opening print window. Please check your browser settings.');
+      };
+
+    } catch (error) {
+      console.error('PDF generation error:', error);
+      alert(`Error generating PDF: ${error.message}`);
+    }
+  };
+
   // Get filtered tasks
   const displayTasks = mapAssignedTasksToDisplay(assignedTasks);
-  const filteredTasks = displayTasks.filter(
-    (task) => activeFilter === "All" || task.status === activeFilter
-  );
+  const filteredTasks = displayTasks.filter((task) => {
+    if (activeFilter === "All") return true;
+    
+    // Clean the task status by removing extra quotes
+    const cleanStatus = task.status?.replace(/"/g, '');
+    
+    // Handle different filter values
+    switch (activeFilter) {
+      case "ASSIGNED":
+        return cleanStatus === "Assigned" || cleanStatus === "ASSIGNED";
+      case "IN_PROGRESS":
+        return cleanStatus === "In Progress" || cleanStatus === "IN_PROGRESS";
+      case "PENDING":
+        return cleanStatus === "Pending" || cleanStatus === "PENDING";
+      case "COMPLETED":
+        return cleanStatus === "Completed" || cleanStatus === "COMPLETED";
+      default:
+        return cleanStatus === activeFilter;
+    }
+  });
 
   return (
     <>
@@ -720,14 +1186,27 @@ const handleGetEquipment = async () => {
 
                 {/* Action Buttons */}
                 <div className="flex flex-col sm:flex-row gap-3">
-                  <button className="flex-1 flex items-center justify-center gap-2 bg-deep_green hover:bg-deep_green/80 text-white font-semibold py-3 rounded-lg transition-all duration-150 shadow-sm hover:shadow-md">
-                    <FileText className="w-4 h-4" />
-                    Export Report
+                  <button 
+                    onClick={generatePDF}
+                    disabled={isGeneratingPDF || loading || assignedTasks.length === 0}
+                    className="flex-1 flex items-center justify-center gap-2 bg-deep_green hover:bg-deep_green/80 text-white font-semibold py-3 rounded-lg transition-all duration-150 shadow-sm hover:shadow-md disabled:opacity-50 disabled:cursor-not-allowed"
+                  >
+                    {isGeneratingPDF ? (
+                      <>
+                        <div className="animate-spin rounded-full h-4 w-4 border-b-2 border-white"></div>
+                        Generating...
+                      </>
+                    ) : (
+                      <>
+                        <FaDownload className="w-4 h-4" />
+                        Export Report
+                      </>
+                    )}
                   </button>
-                  <button className="flex-1 flex items-center justify-center gap-2 bg-light_gray/40 hover:bg-light_gray/60 text-main_dark font-semibold py-3 rounded-lg transition-all duration-150">
+                  {/* <button className="flex-1 flex items-center justify-center gap-2 bg-light_gray/40 hover:bg-light_gray/60 text-main_dark font-semibold py-3 rounded-lg transition-all duration-150">
                     <Phone className="w-4 h-4" />
                     Contact Technician
-                  </button>
+                  </button> */}
                 </div>
               </div>
             </div>
