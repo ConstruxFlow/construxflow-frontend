@@ -29,76 +29,107 @@ const ProjectEquipmentDashboard = () => {
   const [statusFilter, setStatusFilter] = useState('All Status');
   const [showUpdateModal, setShowUpdateModal] = useState(false);
   const [selectedEquipment, setSelectedEquipment] = useState(null);
+  const [newStatus, setNewStatus] = useState('');
+  const [isUpdating, setIsUpdating] = useState(false);
+  const [toast, setToast] = useState({ show: false, message: '', type: 'success' });
 
-  // Mock data for project equipment - will be replaced with API calls
+  // Fetch equipment requests for the specific project from API
   useEffect(() => {
     const fetchProjectEquipment = async () => {
       setLoading(true);
       try {
-        // Mock data - replace with actual API call
-        const mockProjectEquipment = [
-          {
-            id: 1,
-            equipmentId: 1,
-            name: 'Hydraulic Excavator CAT 320',
-            category: 'Heavy Machinery',
-            brand: 'Caterpillar',
-            model: 'CAT 320',
-            status: 'In Use',
-            assignedDate: '2024-11-15',
-            startDate: '2024-11-16',
-            expectedEndDate: '2024-12-15',
-            operator: 'John Martinez',
-            location: 'Zone A - Foundation',
-            totalHoursUsed: 45.5,
-            totalKilometers: 0,
-            todayHours: 8.5,
-            todayKilometers: 0,
-            notes: 'Working on foundation excavation',
-            lastUpdated: '2024-11-20 17:30'
-          },
-          {
-            id: 2,
-            equipmentId: 2,
-            name: 'Concrete Mixer Truck',
-            category: 'Transport Vehicle',
-            brand: 'Volvo',
-            model: 'FM 400',
-            status: 'Pending',
-            assignedDate: '2024-11-18',
-            startDate: null,
-            expectedEndDate: '2024-12-20',
-            operator: 'Sarah Chen',
-            location: 'Zone B - Structure',
-            totalHoursUsed: 0,
-            totalKilometers: 0,
-            todayHours: 0,
-            todayKilometers: 0,
-            notes: 'Awaiting approval from inventory manager',
-            lastUpdated: '2024-11-18 10:15'
-          },
-          {
-            id: 3,
-            equipmentId: 3,
-            name: 'Pneumatic Drill Set',
-            category: 'Hand Tools',
-            brand: 'DeWalt',
-            model: 'D25133K',
-            status: 'Returned',
-            assignedDate: '2024-11-10',
-            startDate: '2024-11-11',
-            expectedEndDate: '2024-11-20',
-            operator: 'Mike Johnson',
-            location: 'Warehouse A',
-            totalHoursUsed: 32.0,
-            totalKilometers: 0,
-            todayHours: 0,
-            todayKilometers: 0,
-            notes: 'Completed drilling work, returned in good condition',
-            lastUpdated: '2024-11-20 16:45'
+        console.log("Fetching equipment requests for project:", projectId);
+        
+        const response = await fetch("http://localhost:8080/api/equipment-requests");
+        
+        if (!response.ok) {
+          throw new Error("Failed to fetch equipment requests");
+        }
+        
+        const data = await response.json();
+        console.log("All equipment requests:", data);
+        
+        // Filter equipment requests by project ID
+        const projectRequests = data.filter(request => request.projectId === projectId);
+        console.log("Filtered project requests:", projectRequests);
+        
+        // Transform the API response to match the expected format
+        const equipmentMap = new Map(); // Use Map to ensure unique equipment
+        
+        projectRequests.forEach(request => {
+          if (request.equipmentDetails && request.equipmentDetails.length > 0) {
+            request.equipmentDetails.forEach(equipment => {
+              const equipmentId = equipment.id;
+              
+              // Check if equipment already exists, if so, update with latest request info
+              if (!equipmentMap.has(equipmentId) || 
+                  new Date(request.requestDate) > new Date(equipmentMap.get(equipmentId).assignedDate)) {
+                equipmentMap.set(equipmentId, {
+                  id: equipment.id,
+                  equipmentId: equipment.id,
+                  name: equipment.name,
+                  category: equipment.category,
+                  brand: equipment.brand,
+                  model: equipment.model,
+                  status: request.status, // Use request status
+                  assignedDate: request.requestDate,
+                  startDate: request.requestedStartDate,
+                  expectedEndDate: request.requestedEndDate,
+                  operator: request.siteManagerId,
+                  location: request.expectedLocation,
+                  totalHoursUsed: equipment.totalUsageHours || 0,
+                  totalKilometers: equipment.totalKilometers || 0,
+                  todayHours: equipment.todayHours || 0,
+                  todayKilometers: equipment.todayKilometers || 0,
+                  notes: request.additionalNotes || equipment.notes,
+                  lastUpdated: equipment.lastUpdated || request.requestDate,
+                  requestId: request.id,
+                  priority: request.priority,
+                  requestPurpose: request.requestPurpose
+                });
+              }
+            });
+          } else {
+            // If no equipment details, create entries based on equipment IDs
+            request.equipmentIds.forEach((equipmentId) => {
+              // Only add if not already exists or this request is more recent
+              if (!equipmentMap.has(equipmentId) || 
+                  new Date(request.requestDate) > new Date(equipmentMap.get(equipmentId).assignedDate)) {
+                equipmentMap.set(equipmentId, {
+                  id: `${request.id}-${equipmentId}`,
+                  equipmentId: equipmentId,
+                  name: `Equipment #${equipmentId}`,
+                  category: 'Unknown',
+                  brand: 'N/A',
+                  model: 'N/A',
+                  status: request.status,
+                  assignedDate: request.requestDate,
+                  startDate: request.requestedStartDate,
+                  expectedEndDate: request.requestedEndDate,
+                  operator: request.siteManagerId,
+                  location: request.expectedLocation,
+                  totalHoursUsed: 0,
+                  totalKilometers: 0,
+                  todayHours: 0,
+                  todayKilometers: 0,
+                  notes: request.additionalNotes,
+                  lastUpdated: request.requestDate,
+                  requestId: request.id,
+                  priority: request.priority,
+                  requestPurpose: request.requestPurpose
+                });
+              }
+            });
           }
-        ];
-        setProjectEquipment(mockProjectEquipment);
+        });
+        
+        // Convert Map to Array for unique equipment
+        const transformedEquipment = Array.from(equipmentMap.values());
+        
+        console.log("Transformed unique equipment data:", transformedEquipment);
+        console.log("Total unique equipment count:", transformedEquipment.length);
+        setProjectEquipment(transformedEquipment);
+        
       } catch (error) {
         console.error('Error fetching project equipment:', error);
       } finally {
@@ -106,10 +137,74 @@ const ProjectEquipmentDashboard = () => {
       }
     };
 
-    fetchProjectEquipment();
+    if (projectId) {
+      fetchProjectEquipment();
+    }
   }, [projectId]);
 
-  const statuses = ['All Status', 'Pending', 'In Use', 'Returned', 'Maintenance'];
+  // Fetch equipment usage summary for each equipment
+  useEffect(() => {
+    const fetchEquipmentUsageSummary = async () => {
+      if (projectEquipment.length === 0) return;
+
+      try {
+        console.log("Fetching usage summary for equipment:", projectEquipment.length);
+        
+        // Fetch usage summary for each equipment
+        const equipmentWithUsage = await Promise.all(
+          projectEquipment.map(async (equipment) => {
+            try {
+              const response = await fetch(`http://localhost:8080/api/equipment-usage/summary/${equipment.equipmentId}`);
+              
+              if (response.ok) {
+                const usageSummary = await response.json();
+                console.log(`Usage summary for equipment ${equipment.equipmentId}:`, usageSummary);
+                
+                // Update equipment with usage summary data
+                return {
+                  ...equipment,
+                  totalHoursUsed: usageSummary.totalHoursUsed || equipment.totalHoursUsed,
+                  totalKilometers: usageSummary.totalKilometers || equipment.totalKilometers,
+                  todayHours: usageSummary.todayHours || equipment.todayHours,
+                  todayKilometers: usageSummary.todayKilometers || equipment.todayKilometers,
+                  lastUsageDate: usageSummary.lastUsageDate || equipment.lastUpdated,
+                  averageDailyHours: usageSummary.averageDailyHours || 0,
+                  totalUsageDays: usageSummary.totalUsageDays || 0,
+                  lastLocation: usageSummary.lastLocation || equipment.location,
+                  usageSummaryLoaded: true
+                };
+              } else {
+                console.warn(`Failed to fetch usage summary for equipment ${equipment.equipmentId}`);
+                return {
+                  ...equipment,
+                  usageSummaryLoaded: false
+                };
+              }
+            } catch (error) {
+              console.error(`Error fetching usage summary for equipment ${equipment.equipmentId}:`, error);
+              return {
+                ...equipment,
+                usageSummaryLoaded: false
+              };
+            }
+          })
+        );
+
+        console.log("Equipment with usage summaries:", equipmentWithUsage);
+        setProjectEquipment(equipmentWithUsage);
+        
+      } catch (error) {
+        console.error('Error fetching equipment usage summaries:', error);
+      }
+    };
+
+    // Only fetch usage summaries after project equipment is loaded
+    if (projectEquipment.length > 0 && !projectEquipment.some(eq => eq.usageSummaryLoaded !== undefined)) {
+      fetchEquipmentUsageSummary();
+    }
+  }, [projectEquipment]);
+
+  const statuses = ['All Status', 'Pending', 'Approved', 'In Use', 'Returned', 'Maintenance'];
   const categories = ['All Categories', 'Heavy Machinery', 'Transport Vehicle', 'Hand Tools', 'Power Equipment'];
 
   const filteredEquipment = projectEquipment.filter(item => {
@@ -123,6 +218,7 @@ const ProjectEquipmentDashboard = () => {
   const getStatusColor = (status) => {
     switch (status) {
       case 'Pending': return 'bg-yellow-100 text-yellow-800';
+      case 'Approved': return 'bg-emerald-100 text-emerald-800';
       case 'In Use': return 'bg-green-100 text-green-800';
       case 'Returned': return 'bg-blue-100 text-blue-800';
       case 'Maintenance': return 'bg-red-100 text-red-800';
@@ -133,6 +229,7 @@ const ProjectEquipmentDashboard = () => {
   const getStatusIcon = (status) => {
     switch (status) {
       case 'Pending': return <Clock className="w-4 h-4" />;
+      case 'Approved': return <CheckCircle className="w-4 h-4" />;
       case 'In Use': return <Activity className="w-4 h-4" />;
       case 'Returned': return <CheckCircle className="w-4 h-4" />;
       case 'Maintenance': return <AlertTriangle className="w-4 h-4" />;
@@ -142,7 +239,139 @@ const ProjectEquipmentDashboard = () => {
 
   const handleStatusUpdate = (equipment) => {
     setSelectedEquipment(equipment);
+    // Set default to the first available option if current status is not in the allowed list
+    const allowedStatuses = ['In Use', 'Returned', 'Maintenance'];
+    const defaultStatus = allowedStatuses.includes(equipment.status) ? equipment.status : 'In Use';
+    setNewStatus(defaultStatus);
     setShowUpdateModal(true);
+  };
+
+  const updateEquipmentStatus = async () => {
+    if (!selectedEquipment || !newStatus) return;
+    
+    setIsUpdating(true);
+    try {
+      const response = await fetch(
+        `http://localhost:8080/api/equipment-requests/updateStatus?requestId=${selectedEquipment.requestId}&status=${encodeURIComponent(newStatus)}`,
+        {
+          method: 'PUT',
+          headers: {
+            'Content-Type': 'application/json',
+          }
+        }
+      );
+
+      if (!response.ok) {
+        throw new Error('Failed to update equipment status');
+      }
+
+      // Refresh the equipment list to show updated status
+      const updatedResponse = await fetch("http://localhost:8080/api/equipment-requests");
+      if (updatedResponse.ok) {
+        const data = await updatedResponse.json();
+        const projectRequests = data.filter(request => request.projectId === projectId);
+        
+        const equipmentMap = new Map();
+        
+        projectRequests.forEach(request => {
+          if (request.equipmentDetails && request.equipmentDetails.length > 0) {
+            request.equipmentDetails.forEach(equipment => {
+              const equipmentId = equipment.id;
+              
+              if (!equipmentMap.has(equipmentId) || 
+                  new Date(request.requestDate) > new Date(equipmentMap.get(equipmentId).assignedDate)) {
+                equipmentMap.set(equipmentId, {
+                  id: equipment.id,
+                  equipmentId: equipment.id,
+                  name: equipment.name,
+                  category: equipment.category,
+                  brand: equipment.brand,
+                  model: equipment.model,
+                  status: request.status,
+                  assignedDate: request.requestDate,
+                  startDate: request.requestedStartDate,
+                  expectedEndDate: request.requestedEndDate,
+                  operator: request.siteManagerId,
+                  location: request.expectedLocation,
+                  totalHoursUsed: equipment.totalUsageHours || 0,
+                  totalKilometers: equipment.totalKilometers || 0,
+                  todayHours: equipment.todayHours || 0,
+                  todayKilometers: equipment.todayKilometers || 0,
+                  notes: request.additionalNotes || equipment.notes,
+                  lastUpdated: equipment.lastUpdated || request.requestDate,
+                  requestId: request.id,
+                  priority: request.priority,
+                  requestPurpose: request.requestPurpose
+                });
+              }
+            });
+          } else {
+            request.equipmentIds.forEach((equipmentId) => {
+              if (!equipmentMap.has(equipmentId) || 
+                  new Date(request.requestDate) > new Date(equipmentMap.get(equipmentId).assignedDate)) {
+                equipmentMap.set(equipmentId, {
+                  id: `${request.id}-${equipmentId}`,
+                  equipmentId: equipmentId,
+                  name: `Equipment #${equipmentId}`,
+                  category: 'Unknown',
+                  brand: 'N/A',
+                  model: 'N/A',
+                  status: request.status,
+                  assignedDate: request.requestDate,
+                  startDate: request.requestedStartDate,
+                  expectedEndDate: request.requestedEndDate,
+                  operator: request.siteManagerId,
+                  location: request.expectedLocation,
+                  totalHoursUsed: 0,
+                  totalKilometers: 0,
+                  todayHours: 0,
+                  todayKilometers: 0,
+                  notes: request.additionalNotes,
+                  lastUpdated: request.requestDate,
+                  requestId: request.id,
+                  priority: request.priority,
+                  requestPurpose: request.requestPurpose
+                });
+              }
+            });
+          }
+        });
+
+        const transformedEquipment = Array.from(equipmentMap.values());
+        setProjectEquipment(transformedEquipment);
+      }
+
+      setShowUpdateModal(false);
+      setSelectedEquipment(null);
+      setNewStatus('');
+      
+      // Show success message
+      setToast({
+        show: true,
+        message: 'Equipment status updated successfully!',
+        type: 'success'
+      });
+      
+      // Auto-hide toast after 3 seconds
+      setTimeout(() => {
+        setToast({ show: false, message: '', type: 'success' });
+      }, 3000);
+      
+    } catch (error) {
+      console.error('Error updating equipment status:', error);
+      setToast({
+        show: true,
+        message: 'Failed to update equipment status. Please try again.',
+        type: 'error'
+      });
+      
+      // Auto-hide toast after 5 seconds for errors
+      setTimeout(() => {
+        setToast({ show: false, message: '', type: 'success' });
+      }, 5000);
+    } finally {
+      setIsUpdating(false);
+    }
   };
 
   const handleDailyUpdate = (equipment) => {
@@ -165,6 +394,7 @@ const ProjectEquipmentDashboard = () => {
   const stats = {
     total: projectEquipment.length,
     pending: projectEquipment.filter(item => item.status === 'Pending').length,
+    approved: projectEquipment.filter(item => item.status === 'Approved').length,
     inUse: projectEquipment.filter(item => item.status === 'In Use').length,
     returned: projectEquipment.filter(item => item.status === 'Returned').length,
     totalHours: projectEquipment.reduce((sum, item) => sum + (item.totalHoursUsed || 0), 0),
@@ -249,11 +479,11 @@ const ProjectEquipmentDashboard = () => {
               textColor: 'text-deep_green'
             },
             {
-              label: 'In Use',
-              value: stats.inUse.toString(),
-              icon: Activity,
-              bgColor: 'bg-gradient-to-br from-green-500 to-green-600',
-              textColor: 'text-green-600'
+              label: 'Approved',
+              value: stats.approved.toString(),
+              icon: CheckCircle,
+              bgColor: 'bg-gradient-to-br from-emerald-500 to-emerald-600',
+              textColor: 'text-emerald-600'
             },
             {
               label: 'Pending',
@@ -378,20 +608,45 @@ const ProjectEquipmentDashboard = () => {
                           {equipment.status}
                         </div>
                         <div className="text-xs text-slatebluegray mt-1">
-                          {equipment.status === 'In Use' ? `Today: ${equipment.todayHours}h` : equipment.lastUpdated}
+                          {equipment.status === 'In Use' ? (
+                            equipment.usageSummaryLoaded && equipment.todayHours !== undefined ? 
+                              `Today: ${equipment.todayHours}h${equipment.todayKilometers ? `, ${equipment.todayKilometers}km` : ''}` :
+                              `Today: ${equipment.todayHours || 0}h`
+                          ) : equipment.lastUpdated}
                         </div>
                       </div>
 
                       {/* Usage Stats */}
                       <div className="text-right min-w-0">
+                        {equipment.usageSummaryLoaded === false && (
+                          <div className="text-xs text-slatebluegray mb-1 flex items-center justify-end gap-1">
+                            <div className="animate-spin w-3 h-3 border border-gray-300 border-t-deep_green rounded-full"></div>
+                            Loading usage...
+                          </div>
+                        )}
                         <div className="text-sm">
                           <span className="text-slatebluegray">Total Hours: </span>
                           <span className="font-medium text-main_dark">{equipment.totalHoursUsed.toFixed(1)}h</span>
+                          {equipment.usageSummaryLoaded && equipment.averageDailyHours && (
+                            <span className="text-xs text-slatebluegray ml-1">
+                              (~{equipment.averageDailyHours.toFixed(1)}h/day)
+                            </span>
+                          )}
                         </div>
                         {equipment.totalKilometers > 0 && (
                           <div className="text-sm">
                             <span className="text-slatebluegray">Total KM: </span>
                             <span className="font-medium text-main_dark">{equipment.totalKilometers.toLocaleString()}</span>
+                          </div>
+                        )}
+                        {equipment.usageSummaryLoaded && equipment.totalUsageDays > 0 && (
+                          <div className="text-xs text-slatebluegray">
+                            Active {equipment.totalUsageDays} day{equipment.totalUsageDays !== 1 ? 's' : ''}
+                          </div>
+                        )}
+                        {equipment.usageSummaryLoaded && equipment.lastUsageDate && (
+                          <div className="text-xs text-slatebluegray">
+                            Last used: {new Date(equipment.lastUsageDate).toLocaleDateString()}
                           </div>
                         )}
                       </div>
@@ -406,12 +661,22 @@ const ProjectEquipmentDashboard = () => {
                             Update Usage
                           </button>
                         )}
-                        <button
-                          onClick={() => handleStatusUpdate(equipment)}
-                          className="px-3 py-2 border border-gray-300 text-gray-700 rounded-lg text-sm font-medium hover:bg-gray-50 transition-colors duration-150"
-                        >
-                          <Edit className="w-4 h-4" />
-                        </button>
+                        {equipment.status !== 'Pending' ? (
+                          <button
+                            onClick={() => handleStatusUpdate(equipment)}
+                            className="px-3 py-2 border border-gray-300 text-gray-700 rounded-lg text-sm font-medium hover:bg-gray-50 transition-colors duration-150"
+                          >
+                            <Edit className="w-4 h-4" />
+                          </button>
+                        ) : (
+                          <button
+                            disabled
+                            className="px-3 py-2 border border-gray-200 text-gray-400 rounded-lg text-sm font-medium cursor-not-allowed"
+                            title="Status update disabled for pending requests"
+                          >
+                            <Edit className="w-4 h-4" />
+                          </button>
+                        )}
                         <button className="p-2 text-slatebluegray hover:text-main_dark transition-colors duration-150">
                           <ArrowRight className="w-4 h-4" />
                         </button>
@@ -433,22 +698,38 @@ const ProjectEquipmentDashboard = () => {
 
         {/* Status Update Modal */}
         {showUpdateModal && selectedEquipment && (
-          <div className="fixed inset-0 bg-black bg-opacity-50 flex items-center justify-center z-50">
+          <div 
+            className="fixed inset-0 bg-black bg-opacity-50 flex items-center justify-center z-50"
+            onClick={(e) => {
+              if (e.target === e.currentTarget) {
+                setShowUpdateModal(false);
+                setSelectedEquipment(null);
+                setNewStatus('');
+              }
+            }}
+          >
             <div className="bg-white rounded-xl p-6 max-w-md w-full mx-4">
               <h3 className="text-lg font-semibold text-main_dark mb-4">Update Equipment Status</h3>
               <div className="space-y-4">
                 <div>
                   <label className="block text-sm font-medium text-main_dark mb-2">Equipment</label>
                   <p className="text-sm text-slatebluegray">{selectedEquipment.name}</p>
+                  <p className="text-xs text-slatebluegray">Request ID: {selectedEquipment.requestId}</p>
                 </div>
                 <div>
                   <label className="block text-sm font-medium text-main_dark mb-2">Current Status</label>
-                  <p className="text-sm text-slatebluegray">{selectedEquipment.status}</p>
+                  <div className={`inline-flex items-center gap-1 px-3 py-1 rounded-full text-sm font-medium ${getStatusColor(selectedEquipment.status)}`}>
+                    {getStatusIcon(selectedEquipment.status)}
+                    {selectedEquipment.status}
+                  </div>
                 </div>
                 <div>
                   <label className="block text-sm font-medium text-main_dark mb-2">New Status</label>
-                  <select className="w-full px-3 py-2 border border-gray-300 rounded-lg focus:outline-none focus:ring-2 focus:ring-web_yellow focus:border-transparent">
-                    <option value="Pending">Pending</option>
+                  <select 
+                    value={newStatus}
+                    onChange={(e) => setNewStatus(e.target.value)}
+                    className="w-full px-3 py-2 border border-gray-300 rounded-lg focus:outline-none focus:ring-2 focus:ring-web_yellow focus:border-transparent"
+                  >
                     <option value="In Use">In Use</option>
                     <option value="Returned">Returned</option>
                     <option value="Maintenance">Maintenance</option>
@@ -456,23 +737,58 @@ const ProjectEquipmentDashboard = () => {
                 </div>
                 <div className="flex gap-3 pt-4">
                   <button
-                    onClick={() => setShowUpdateModal(false)}
-                    className="flex-1 px-4 py-2 border border-gray-300 text-gray-700 rounded-lg hover:bg-gray-50 transition-colors duration-150"
+                    onClick={() => {
+                      setShowUpdateModal(false);
+                      setSelectedEquipment(null);
+                      setNewStatus('');
+                    }}
+                    disabled={isUpdating}
+                    className="flex-1 px-4 py-2 border border-gray-300 text-gray-700 rounded-lg hover:bg-gray-50 transition-colors duration-150 disabled:opacity-50 disabled:cursor-not-allowed"
                   >
                     Cancel
                   </button>
                   <button
-                    onClick={() => {
-                      // Handle status update
-                      setShowUpdateModal(false);
-                    }}
-                    className="flex-1 px-4 py-2 bg-deep_green text-white rounded-lg font-medium hover:bg-deep_green/90 transition-colors duration-150"
+                    onClick={updateEquipmentStatus}
+                    disabled={isUpdating || newStatus === selectedEquipment.status}
+                    className="flex-1 px-4 py-2 bg-deep_green text-white rounded-lg font-medium hover:bg-deep_green/90 transition-colors duration-150 disabled:opacity-50 disabled:cursor-not-allowed flex items-center justify-center gap-2"
                   >
-                    Update Status
+                    {isUpdating ? (
+                      <>
+                        <div className="w-4 h-4 border-2 border-white border-t-transparent rounded-full animate-spin"></div>
+                        Updating...
+                      </>
+                    ) : (
+                      'Update Status'
+                    )}
                   </button>
                 </div>
               </div>
             </div>
+          </div>
+        )}
+
+        {/* Toast Notification */}
+        {toast.show && (
+          <div className={`fixed top-4 right-4 z-50 max-w-sm w-full ${toast.type === 'success' ? 'bg-green-500' : 'bg-red-500'} text-white p-4 rounded-lg shadow-lg flex items-center gap-3`}>
+            <div className="flex-shrink-0">
+              {toast.type === 'success' ? (
+                <CheckCircle className="w-5 h-5" />
+              ) : (
+                <AlertTriangle className="w-5 h-5" />
+              )}
+            </div>
+            <div className="flex-1">
+              <p className="text-sm font-medium">{toast.message}</p>
+            </div>
+            <button
+              onClick={() => setToast({ show: false, message: '', type: 'success' })}
+              className="flex-shrink-0 text-white hover:text-gray-200 transition-colors duration-150"
+            >
+              <span className="sr-only">Close</span>
+              <svg className="w-4 h-4" fill="currentColor" viewBox="0 0 20 20">
+                <path fillRule="evenodd" d="M4.293 4.293a1 1 0 011.414 0L10 8.586l4.293-4.293a1 1 0 111.414 1.414L11.414 10l4.293 4.293a1 1 0 01-1.414 1.414L10 11.414l-4.293 4.293a1 1 0 01-1.414-1.414L8.586 10 4.293 5.707a1 1 0 010-1.414z" clipRule="evenodd" />
+              </svg>
+            </button>
           </div>
         )}
       </div>

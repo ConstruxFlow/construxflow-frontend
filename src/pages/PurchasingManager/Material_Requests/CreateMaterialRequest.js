@@ -644,17 +644,6 @@ const CreateMaterialRequest = () => {
                     className="w-full px-3 py-2 border border-gray-300 rounded-md focus:ring-2 focus:ring-web_yellow"
                   />
                 </div>
-                <div>
-                  <h3 className="text-lg font-semibold text-main_dark mb-4">
-                    Attachments
-                  </h3>
-                  <div className="border-2 border-dashed border-gray-300 rounded-lg p-8 text-center hover:border-web_yellow cursor-pointer">
-                    <FaCloudUploadAlt className="mx-auto h-12 w-12 text-gray-400 mb-4" />
-                    <p className="text-gray-600">
-                      Drag files here or click to upload
-                    </p>
-                  </div>
-                </div>
               </div>
             </div>
 

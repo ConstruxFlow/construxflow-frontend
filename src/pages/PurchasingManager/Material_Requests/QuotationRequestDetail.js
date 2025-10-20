@@ -341,7 +341,6 @@ const QuotationRequestDetail = () => {
                   { id: "overview", label: "Overview" },
                   { id: "materials", label: "Materials" },
                   { id: "delivery", label: "Delivery" },
-                  { id: "documents", label: "Documents" },
                 ].map((tab) => (
                   <button
                     key={tab.id}
@@ -609,60 +608,6 @@ const QuotationRequestDetail = () => {
                       <FaTruck className="mx-auto h-12 w-12 text-gray-400 mb-4" />
                       <p className="text-gray-600">
                         No delivery schedule specified for this request
-                      </p>
-                    </div>
-                  )}
-                </div>
-              )}
-
-              {/* Documents Tab */}
-              {activeTab === "documents" && (
-                <div>
-                  <h3 className="text-lg font-semibold text-main_dark mb-4 flex items-center gap-2">
-                    <FaFileAlt className="w-5 h-5 text-slatebluegray" />
-                    Attached Documents
-                  </h3>
-
-                  {requestData.quotationReqDocs &&
-                  requestData.quotationReqDocs.length > 0 ? (
-                    <div className="space-y-4">
-                      {requestData.quotationReqDocs.map((document, index) => (
-                        <div
-                          key={index}
-                          className="flex flex-col sm:flex-row items-start sm:items-center justify-between p-4 border border-gray-200 rounded-lg gap-4 sm:gap-0"
-                        >
-                          <div className="flex items-center gap-4">
-                            <div className="w-10 h-10 bg-blue-100 rounded-lg flex items-center justify-center">
-                              <FaFileAlt className="w-5 h-5 text-blue-600" />
-                            </div>
-                            <div>
-                              <h4 className="font-medium text-main_dark">
-                                {document.documentName}
-                              </h4>
-                              <div className="flex flex-col sm:flex-row items-start sm:items-center gap-2 sm:gap-4 text-sm text-gray-600">
-                                <span>{document.documentType}</span>
-                                <span>
-                                  Request ID: {document.quotationReqId}
-                                </span>
-                              </div>
-                            </div>
-                          </div>
-                          <div className="flex items-center gap-3">
-                            <button className="text-deep_green hover:text-deep_green/80 transition-colors">
-                              <FaEye className="w-4 h-4" />
-                            </button>
-                            <button className="text-deep_green hover:text-deep_green/80 transition-colors">
-                              <FaDownload className="w-4 h-4" />
-                            </button>
-                          </div>
-                        </div>
-                      ))}
-                    </div>
-                  ) : (
-                    <div className="text-center py-8">
-                      <FaFileAlt className="mx-auto h-12 w-12 text-gray-400 mb-4" />
-                      <p className="text-gray-600">
-                        No documents attached to this request
                       </p>
                     </div>
                   )}

@@ -619,8 +619,8 @@ const CreatePurchaseOrder = () => {
                       onChange={handleChange}
                       className="w-full px-3 py-2 border border-gray-300 rounded-md focus:outline-none focus:ring-2 focus:ring-web_yellow focus:border-transparent"
                     >
-                      <option value="Draft">Draft</option>
                       <option value="Pending">Pending</option>
+                      <option value="Draft">Draft</option>
                       <option value="Approved">Approved</option>
                       <option value="Sent">Sent</option>
                     </select>

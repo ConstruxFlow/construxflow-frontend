@@ -114,7 +114,7 @@ const PoDetails = () => {
     const steps = [
       { id: "pending", label: "Pending", icon: FaFileAlt },
       { id: "approved", label: "Approved", icon: FaCheck },
-      { id: "dispatch", label: "Dispatched", icon: FaTruck },
+      { id: "dispatched", label: "Dispatched", icon: FaTruck },
       { id: "delivered", label: "Delivered", icon: FaMapMarkerAlt },
       { id: "delivered", label: "Completed", icon: FaCheck },
     ];
@@ -296,18 +296,6 @@ const PoDetails = () => {
                         >
                           {step.label}
                         </span>
-                        {/* {index < statusSteps.length - 1 && (
-                          <div
-                            className={`absolute h-0.5 w-16 mt-6 ${
-                              step.isCompleted ? "bg-web_yellow" : "bg-gray-200"
-                            }`}
-                            style={{
-                              left: `${
-                                (index * 100) / (statusSteps.length - 1)
-                              }%`,
-                            }}
-                          />
-                        )} */}
                       </div>
                     );
                   })}

@@ -38,18 +38,35 @@ const MaintenanceRequestDetails = ({ request, onUpdate, equipmentId }) => {
   };
 
   const getStatusColor = (status) => {
-    switch (status?.toLowerCase()) {
+    // Map status for display purposes
+    const displayStatus = status?.toLowerCase();
+    switch (displayStatus) {
       case 'pending':
         return 'text-yellow-600 bg-yellow-50 border-yellow-200';
-      case 'approved':
+      case 'approved': // Display as "APPROVED" in frontend
         return 'text-green-600 bg-green-50 border-green-200';
-      case 'rejected':
+      case 'rejected': // Display as "REJECTED" in frontend
         return 'text-red-600 bg-red-50 border-red-200';
       case 'completed':
         return 'text-blue-600 bg-blue-50 border-blue-200';
       default:
         return 'text-slatebluegray bg-light_gray/40 border-light_gray';
     }
+  };
+
+  const getDisplayStatus = (status) => {
+    // Ensure frontend always shows "APPROVED" even if database has "ACCEPT"
+    if (!status) return 'Pending';
+    
+    const statusMap = {
+      'accept': 'APPROVED',
+      'reject': 'REJECTED', 
+      'pending': 'PENDING',
+      'approved': 'APPROVED',
+      'rejected': 'REJECTED'
+    };
+    
+    return statusMap[status.toLowerCase()] || status;
   };
 
   const checkInventoryAvailability = async () => {
@@ -269,7 +286,14 @@ const MaintenanceRequestDetails = ({ request, onUpdate, equipmentId }) => {
   };
 
   // Don't show action buttons if request is already approved/rejected
-  const showActionButtons = !request.status || request.status.toLowerCase() === 'pending';
+  // Check both "APPROVED" and "ACCEPT" for approved status
+  const isApproved = request.status && 
+    (request.status.toLowerCase() === 'approved' || request.status.toLowerCase() === 'accept');
+  
+  const isRejected = request.status && 
+    (request.status.toLowerCase() === 'rejected' || request.status.toLowerCase() === 'reject');
+  
+  const showActionButtons = !isApproved && !isRejected;
 
   return (
     <div className="space-y-6">
@@ -359,14 +383,14 @@ const MaintenanceRequestDetails = ({ request, onUpdate, equipmentId }) => {
             </div>
           </div>
 
-          {/* Status */}
+          {/* Status - Display as "APPROVED" even if database has "ACCEPT" */}
           <div>
             <label className="block text-sm font-medium text-slatebluegray mb-2">
               Current Status
             </label>
             <div className="flex items-center gap-3 p-3 bg-gray-50 border border-gray-200 rounded-lg">
               <span className={`px-3 py-1 rounded-full text-xs font-medium border ${getStatusColor(request.status)}`}>
-                {request.status || 'Pending'}
+                {getDisplayStatus(request.status)}
               </span>
             </div>
           </div>
@@ -474,27 +498,6 @@ const MaintenanceRequestDetails = ({ request, onUpdate, equipmentId }) => {
                 </>
               )}
             </button>
-
-            {/* Optional: Manual inventory update button for approved requests */}
-            {request.status && request.status.toLowerCase() === 'approved' && (
-              <button
-                onClick={handleUpdateInventory}
-                disabled={isUpdating}
-                className="bg-deep_green hover:bg-deep_green/80 text-white px-6 py-3 rounded-lg font-semibold transition-all duration-150 shadow-sm hover:shadow-md flex items-center gap-2 disabled:opacity-50 disabled:cursor-not-allowed"
-              >
-                {isUpdating ? (
-                  <>
-                    <div className="animate-spin rounded-full h-4 w-4 border-b-2 border-white"></div>
-                    Updating...
-                  </>
-                ) : (
-                  <>
-                    <FaEdit className="w-4 h-4" />
-                    Update Inventory
-                  </>
-                )}
-              </button>
-            )}
           </div>
         </div>
       )}
@@ -504,17 +507,17 @@ const MaintenanceRequestDetails = ({ request, onUpdate, equipmentId }) => {
         <div className="bg-purewhite border border-gray-200 rounded-xl p-6 shadow-sm">
           <h3 className="text-lg font-semibold text-main_dark mb-4">Request Status</h3>
           <div className={`inline-flex items-center gap-2 px-4 py-2 rounded-lg ${
-            request.status?.toLowerCase() === 'approved' 
+            isApproved 
               ? 'bg-green-100 text-green-800' 
               : 'bg-red-100 text-red-800'
           }`}>
-            {request.status?.toLowerCase() === 'approved' ? (
+            {isApproved ? (
               <CheckCircle className="w-5 h-5" />
             ) : (
               <XCircle className="w-5 h-5" />
             )}
             <span className="font-semibold">
-              This request has been {request.status?.toLowerCase()}
+              This request has been {getDisplayStatus(request.status).toLowerCase()}
             </span>
           </div>
         </div>

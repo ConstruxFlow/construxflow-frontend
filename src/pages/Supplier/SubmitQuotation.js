@@ -460,7 +460,7 @@ const SubmitQuotation = () => {
                     <button
                       type="button"
                       onClick={() => handleDeletePricing(idx)}
-                      className="ml-2 text-red-500 hover:text-red-700 sm:col-span-4 sm:text-right"
+                      className="ml-2 w-fit text-red-500 hover:text-red-700 sm:col-span-4 sm:text-right"
                       aria-label="Delete item"
                     >
                       <FaTrash />
@@ -516,7 +516,7 @@ const SubmitQuotation = () => {
               </label>
               <div className="relative">
                 <span className="absolute left-3 top-1/2 -translate-y-1/2 text-slatebluegray">
-                  {isPercentage ? '%' : '$'}
+                  {isPercentage ? '%' : 'RS'}
                 </span>
                 <input
                   type="number"
@@ -524,7 +524,7 @@ const SubmitQuotation = () => {
                   value={advancedPayment}
                   onChange={(e) => setAdvancedPayment(e.target.value)}
                   placeholder={isPercentage ? "0" : "0.00"}
-                  className="w-full border border-light_gray rounded-lg pl-7 pr-3 py-2 text-main_dark focus:outline-none"
+                  className="w-full border border-light_gray rounded-lg pl-10 pr-3 py-2 text-main_dark focus:outline-none"
                   min="0"
                   max={isPercentage ? "100" : undefined}
                   step={isPercentage ? "1" : "0.01"}
@@ -600,11 +600,8 @@ const SubmitQuotation = () => {
                   </div>
                   <div className="relative">
                     <label className="block text-sm text-slatebluegray mb-1">
-                      Shipping Cost
+                      Shipping Cost RS:
                     </label>
-                    <span className="absolute left-1 top-2 text-slatebluegray">
-                      RS
-                    </span>
                     <input
                       type="number"
                       name="shippingCost"
@@ -620,7 +617,7 @@ const SubmitQuotation = () => {
                     <button
                       type="button"
                       onClick={() => handleDeleteLocation(idx)}
-                      className="text-red-500 hover:text-red-700 sm:col-span-4 sm:text-right"
+                      className="text-red-500 w-fit hover:text-red-700 sm:col-span-4 sm:text-right"
                       aria-label="Delete location"
                     >
                       <FaTrash />
@@ -667,43 +664,6 @@ const SubmitQuotation = () => {
               placeholder="Add any special instructions, bulk discounts, or additional information..."
               className="w-full border border-light_gray rounded-lg px-4 py-3 text-main_dark focus:outline-none resize-none"
             />
-          </section>
-
-          {/* Attachments */}
-          <section className="bg-purewhite border border-light_gray rounded-lg p-4 sm:p-6 mb-6">
-            <div className="font-semibold text-main_dark mb-4">Attachments</div>
-            <div className="flex flex-col items-center justify-center border-2 border-dashed border-light_gray rounded-lg py-8 bg-gray-50">
-              <FaPaperclip className="text-2xl text-slatebluegray mb-2" />
-              <div className="text-slatebluegray text-sm mb-2 font-medium">
-                Drop files here or click to upload
-              </div>
-              <div className="text-gray-400 text-xs mb-4">
-                Supported formats: PDF, DOC, XLS, JPG, PNG (Max 10MB)
-              </div>
-              <input
-                type="file"
-                name="attachments"
-                multiple
-                onChange={handleAttachmentChange}
-                className="hidden"
-                id="file-upload"
-              />
-              <label
-                htmlFor="file-upload"
-                className="bg-gray-200 text-main_dark px-6 py-2 rounded-lg cursor-pointer hover:bg-light_brown/80 transition font-medium"
-              >
-                Choose Files
-              </label>
-            </div>
-            {attachments.length > 0 && (
-              <ul className="text-sm text-slatebluegray mt-3">
-                {attachments.map((file, idx) => (
-                  <li key={idx} className="py-1">
-                    📄 {file.name}
-                  </li>
-                ))}
-              </ul>
-            )}
           </section>
 
           {/* Quotation Summary - UPDATED */}

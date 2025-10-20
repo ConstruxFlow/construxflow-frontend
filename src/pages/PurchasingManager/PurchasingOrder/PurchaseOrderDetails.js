@@ -103,7 +103,7 @@ const PurchaseOrderDetails = () => {
     const steps = [
       { id: 'pending', label: 'Pending', icon: FaFileAlt },
       { id: 'approved', label: 'Approved', icon: FaCheck },
-      { id: 'dispatch', label: 'Dispatch', icon: FaTruck },
+      { id: 'dispatched', label: 'Dispatched', icon: FaTruck },
       { id: 'delivered', label: 'Delivered', icon: FaMapMarkerAlt },
       { id: 'delivered', label: 'Completed', icon: FaCheck }
     ];

@@ -16,6 +16,8 @@ import {
   Wrench
 } from 'lucide-react';
 import NavBar from '../NavBar';
+import { toast } from 'react-toastify';
+import LoadingOverlay from '../LoadingOverlay';
 
 const EquipmentUsageUpdate = () => {
   const navigate = useNavigate();
@@ -24,46 +26,71 @@ const EquipmentUsageUpdate = () => {
   const { equipment, projectId } = location.state || {};
 
   const [formData, setFormData] = useState({
-    equipmentId: equipmentId,
-    projectId: projectId,
+    equipmentId: equipmentId || '',
+    projectId: projectId || '',
     operator: equipment?.operator || '',
     usageDate: new Date().toISOString().split('T')[0],
     startTime: '',
     endTime: '',
-    hoursUsed: '',
-    kilometersTraveled: '',
+    hoursUsed: '0',
+    kilometersTraveled: '0',
     location: equipment?.location || '',
     purpose: '',
     notes: '',
     fuelConsumption: '',
     maintenanceNotes: '',
-    weatherConditions: '',
+    weatherConditions: 'Clear',
     status: 'Completed'
   });
 
   const [loading, setLoading] = useState(false);
   const [submitting, setSubmitting] = useState(false);
   const [previousUsage, setPreviousUsage] = useState(null);
+  const [loadingProgress, setLoadingProgress] = useState(0);
+  const [error, setError] = useState("");
 
-  // Mock data for previous usage - will be replaced with API calls
+  // Fetch last usage data from API
   useEffect(() => {
     const fetchPreviousUsage = async () => {
       setLoading(true);
       try {
-        // Mock data - replace with actual API call
-        const mockPreviousUsage = {
-          lastUpdated: '2024-11-19 17:30',
-          totalHours: 37.0,
-          totalKilometers: 0,
-          todayHours: 8.0,
-          todayKilometers: 0,
-          location: 'Zone A - Foundation',
-          operator: 'John Martinez',
-          notes: 'Foundation excavation work completed successfully'
+        console.log('Fetching last usage for equipment:', equipmentId);
+        
+        const response = await fetch(`http://localhost:8080/api/equipment-usage/last-usage/${equipmentId}`);
+        
+        if (!response.ok) {
+          throw new Error('Failed to fetch last usage data');
+        }
+        
+        const lastUsageData = await response.json();
+        console.log('Last usage data received:', lastUsageData);
+        
+        // Transform API response to match the expected format
+        const transformedUsage = {
+          lastUpdated: lastUsageData.lastLoggedAt || '',
+          lastUsageHours: lastUsageData.lastUsageHours || 0,
+          lastUsageLocation: lastUsageData.lastUsageLocation || '',
+          lastUsageDate: lastUsageData.lastUsageDate || '',
+          operator: lastUsageData.operator || '',
+          purpose: lastUsageData.purpose || '',
+          status: lastUsageData.status || '',
+          hasUsageHistory: lastUsageData.hasUsageHistory || false
         };
-        setPreviousUsage(mockPreviousUsage);
+        
+        setPreviousUsage(transformedUsage);
       } catch (error) {
         console.error('Error fetching previous usage:', error);
+        // Set default empty state if API fails
+        setPreviousUsage({
+          lastUpdated: '',
+          lastUsageHours: 0,
+          lastUsageLocation: 'No previous usage',
+          lastUsageDate: '',
+          operator: '',
+          purpose: '',
+          status: '',
+          hasUsageHistory: false
+        });
       } finally {
         setLoading(false);
       }
@@ -74,6 +101,19 @@ const EquipmentUsageUpdate = () => {
     }
   }, [equipmentId]);
 
+  // Ensure form data is properly initialized with route params and location state
+  useEffect(() => {
+    if (equipmentId || projectId || equipment) {
+      setFormData(prev => ({
+        ...prev,
+        equipmentId: equipmentId || prev.equipmentId,
+        projectId: projectId || prev.projectId,
+        operator: equipment?.operator || prev.operator,
+        location: equipment?.location || prev.location
+      }));
+    }
+  }, [equipmentId, projectId, equipment]);
+
   const handleInputChange = (field, value) => {
     setFormData(prev => ({
       ...prev,
@@ -81,61 +121,133 @@ const EquipmentUsageUpdate = () => {
     }));
   };
 
-  const calculateHours = () => {
-    if (formData.startTime && formData.endTime) {
-      const start = new Date(`2000-01-01T${formData.startTime}`);
-      const end = new Date(`2000-01-01T${formData.endTime}`);
-      const diffMs = end - start;
-      const diffHours = diffMs / (1000 * 60 * 60);
-      return Math.max(0, diffHours);
-    }
-    return 0;
-  };
-
   const handleTimeChange = (field, value) => {
     handleInputChange(field, value);
-    if (field === 'startTime' || field === 'endTime') {
-      const calculatedHours = calculateHours();
-      handleInputChange('hoursUsed', calculatedHours.toFixed(1));
+    
+    // Calculate hours with the new value
+    const startTime = field === 'startTime' ? value : formData.startTime;
+    const endTime = field === 'endTime' ? value : formData.endTime;
+    
+    if (startTime && endTime) {
+      const start = new Date(`2000-01-01T${startTime}`);
+      const end = new Date(`2000-01-01T${endTime}`);
+      const diffMs = end - start;
+      const diffHours = diffMs / (1000 * 60 * 60);
+      const calculatedHours = Math.max(0, diffHours);
+      
+      // Update hours used with a slight delay to ensure the time field is updated first
+      setTimeout(() => {
+        handleInputChange('hoursUsed', calculatedHours.toFixed(1));
+      }, 0);
     }
+  };
+
+  // Helper function to check if end time is after start time
+  const isTimeRangeValid = () => {
+    if (!formData.startTime || !formData.endTime) return true;
+    const start = new Date(`2000-01-01T${formData.startTime}`);
+    const end = new Date(`2000-01-01T${formData.endTime}`);
+    return end > start;
   };
 
   const handleSubmit = async (e) => {
     e.preventDefault();
     
+    // Debug: Log current form data
+    console.log('Current form data:', formData);
+    console.log('Equipment ID:', formData.equipmentId);
+    console.log('Project ID:', formData.projectId);
+    
+    if (!formData.equipmentId || !formData.projectId) {
+      toast.error('Missing equipment ID or project ID. Please check the URL and try again.');
+      return;
+    }
+    
     if (!formData.operator || !formData.startTime || !formData.endTime || !formData.location) {
-      alert('Please fill in all required fields');
+      toast.error('Please fill in all required fields');
+      return;
+    }
+
+    if (!isTimeRangeValid()) {
+      toast.error('End time must be after start time');
       return;
     }
 
     if (parseFloat(formData.hoursUsed) <= 0) {
-      alert('Hours used must be greater than 0');
+      toast.error('Hours used must be greater than 0. Please check your start and end times.');
       return;
     }
 
     setSubmitting(true);
+    setError("");
+    setLoadingProgress(0);
+
+    const progressInterval = setInterval(() => {
+      setLoadingProgress((p) => (p >= 90 ? p : p + Math.random() * 5));
+    }, 200);
+
     try {
-      // Mock API call - replace with actual API
-      await new Promise(resolve => setTimeout(resolve, 2000));
+      setLoadingProgress(10);
+
+      // Prepare the request body according to your DTO structure
+      const requestBody = {
+        equipmentId: parseInt(formData.equipmentId),
+        projectId: formData.projectId,
+        operator: formData.operator,
+        usageDate: formData.usageDate,
+        startTime: `${formData.usageDate}T${formData.startTime}:00`,
+        endTime: `${formData.usageDate}T${formData.endTime}:00`,
+        hoursUsed: parseFloat(formData.hoursUsed) || 0.0,
+        kilometersTraveled: parseFloat(formData.kilometersTraveled) || 0.0,
+        location: formData.location,
+        purpose: formData.purpose || '',
+        notes: formData.notes || '',
+        fuelConsumption: formData.fuelConsumption ? `${formData.fuelConsumption}L` : '',
+        maintenanceNotes: formData.maintenanceNotes || '',
+        weatherConditions: formData.weatherConditions || 'Clear',
+        status: formData.status || 'Completed',
+        loggedAt: new Date().toISOString(),
+        loggedBy: formData.operator
+      };
+
+      console.log('Sending Request Body:', JSON.stringify(requestBody, null, 2));
+
+      setLoadingProgress(25);
+
+      const response = await fetch('http://localhost:8080/api/equipment-usage', {
+        method: 'POST',
+        headers: {
+          'Content-Type': 'application/json',
+        },
+        body: JSON.stringify(requestBody)
+      });
+
+      setLoadingProgress(50);
+
+      if (!response.ok) {
+        const errorData = await response.text();
+        console.error('Server error:', errorData);
+        throw new Error(`Failed to submit equipment usage: ${response.status} ${response.statusText}`);
+      }
+
+      const result = await response.json();
       
-      // Success - navigate back to project equipment dashboard
-      alert('Daily usage updated successfully!');
+      setLoadingProgress(90);
+      
+      console.log('Success Response:', result);
+      
+      setLoadingProgress(100);
+      toast.success("Daily usage updated successfully!");
       navigate(`/site-manager/project-equipment/${projectId}`);
+      
     } catch (error) {
       console.error('Error updating usage:', error);
-      alert('Error updating usage. Please try again.');
+      setError(error.message);
+      toast.error("Error updating usage. Please try again.");
     } finally {
       setSubmitting(false);
-    }
-  };
-
-  const getWeatherIcon = (condition) => {
-    switch (condition) {
-      case 'Sunny': return '☀️';
-      case 'Cloudy': return '☁️';
-      case 'Rainy': return '🌧️';
-      case 'Windy': return '💨';
-      default: return '🌤️';
+      clearInterval(progressInterval);
+      setLoadingProgress(0);
     }
   };
 
@@ -171,6 +283,7 @@ const EquipmentUsageUpdate = () => {
 
   return (
     <>
+      {submitting && <LoadingOverlay progress={loadingProgress} />}
       <NavBar
         profileURL='profile'
         links={[
@@ -214,20 +327,25 @@ const EquipmentUsageUpdate = () => {
             </div>
 
             {/* Previous Usage Summary */}
-            {previousUsage && (
+            {previousUsage && previousUsage.hasUsageHistory && (
               <div className="grid grid-cols-1 md:grid-cols-3 gap-4 mt-4 pt-4 border-t border-deep_green/20">
                 <div className="text-center">
-                  <div className="text-2xl font-bold text-main_dark">{previousUsage.totalHours.toFixed(1)}h</div>
-                  <div className="text-xs text-slatebluegray">Total Hours</div>
+                  <div className="text-2xl font-bold text-main_dark">{previousUsage.lastUsageHours.toFixed(1)}h</div>
+                  <div className="text-xs text-slatebluegray">Last Usage Hours</div>
                 </div>
                 <div className="text-center">
-                  <div className="text-2xl font-bold text-main_dark">{previousUsage.todayHours.toFixed(1)}h</div>
-                  <div className="text-xs text-slatebluegray">Yesterday</div>
+                  <div className="text-2xl font-bold text-main_dark">{previousUsage.lastUsageDate}</div>
+                  <div className="text-xs text-slatebluegray">Last Usage Date</div>
                 </div>
                 <div className="text-center">
-                  <div className="text-2xl font-bold text-main_dark">{previousUsage.location}</div>
+                  <div className="text-2xl font-bold text-main_dark">{previousUsage.lastUsageLocation}</div>
                   <div className="text-xs text-slatebluegray">Last Location</div>
                 </div>
+              </div>
+            )}
+            {previousUsage && !previousUsage.hasUsageHistory && (
+              <div className="mt-4 pt-4 border-t border-deep_green/20 text-center">
+                <div className="text-slatebluegray text-sm">No previous usage recorded for this equipment</div>
               </div>
             )}
           </div>
@@ -235,6 +353,12 @@ const EquipmentUsageUpdate = () => {
 
         {/* Usage Update Form */}
         <form onSubmit={handleSubmit} className="bg-purewhite border border-gray-200 rounded-xl shadow-sm p-8">
+          {error && (
+            <div className="mb-6 bg-red-50 border border-red-200 text-red-700 px-4 py-3 rounded-lg flex items-center gap-2">
+              <AlertTriangle className="w-4 h-4" />
+              <span className="text-sm">{error}</span>
+            </div>
+          )}
           <div className="space-y-6">
             {/* Basic Information */}
             <div className="grid grid-cols-1 md:grid-cols-2 gap-6">
@@ -291,23 +415,33 @@ const EquipmentUsageUpdate = () => {
                   type="time"
                   value={formData.endTime}
                   onChange={(e) => handleTimeChange('endTime', e.target.value)}
-                  className="w-full px-4 py-3 border border-gray-300 rounded-lg focus:outline-none focus:ring-2 focus:ring-web_yellow focus:border-transparent transition-all duration-150"
+                  className={`w-full px-4 py-3 border rounded-lg focus:outline-none focus:ring-2 transition-all duration-150 ${
+                    !isTimeRangeValid() 
+                      ? 'border-red-300 focus:ring-red-200 focus:border-red-500' 
+                      : 'border-gray-300 focus:ring-web_yellow focus:border-transparent'
+                  }`}
                   required
                 />
+                {!isTimeRangeValid() && (
+                  <p className="text-red-500 text-xs mt-1 flex items-center gap-1">
+                    <AlertTriangle className="w-3 h-3" />
+                    End time must be after start time
+                  </p>
+                )}
               </div>
               <div>
                 <label className="block text-sm font-medium text-main_dark mb-2">
                   <TrendingUp className="w-4 h-4 inline mr-2" />
-                  Hours Used *
+                  Hours Used * <span className="text-xs text-gray-500">(Auto-calculated)</span>
                 </label>
                 <input
                   type="number"
                   step="0.1"
                   min="0"
                   value={formData.hoursUsed}
-                  onChange={(e) => handleInputChange('hoursUsed', e.target.value)}
-                  placeholder="Calculated automatically"
-                  className="w-full px-4 py-3 border border-gray-300 rounded-lg focus:outline-none focus:ring-2 focus:ring-web_yellow focus:border-transparent transition-all duration-150"
+                  readOnly
+                  placeholder="Enter start and end times to calculate"
+                  className="w-full px-4 py-3 border border-gray-200 rounded-lg bg-gray-50 text-gray-700 cursor-not-allowed"
                   required
                 />
               </div>

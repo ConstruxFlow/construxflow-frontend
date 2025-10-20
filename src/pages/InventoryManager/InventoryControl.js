@@ -12,6 +12,7 @@ const InventoryControl = () => {
         {name: 'Inventory Control', path: '/inventory-control'},
         {name: 'Inventory Monitoring', path: '/inventory-monitoring'},
         {name: 'Maintenance Requests', path: '/maintenance-requests-overview'},
+        { name: 'Equipment Request', href: '/Inventory-requests' },
         {name: 'Equipment Sheduling', path: '/equipment-scheduling'},
         
      ]}

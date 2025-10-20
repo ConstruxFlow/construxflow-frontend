@@ -1,5 +1,5 @@
 import { createBrowserRouter } from "react-router-dom";
-import { Route, Routes } from 'react-router-dom';
+import { Route, Routes } from "react-router-dom";
 
 import Home from "./pages/Home";
 import Login from "./pages/Login";
@@ -88,49 +88,183 @@ import ManagerReg from "./pages/Admin/ManagerReg";
 import InventoryProfile from "./pages/InventoryManager/ManagerProfile";
 import InventoryRequests from "./pages/InventoryManager/InventoryRequests";
 import UpdateInventory from "./pages/InventoryManager/UpdateInventory";
-
+import EquipmentDetails from "./pages/InventoryManager/EquipmentDetails";
 // ADD THE MISSING IMPORT
 import ScheduleEquipment from "./pages/InventoryManager/ScheduleEquipment";
+import ProtectedRoute from "./Context/ProtectedRoute";
+import Unauthorized from "./pages/Unauthorized";
 
 export const routes = createBrowserRouter([
   {
     path: "/",
     element: <Home />,
   },
+  // Supplier
+  {
+    path: "/supplier",
+    element: <ProtectedRoute allowedRoles={"Supplier"} />,
+    children: SupplierRoutes.children,
+  },
+
+  // Finance Officer
+  {
+    path: "/financial",
+    element: <ProtectedRoute allowedRoles={"Finance_Officer"} />,
+    children: FinanceManagerRoutes.children,
+  },
+
+  // PURCHASING MANAGER
+  {
+    path: "/purchasing",
+    element: <ProtectedRoute allowedRoles={"Purchasing_Manager"} />,
+    children: purchasingManagerRoutes.children,
+  },
+
+  // SITE MANAGER
+  {
+    path: "/site-manager",
+    element: <ProtectedRoute allowedRoles={["Site_Manager"]} />,
+    children: siteManagerRoutes.children,
+  },
+
+  // MAINTENANCE HEAD
+  {
+    path: "/maintenance",
+    element: <ProtectedRoute allowedRoles={["Maintenance_Head"]} />,
+    children: MaintenanceRoute.children,
+  },
+  {
+    path: "/login",
+    element: <Login />,
+  },
+
+  // admin routes
+  {
+    path: "/admin",
+    element: <ProtectedRoute allowedRoles={["Admin"]} />,
+    children: [
+      { path: "", element: <Admin_Dashboard /> },
+      { path: "profile", element: <ManagerProfileView /> },
+      { path: "projects-list", element: <AdminProjectsList /> },
+      { path: "projects-list/:projectId", element: <AdminProjectDetails /> },
+    ],
+  },
+  {
+    path: "/admin-inventory",
+    element: <ProtectedRoute allowedRoles={["Admin"]} />,
+    children: [{ path: "", element: <Admin_Inventory /> }],
+  },
+  {
+    path: "/admin-users",
+    element: <ProtectedRoute allowedRoles={["Admin"]} />,
+    children: [{ path: "", element: <Admin_Users /> }],
+  },
+  {
+    path: "/admin-managers",
+    element: <ProtectedRoute allowedRoles={["Admin"]} />,
+    children: [{ path: "", element: <ManagerReg /> }],
+  },
+  {
+    path: "/admin-analysis",
+    element: <ProtectedRoute allowedRoles={["Admin"]} />,
+    children: [{ path: "", element: <Admin_Analysis /> }],
+  },
+
+  // INVENTORY MANAGER
+  {
+    path: "/inventory-control",
+    element: <ProtectedRoute allowedRoles={["Inventory_Manager"]} />,
+    children: [{ path: "", element: <InventoryControl /> }],
+  },
+  {
+    path: "/maintenance-requests-overview",
+    element: <ProtectedRoute allowedRoles={["Inventory_Manager"]} />,
+    children: [{ path: "", element: <MaintenanceRequestsOverview /> }],
+  },
+  {
+    path: "/maintenance-request-page",
+    element: <ProtectedRoute allowedRoles={["Inventory_Manager"]} />,
+    children: [{ path: "", element: <MaintenanceRequestPage /> }],
+  },
+  {
+    path: "/maintenance-request-page/:equipmentId",
+    element: <ProtectedRoute allowedRoles={["Inventory_Manager"]} />,
+    children: [{ path: "", element: <MaintenanceRequestPage /> }],
+  },
+  {
+    path: "/shedule-form",
+    element: <ProtectedRoute allowedRoles={["Inventory_Manager"]} />,
+    children: [{ path: "", element: <ScheduleForm /> }],
+  },
+  {
+    path: "/reorder-material-page",
+    element: <ProtectedRoute allowedRoles={["Inventory_Manager"]} />,
+    children: [{ path: "", element: <ReorderMaterialPage /> }],
+  },
+  {
+    path: "/Inventory/profile",
+    element: <ProtectedRoute allowedRoles={["Inventory_Manager"]} />,
+    children: [{ path: "", element: <InventoryProfile /> }],
+  },
+  {
+    path: "/Inventory-requests",
+    element: <ProtectedRoute allowedRoles={["Inventory_Manager"]} />,
+    children: [{ path: "", element: <InventoryRequests /> }],
+  },
+  {
+    path: "/update-inventory",
+    element: <ProtectedRoute allowedRoles={["Inventory_Manager"]} />,
+    children: [{ path: "", element: <UpdateInventory /> }],
+  },
+  {
+    path: "/schedule-form/:equipmentId",
+    element: <ProtectedRoute allowedRoles={["Inventory_Manager"]} />,
+    children: [{ path: "", element: <ScheduleEquipment /> }],
+  },
+  {
+    path: "/equipment-details/:id",
+    element: <ProtectedRoute allowedRoles={["Inventory_Manager"]} />,
+    children: [{ path: "", element: <EquipmentDetails /> }],
+  },
+  {
+    path: "/view-schedule-page/:id",
+    element: <ProtectedRoute allowedRoles={["Inventory_Manager"]} />,
+    children: [{ path: "", element: <ViewSchedulePage /> }],
+  },
+  {
+    path: "/inventory-dashboard",
+    element: <ProtectedRoute allowedRoles={"Inventory_Manager"} />,
+    children: [{ path: "", element: <InventoryDashboard /> }],
+  },
+  {
+    path: "/inventory-monitoring",
+    element: <ProtectedRoute allowedRoles={"Inventory_Manager"} />,
+    children: [{ path: "", element: <InventoryMonitoring /> }],
+  },
+  {
+    path: "/add-equipment",
+    element: <ProtectedRoute allowedRoles={"Inventory_Manager"} />,
+    children: [{ path: "", element: <AddEquipment /> }],
+  },
+  {
+    path: "/add-material",
+    element: <ProtectedRoute allowedRoles={"Inventory_Manager"} />,
+    children: [{ path: "", element: <AddMaterial /> }],
+  },
+  {
+    path: "/unauthorized",
+    element: <Unauthorized />,
+  },
   {
     path: "/dashboard1",
     element: <SupplierDashboard />,
   },
-  {
-    path: "/dashboard",
-    element: <PurchasingDashboard />
-  },
-  {
-    path: "/inventory-dashboard",
-    element: <InventoryDashboard />
-  },
-  {
-    path: "/inventory-monitoring",
-    element: <InventoryMonitoring />
-  },
-  
-  // Supplier
-  SupplierRoutes,
 
-  // Finance Officer
-  FinanceManagerRoutes,
-  
-  // SITE MANAGER
-  siteManagerRoutes,
-
-  // MAINTENANCE HEAD
-  MaintenanceRoute,
-  
   {
     path: "/pdfreader",
     element: <BOQPDFReader />,
   },
-    
+
   // SITE MANAGER
   {
     path: "/site-manager",
@@ -138,7 +272,8 @@ export const routes = createBrowserRouter([
   },
   {
     path: "/projects-list",
-    element: <Existing_Projects_List />,
+    element: <ProtectedRoute allowedRoles={["Site_Manager"]} />,
+    children: [{ path: "", element: <Existing_Projects_List /> }],
   },
   {
     path: "/projects-list/create-project",
@@ -190,7 +325,7 @@ export const routes = createBrowserRouter([
   },
   {
     path: "/site-manager-profile",
-    element: <SiteManager_Profile />
+    element: <SiteManager_Profile />,
   },
   {
     path: "/equipment-scheduling",
@@ -208,21 +343,21 @@ export const routes = createBrowserRouter([
     path: "/requests/:id",
     element: <RequestDetails />,
   },
-  { 
-    path: "/quotations/submit", 
-    element: <SubmitQuotation /> 
+  {
+    path: "/quotations/submit",
+    element: <SubmitQuotation />,
   },
-  { 
-    path: "/quotations", 
-    element: <QuotationStatus /> 
+  {
+    path: "/quotations",
+    element: <QuotationStatus />,
   },
-  { 
-    path: "/payments/receive-advanced", 
-    element: <ReceiveAdvancedPayment /> 
+  {
+    path: "/payments/receive-advanced",
+    element: <ReceiveAdvancedPayment />,
   },
-  { 
-    path: "/payments/receive-full", 
-    element: <ReceiveFullPayment /> 
+  {
+    path: "/payments/receive-full",
+    element: <ReceiveFullPayment />,
   },
   {
     path: "/orders",
@@ -232,118 +367,22 @@ export const routes = createBrowserRouter([
     path: "/orders/:id",
     element: <OrderDetails />,
   },
-  { 
-    path: "/payments", 
-    element: <PaymentStatus /> 
-  },
-  { 
-    path: "/supplierprofile", 
-    element: <SupplierProfile /> 
-  },
-  { 
-    path: "/supplierprofile/edit", 
-    element: <SupplierProfileEdit /> 
+  {
+    path: "/payments",
+    element: <PaymentStatus />,
   },
   {
-    path: "/login",
-    element: <Login />,
+    path: "/supplierprofile",
+    element: <SupplierProfile />,
+  },
+  {
+    path: "/supplierprofile/edit",
+    element: <SupplierProfileEdit />,
   },
 
-  // PURCHASING MANAGER
-  purchasingManagerRoutes,
-
-  {
-    path: "/admin",
-    element: <Admin_Dashboard/>
-  },
-  {
-    path: "/admin/profile",
-    element: <ManagerProfileView />
-  },
-  {
-    path: "/admin/projects-list",
-    element: <AdminProjectsList />
-  },
-  {
-    path: "/admin-projects-list/:projectId",
-    element: <AdminProjectDetails />
-  },
-  {
-    path: "/admin-inventory",
-    element: <Admin_Inventory/>
-  },
-  {
-    path: "/admin-users",
-    element: <Admin_Users/>
-  },
   {
     path: "/verify-email",
-    element: <VerificationEmailPage/>
+    element: <VerificationEmailPage />,
   },
-  {
-    path: "/add-equipment",
-    element: <AddEquipment />,
-  },
-  {
-    path: "/add-material",
-    element: <AddMaterial />,
-  },
-  {
-    path: "/admin",
-    element: <Admin_Dashbaord/>
-  },
-  {
-    path: "/admin-managers",
-    element: <ManagerReg />,
-  },
-  {
-    path: "/inventory-control",
-    element: <InventoryControl />,
-  },
-  {
-    path: "/maintenance-requests-overview",
-    element: <MaintenanceRequestsOverview />,
-  },
-  {
-    path: "/maintenance-request-page",
-    element: <MaintenanceRequestPage />,
-  },
-  {
-    path: "/admin-analysis",
-    element: <Admin_Analysis/>
-  },
-  {
-    path: "/maintenance-request-page/:equipmentId",
-    element: <MaintenanceRequestPage />,
-  },
-  {
-    path: "/shedule-form",
-    element: <ScheduleForm />,
-  },
-  {
-    path: "/view-schedule-page",
-    element: <ViewSchedulePage />,
-  },
-  {
-    path: "/reorder-material-page",
-    element: <ReorderMaterialPage />,
-  },
-  {
-    path: "/Inventory/profile",
-    element: <InventoryProfile />,
-  },
-  {
-    path: "/Inventory-requests",
-    element: <InventoryRequests />,
-  },
-  {
-    path: "/update-inventory",
-    element: <UpdateInventory />,
-  },
-  // ADD THE MISSING ROUTE - FIXED
-  {
-    path: "/schedule-form/:equipmentId",
-    element: <ScheduleEquipment />,
-  }
   // REMOVED THE EXTRA "ReorderMaterialPage" text that was causing syntax error
 ]);
