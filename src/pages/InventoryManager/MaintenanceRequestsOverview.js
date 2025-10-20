@@ -197,24 +197,7 @@ const MaintenanceRequestsOverview = () => {
           </div>
 
           {/* Stats Cards */}
-          <div className="grid grid-cols-2 lg:grid-cols-4 gap-4 mb-6">
-            <div className="bg-purewhite border border-gray-200 rounded-lg p-4">
-              <div className="text-2xl font-bold text-main_dark">{totalRequests}</div>
-              <div className="text-sm text-gray-600">Total Requests</div>
-            </div>
-            <div className="bg-purewhite border border-gray-200 rounded-lg p-4">
-              <div className="text-2xl font-bold text-yellow-600">{pendingRequests}</div>
-              <div className="text-sm text-gray-600">Pending</div>
-            </div>
-            <div className="bg-purewhite border border-gray-200 rounded-lg p-4">
-              <div className="text-2xl font-bold text-green-600">{approvedRequests}</div>
-              <div className="text-sm text-gray-600">Approved</div>
-            </div>
-            <div className="bg-purewhite border border-gray-200 rounded-lg p-4">
-              <div className="text-2xl font-bold text-blue-600">{completedRequests}</div>
-              <div className="text-sm text-gray-600">Completed</div>
-            </div>
-          </div>
+          
 
           {/* Search and Filters */}
           <div className="bg-purewhite border border-gray-200 rounded-lg p-4 sm:p-6 mb-6">
