@@ -2882,37 +2882,6 @@ const AdminProjectDetails = () => {
             </div>
           </div>
 
-          {/* Documents Section - READ ONLY */}
-          {project?.documentPaths &&
-            Array.isArray(project.documentPaths) &&
-            project.documentPaths.length > 0 && (
-              <div className="bg-white border border-gray-200 rounded-lg p-4 sm:p-6">
-                <h3 className="text-lg font-semibold text-main_dark mb-4">
-                  Project Documents
-                </h3>
-                <div className="grid grid-cols-1 md:grid-cols-2 lg:grid-cols-3 gap-4">
-                  {project.documentPaths.map((docPath, index) => (
-                    <div
-                      key={index}
-                      className="flex flex-col sm:flex-row items-start sm:items-center p-3 bg-gray-50 rounded-lg gap-2 sm:gap-0"
-                    >
-                      <FaFileContract className="w-5 h-5 text-blue-600 mr-0 sm:mr-3 mb-2 sm:mb-0" />
-                      <div className="flex-1">
-                        <div className="text-sm font-medium text-main_dark">
-                          {docPath?.split("\\")?.pop() || "Unknown Document"}
-                        </div>
-                        <div className="text-xs text-gray-500">
-                          BOQ Document
-                        </div>
-                      </div>
-                      <button className="text-deep_green hover:text-deep_green/80 transition-colors mt-2 sm:mt-0">
-                        <FaDownload className="w-4 h-4" />
-                      </button>
-                    </div>
-                  ))}
-                </div>
-              </div>
-            )}
         </div>
       </main>
     </div>

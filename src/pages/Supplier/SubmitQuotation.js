@@ -666,43 +666,6 @@ const SubmitQuotation = () => {
             />
           </section>
 
-          {/* Attachments */}
-          <section className="bg-purewhite border border-light_gray rounded-lg p-4 sm:p-6 mb-6">
-            <div className="font-semibold text-main_dark mb-4">Attachments</div>
-            <div className="flex flex-col items-center justify-center border-2 border-dashed border-light_gray rounded-lg py-8 bg-gray-50">
-              <FaPaperclip className="text-2xl text-slatebluegray mb-2" />
-              <div className="text-slatebluegray text-sm mb-2 font-medium">
-                Drop files here or click to upload
-              </div>
-              <div className="text-gray-400 text-xs mb-4">
-                Supported formats: PDF, DOC, XLS, JPG, PNG (Max 10MB)
-              </div>
-              <input
-                type="file"
-                name="attachments"
-                multiple
-                onChange={handleAttachmentChange}
-                className="hidden"
-                id="file-upload"
-              />
-              <label
-                htmlFor="file-upload"
-                className="bg-gray-200 text-main_dark px-6 py-2 rounded-lg cursor-pointer hover:bg-light_brown/80 transition font-medium"
-              >
-                Choose Files
-              </label>
-            </div>
-            {attachments.length > 0 && (
-              <ul className="text-sm text-slatebluegray mt-3">
-                {attachments.map((file, idx) => (
-                  <li key={idx} className="py-1">
-                    📄 {file.name}
-                  </li>
-                ))}
-              </ul>
-            )}
-          </section>
-
           {/* Quotation Summary - UPDATED */}
           <section className="bg-light_gray rounded-lg p-6 mb-6">
             <div className="font-semibold text-main_dark mb-4">
