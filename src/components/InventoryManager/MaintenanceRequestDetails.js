@@ -12,6 +12,7 @@ import {
   FaExclamationTriangle
 } from 'react-icons/fa';
 import { Save, Package, AlertTriangle, CheckCircle, XCircle } from 'lucide-react';
+import { toast } from "react-toastify";
 import axios from 'axios';
 
 const MaintenanceRequestDetails = ({ request, onUpdate, equipmentId }) => {
@@ -98,7 +99,7 @@ const MaintenanceRequestDetails = ({ request, onUpdate, equipmentId }) => {
     await executeApprove();
   };
 
-  const executeApprove = async () => {
+ const executeApprove = async () => {
     setIsApproving(true);
     try {
       const response = await axios.post(
@@ -106,14 +107,14 @@ const MaintenanceRequestDetails = ({ request, onUpdate, equipmentId }) => {
       );
 
       if (response.data.success) {
-        alert(`Request approved successfully! ${response.data.inventoryItemsUpdated} inventory items updated.`);
+        toast.success(`Request approved successfully! ${response.data.inventoryItemsUpdated} inventory items updated.`);
         if (onUpdate) onUpdate();
       } else {
-        alert('Failed to approve request: ' + response.data.message);
+        toast.error('Failed to approve request: ' + response.data.message);
       }
     } catch (err) {
       console.error("Failed to approve request:", err);
-      alert('Failed to approve request: ' + (err.response?.data?.message || err.message));
+      toast.error('Failed to approve request: ' + (err.response?.data?.message || err.message));
     } finally {
       setIsApproving(false);
       setShowConfirmDialog(false);
