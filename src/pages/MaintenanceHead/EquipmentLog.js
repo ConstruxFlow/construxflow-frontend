@@ -30,6 +30,8 @@ export default function EquipmentLogContainer() {
   const [equipmentDetails, setEquipmentDetails] = useState([]);
   const [showExportDropdown, setShowExportDropdown] = useState(false);
   const [isGeneratingPDF, setIsGeneratingPDF] = useState(false);
+  const [upcomingSchedulesCount, setUpcomingSchedulesCount] = useState(0);
+  const [nearestScheduleDate, setNearestScheduleDate] = useState(null);
   const navigation = useNavigate();
 
   useEffect(() => {
@@ -166,6 +168,47 @@ export default function EquipmentLogContainer() {
   useEffect(() => {
     setCurrentPage(1);
   }, [searchTerm, selectedType, selectedStatus]);
+
+  // Calculate upcoming schedules and nearest date
+  useEffect(() => {
+    const calculateUpcomingSchedules = () => {
+      const currentDate = new Date();
+      const nextWeek = new Date();
+      nextWeek.setDate(currentDate.getDate() + 7); // Next 7 days
+
+      let upcomingCount = 0;
+      let nearestDate = null;
+      let nearestDiff = Infinity;
+
+      schedules.forEach(schedule => {
+        if (schedule.nextDate) {
+          const scheduleDate = new Date(schedule.nextDate);
+          
+          // Check if schedule is within next 7 days
+          if (scheduleDate >= currentDate && scheduleDate <= nextWeek) {
+            upcomingCount++;
+            
+            // Find the nearest upcoming date
+            const timeDiff = scheduleDate.getTime() - currentDate.getTime();
+            if (timeDiff < nearestDiff && timeDiff > 0) {
+              nearestDiff = timeDiff;
+              nearestDate = scheduleDate;
+            }
+          }
+        }
+      });
+
+      setUpcomingSchedulesCount(upcomingCount);
+      setNearestScheduleDate(nearestDate);
+      
+      console.log("Upcoming schedules in next 7 days:", upcomingCount);
+      console.log("Nearest schedule date:", nearestDate);
+    };
+
+    if (schedules.length > 0) {
+      calculateUpcomingSchedules();
+    }
+  }, [schedules]);
 
   // Close dropdown when clicking outside
   useEffect(() => {
@@ -675,6 +718,52 @@ export default function EquipmentLogContainer() {
               </div>
             </div>
           </div>
+
+          {/* Alert Banner - Show only when there are upcoming schedules */}
+          {upcomingSchedulesCount > 0 && (
+            <div className="bg-gradient-to-r from-web_yellow/15 via-web_yellow/8 to-transparent border-l-4 border-web_yellow rounded-lg p-4 mb-8 flex items-start gap-4 shadow-md">
+              <div className="text-yellow-600 text-2xl mt-1">📅</div>
+              <div>
+                <h3 className="font-semibold text-base text-gray-800 mb-1 tracking-wide">
+                  Upcoming Maintenance Alert
+                </h3>
+                <p className="text-gray-500 text-sm font-medium">
+                  {upcomingSchedulesCount} maintenance schedule{upcomingSchedulesCount > 1 ? 's are' : ' is'} coming soon in the next 7 days.
+                  {nearestScheduleDate && (
+                    <span className="block mt-1 text-gray-600 font-semibold">
+                      Next schedule: {nearestScheduleDate.toLocaleDateString("en-US", {
+                        month: "short",
+                        day: "numeric",
+                        year: "numeric"
+                      })} at {nearestScheduleDate.toLocaleTimeString("en-US", {
+                        hour: "numeric",
+                        minute: "2-digit",
+                        hour12: true
+                      })}
+                    </span>
+                  )}
+                </p>
+              </div>
+              <button 
+                className="ml-auto bg-main_dark text-white px-4 py-2 rounded-lg hover:bg-slatebluegray text-sm transition-colors"
+                onClick={() => {
+                  // Find the equipment ID with the nearest upcoming schedule
+                  const nearestSchedule = schedules.find(schedule => 
+                    schedule.nextDate && new Date(schedule.nextDate).getTime() === nearestScheduleDate?.getTime()
+                  );
+                  const equipmentId = nearestSchedule?.equipmentId;
+                  if (equipmentId) {
+                    handleScheduleService(equipmentId);
+                  } else {
+                    // Fallback to general schedules page if no specific equipment found
+                    navigation("/maintenance/update-equipment-maintenance");
+                  }
+                }}
+              >
+                View Schedules
+              </button>
+            </div>
+          )}
 
           {/* Stats Cards */}
           <div className="grid grid-cols-1 sm:grid-cols-2 lg:grid-cols-4 gap-3 sm:gap-4 mb-8">
