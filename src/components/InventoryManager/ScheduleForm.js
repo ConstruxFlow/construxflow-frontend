@@ -1,5 +1,6 @@
 import React, { useState, useEffect } from 'react';
 import { Calendar, MapPin, Settings, Save, X, Clock, Wrench, AlertTriangle, Ban } from 'lucide-react';
+import { toast } from "react-toastify";
 
 const API_BASE = import.meta?.env?.VITE_API_BASE ?? 'http://localhost:8080/api';
 
@@ -161,8 +162,8 @@ const ScheduleForm = ({ equipmentId }) => {
       });
 
       if (response.ok) {
-        alert('Maintenance request sent successfully! The equipment status has been updated to UNDER MAINTENANCE.');
-        setHasMaintenanceConflict(false);
+  toast.success('Maintenance request sent successfully! The equipment status has been updated to UNDER MAINTENANCE.');
+  setHasMaintenanceConflict(false);
         
         // Refresh equipment data to get updated status
         const refreshResponse = await fetch(`${API_BASE}/equipment-schedule/form-data/${equipmentId}`);
