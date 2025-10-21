@@ -425,13 +425,13 @@ const MaintenanceRequestDashboard = () => {
                   </div>
                 </div>
 
-                {/* Equipment Notes */}
+                {/* Equipment Notes
                 {selectedRequest.equipment.notes && (
                   <div className="bg-green-50 rounded-lg p-4">
                     <h3 className="text-lg font-semibold text-gray-900 mb-3">Equipment Notes</h3>
                     <p className="text-gray-900 bg-white p-3 rounded border">{selectedRequest.equipment.notes}</p>
                   </div>
-                )}
+                )} */}
               </div>
 
               {/* Modal Footer */}
@@ -442,27 +442,29 @@ const MaintenanceRequestDashboard = () => {
                 >
                   Close
                 </button>
-                <button
-                  onClick={() => handleCreateSchedule(selectedRequest)}
-                  disabled={creatingSchedule}
-                  className={`px-6 py-2 rounded-lg transition-colors flex items-center gap-2 ${
-                    creatingSchedule 
-                      ? 'bg-gray-400 cursor-not-allowed' 
-                      : 'bg-[#236571] hover:bg-[#1a4e57]'
-                  } text-white`}
-                >
-                  {creatingSchedule ? (
-                    <>
-                      <div className="animate-spin rounded-full h-4 w-4 border-b-2 border-white"></div>
-                      Approving...
-                    </>
-                  ) : (
-                    <>
-                      <Calendar className="w-4 h-4" />
-                      Create Schedule
-                    </>
-                  )}
-                </button>
+                {selectedRequest.status?.toUpperCase() !== 'APPROVED' && (
+                  <button
+                    onClick={() => handleCreateSchedule(selectedRequest)}
+                    disabled={creatingSchedule}
+                    className={`px-6 py-2 rounded-lg transition-colors flex items-center gap-2 ${
+                      creatingSchedule 
+                        ? 'bg-gray-400 cursor-not-allowed' 
+                        : 'bg-[#236571] hover:bg-[#1a4e57]'
+                    } text-white`}
+                  >
+                    {creatingSchedule ? (
+                      <>
+                        <div className="animate-spin rounded-full h-4 w-4 border-b-2 border-white"></div>
+                        Approving...
+                      </>
+                    ) : (
+                      <>
+                        <Calendar className="w-4 h-4" />
+                        Create Schedule
+                      </>
+                    )}
+                  </button>
+                )}
               </div>
             </div>
           </div>

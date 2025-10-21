@@ -961,7 +961,7 @@ export default function UpcomingEquipmentMaintenance() {
             <div className="bg-purewhite border border-gray-200 rounded-xl p-4 sm:p-5 flex items-center gap-3 sm:gap-4 shadow-sm hover:shadow-md hover:-translate-y-0.5 transition-all duration-150">
               <div className="flex-1 min-w-0">
                 <p className="text-slatebluegray font-medium text-sm mb-0.5 truncate">
-                  Total Equipment
+                  Total Schedule
                 </p>
                 <h3 className="text-xl sm:text-2xl font-bold text-main_dark leading-tight mb-0.5">
                   {equipmentData.length}

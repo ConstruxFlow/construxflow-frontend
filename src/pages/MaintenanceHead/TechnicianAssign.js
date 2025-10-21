@@ -252,26 +252,7 @@ export default function TechnicianAssignmentMain() {
       .map(tech => tech.name)
       .join(", ");
 
-    return `🔧 MAINTENANCE ASSIGNMENT
-
-Technician(s): ${technicianNames}
-Equipment: ${equipment?.equipmentName || 'N/A'}
-Type: ${equipment?.equipmentType || 'N/A'}
-Location: Equipment ID ${equipment?.equipmentId || 'N/A'}
-
-📅 Schedule:
-Date: ${startDate}
-Time: ${startTime}
-Duration: ${duration}
-
-📝 Instructions:
-${instructions || 'No special instructions'}
-
-Description: ${equipment?.description || 'N/A'}
-
-Please report to the assigned location at the scheduled time. Contact maintenance head for any clarifications.
-
-- ConstruxFlow Maintenance Team`;
+    return `Task: -ConstruxFlow`;
   };
 
   // Send individual SMS
